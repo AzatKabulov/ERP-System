@@ -39,7 +39,7 @@ Flutter widgets and shared theme
     │     ├── core/session: secure refresh token, profile, business and location choice
     │     ├── core/operations: pending-operation store + runner (restart-safe retries)
     │     ├── core/money: exact decimal text <-> integer hundredths/thousandths (no double)
-    │     └── features/: auth, admin, catalog, scanning, (later) inventory, purchasing, sales...
+    │     └── features/: auth, admin, catalog, scanning, inventory, purchasing, (later) sales...
     ├── SharedPreferences: interface language, last business/location ids,
     │     and unconfirmed-operation retry records (no tokens, no balances)
     └── Demo mode (--dart-define=DEMO_MODE=true, or an explicit DemoStore):
@@ -48,7 +48,8 @@ Flutter widgets and shared theme
 Django REST API (backend/)  ->  PostgreSQL
     apps/accounts (users, sessions, recovery) · apps/businesses (tenants, locations,
     roles, exchange rates) · apps/catalog (products, barcodes, units, reorder levels) ·
-    apps/audit (audit trail, idempotency) · apps/common (errors, request IDs)
+    apps/inventory (stock ledger, FIFO layers) · apps/purchasing (suppliers, orders,
+    deliveries) · apps/audit (audit trail, idempotency) · apps/common (errors, request IDs)
 ```
 
 Which pages are connected to the API is tracked in `PLAN.md` and `HANDOFF.md`. A real build shows an honest "later release" page for anything not connected yet; it never shows demo data as real.
@@ -84,7 +85,7 @@ Backend and client dependencies are pinned (`backend/uv.lock`, `mobile/pubspec.l
 | --- | --- |
 | `mobile/lib/main.dart` | Startup, language preference, localization delegates, and the choice between demo and real mode |
 | `mobile/lib/core/` | `config/` (build-time settings), `api/` (client, errors, error-code translation), `session/` (secure token store, profile, business/location choice), `operations/` (restart-safe pending operations), `money/` (exact decimal parsing and formatting), `format/`, `connectivity/` |
-| `mobile/lib/features/` | Real-mode screens by feature: `auth/` (sign-in, password recovery), `admin/` (business profile, locations, staff, language, exchange rate), `catalog/` (list, detail, form, reference pickers), `scanning/` (camera scanner behind the `BarcodeScanner` interface, `BarcodeInput`), `workspace/` (real workspace, placeholders, unsaved-work guard), `operations/` (pending-operation banner), `shared/` (loading/error widgets) |
+| `mobile/lib/features/` | Real-mode screens by feature: `auth/` (sign-in, password recovery), `admin/` (business profile, locations, staff, language, exchange rate), `catalog/` (list, detail, form, reference pickers), `scanning/` (camera scanner behind the `BarcodeScanner` interface, `BarcodeInput`), `inventory/` (stock list, history, opening stock and adjustments), `purchasing/` (suppliers, orders, receiving), `workspace/` (real workspace, placeholders, unsaved-work guard), `operations/` (pending-operation banner), `shared/` (loading/error widgets) |
 | `mobile/lib/demo/` | Sample records and in-memory demonstration operations |
 | `mobile/lib/screens/` | The demonstration workspace and its dashboard, products/inventory, sales, and management screens |
 | `mobile/lib/widgets/` | Shared visual components, dialogs, display helpers, and `AppShell` (navigation and header used by both workspaces) |
@@ -92,7 +93,7 @@ Backend and client dependencies are pinned (`backend/uv.lock`, `mobile/pubspec.l
 | `mobile/lib/l10n/` | Russian/Turkmen ARB files, generated strings, and Turkmen adapters |
 | `mobile/assets/fonts/` | Bundled fonts and licenses |
 | `mobile/test/` | Demo behavior, core (API client, session, operation runner), real-mode widget, and translation-parity tests |
-| `backend/` | Django REST API: `config/`, `apps/{common,accounts,businesses,catalog,audit}/`, Dockerfile |
+| `backend/` | Django REST API: `config/`, `apps/{common,accounts,businesses,catalog,inventory,purchasing,audit}/`, Dockerfile |
 | `infra/` | Container stack and the staging runbook (no deployment is performed by the repository) |
 | `.github/workflows/` | CI for the app, the backend and the container image |
 | `mobile/android/` | Android host and checksum-pinned Gradle wrapper |
@@ -104,21 +105,18 @@ The browser host supports development review. It does not introduce a separate d
 
 ### Proposed Additions
 
-These paths are a plan, not existing directories (`core/`, `features/{auth,admin,catalog,scanning,workspace,operations,shared}` and `backend/apps/{common,accounts,businesses,catalog,audit}` already exist). Add the rest as their workflows are implemented rather than creating empty abstractions in advance.
+These paths are a plan, not existing directories (`core/`, `features/{auth,admin,catalog,scanning,inventory,purchasing,workspace,operations,shared}` and `backend/apps/{common,accounts,businesses,catalog,inventory,purchasing,audit}` already exist). Add the rest as their workflows are implemented rather than creating empty abstractions in advance.
 
 ```text
 mobile/lib/
     features/               # Feature models, repositories, controllers, screens
-        inventory/
-        purchasing/
         sales/
         ...
 
 backend/
     config/                 # Django settings, URLs, environment configuration
     apps/
-        inventory/          # Ledger, balances, transfers, counts, adjustments
-        purchasing/         # Suppliers, purchase orders, deliveries, returns
+        # inventory/ and purchasing/ exist; transfers, counts and supplier returns are added to them later
         sales/              # Customers, sales, recorded payments, refunds
         expenses/           # Expense categories, entries, receipt links
         warranties/         # Entitlement snapshots and claim workflows
@@ -215,6 +213,18 @@ A shared database with business-scoped records is the proposed first deployment.
 - `ExchangeRate` (in `apps/businesses`) is an append-only history guarded by a database trigger: a rate is never edited, a new entry supersedes the old. Entering one needs `exchange_rate.manage` (owner, manager). Rates have up to 6 decimals; conversion rounds half up to 2 decimals using integer arithmetic. Phase 5 copies the rate used onto each sale line.
 - Every create, change and archive writes an audit event. Reorder levels (minimum/target per product and location) are stored now and used by the Phase 7 suggestions.
 - In the app, money and quantities are parsed from and sent as exact decimal text (`core/money/decimal_math.dart`); `double` is never used for amounts.
+
+### Stock ledger, purchasing and receiving (implemented)
+
+- **One writer.** `apps/inventory/services.post()` is the only code that creates stock movements, balances or cost layers (a test scans the source to keep it that way). Opening stock, adjustments and purchase receipts call it; later sales, transfers and returns will too. Admin screens for these tables are read-only.
+- **Three tables, one invariant.** `StockMovement` is append-only (PostgreSQL trigger plus an ORM guard). `StockBalance` holds the current quantity per product, location and condition (`sellable`, `damaged`, `inspection`, `in_transit`) with a `CHECK quantity >= 0`. `CostLayer` holds one FIFO layer per incoming line (`CHECK 0 <= remaining <= initial`). `reconcile()` (and `manage.py reconcile_stock`) proves balance = sum of movements = sum of layer remainders, and that each layer equals its own movements. Every backend scenario test finishes by asserting it returns no differences.
+- **FIFO (D6).** Outgoing goods consume the oldest layer first and record one movement per layer slice, each with that layer's exact unit cost, so the cost of a sale is known per slice. Opening stock and receipts each create a layer at their own unit cost (TMT).
+- **Locking.** A posting creates missing balance rows (`INSERT ... ON CONFLICT DO NOTHING`), then locks the balances one by one in sorted order, then the layers oldest first. A shortfall is `insufficient_stock` (409) and nothing is written. Tests run real threads: two outflows of the last unit, twelve outflows of five units, concurrent first receipts of a new product, and opposite lock order.
+- **Opening stock** (`stock.opening.post`): quantity and unit cost per line, allowed once per product and location (afterwards use adjustments); **adjustments** (`stock.adjust`): increase (with a cost) or decrease, per condition, with a mandatory reason stored on every movement. Both run inside `run_idempotent` (actions `stock_opening`, `stock_adjust`). Owner and manager only, provisionally (D7).
+- **Reads.** `GET .../stock/` (balances; `value` and `average_cost` only with `stock.cost.view`; only the caller's locations) and `GET .../stock/movements/` (`stock.history.view`; `unit_cost` only with `stock.cost.view`). There is no endpoint that edits or deletes a movement.
+- **Purchasing.** `Supplier`; `PurchaseOrder` numbered per business from a locked counter (`PO-0001`) with states draft, ordered, partially received, received, cancelled; lines carry quantity and unit cost (TMT). An order never changes stock. Draft orders can be edited; submit moves a draft to ordered; cancelling stops what is still outstanding and keeps what already arrived.
+- **Receiving.** `POST .../purchase-orders/<id>/deliveries/` (`purchasing.receive`, action `purchase_receive`) runs in `run_idempotent`: the order and its lines are locked, receiving more than is outstanding is refused (`over_receipt`), the `Delivery` rows are append-only, and the goods enter stock at the order's location at the line cost through the inventory service. Concurrent copies of one receipt produce one delivery; concurrent receipts with different keys cannot exceed the order. The warehouse role receives goods but never sees costs: cost fields are removed from order, delivery, stock and history responses on the server.
+- **Restart safety (end to end).** The app saves the request and its key before sending and clears it only after a definite answer. After a lost answer the app asks `GET .../operations/purchase_receive/<key>/`; a resend always reuses the key. Verified in widget tests (answer lost then app restart; a 5xx before commit resent with the same key) and in a real browser run against the real backend (HANDOFF section 4).
 
 ### Money, Reports, and Files
 

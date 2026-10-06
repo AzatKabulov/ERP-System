@@ -4,6 +4,8 @@ Status: approved roadmap, 2026-10-06; revised the same day after Codex's review 
 
 Starting point: a bilingual Flutter interface prototype that runs on demonstration data only (see [HANDOFF.md](HANDOFF.md)).
 
+**Progress (2026-10-06): Phases 1, 2, 3 and 4 are implemented and verified** (backend, app, CI, and a real-browser run against the real backend; HANDOFF section 4 has the evidence). Still open and needing the owner: step 0.1/0.2, 0.3's branch protection, 2.1 (a deployed staging server), and 3.3 (camera scan on the pilot tablet). Phase 5 (sales) is next.
+
 ## How to use this plan
 
 1. Pick the first phase that is not finished. Check its **Before you start** list. Those are your decisions, and the phase cannot be finished without them.
@@ -51,7 +53,7 @@ Agents must not invent these (AGENTS.md "Boundaries"). Record each answer in the
 | D2 | Hosting provider and region, reachable from the pilot store's internet in Turkmenistan | Phase 2 (test server, provisional); Phase 10 (final) | Open |
 | D3 | Business currency, decimal places, rounding | Phase 3 | **Decided 2026-10-06:** business currency TMT (2 decimals, rounded half up). A product's selling price may be stated in TMT or USD and is converted to TMT at an owner/manager-entered rate that is saved on each sale. Costs, totals, payments and reports are TMT only. Recorded as a scope change in the PRD. |
 | D4 | Receipt/invoice format, tax rules, document numbering (confirm with a local accountant) | Phase 5 (provisional); Phase 10 (final) | Open |
-| D5 | What each role (owner, manager, sales, warehouse) may see and do | Phase 1 (draft from the PRD is acceptable) | Open |
+| D5 | What each role (owner, manager, sales, warehouse) may see and do | Phase 1 (draft from the PRD is acceptable) | **Provisional draft implemented** (`backend/apps/businesses/permissions.py`, table in ARCHITECTURE); owner review pending |
 | D6 | Inventory costing method | Needed before Phase 4 | **Decided 2026-10-06: FIFO.** Each purchase keeps its own unit cost and the oldest stock is used first when selling. Opening stock records a unit cost with every quantity. |
 | D7 | Who approves discounts, refunds and stock adjustments, and limits | Phases 5–7 | Open |
 | D8a | Warranty terms stored on products and copied onto each sale | Phase 3 | **Decided 2026-10-06:** a period in months (0 = no warranty) plus free-text conditions per product |
@@ -138,19 +140,19 @@ Goal: real stock per location, changed only through recorded movements; purchase
 
 Before you start: D6 (decided: FIFO), D7 (who approves adjustments; until answered, opening stock and adjustments are posted by owner or manager with a mandatory reason, as a provisional rule).
 
-- [ ] 4.1 Stock ledger:
+- [x] 4.1 Stock ledger:
   - unchangeable stock movements, and balances per product, location and condition (sellable, damaged, awaiting inspection, in transit)
   - FIFO cost layers (D6): every receipt or opening-stock line creates a layer with its own unit cost; selling or writing off uses the oldest layer first, so each movement records its exact cost
   - one inventory service as the only writer, using PostgreSQL row locks taken in a consistent order and a "no negative sellable stock" constraint
   - a reconciliation check comparing balances, movements and cost layers
-- [ ] 4.2 Opening stock and adjustments: initial quantities are entered **together with their unit cost** (otherwise historical stock value and profit would need rework), with a reason and the responsible user; stock write-offs and corrections need a mandatory reason. Both are protected by an operation key.
-- [ ] 4.3 Purchasing:
+- [x] 4.2 Opening stock and adjustments: initial quantities are entered **together with their unit cost** (otherwise historical stock value and profit would need rework), with a reason and the responsible user; stock write-offs and corrections need a mandatory reason. Both are protected by an operation key.
+- [x] 4.3 Purchasing:
   - suppliers, and purchase orders through draft, ordered, partially received, received and cancelled
   - deliveries with the actual received quantities and remaining quantities
   - stock increases only on receipt; receipt cost kept for valuation
   - posting the same receipt twice is impossible (operation key)
-- [ ] 4.4 Screens: stock per location and movement history; opening stock and adjustments; suppliers; create and edit purchase orders; receive full or partial deliveries through the restart-safe pending-operation runner, keeping the same operation key after a timeout, crash or restart, with an "outcome unknown" banner.
-- [ ] 4.5 Tests: partial and repeated deliveries, duplicate and concurrent receipt requests, FIFO costs across several layers, two simultaneous outflows of the last unit, direct attempts to make a balance negative or edit a movement, the restart scenario (server committed, answer lost, app restarted, exactly one delivery), permissions, and a reconciliation difference of zero.
+- [x] 4.4 Screens: stock per location and movement history; opening stock and adjustments; suppliers; create and edit purchase orders; receive full or partial deliveries through the restart-safe pending-operation runner, keeping the same operation key after a timeout, crash or restart, with an "outcome unknown" banner.
+- [x] 4.5 Tests: partial and repeated deliveries, duplicate and concurrent receipt requests, FIFO costs across several layers, two simultaneous outflows of the last unit, direct attempts to make a balance negative or edit a movement, the restart scenario (server committed, answer lost, app restarted, exactly one delivery), permissions, and a reconciliation difference of zero.
 
 Done when: PRD flow 2 (purchase order → partial receipt → final receipt) works end to end and balances always match the ledger.
 
@@ -302,3 +304,4 @@ Anything listed under "Out of Scope" in the PRD stays out unless the owner chang
   - password recovery by emailed code added (step 1.4, D16);
   - agents pause only decision-dependent work ("How to use" item 5);
   - currency decision D3 recorded: TMT business currency, selling prices may be stated in TMT or USD.
+- 2026-10-06, implementation: Phases 1-4 built autonomously while the owner was away. Assumptions made without the owner (listed for review in the session's final message and in HANDOFF): FIFO reading of D6; USD only for selling prices; opening stock once per product and location; over-receipt refused; receipt cost equals the order line cost; opening stock and adjustments by owner/manager only (provisional D7); PO numbers `PO-0001`.
