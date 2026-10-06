@@ -10,7 +10,7 @@ This project is an inventory-focused ERP for shops and wholesalers, with car par
 - Confirmed database (2026-10-06): PostgreSQL; not yet implemented.
 - Initial operating model: internet access is required for stock-changing actions; business records are isolated by business and location permissions.
 
-The repository contains a Flutter interface prototype under `mobile/`, using in-memory demonstration operations and persistent language selection. Android and web hosts are present. Flutter 3.47.6 is pinned in `.flutter-version`; cloud activation and setup helpers are under `scripts/`. Analysis, 12 tests, web and debug APK builds, and interactive browser checks passed. Physical Android hardware and iOS remain untested. The backend is not implemented. Do not describe demonstration operations as production functionality.
+The repository contains a Flutter interface prototype under `mobile/`, using in-memory demonstration operations and persistent language selection. Android and web hosts are present. Flutter 3.47.6 is pinned in `.flutter-version`; cloud activation and setup helpers are under `scripts/`. Analysis, 12 tests, web and debug APK builds, and interactive browser checks passed. Physical Android hardware and iOS remain untested. The backend under `backend/` is being built phase by phase (see `PLAN.md` and `HANDOFF.md` for what exists); the Flutter app still shows demonstration data unless a phase says it is connected. Do not describe demonstration operations as production functionality.
 
 ## Before You Start
 
@@ -117,19 +117,25 @@ For internal web smoke testing, serve a successfully built `mobile/build/web` di
 
 The debug APK build and APK signature have been verified. This does not establish real-device scanner or printer compatibility, release signing, or store readiness.
 
-### Planned Backend Commands
+### Backend Commands
 
-Working directory: the future backend directory, tentatively `backend/`. These commands assume Django has been installed from the chosen dependency manifest into an active project virtual environment and `manage.py` exists.
+Working directory: `backend/`. Python 3.13 and `uv` manage the pinned dependencies (`pyproject.toml`, `uv.lock`). The backend needs PostgreSQL; tests require it (SQLite is not supported). Settings come from the environment; `backend/.env` is git-ignored and `backend/.env.example` lists every variable.
+
+On the Claude Code cloud VM, run `bash scripts/claude_cloud_postgres.sh` once per fresh VM. It starts PostgreSQL 16, creates a local-only role and database, and writes `backend/.env` with random values. Elsewhere, create the database and `backend/.env` yourself. Then load the variables (`set -a; . ./.env; set +a`) before the commands below, and run `uv run` from `backend/` (set `UV_PYTHON_DOWNLOADS=never` where only the system Python is available).
 
 | Purpose | Command |
 | --- | --- |
-| Check Django configuration | `python manage.py check` |
-| Check for missing migrations | `python manage.py makemigrations --check --dry-run` |
-| Apply migrations to the configured local development database | `python manage.py migrate` |
-| Run backend tests | `python manage.py test` |
-| Run the local development server | `python manage.py runserver 127.0.0.1:8000` |
+| Install pinned dependencies | `uv sync --frozen` |
+| Check Django configuration | `uv run python manage.py check` |
+| Check for missing migrations | `uv run python manage.py makemigrations --check --dry-run` |
+| Apply migrations to the local development database | `uv run python manage.py migrate` (then once: `createcachetable`) |
+| Run backend tests (uses `config.settings_test`: fast password hasher) | `uv run python manage.py test` |
+| Lint and format check | `uv run ruff check .` and `uv run ruff format --check .` |
+| Apply formatting | `uv run ruff format .` |
+| Run the local development server | `uv run python manage.py runserver 127.0.0.1:8000` |
+| Create a business with its first owner (operator tool; password from `ERP_OWNER_PASSWORD` or a prompt) | `uv run python manage.py create_business --name ... --owner-username ... --owner-email ... --location ...` |
 
-The dependency installation command, required environment variables, PostgreSQL startup, formatting and linting tools, and health checks must be added after the actual scaffold is chosen and validated. Use the project's selected test runner if it differs from Django's runner. Do not invent a dependency filename or configuration module.
+Health check: `GET /api/v1/health/`. Concurrency tests use real threads against PostgreSQL and run as part of `manage.py test`. Add a dependency only through `pyproject.toml` and commit the updated `uv.lock`.
 
 ## Validation and Reporting
 
