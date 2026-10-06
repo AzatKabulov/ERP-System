@@ -192,7 +192,9 @@ A shared database with business-scoped records is the proposed first deployment.
 
 Store money using PostgreSQL decimal/numeric fields and Python `Decimal`, with explicit currency and rounding rules. Send API monetary values as decimal strings; clients must not convert them through binary floating-point arithmetic. Choose quantity precision according to product units rather than assuming every future item is an integer piece.
 
-Sale lines preserve price, discount, tax, and applicable warranty snapshots. Inventory costing/valuation policy remains undecided. Implement that policy before presenting gross margins as authoritative; revenue, gross profit, expenses, and net profit are separate measures. This product does not initially provide a full accounting ledger.
+Sale lines preserve price, discount, tax, exchange rate, and applicable warranty snapshots. Inventory costing is **FIFO** (decided 2026-10-06): each receipt or opening-stock line creates a cost layer with its own unit cost, and selling or writing off consumes the oldest layer first, so every outflow movement records its exact cost. Revenue, gross profit, expenses, and net profit are separate measures. This product does not initially provide a full accounting ledger.
+
+**Currency (decided 2026-10-06).** The business currency is TMT (2 decimals, rounded half up). A product's selling price may be stated in TMT or USD; a USD price is converted to TMT at the most recent exchange rate entered by an owner or manager (append-only rate history), and the rate and converted price are snapshotted on the sale line. Purchase costs, payments, totals, stock values and reports are always in TMT.
 
 Store attachment metadata in PostgreSQL and file content in private storage. Check business permissions before upload/download and use short-lived authorized access where supported. Validate file size/type and keep generated reports private. PDFs must embed fonts supporting both required languages. Expensive report generation can become a background job as volume grows.
 
@@ -212,8 +214,8 @@ Rate-limit sign-in and sensitive endpoints. Audit important changes with actor, 
 | --- | --- | --- |
 | Authentication | Django accounts; no Clerk/Firebase dependency assumed | Select maintained token library and recovery workflow |
 | Payment gateway | None; record payments and refunds | A gateway is a separate future scope decision |
-| Email/SMS | Optional provider for account recovery/notifications | Select only if the pilot requires it; no messages are currently sent |
-| Barcode scanning | Manual/keyboard lookup works in the demo | Select and test camera/plugin and external scanner support on the pilot tablet |
+| Email | Password-recovery codes through any SMTP service configured by environment settings (decided 2026-10-06) | Choose the provider (D16) and test delivery from Turkmenistan; tests use an in-memory email backend. SMS is not planned |
+| Barcode scanning | Tablet camera is the agreed first method (decided 2026-10-06), with manual entry as a fallback | Verify camera scanning on the pilot tablet; USB/Bluetooth scanners are an optional later step |
 | Receipt/label printing | Optional device integration; generated documents planned | Select printer/protocol and test Russian/Turkmen glyphs |
 | File and backup storage | Private storage with separate protected backups | Select provider, retention, and restore procedures |
 | Error monitoring | Server metrics/logs first; optional hosted error tracker | Select provider and redact business data |
@@ -272,8 +274,8 @@ Backend checks must cover cross-business and role denial, atomic rollback, concu
 | Decision | Resolve before |
 | --- | --- |
 | Backend dependency versions, token library, API contracts | Implementing backend/client integration |
-| Currency, rounding, invoice numbering, local tax/document requirements | Finalizing production sales and documents |
-| Inventory costing and count reconciliation policy | Authoritative valuation/margin reports and stock counts |
+| Invoice numbering and local tax/document requirements (currency and rounding were decided 2026-10-06) | Finalizing production sales and documents |
+| Count reconciliation policy (FIFO costing was decided 2026-10-06) | Stock counts |
 | Refund/adjustment approvals and warranty terms | Finalizing those workflows |
 | Pilot tablet, scanning method, printer, approved translations | Pilot acceptance |
 | Hosting/storage provider, backup retention, RPO/RTO | Production deployment |
