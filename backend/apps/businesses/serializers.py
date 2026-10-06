@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
@@ -5,7 +7,7 @@ from rest_framework import serializers
 from apps.accounts.models import USERNAME_VALIDATOR, User, normalize_username
 from apps.accounts.serializers import password_errors
 
-from .models import LANGUAGES, Business, Location, Membership, Role
+from .models import LANGUAGES, Business, ExchangeRate, Location, Membership, Role
 
 
 class BusinessSerializer(serializers.ModelSerializer):
@@ -22,6 +24,18 @@ class BusinessSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "currency", "is_active", "created_at"]
+
+
+class ExchangeRateSerializer(serializers.ModelSerializer):
+    rate = serializers.DecimalField(
+        max_digits=18, decimal_places=6, min_value=Decimal("0.000001"), max_value=Decimal("1000000")
+    )
+    set_by = serializers.CharField(source="set_by.username", read_only=True)
+
+    class Meta:
+        model = ExchangeRate
+        fields = ["id", "currency", "rate", "set_by", "created_at"]
+        read_only_fields = ["id", "set_by", "created_at"]
 
 
 class LocationSerializer(serializers.ModelSerializer):

@@ -7,7 +7,9 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../shared/async_section.dart';
+import '../catalog/catalog_repository.dart';
 import 'admin_repository.dart';
+import 'exchange_rate_section.dart';
 
 String roleLabel(AppLocalizations l, String role) => switch (role) {
   'owner' => l.roleOwner,
@@ -28,12 +30,14 @@ class RealAdministrationScreen extends StatefulWidget {
     super.key,
     required this.session,
     required this.repository,
+    required this.catalog,
     required this.languageCode,
     required this.onLanguageChanged,
   });
 
   final SessionController session;
   final AdminRepository repository;
+  final CatalogRepository catalog;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
 
@@ -139,6 +143,13 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                   ),
                 ],
               ),
+            ),
+          ],
+          if (session.can('exchange_rate.view')) ...[
+            const SizedBox(height: 24),
+            ExchangeRateSection(
+              repository: widget.catalog,
+              canManage: session.can('exchange_rate.manage'),
             ),
           ],
           if (session.can('location.view')) ...[

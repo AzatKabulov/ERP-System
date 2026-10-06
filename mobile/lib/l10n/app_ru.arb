@@ -361,5 +361,102 @@
     }
   },
   "unknownActionLabel": "Действие со складом",
-  "unsavedChangeConflict": "Несохранённые данные будут потеряны при смене. Продолжить?"
+  "unsavedChangeConflict": "Несохранённые данные будут потеряны при смене. Продолжить?",
+  "addProduct": "Добавить товар",
+  "editProduct": "Изменить товар",
+  "productSku": "Артикул (SKU)",
+  "productName": "Название товара",
+  "categoryLabel": "Категория",
+  "brandLabel": "Бренд",
+  "unitLabel": "Единица измерения",
+  "noneOption": "Не выбрано",
+  "addNewOption": "Добавить новую…",
+  "addCategory": "Новая категория",
+  "addBrand": "Новый бренд",
+  "addUnit": "Новая единица измерения",
+  "unitSymbol": "Обозначение",
+  "unitDecimals": "Знаков после запятой (0–3)",
+  "priceLabel": "Цена продажи",
+  "priceCurrencyLabel": "Валюта цены",
+  "priceInTmt": "≈ {amount} в TMT",
+  "@priceInTmt": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rateMissingNote": "Курс USD не задан: цена в TMT неизвестна.",
+  "defaultCostLabel": "Закупочная цена по умолчанию (TMT)",
+  "warrantyMonthsLabel": "Гарантия, месяцев (0 — нет)",
+  "warrantyTermsLabel": "Условия гарантии",
+  "warrantyMonthsValue": "Гарантия: {months} мес.",
+  "@warrantyMonthsValue": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "barcodesLabel": "Штрихкоды",
+  "addBarcode": "Добавить штрихкод",
+  "barcodeFieldLabel": "Штрихкод",
+  "scanWithCamera": "Сканировать камерой",
+  "archiveProduct": "Архивировать",
+  "restoreProduct": "Вернуть из архива",
+  "archiveConfirm": "Архивный товар исчезнет из списка и продаж, история сохранится. Продолжить?",
+  "archivedLabel": "В архиве",
+  "showArchived": "Показать архивные",
+  "noProducts": "Товаров пока нет",
+  "noProductsHint": "Добавьте первый товар, чтобы начать работу.",
+  "loadMore": "Показать ещё",
+  "productSaved": "Товар сохранён.",
+  "productCardTitle": "Карточка товара",
+  "scanTitle": "Наведите камеру на штрихкод",
+  "scanTorch": "Фонарик",
+  "cameraDenied": "Нет доступа к камере. Разрешите доступ в настройках или введите штрихкод вручную.",
+  "cameraUnavailable": "Камера недоступна на этом устройстве.",
+  "enterManually": "Ввести вручную",
+  "scannedCode": "Считан код: {code}",
+  "@scannedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "errorBarcodeNotFound": "Товар с таким штрихкодом не найден.",
+  "errorUnitInUse": "Нельзя менять точность, пока единица используется в товарах.",
+  "fieldSkuTaken": "Этот артикул уже используется.",
+  "fieldBarcodeTaken": "Этот штрихкод уже используется другим товаром.",
+  "fieldTooManyDecimals": "Слишком много знаков после запятой.",
+  "fieldOutOfRange": "Значение вне допустимого диапазона.",
+  "fieldQuantityPrecision": "Для этой единицы допускается меньше знаков после запятой.",
+  "exchangeRateTitle": "Курс доллара (USD → TMT)",
+  "currentRate": "Текущий курс: 1 USD = {rate} TMT",
+  "@currentRate": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "noRateYet": "Курс ещё не задан. Цены в USD нельзя пересчитать в TMT.",
+  "newRateLabel": "Новый курс (TMT за 1 USD)",
+  "setRate": "Установить курс",
+  "rateHistory": "История курса",
+  "rateHistoryEntry": "{rate} — {user}, {when}",
+  "@rateHistoryEntry": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      },
+      "user": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  }
 }

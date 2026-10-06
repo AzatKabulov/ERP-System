@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/format/format_stamp.dart';
 import '../../core/operations/operation_runner.dart';
 import '../../core/operations/pending_operation.dart';
 import '../../l10n/app_localizations.dart';
@@ -12,15 +13,6 @@ String operationActionLabel(AppLocalizations l, String action) =>
     switch (action) {
       _ => l.unknownActionLabel,
     };
-
-String _two(int n) => n.toString().padLeft(2, '0');
-
-/// Locale-neutral timestamp (the Turkmen date formatting is not approved yet).
-String formatStamp(DateTime t) {
-  final local = t.toLocal();
-  return '${local.year}-${_two(local.month)}-${_two(local.day)} '
-      '${_two(local.hour)}:${_two(local.minute)}';
-}
 
 /// A notice that some actions have not been confirmed by the server, with a way
 /// to review them. Shown on every page while any exist, because an unconfirmed

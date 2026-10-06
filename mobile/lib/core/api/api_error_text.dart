@@ -26,6 +26,10 @@ String apiErrorText(AppLocalizations l, ApiException e) {
     case 'invalid_token':
     case 'not_authenticated':
       return l.sessionExpiredNotice;
+    case 'barcode_not_found':
+      return l.errorBarcodeNotFound;
+    case 'unit_in_use':
+      return l.errorUnitInUse;
     case 'validation_error':
       return l.errorValidation;
     case 'network':
@@ -59,6 +63,13 @@ String fieldErrorText(AppLocalizations l, FieldError e) => switch (e.code) {
   'password_entirely_numeric' => l.passwordNumeric,
   'password_too_similar' => l.passwordSimilar,
   'invalid_old_password' => l.errorInvalidOldPassword,
+  'sku_taken' => l.fieldSkuTaken,
+  'barcode_taken' => l.fieldBarcodeTaken,
+  'max_decimal_places' ||
+  'max_digits' ||
+  'max_whole_digits' => l.fieldTooManyDecimals,
+  'min_value' || 'max_value' => l.fieldOutOfRange,
+  'quantity_precision' => l.fieldQuantityPrecision,
   _ => l.fieldInvalid,
 };
 
