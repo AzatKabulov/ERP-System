@@ -1,0 +1,45 @@
+# Development / staging stack: PostgreSQL + one-shot migration + the API.
+# Put TLS in front of it (reverse proxy); the API port is bound to localhost only.
+# Usage and runbook: infra/README.md
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-erp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in infra/.env}
+      POSTGRES_DB: ${POSTGRES_DB:-erp}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-erp} -d ${POSTGRES_DB:-erp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build: ../backend
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+    command: sh -c "python manage.py migrate --noinput && python manage.py createcachetable"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: ../backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:

@@ -34,9 +34,22 @@ Stock-changing actions require internet access. Optional cached views must show 
 Flutter widgets and shared theme
     ├── Generated Russian / Turkmen ARB strings
     ├── Custom Turkmen delegates for the toolkit controls used
-    ├── SharedPreferences: selected interface language only
-    └── DemoStore: sample catalog, balances, cart, and session operations
+    ├── Real mode (default build): sign-in -> workspace on the API
+    │     ├── core/api: ApiClient (bearer token, one refresh, structured errors)
+    │     ├── core/session: secure refresh token, profile, business and location choice
+    │     ├── core/operations: pending-operation store + runner (restart-safe retries)
+    │     └── features/: auth, admin, (later) catalog, inventory, purchasing, sales...
+    ├── SharedPreferences: interface language, last business/location ids,
+    │     and unconfirmed-operation retry records (no tokens, no balances)
+    └── Demo mode (--dart-define=DEMO_MODE=true, or an explicit DemoStore):
+          sample catalog, balances, cart and session operations, with a visible banner
+
+Django REST API (backend/)  ->  PostgreSQL
+    apps/accounts (users, sessions, recovery) · apps/businesses (tenants, locations,
+    roles) · apps/audit (audit trail, idempotency) · apps/common (errors, request IDs)
 ```
+
+Which pages are connected to the API is tracked in `PLAN.md` and `HANDOFF.md`. A real build shows an honest "later release" page for anything not connected yet; it never shows demo data as real.
 
 `DemoStore` is a local demonstration implementation. Business records live in memory and reset when the app restarts. It does not provide production persistence, authentication, permissions, accounting, or offline sales. Transfers complete immediately in the demo; production transfers must track dispatch, transit, and receipt separately. Warranty cards are sample records.
 
@@ -46,19 +59,20 @@ Flutter widgets and shared theme
 | --- | --- | --- |
 | Shared client | Flutter and Dart; Android tablets first, Apple platforms later | Confirmed; Android/web prototype present |
 | Client toolchain | Flutter 3.47.6, pinned in `.flutter-version`; dependencies in `mobile/pubspec.lock` | Implemented |
-| State and UI updates | `ChangeNotifier` and `AnimatedBuilder`, with shared theme/widgets | Implemented for the prototype |
+| State and UI updates | `ChangeNotifier` / `ListenableBuilder`, with shared theme/widgets (`AppShell` frames both demo and real workspaces) | Implemented |
+| HTTP client | `package:http` behind `ApiClient`; the only code that talks to the server | Implemented (Phase 2) |
 | Localization | Flutter-generated ARB strings for `ru` and `tk`, custom Turkmen toolkit delegates, bundled Inter and Noto Serif | Implemented for current screens; terminology review pending |
-| Local preferences | `SharedPreferences` for interface language | Implemented; never a stock database or token store |
-| Backend | Python, Django, Django REST Framework | Confirmed (2026-10-06); not implemented |
-| Database | PostgreSQL | Confirmed (2026-10-06); not implemented |
-| Authentication | Django user accounts and business memberships; mobile access/refresh tokens through a maintained authentication library | Proposed; exact library and token policy to select during backend setup |
-| Mobile session storage | Platform secure storage backed by Android Keystore / Apple Keychain | Planned; package not installed |
+| Local preferences | `SharedPreferences` for interface language, the last business/location ids, and pending-operation retry records | Implemented; never a stock database or token store. The legacy API is used on purpose: on Android it writes with `commit()`, so an awaited write is durable (the newer async API uses `apply()`); re-check before changing it |
+| Backend | Python 3.13, Django 5.2 LTS (supported to April 2028), Django REST Framework 3.18; pinned in `backend/uv.lock`, managed with `uv`; lint/format with `ruff` | Foundation implemented (Phase 1) |
+| Database | PostgreSQL 16 (tests and CI run against it; SQLite is unsupported) | Implemented |
+| Authentication | Django user accounts and business memberships; `djangorestframework-simplejwt` (access 15 min, rotating blacklisted refresh 14 days, instant revocation on password change through a per-user session version); emailed one-time recovery codes | Implemented (Phase 1). Email provider (D16) still to choose |
+| Mobile session storage | `flutter_secure_storage` (Android Keystore / Apple Keychain) holds only the refresh token | Implemented in code (Phase 2); Android runtime behavior is verified only by the CI build until a device test |
 | Attachments and PDFs | Private file/object storage; server-generated documents with bundled fonts | Planned; provider and PDF library undecided |
 | Background jobs | Celery with Redis if long-running imports, reports, or scheduled work require it | Future option; not needed to run the prototype |
 | Monitoring | Structured server logs, health metrics, and error reporting | Planned; provider undecided |
 | Payment handling | Record payment method and amounts; no payment gateway | Initial product scope |
 
-Backend versions and dependencies must be pinned when that scaffold is created. No Django, PostgreSQL, Redis, authentication provider, or external service is currently connected to the app. Keep the existing client state approach unless a concrete workflow justifies changing it.
+Backend and client dependencies are pinned (`backend/uv.lock`, `mobile/pubspec.lock`); add a dependency only through those manifests. No Redis, payment, storage or monitoring provider is connected yet. Keep the existing client state approach unless a concrete workflow justifies changing it.
 
 ## Project Structure
 
@@ -66,14 +80,19 @@ Backend versions and dependencies must be pinned when that scaffold is created. 
 
 | Path | Responsibility |
 | --- | --- |
-| `mobile/lib/main.dart` | Startup, language preference, and localization delegates |
+| `mobile/lib/main.dart` | Startup, language preference, localization delegates, and the choice between demo and real mode |
+| `mobile/lib/core/` | `config/` (build-time settings), `api/` (client, errors, error-code translation), `session/` (secure token store, profile, business/location choice), `operations/` (restart-safe pending operations), `connectivity/` |
+| `mobile/lib/features/` | Real-mode screens by feature: `auth/` (sign-in, password recovery), `admin/` (business profile, locations, staff, language), `workspace/` (real workspace, placeholders, unsaved-work guard), `operations/` (pending-operation banner), `shared/` (loading/error widgets) |
 | `mobile/lib/demo/` | Sample records and in-memory demonstration operations |
-| `mobile/lib/screens/` | Workspace navigation, dashboard, products/inventory, sales, and management screens |
-| `mobile/lib/widgets/` | Shared visual components, dialogs, and display helpers |
+| `mobile/lib/screens/` | The demonstration workspace and its dashboard, products/inventory, sales, and management screens |
+| `mobile/lib/widgets/` | Shared visual components, dialogs, display helpers, and `AppShell` (navigation and header used by both workspaces) |
 | `mobile/lib/theme/` | Flutter theme and semantic colors |
 | `mobile/lib/l10n/` | Russian/Turkmen ARB files, generated strings, and Turkmen adapters |
 | `mobile/assets/fonts/` | Bundled fonts and licenses |
-| `mobile/test/` | Demo behavior and widget tests |
+| `mobile/test/` | Demo behavior, core (API client, session, operation runner), real-mode widget, and translation-parity tests |
+| `backend/` | Django REST API: `config/`, `apps/{common,accounts,businesses,audit}/`, Dockerfile |
+| `infra/` | Container stack and the staging runbook (no deployment is performed by the repository) |
+| `.github/workflows/` | CI for the app, the backend and the container image |
 | `mobile/android/` | Android host and checksum-pinned Gradle wrapper |
 | `mobile/web/` | Browser host for reviewing the same Flutter interface |
 | `scripts/` | Cloud tool activation and reproducible setup helpers |
@@ -83,11 +102,10 @@ The browser host supports development review. It does not introduce a separate d
 
 ### Proposed Additions
 
-These paths are a plan, not existing directories. Add them as their workflows are implemented rather than creating empty abstractions in advance.
+These paths are a plan, not existing directories (`core/`, `features/{auth,admin,workspace,operations,shared}` and `backend/apps/{common,accounts,businesses,audit}` already exist). Add the rest as their workflows are implemented rather than creating empty abstractions in advance.
 
 ```text
 mobile/lib/
-    core/                   # API transport, session handling, common errors
     features/               # Feature models, repositories, controllers, screens
         catalog/
         inventory/
@@ -127,6 +145,7 @@ Screen → controller/state → feature repository → API client → server
 Widgets display state and collect input. Repositories map server responses into typed models. The API client centralizes authentication, timeouts, pagination, and structured errors. Demo data remains explicitly separate from API-backed records; saving `DemoStore` balances into preferences is not a production persistence strategy.
 
 - Show loading, empty, validation, success, and failure states. Disable duplicate submission while a command is pending.
+- **Restart-safe commands.** Every stock-changing action goes through `OperationRunner`. It saves a `PendingOperation` (operation key, action, business, path, body) on the device **before** sending, sends it with the key as `Idempotency-Key`, and removes the record only on a definite answer (2xx, or a 4xx refusal that changed nothing). After a timeout, a 5xx, a crash or a restart the record stays; the app asks the server what became of that key and only ever retries with the **same** key. A key the server has never seen is listed as such and the user chooses to retry or discard; nothing is re-sent behind their back. Records are private to the signed-in user, hold no tokens or balances, and an ended session keeps them so the action can be sent after signing in again. Tests cover "server committed, answer lost, app restarted, exactly one record".
 - The server confirms a sale, receipt, transfer, or refund before the UI shows completion. A cart does not reserve stock in the initial model; checkout rechecks availability.
 - Cache only appropriate reads initially, keyed by business, location, and user access. Clear private cache/session state on logout or account changes. Preserve drafts across language switching.
 - Keep all system strings in Russian/Turkmen ARB resources. User-entered product names and identifiers remain unchanged when the interface language changes.
@@ -202,9 +221,43 @@ CSV imports first stage and validate data, preview duplicates/errors, then apply
 
 ## Authentication and Permissions
 
-Use server-managed accounts and memberships, with owner, manager, sales, and warehouse permissions as defined in the PRD. The API checks both the action and allowed locations for every request. Django administration, if enabled, is a separate restricted operator tool.
+Server-managed accounts and memberships, with owner, manager, sales, and warehouse roles. The API checks both the action and the allowed locations for every request. Django administration is a separate restricted operator tool (`is_staff` users only).
 
-The recommended mobile approach uses short-lived access tokens and revocable, rotating refresh sessions through a maintained library. Store refresh credentials in platform secure storage; keep server credentials out of the app. Define expiry, rotation/reuse detection, logout revocation, password reset, and audit behavior before release. Do not invent a custom token protocol.
+**Implemented session design (Phase 1).** Sign-in with username and password returns a 15-minute access token and a 14-day refresh token (`djangorestframework-simplejwt`). Refreshing rotates the token and blacklists the old one, and two simultaneous uses of one token cannot both succeed. A password change or reset bumps the user's `session_version`; every token carries the version it was issued with, so all earlier sessions stop working immediately instead of at expiry. A refresh token that is presented twice is refused (401); the whole account is deliberately **not** signed out in that case, because a lost response on a slow mobile network would otherwise log people out. Deactivating a user or a membership takes effect on the next request. Login and recovery are rate limited per client address and per claimed identity, using a database-backed cache so limits hold across workers; `X-Forwarded-For` is ignored unless `DJANGO_NUM_PROXIES` says how many proxies are really in front of the app.
+
+**Recovery (decision D16).** An 8-character one-time code is emailed (in the user's language), stored only as a keyed hash, valid for 30 minutes, usable once, limited to 5 wrong attempts, and the response is identical whether or not the account exists. A weak new password does not use up a correct code. Delivery is plain SMTP configured by environment variables; the provider is still to be chosen and tested from Turkmenistan.
+
+**Business scoping.** Every business-scoped route lives under `/api/v1/businesses/<id>/`. The business comes from the URL and is checked against the caller's membership; an ID in a request body never grants access. A non-member receives 404 (so another business's existence is not revealed), a member without the permission receives 403, and a view that declares no permission is denied. A structural test fails if a route is added without this scoping. Related records must belong to the same business (`same business` validation) and locations are further limited per membership.
+
+**Permission matrix (PROVISIONAL, PLAN.md D5; generated from `backend/apps/businesses/permissions.py`, which is the single source of truth).** Owners and managers see every location; sales and warehouse staff see only their assigned locations.
+
+| Permission | Owner | Manager | Sales | Warehouse |
+| --- | :---: | :---: | :---: | :---: |
+| `business.view` | ✓ | ✓ | ✓ | ✓ |
+| `business.manage` | ✓ |  |  |  |
+| `location.view` | ✓ | ✓ | ✓ | ✓ |
+| `location.manage` | ✓ |  |  |  |
+| `staff.view` | ✓ | ✓ |  |  |
+| `staff.manage` | ✓ |  |  |  |
+| `exchange_rate.view` | ✓ | ✓ | ✓ | ✓ |
+| `exchange_rate.manage` | ✓ | ✓ |  |  |
+| `catalog.view` | ✓ | ✓ | ✓ | ✓ |
+| `catalog.manage` | ✓ | ✓ |  |  |
+| `catalog.cost.view` | ✓ | ✓ |  |  |
+| `stock.view` | ✓ | ✓ | ✓ | ✓ |
+| `stock.history.view` | ✓ | ✓ |  | ✓ |
+| `stock.cost.view` | ✓ | ✓ |  |  |
+| `stock.opening.post` | ✓ | ✓ |  |  |
+| `stock.adjust` | ✓ | ✓ |  |  |
+| `supplier.view` | ✓ | ✓ |  | ✓ |
+| `supplier.manage` | ✓ | ✓ |  |  |
+| `purchasing.view` | ✓ | ✓ |  | ✓ |
+| `purchasing.manage` | ✓ | ✓ |  |  |
+| `purchasing.receive` | ✓ | ✓ |  | ✓ |
+| `purchasing.cost.view` | ✓ | ✓ |  |  |
+| `operations.view` | ✓ | ✓ | ✓ | ✓ |
+
+**Idempotent commands and the audit trail.** A stock-changing command carries an `Idempotency-Key` (a UUID chosen by the app). The server claims the key inside the same database transaction as the work: the same key and request replays the stored outcome, the same key with a different request is refused (422), simultaneous duplicates serialise on a PostgreSQL advisory lock, and a failed attempt rolls back and frees the key. `GET /api/v1/businesses/<id>/operations/<action>/<key>/` tells the app what became of a key after a timeout, crash or restart. Audit events are append-only: the ORM refuses updates and deletes and a PostgreSQL trigger refuses them for raw SQL too.
 
 Rate-limit sign-in and sensitive endpoints. Audit important changes with actor, business, location, action, record reference, time, and request ID; omit credentials and sensitive payloads. Permission changes must take effect on the server even if the client still displays cached navigation.
 
@@ -228,7 +281,7 @@ Provider availability and API connectivity must be tested from the pilot's netwo
 
 ### Development Today
 
-The Codex cloud environment runs the Flutter development workflow and an internal web smoke server. It is not the production hosting environment. Setup/run commands are in [README.md](../README.md); the reusable cloud installation/startup configuration is saved separately. Retained SDKs and caches can be reused, but live services must restart after an environment is restored.
+The Codex and Claude Code cloud environments run the Flutter development workflow, the backend tests and an internal web smoke server. They are not the production hosting environment. Setup/run commands are in [README.md](../README.md) and `AGENTS.md`. Pull requests and pushes run CI (`.github/workflows/ci.yml`): the Flutter checks and a debug APK build (the only place Android compiles when the cloud VM cannot download the Android SDK), the backend checks against a PostgreSQL service, and a container image build. `backend/Dockerfile`, `infra/docker-compose.yml` and `infra/README.md` describe how to run the API; they do not deploy anything by themselves.
 
 ### Proposed Production Deployment
 

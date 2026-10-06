@@ -75,6 +75,12 @@ Use internal browser requests for validation. The onboarding UI does not provide
 
 The helpers above assume the Codex cloud (`/workspace` paths). In a Claude Code cloud session, run `bash scripts/setup_claude_cloud.sh` once, then `source scripts/claude_cloud_env.sh` before Flutter commands. The setup installs the pinned Flutter SDK under `~/.tools` and supports the format, analysis, test, and web build commands above. It omits Android because `dl.google.com` is blocked by that environment's default network policy; see `HANDOFF.md`.
 
+### Backend and CI
+
+The Django API lives in `backend/` (Python 3.13, Django 5.2 LTS, Django REST Framework, PostgreSQL). Commands, environment variables and the local PostgreSQL helper are in [AGENTS.md](AGENTS.md); deployment files are in `infra/`. GitHub Actions (`.github/workflows/ci.yml`) runs the Flutter checks plus a debug Android APK build, the backend checks against PostgreSQL, and a container image build on every push and pull request.
+
+The app starts at sign-in and talks to the API at `API_BASE_URL` (`--dart-define=API_BASE_URL=https://...`; debug builds default to `http://127.0.0.1:8000`). For the in-memory demonstration instead, build with `--dart-define=DEMO_MODE=true`. Never present the demonstration as real functionality.
+
 ### Current validation status
 
 Verified in the cloud environment:

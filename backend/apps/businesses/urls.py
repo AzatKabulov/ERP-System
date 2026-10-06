@@ -21,6 +21,11 @@ urlpatterns = [
         name="staff-list",
     ),
     path(
+        "businesses/<uuid:business_id>/staff/<uuid:staff_id>/send-code/",
+        views.StaffSendCodeView.as_view(),
+        name="staff-send-code",
+    ),
+    path(
         "businesses/<uuid:business_id>/staff/<uuid:staff_id>/",
         views.StaffDetailView.as_view(),
         name="staff-detail",
