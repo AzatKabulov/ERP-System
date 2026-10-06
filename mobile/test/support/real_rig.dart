@@ -90,4 +90,11 @@ Future<void> tapKey(WidgetTester tester, String name) async {
     await tester.pump(const Duration(milliseconds: 100));
   }
   await tester.tap(finder);
+  await tester.pump(); // let the tap's own rebuild happen before the next look
+}
+
+/// Taps the back button of the screen on top and waits for the route to leave.
+Future<void> goBack(WidgetTester tester) async {
+  await tester.tap(find.byType(BackButton).last);
+  await settle(tester, ms: 800);
 }

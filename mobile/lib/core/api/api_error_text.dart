@@ -30,6 +30,24 @@ String apiErrorText(AppLocalizations l, ApiException e) {
       return l.errorBarcodeNotFound;
     case 'unit_in_use':
       return l.errorUnitInUse;
+    case 'insufficient_stock':
+      return l.errorInsufficientStock;
+    case 'opening_stock_exists':
+      return l.errorOpeningExists;
+    case 'product_archived':
+      return l.errorProductArchived;
+    case 'location_inactive':
+      return l.errorLocationInactive;
+    case 'over_receipt':
+      return l.errorOverReceipt;
+    case 'order_not_draft':
+      return l.errorOrderNotDraft;
+    case 'order_not_receivable':
+      return l.errorOrderNotReceivable;
+    case 'order_not_cancellable':
+      return l.errorOrderNotCancellable;
+    case 'order_has_no_lines':
+      return l.errorOrderNoLines;
     case 'validation_error':
       return l.errorValidation;
     case 'network':
@@ -70,6 +88,7 @@ String fieldErrorText(AppLocalizations l, FieldError e) => switch (e.code) {
   'max_whole_digits' => l.fieldTooManyDecimals,
   'min_value' || 'max_value' => l.fieldOutOfRange,
   'quantity_precision' => l.fieldQuantityPrecision,
+  'duplicate_product' || 'duplicate_line' => l.fieldDuplicateProduct,
   _ => l.fieldInvalid,
 };
 
