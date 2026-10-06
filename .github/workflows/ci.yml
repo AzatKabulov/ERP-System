@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile:
+    name: Mobile (format, analyze, test, web, Android debug APK)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      # .flutter-version is the single source of truth for the SDK version.
+      - name: Read pinned Flutter version
+        id: flutter_version
+        run: echo "version=$(tr -d '\r\n' < .flutter-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ steps.flutter_version.outputs.version }}
+          cache: true
+
+      - name: Verify the SDK is the pinned commit
+        run: |
+          flutter --version --machine | tee /tmp/flutter-version.json
+          python3 - <<'PY'
+          import json
+          rev = json.load(open('/tmp/flutter-version.json'))['frameworkRevision']
+          expected = '5fc346839b5d0eef006ed8404392afb4dfae428d'
+          assert rev == expected, f'Flutter revision {rev} != pinned {expected}'
+          PY
+
+      - name: Dependencies (frozen lockfile)
+        working-directory: mobile
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        working-directory: mobile
+        run: flutter gen-l10n
+
+      - name: Format check
+        working-directory: mobile
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        working-directory: mobile
+        run: flutter analyze
+
+      - name: Test
+        working-directory: mobile
+        run: flutter test
+
+      - name: Build web
+        working-directory: mobile
+        run: flutter build web --no-web-resources-cdn
+
+      - name: Build Android debug APK
+        working-directory: mobile
+        run: flutter build apk --debug
