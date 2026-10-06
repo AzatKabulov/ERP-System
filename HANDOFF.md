@@ -20,7 +20,7 @@ The product is a **runnable Flutter interface prototype**. It is not a working E
 | Purchase orders (3 fixed samples), warranty cards (3 fixed samples) | Hard-coded samples |
 | Russian and Turkmen interfaces (202 matching keys each), persistent language choice, custom Turkmen Flutter delegates, bundled Inter and Noto Serif fonts | Implemented; Turkmen wording still needs fluent-speaker review |
 | Manual barcode entry dialog | Demo only |
-| Backend (Django REST Framework + PostgreSQL), database | **Not started** (proposed in `docs/ARCHITECTURE.md`) |
+| Backend (Django REST Framework + PostgreSQL), database | **Not started**; stack confirmed 2026-10-06 (`PLAN.md` Phase 1) |
 | Sign-in, roles and permissions, business isolation | **Not started** |
 | Camera or external barcode scanning, receipt/label printing | **Not started**; hardware not selected |
 | CSV import/export, backups, document/PDF generation, real transfer states, count reconciliation | **Not started** |
@@ -35,6 +35,10 @@ No application code, dependency, lockfile or Codex script was changed.
 - Added `HANDOFF.md` (this file).
 - Added `scripts/claude_cloud_env.sh` and `scripts/setup_claude_cloud.sh`: Claude Code cloud counterparts of the Codex scripts. They use `~/.tools/flutter` instead of `/workspace`, rely on the VM's own Java 21 and Chromium, and omit the Android SDK (see section 5). The Codex scripts remain untouched and still apply to the Codex cloud.
 - `README.md`: added a short "Claude Code cloud" subsection.
+- Follow-up the same day, documentation only:
+  - Added [PLAN.md](PLAN.md), the phased roadmap from prototype to pilot and Apple release, with the owner decisions each phase needs.
+  - Recorded the owner's confirmation of Django REST Framework + PostgreSQL in `AGENTS.md` and `docs/ARCHITECTURE.md`.
+  - Linked the plan from `AGENTS.md`, `CLAUDE.md` and `README.md`.
 
 ## 4. Checks actually run (this session, this VM)
 
@@ -70,8 +74,8 @@ The browser checks covered: Russian is the default language; the demonstration b
 ## 6. Remaining blockers
 
 1. **Android builds** need `dl.google.com` allowed (cloud environment settings, Network access: Custom, add the domain under Allowed domains and keep the default package-manager list). After that, extend `scripts/setup_claude_cloud.sh` with the Android steps from `scripts/setup_cloud.sh` (pinned command-line tools, platform 36, build-tools 36.0.0, NDK 28.2.13676358, Gradle mirror). Whether the Gradle Maven mirror host in `scripts/configure_gradle.sh` is reachable here has not been tested.
-2. **Product decisions** listed under "Decisions to Confirm" in `docs/PRD.md` (currency, tax and invoice format, costing method, refund and adjustment approvals, hosting, backups, pilot tablet and scanner).
-3. **Backend stack authorization.** `AGENTS.md` forbids major architecture changes without approval. Confirm Django REST Framework and PostgreSQL before scaffolding them.
+2. **Owner decisions** D2–D15 in the `PLAN.md` decision table: currency, tax and invoice format, costing method, approvals, hosting, backups, pilot tablet and scanner, and others. Each lists the phase it blocks.
+3. **Backend stack:** resolved. Django REST Framework + PostgreSQL were confirmed on 2026-10-06 (D1).
 4. **Turkmen terminology** needs review by fluent speakers before any pilot.
 5. **Real-device testing** has never happened.
 
@@ -83,11 +87,8 @@ The browser checks covered: Russian is the default language; the demonstration b
 
 ## 8. Recommended next steps
 
-1. Allow `dl.google.com`, extend the setup script, and confirm a debug APK builds (optional but cheap).
-2. Authorize the backend stack, then build a **vertical slice**: a pinned Django/DRF/PostgreSQL scaffold under `backend/` with businesses, locations, memberships, sign-in, permissions and a read-only product catalog, with tests for cross-business denial. Pair it with a Flutter API client, secure session storage and sign-in screens in both languages, and show the real product list in place of the demo list. Keep demo data clearly separate from API data.
-3. Next milestone after that: purchasing and receiving, then sales with idempotent retries and a stock ledger (PRD stage 1). Run stock-concurrency tests against PostgreSQL.
-4. In parallel, settle the PRD's open decisions with the client and book a fluent-speaker review of the Turkmen strings.
+Follow [PLAN.md](PLAN.md). The next work is **Phase 0 (Preparation)**: merge this branch into `main`, allow `dl.google.com` and build a debug APK, add GitHub Actions CI, and record the first owner decisions (D3, D5, D9, D10, and candidate hosts for D2). Phase 1 (backend foundation) follows.
 
 ## 9. Switching back to Codex
 
-Tell Codex: "Continue from the branch `claude/laughing-faraday-3dkwcb`. Read `HANDOFF.md` and `AGENTS.md` first, then `docs/PRD.md`. Use the Codex scripts under `scripts/` as before. Report what you verify yourself."
+Tell Codex: "Continue from the branch `claude/laughing-faraday-3dkwcb`. Read `HANDOFF.md`, `AGENTS.md` and `PLAN.md` first, then `docs/PRD.md`. Use the Codex scripts under `scripts/` as before. Report what you verify yourself."

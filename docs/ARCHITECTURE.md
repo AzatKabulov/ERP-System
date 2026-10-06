@@ -1,6 +1,6 @@
 # Architecture
 
-Status: The Flutter interface prototype is implemented. Analysis, 12 unit/widget tests, web and debug Android builds, APK signature verification, and interactive browser checks passed during prototype development. Physical Android hardware and iOS remain untested. The production backend, database, authentication, and deployment described below are proposed and have not been implemented.
+Status: The Flutter interface prototype is implemented. Analysis, 12 unit/widget tests, web and debug Android builds, APK signature verification, and interactive browser checks passed during prototype development. Physical Android hardware and iOS remain untested. Django REST Framework and PostgreSQL were confirmed as the backend and database on 2026-10-06. They, the authentication, and the deployment described below have not been implemented yet; [PLAN.md](../PLAN.md) sets the delivery order.
 
 Product requirements live in [PRD.md](PRD.md), visual rules in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), and development rules in [AGENTS.md](../AGENTS.md). This document describes how the agreed inventory ERP should fit together.
 
@@ -49,8 +49,8 @@ Flutter widgets and shared theme
 | State and UI updates | `ChangeNotifier` and `AnimatedBuilder`, with shared theme/widgets | Implemented for the prototype |
 | Localization | Flutter-generated ARB strings for `ru` and `tk`, custom Turkmen toolkit delegates, bundled Inter and Noto Serif | Implemented for current screens; terminology review pending |
 | Local preferences | `SharedPreferences` for interface language | Implemented; never a stock database or token store |
-| Backend | Python, Django, Django REST Framework | Proposed |
-| Database | PostgreSQL | Proposed |
+| Backend | Python, Django, Django REST Framework | Confirmed (2026-10-06); not implemented |
+| Database | PostgreSQL | Confirmed (2026-10-06); not implemented |
 | Authentication | Django user accounts and business memberships; mobile access/refresh tokens through a maintained authentication library | Proposed; exact library and token policy to select during backend setup |
 | Mobile session storage | Platform secure storage backed by Android Keystore / Apple Keychain | Planned; package not installed |
 | Attachments and PDFs | Private file/object storage; server-generated documents with bundled fonts | Planned; provider and PDF library undecided |

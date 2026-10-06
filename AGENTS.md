@@ -6,16 +6,16 @@ This project is an inventory-focused ERP for shops and wholesalers, with car par
 
 - Confirmed client: Flutter and Dart, with Android tablets first, followed by iPad and iPhone.
 - Confirmed launch market and languages: Turkmenistan; complete Russian (`ru`) and Turkmen (`tk`, modern Latin script) interfaces are required from the first Android release.
-- Proposed backend: Python, Django, and Django REST Framework.
-- Proposed database: PostgreSQL.
+- Confirmed backend (2026-10-06): Python, Django, and Django REST Framework; not yet implemented.
+- Confirmed database (2026-10-06): PostgreSQL; not yet implemented.
 - Initial operating model: internet access is required for stock-changing actions; business records are isolated by business and location permissions.
 
 The repository contains a Flutter interface prototype under `mobile/`, using in-memory demonstration operations and persistent language selection. Android and web hosts are present. Flutter 3.47.6 is pinned in `.flutter-version`; cloud activation and setup helpers are under `scripts/`. Analysis, 12 tests, web and debug APK builds, and interactive browser checks passed. Physical Android hardware and iOS remain untested. The backend is not implemented. Do not describe demonstration operations as production functionality.
 
 ## Before You Start
 
-1. Read this file and `docs/PRD.md`.
-2. Read `docs/DESIGN_SYSTEM.md` before UI changes and `docs/ARCHITECTURE.md` before technical changes. The architecture distinguishes the current demonstration implementation from the proposed backend.
+1. Read this file, `docs/PRD.md`, `HANDOFF.md` (current state), and `PLAN.md` (phased delivery order).
+2. Read `docs/DESIGN_SYSTEM.md` before UI changes and `docs/ARCHITECTURE.md` before technical changes. The architecture distinguishes the current demonstration implementation from the planned production backend.
 3. Inspect the working tree, relevant source files, existing widgets and services, dependency manifests, version pins, and any more specific `AGENTS.md` instructions before editing.
 4. Follow the user's latest decisions. If documentation is stale, update the affected document as part of the authorized task rather than continuing with the old decision.
 5. Resolve routine implementation details using existing conventions. Ask only when a missing decision materially affects scope, architecture, or business behavior and cannot be inferred. Continue independent work while clarification is pending.
@@ -45,7 +45,7 @@ The repository contains a Flutter interface prototype under `mobile/`, using in-
 
 ### Backend and Database
 
-- If the proposed backend is adopted, use Python conventions, focused Django applications, clear API serializers, and type annotations where useful.
+- In the backend, use Python conventions, focused Django applications, clear API serializers, and type annotations where useful.
 - Keep business rules out of UI code and avoid duplicating them across API endpoints.
 - Use decimal arithmetic for money and documented rounding rules. Do not calculate financial totals using binary floating-point values.
 - Use database transactions and appropriate concurrency controls for operations affecting stock or finalized financial records.
