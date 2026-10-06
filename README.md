@@ -4,7 +4,7 @@ Inventory ERP for shops in Turkmenistan, with Russian and Turkmen interfaces. An
 
 ## What is included
 
-- **Real build (default):** sign-in against the Django API, session restore, restart-safe pending operations, administration (business, locations, staff, language, USD→TMT rate) and the product catalog with camera barcode scanning. Pages for later phases show a "later release" notice, never sample data.
+- **Real build (default):** sign-in against the Django API, session restore, restart-safe pending operations, administration (business, locations, staff, language, USD→TMT rate), the product catalog with camera barcode scanning, stock (ledger with FIFO costs, opening stock, adjustments, history), suppliers, purchase orders and partial deliveries. Pages for later phases (sales, expenses, warranties, reports) show a "later release" notice, never sample data.
 - **Demonstration build** (`--dart-define=DEMO_MODE=true`): the earlier interface prototype with dashboard, products, inventory, purchasing, sales and returns, expenses, warranties, reports and administration screens on in-memory sample data, three demonstration locations and a searchable car-part catalog.
 - Persistent language selection, ARB translations, and custom Turkmen delegates for the controls used here.
 - Bundled Inter and Noto Serif fonts, their licenses, and Android and web platform scaffolds.

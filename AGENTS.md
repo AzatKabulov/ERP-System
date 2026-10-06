@@ -133,6 +133,8 @@ On the Claude Code cloud VM, run `bash scripts/claude_cloud_postgres.sh` once pe
 | Lint and format check | `uv run ruff check .` and `uv run ruff format --check .` |
 | Apply formatting | `uv run ruff format .` |
 | Run the local development server | `uv run python manage.py runserver 127.0.0.1:8000` |
+| Check that stock balances, movements, FIFO layers and purchase-order receipts agree (non-zero exit on any difference) | `uv run python manage.py reconcile_stock` |
+| Create sample data for development and staging tests only (refuses in production; password from `ERP_SAMPLE_PASSWORD`) | `uv run python manage.py create_sample_business` |
 | Create a business with its first owner (operator tool; password from `ERP_OWNER_PASSWORD` or a prompt) | `uv run python manage.py create_business --name ... --owner-username ... --owner-email ... --location ...` |
 
 Health check: `GET /api/v1/health/`. Concurrency tests use real threads against PostgreSQL and run as part of `manage.py test`. Add a dependency only through `pyproject.toml` and commit the updated `uv.lock`.
