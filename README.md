@@ -71,6 +71,10 @@ python -m http.server 8080 --bind 127.0.0.1
 
 Use internal browser requests for validation. The onboarding UI does not provide a localhost application preview.
 
+### Claude Code cloud
+
+The helpers above assume the Codex cloud (`/workspace` paths). In a Claude Code cloud session, run `bash scripts/setup_claude_cloud.sh` once, then `source scripts/claude_cloud_env.sh` before Flutter commands. The setup installs the pinned Flutter SDK under `~/.tools` and supports the format, analysis, test, and web build commands above. It omits Android because `dl.google.com` is blocked by that environment's default network policy; see `HANDOFF.md`.
+
 ### Current validation status
 
 Verified in the cloud environment:
