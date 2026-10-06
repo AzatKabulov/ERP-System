@@ -56,6 +56,7 @@ def endpoints(business, location, staff):
         ("post", f"{base}/staff/", "staff.manage"),
         ("get", f"{base}/staff/{staff}/", "staff.view"),
         ("patch", f"{base}/staff/{staff}/", "staff.manage"),
+        ("post", f"{base}/staff/{staff}/send-code/", "staff.manage"),
         (
             "get",
             f"{base}/operations/anything/00000000-0000-4000-8000-000000000000/",
@@ -344,6 +345,51 @@ class StaffTests(APITestCase):
         self.assertEqual(event.actor.username, "a-owner")
         self.assertNotIn(PASSWORD, str(event.metadata))
         self.assertTrue(event.request_id)
+
+
+class StaffSendCodeTests(APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.w = World()
+        self.owner = client_for(self.w.user("a", Role.OWNER))
+
+    def url(self, role):
+        return (
+            f"/api/v1/businesses/{self.w.a.pk}/staff/{self.w.staff_id(self.w.a, role)}/send-code/"
+        )
+
+    def test_owner_triggers_a_recovery_email_and_it_is_audited(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.owner.post(self.url(Role.SALES), format="json")
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["a-sales@example.test"])
+        self.assertTrue(AuditEvent.objects.filter(action="staff.code_sent").exists())
+
+    def test_the_code_really_lets_the_person_choose_a_password(self):
+        self.owner.post(self.url(Role.SALES), format="json")
+        import re
+
+        code = re.search(r"\b[A-HJ-NP-Z2-9]{8}\b", mail.outbox[-1].body).group(0)
+        response = APIClient().post(
+            "/api/v1/auth/password/reset/confirm/",
+            {"identifier": "a-sales", "code": code, "new_password": "chosen-by-the-user-77"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_inactive_accounts_get_no_email(self):
+        from apps.accounts.models import User
+
+        User.objects.filter(username="a-sales").update(is_active=False)
+        self.assertEqual(self.owner.post(self.url(Role.SALES), format="json").status_code, 202)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_other_businesses_staff_cannot_be_reached(self):
+        b_staff = self.w.staff_id(self.w.b, Role.SALES)
+        url = f"/api/v1/businesses/{self.w.a.pk}/staff/{b_staff}/send-code/"
+        self.assertEqual(self.owner.post(url, format="json").status_code, 404)
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class MeTests(APITestCase):

@@ -124,3 +124,30 @@ jobs:
         run: uv run python manage.py makemigrations --check --dry-run
       - name: Tests
         run: uv run python manage.py test --verbosity 1
+
+  docker:
+    name: Backend container image builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate compose file
+        run: |
+          cp infra/.env.example infra/.env
+          sed -i 's/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=ci-only/; s/^DJANGO_SECRET_KEY=$/DJANGO_SECRET_KEY=ci-only-secret/' infra/.env
+          docker compose -f infra/docker-compose.yml config --quiet
+      - name: Build image
+        run: docker build --tag erp-backend:ci backend
+      - name: Image starts and answers (database-less health must report unavailable, not crash)
+        run: |
+          docker run -d --name api -p 8000:8000 \
+            -e DJANGO_SECRET_KEY=ci-only-secret -e DJANGO_ALLOWED_HOSTS=127.0.0.1 \
+            -e POSTGRES_HOST=127.0.0.1 erp-backend:ci
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/v1/health/ || true)
+            [ "$code" = "503" ] && echo "health answered 503 as expected without a database" && exit 0
+            sleep 2
+          done
+          docker logs api
+          exit 1
+

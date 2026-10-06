@@ -43,3 +43,32 @@ class CreateBusinessCommandTests(APITestCase):
                     stdout=StringIO(),
                 )
         self.assertFalse(Business.objects.exists())
+
+
+class CreateSampleBusinessCommandTests(APITestCase):
+    def test_creates_one_user_per_role_with_the_given_password(self):
+        with mock.patch.dict(os.environ, {"ERP_SAMPLE_PASSWORD": PASSWORD}):
+            call_command("create_sample_business", stdout=StringIO())
+        business = Business.objects.get(name="Sample Auto Parts (test data)")
+        roles = {m.user.username: m.role for m in Membership.objects.filter(business=business)}
+        self.assertEqual(
+            roles,
+            {"owner": "owner", "manager": "manager", "sales": "sales", "warehouse": "warehouse"},
+        )
+        self.assertTrue(User.objects.get(username="sales").check_password(PASSWORD))
+        self.assertEqual(business.locations.count(), 2)
+        with self.assertRaises(CommandError):  # second run
+            call_command("create_sample_business", stdout=StringIO())
+
+    def test_random_password_is_printed_once_when_none_is_given(self):
+        out = StringIO()
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("ERP_SAMPLE_PASSWORD", None)
+            call_command("create_sample_business", stdout=out)
+        self.assertIn("shown once", out.getvalue())
+
+    def test_refuses_to_run_in_production(self):
+        with self.settings(DJANGO_ENV="production"):
+            with self.assertRaises(CommandError):
+                call_command("create_sample_business", stdout=StringIO())
+        self.assertFalse(Business.objects.exists())

@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts import services as account_services
 from apps.accounts.serializers import UserSerializer
 from apps.audit import services as audit
 
@@ -156,6 +157,23 @@ class StaffListCreateView(BusinessScopedMixin, generics.ListAPIView):
             request.business, request.user, data=serializer.validated_data
         )
         return Response(StaffSerializer(membership).data, status=201)
+
+
+class StaffSendCodeView(BusinessAPIView):
+    """Emails a staff member a one-time code to (re)set their password."""
+
+    required_permission = "staff.manage"
+
+    def post(self, request, business_id, staff_id):
+        membership = get_object_or_404(
+            Membership.objects.select_related("user"), pk=staff_id, business=request.business
+        )
+        if membership.user.is_active:
+            account_services.send_code(membership.user, "reset", request.business.name)
+        audit.record(
+            "staff.code_sent", actor=request.user, business=request.business, obj=membership
+        )
+        return Response({"status": "accepted"}, status=202)
 
 
 class StaffDetailView(BusinessAPIView):

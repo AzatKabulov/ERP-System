@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:erp_system/core/config/app_config.dart';
 import 'package:erp_system/main.dart';
 import 'package:erp_system/demo/demo_store.dart';
 
@@ -96,7 +97,9 @@ void main() {
       tester.platformDispatcher.textScaleFactorTestValue = 2;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       final prefs = await preferences();
-      await tester.pumpWidget(ErpApp(preferences: prefs));
+      await tester.pumpWidget(
+        ErpApp(preferences: prefs, config: AppConfig.demo),
+      );
       await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView).last, const Offset(0, -450));
       await tester.pumpAndSettle();
