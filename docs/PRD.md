@@ -49,7 +49,7 @@ Show sales totals, inventory value, low-stock alerts, reorder suggestions, and r
 
 Manage names, SKUs, barcodes, categories, brands, units, purchase costs, selling prices, and warranty terms. Support product lookup by text or barcode during sales, receiving, and stock counts.
 
-The first Android release must support at least one agreed scanning method on a real tablet. Camera scanning and external scanner support should be tested separately; support for arbitrary scanners is not assumed.
+The first Android release must support at least one agreed scanning method on a real tablet. The agreed first method is the tablet camera (decided 2026-10-06), always with manual entry as a fallback. Typed entry alone does not satisfy the scanning acceptance check. External scanner support is tested separately once a device is chosen; support for arbitrary scanners is not assumed.
 
 ### Inventory, Stores, and Warehouses
 
@@ -127,7 +127,7 @@ Restoration is a controlled administrator operation. CSV exports alone do not sa
 - Retrying a request must not create duplicate sales, receipts, refunds, or stock movements.
 - Concurrent sales must not sell the same unavailable stock. Negative available stock is disallowed in the initial version.
 - Finalized records retain their history. Corrections use linked reversals or adjustments rather than silently rewriting past movements.
-- Monetary calculations use decimal arithmetic with defined currency and rounding rules. The first version uses one configured currency per business; currency conversion is outside scope.
+- Monetary calculations use decimal arithmetic with defined currency and rounding rules. The first version uses one configured currency per business (TMT for the pilot, 2 decimals, rounded half up). One limited exception, decided 2026-10-06: a product's selling price may be stated in USD and is converted to the business currency at an exchange rate entered by an owner or manager; the rate used is saved on each sale. Purchase costs, totals, payments, stock values and reports remain in the business currency.
 - Important forms provide validation, loading, success, empty, and error states. A failed request must never appear as a successful transaction.
 - Use authenticated, encrypted network connections. Keep server credentials out of the mobile application and protect stored sessions.
 - Tablet layouts support portrait and landscape, accessible text sizing, readable contrast, and comfortable touch targets.
@@ -166,14 +166,15 @@ All listed features remain in the agreed product scope. Stages determine deliver
 - Automatic supplier ordering and advanced demand forecasting.
 - Online-store integrations and a separate desktop interface.
 - Advanced vehicle compatibility catalogs and automated equivalent-part suggestions.
-- Multi-currency conversion and universal compatibility with scanners or printers.
+- Full multi-currency accounting (beyond the limited USD selling-price exception described above), and universal compatibility with scanners or printers.
 
 ## Decisions to Confirm During Implementation
 
-- Business currency, Turkmenistan-specific invoice formats, and applicable tax requirements.
+- Turkmenistan-specific invoice formats and applicable tax requirements. (Business currency TMT with optional USD selling prices was decided 2026-10-06.)
 - Default language for first-time users, document-language defaults, and approved Russian/Turkmen business terminology.
 - Pilot tablet model, scanning method, and any required receipt or label printer.
-- Inventory valuation method and warranty policies.
+- Warranty claim policies. (FIFO inventory costing and the warranty term fields were decided 2026-10-06.)
+- Email service for password-recovery codes, tested from Turkmenistan.
 - Refund and stock-adjustment approval rules.
 - Hosting, backup frequency, retention, and acceptable recovery time and data loss.
 
