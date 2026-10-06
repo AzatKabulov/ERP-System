@@ -93,6 +93,8 @@ Reusable installation and startup instructions are saved in the cloud environmen
 ## Project documents
 
 - [Product requirements](docs/PRD.md)
+- [Delivery plan](PLAN.md)
+- [Current state and handoff notes](HANDOFF.md)
 - [Agent instructions](AGENTS.md)
 - [Design system](docs/DESIGN_SYSTEM.md)
 - [Architecture and prototype boundaries](docs/ARCHITECTURE.md)
