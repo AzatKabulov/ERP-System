@@ -9,6 +9,8 @@ import '../../widgets/app_shell.dart';
 import '../../widgets/common.dart';
 import '../admin/admin_repository.dart';
 import '../admin/administration_screen.dart';
+import '../catalog/catalog_repository.dart';
+import '../catalog/catalog_screen.dart';
 import '../operations/pending_operations_banner.dart';
 import 'placeholder_screens.dart';
 import 'unsaved_work.dart';
@@ -71,10 +73,17 @@ class _RealWorkspaceState extends State<RealWorkspace> {
     final page = _allowed(_page) ? _page : AppPage.dashboard;
     return switch (page) {
       AppPage.dashboard => WelcomeScreen(session: session),
+      AppPage.products => CatalogScreen(
+        key: ValueKey('catalog-${membership.id}'),
+        session: session,
+        repository: CatalogRepository(widget.api, membership.businessId),
+        unsaved: widget.unsaved,
+      ),
       AppPage.administration => RealAdministrationScreen(
         key: ValueKey('admin-${membership.id}-$_reloadCounter'),
         session: session,
         repository: AdminRepository(widget.api, membership.businessId),
+        catalog: CatalogRepository(widget.api, membership.businessId),
         languageCode: widget.languageCode,
         onLanguageChanged: widget.onLanguageChanged,
       ),

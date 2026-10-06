@@ -73,10 +73,10 @@ Goal: every change is checked automatically, Android builds work, and the first 
 
 Before you start: none. (Step 0.2 needs one environment setting from you.)
 
-- [ ] 0.1 Merge the onboarding branch (`claude/laughing-faraday-3dkwcb`) into `main` through a pull request.
-- [ ] 0.2 You: allow `dl.google.com` in the Claude Code cloud environment's network settings. Agent: extend `scripts/setup_claude_cloud.sh` with the Android steps from `scripts/setup_cloud.sh` and verify `flutter build apk --debug`.
-- [ ] 0.3 GitHub Actions CI for `mobile/`: format check, analyze, tests, web build and debug APK, on every pull request and on `main`. You: in GitHub settings, require CI to pass before merging into `main`.
-- [ ] 0.4 Decision kickoff: you answer D3, D5, D9 and D10 at least provisionally, and name candidate hosts for D2. The agent records the answers in the PRD/ARCHITECTURE and in the table above.
+- [ ] 0.1 Merge the onboarding branch (`claude/laughing-faraday-3dkwcb`) into `main` through a pull request. *Open (owner): this session works on the single assigned branch and opens no pull request unless asked.*
+- [ ] 0.2 You: allow `dl.google.com` in the Claude Code cloud environment's network settings. Agent: extend `scripts/setup_claude_cloud.sh` with the Android steps from `scripts/setup_cloud.sh` and verify `flutter build apk --debug`. *Open (owner): the cloud environment still blocks `dl.google.com`. Android is built and verified in GitHub Actions instead.*
+- [x] 0.3 GitHub Actions CI for `mobile/`: format check, analyze, tests, web build and debug APK, on every pull request and on `main`. You: in GitHub settings, require CI to pass before merging into `main`. **Done and green on every push; still owner:** require the CI checks in GitHub branch protection for `main`.
+- [ ] 0.4 Decision kickoff: you answer D3, D5, D9 and D10 at least provisionally, and name candidate hosts for D2. The agent records the answers in the PRD/ARCHITECTURE and in the table above. *Recorded so far: D3, D6, D8a, D9, D16 decided; D5 and D10 provisional. D2 (host candidates) still open.*
 
 Done when: CI is green on `main`; a debug APK is built by CI; the decisions table is updated.
 
@@ -86,11 +86,11 @@ Goal: a tested Django API that knows businesses, locations, staff, roles and ses
 
 Before you start: D1 (confirmed), D5 (draft).
 
-- [ ] 1.1 Scaffold `backend/`: pinned Python and dependencies in a lockfile, Django (current LTS), DRF, psycopg 3, settings from environment variables (a `.env.example` only, never real secrets), `/api/v1/health/`, a linter/formatter, a test runner and an OpenAPI schema. Set up PostgreSQL for the cloud session and for CI. Record the chosen tools and versions in ARCHITECTURE.md and replace "Planned Backend Commands" in AGENTS.md with the real commands.
-- [ ] 1.2 Shared building blocks: custom user model (create it before the first migration), UUID public IDs, UTC timestamps, structured error responses (code, parameters, field errors, request ID), request-ID middleware, an audit event record, and an idempotency record (operation key, scope, request fingerprint, stored result) for later stock commands.
-- [ ] 1.3 Businesses and access: business, location (store or warehouse), membership (user ↔ business with role) and permitted locations. Implement the D5 permission matrix in code. Reusable business-scoped queries and permission classes ensure a client-supplied business ID never grants access. Restrict Django admin to operators; it is used to create a pilot business.
-- [ ] 1.4 Sign-in: login, short-lived access tokens with rotating, revocable refresh tokens (a maintained library, no custom protocol), logout, a login rate limit, a `/me` endpoint returning memberships and permissions, and password change. Staff accounts are created by owners or managers; there is no public sign-up. **Password recovery (D16):** an emailed one-time code that expires in 30 minutes, works once, has limited attempts and is rate-limited, gives the same answer whether or not the account exists, and is written in the user's language. It is sent through any SMTP service chosen under D16.
-- [ ] 1.5 Backend CI job: lint, `check`, missing-migration check and tests against PostgreSQL.
+- [x] 1.1 Scaffold `backend/`: pinned Python and dependencies in a lockfile, Django (current LTS), DRF, psycopg 3, settings from environment variables (a `.env.example` only, never real secrets), `/api/v1/health/`, a linter/formatter, a test runner and an OpenAPI schema. Set up PostgreSQL for the cloud session and for CI. Record the chosen tools and versions in ARCHITECTURE.md and replace "Planned Backend Commands" in AGENTS.md with the real commands.
+- [x] 1.2 Shared building blocks: custom user model (create it before the first migration), UUID public IDs, UTC timestamps, structured error responses (code, parameters, field errors, request ID), request-ID middleware, an audit event record, and an idempotency record (operation key, scope, request fingerprint, stored result) for later stock commands.
+- [x] 1.3 Businesses and access: business, location (store or warehouse), membership (user ↔ business with role) and permitted locations. Implement the D5 permission matrix in code. Reusable business-scoped queries and permission classes ensure a client-supplied business ID never grants access. Restrict Django admin to operators; it is used to create a pilot business.
+- [x] 1.4 Sign-in: login, short-lived access tokens with rotating, revocable refresh tokens (a maintained library, no custom protocol), logout, a login rate limit, a `/me` endpoint returning memberships and permissions, and password change. Staff accounts are created by owners or managers; there is no public sign-up. **Password recovery (D16):** an emailed one-time code that expires in 30 minutes, works once, has limited attempts and is rate-limited, gives the same answer whether or not the account exists, and is written in the user's language. It is sent through any SMTP service chosen under D16.
+- [x] 1.5 Backend CI job: lint, `check`, missing-migration check and tests against PostgreSQL.
 
 Done when: CI is green; tests prove cross-business, wrong-role and wrong-location requests are denied, refresh tokens rotate and revoke, and login is rate-limited.
 
@@ -100,16 +100,16 @@ Goal: the real app signs in to a real test server, reachable from Turkmenistan, 
 
 Before you start: D2 (provisional host), D10.
 
-- [ ] 2.1 Staging server on the provisional host: container image, HTTPS, its own database and secrets, deployment from `main`, a health check, and a command to create a test business with sample staff. You: open the health address on the pilot tablet or phone **from the shop's own internet connection** and report the result. If it is slow or blocked, revisit D2 now.
-- [ ] 2.2 Flutter core (`mobile/lib/core/`, the structure in ARCHITECTURE "Proposed Additions"):
+- [ ] 2.1 Staging server on the provisional host: container image, HTTPS, its own database and secrets, deployment from `main`, a health check, and a command to create a test business with sample staff. You: open the health address on the pilot tablet or phone **from the shop's own internet connection** and report the result. If it is slow or blocked, revisit D2 now. *Deployment files are done and the image builds in CI (`backend/Dockerfile`, `infra/`); deploying and testing from the shop's connection remain owner steps.*
+- [x] 2.2 Flutter core (`mobile/lib/core/`, the structure in ARCHITECTURE "Proposed Additions"):
   - an API client with base URL set at build time, timeouts, token refresh and structured errors translated through ARB
   - secure session storage (Android Keystore)
   - a clear "no connection" state; stock-changing actions are disabled while offline, and any cached data is marked as possibly stale
   - a **pending-operation store and runner** implementing the restart-safe rule in "Every phase": saved before sending, cleared only on a definite server answer, resolved after a restart by asking the server for the outcome of the same key; "outcome unknown" operations are listed with *Retry (same key)* and *Discard*
-- [ ] 2.3 Sign-in screen, session restore, logout (clears private cached data), business and location selection with explicit handling of unsaved work, and navigation matching the user's permissions. Keep the existing `ChangeNotifier` approach and theme widgets (`mobile/lib/widgets/common.dart`).
-- [ ] 2.4 Demo separation: `DemoStore` and the demo banner exist only in a demo build flag (used for the web preview). Normal builds start at sign-in and can never show demo data as real.
-- [ ] 2.5 Administration screens: business profile, locations, staff accounts, roles and permitted locations, and interface/document language preferences.
-- [ ] 2.6 Tests: API client (mocked server), sign-in states (wrong password, expired session, server unreachable) and permission-based navigation, in both languages.
+- [x] 2.3 Sign-in screen, session restore, logout (clears private cached data), business and location selection with explicit handling of unsaved work, and navigation matching the user's permissions. Keep the existing `ChangeNotifier` approach and theme widgets (`mobile/lib/widgets/common.dart`).
+- [x] 2.4 Demo separation: `DemoStore` and the demo banner exist only in a demo build flag (used for the web preview). Normal builds start at sign-in and can never show demo data as real.
+- [x] 2.5 Administration screens: business profile, locations, staff accounts, roles and permitted locations, and interface/document language preferences.
+- [x] 2.6 Tests: API client (mocked server), sign-in states (wrong password, expired session, server unreachable) and permission-based navigation, in both languages.
 
 Done when: a staff member signs in to staging from the pilot tablet (or emulator) in Russian and Turkmen, sees only their business, and an owner can add a location and a staff member.
 
@@ -119,7 +119,7 @@ Goal: the real product catalog, searchable by name, SKU or barcode, with at leas
 
 Before you start: D3 (decided), D8a (decided), D9 (camera decided; the pilot tablet is needed for the device test in step 3.3).
 
-- [ ] 3.1 Catalog API:
+- [x] 3.1 Catalog API:
   - products, categories, brands and units (with quantity precision per unit)
   - several barcodes per product; barcodes and SKUs unique within a business
   - decimal selling price stated in TMT or USD (D3), with an owner/manager-entered USD→TMT exchange rate kept as history, and an optional default purchase cost in TMT (visible only to permitted roles)
@@ -127,8 +127,8 @@ Before you start: D3 (decided), D8a (decided), D9 (camera decided; the pilot tab
   - minimum/target stock per product and location
   - archive instead of delete, and an audit entry for every change
   - search that handles Cyrillic and Turkmen letters without transliteration, with pagination
-- [ ] 3.2 Catalog screens on the API: list, search, detail, create, edit and archive. Include validation, empty and error states, long names, and financial fields per permission. Reuse the existing products screen layout (`mobile/lib/screens/products.dart`).
-- [ ] 3.3 Barcode lookup with **one agreed method first: the tablet camera** (D9). A read-only lookup endpoint; a camera scan screen with torch, permission-denied and no-camera states; and manual entry as a fallback. A scan only fills a field: it never completes a sale or moves stock by itself. Typed entry does **not** satisfy the scanning acceptance check. USB/Bluetooth scanners are an optional later step once the owner chooses one and it is tested. Do not claim support for untested hardware.
+- [x] 3.2 Catalog screens on the API: list, search, detail, create, edit and archive. Include validation, empty and error states, long names, and financial fields per permission. Reuse the existing products screen layout (`mobile/lib/screens/products.dart`).
+- [ ] 3.3 Barcode lookup with **one agreed method first: the tablet camera** (D9). A read-only lookup endpoint; a camera scan screen with torch, permission-denied and no-camera states; and manual entry as a fallback. A scan only fills a field: it never completes a sale or moves stock by itself. Typed entry does **not** satisfy the scanning acceptance check. USB/Bluetooth scanners are an optional later step once the owner chooses one and it is tested. Do not claim support for untested hardware. *Implemented (camera screen, torch, permission-denied and no-camera states, manual fallback, fake-scanner tests); awaiting the real-tablet check, see the checklist in HANDOFF.*
 
 Done when: an owner manages the catalog in both languages, and a barcode scanned **with the pilot tablet's camera** finds the right product (a typed code alone does not count). HANDOFF records the device, Android version, barcode types, lighting and speed that were checked. Until that device check is done, step 3.3 stays unticked.
 

@@ -12,6 +12,7 @@ import 'core/operations/pending_operation_store.dart';
 import 'core/session/session_controller.dart';
 import 'core/session/token_stores.dart';
 import 'demo/demo_store.dart';
+import 'features/scanning/barcode_scanner.dart';
 import 'features/workspace/real_home.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/turkmen_localizations.dart';
@@ -44,6 +45,7 @@ class ErpApp extends StatefulWidget {
     this.httpClient,
     this.tokenStore,
     this.pendingStore,
+    this.scanner = const CameraBarcodeScanner(),
   });
 
   final SharedPreferences preferences;
@@ -56,6 +58,9 @@ class ErpApp extends StatefulWidget {
   final http.Client? httpClient;
   final TokenStore? tokenStore;
   final PendingOperationStore? pendingStore;
+
+  /// How barcodes are read (the camera in the app, a fake in tests).
+  final BarcodeScanner scanner;
 
   @override
   State<ErpApp> createState() => _ErpAppState();
@@ -126,6 +131,8 @@ class _ErpAppState extends State<ErpApp> {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
+      builder: (context, child) =>
+          ScannerScope(scanner: widget.scanner, child: child!),
       home: _demo
           ? Workspace(
               store: _store!,

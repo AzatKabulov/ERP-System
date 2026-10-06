@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Barcode scanning uses the camera. It is optional: manual entry always works. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
         android:label="ERP System"
         android:name="${applicationName}"

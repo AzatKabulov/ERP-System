@@ -10,10 +10,11 @@ from apps.audit import services as audit
 
 from . import services
 from .access import BusinessAPIView, BusinessScopedMixin, restrict_to_locations
-from .models import Location, Membership
+from .models import ExchangeRate, Location, Membership
 from .permissions import has_permission, permissions_for
 from .serializers import (
     BusinessSerializer,
+    ExchangeRateSerializer,
     LocationSerializer,
     StaffCreateSerializer,
     StaffSerializer,
@@ -82,6 +83,26 @@ class BusinessDetailView(BusinessAPIView):
             metadata=serializer.validated_data,
         )
         return Response(serializer.data)
+
+
+class ExchangeRateListCreateView(BusinessScopedMixin, generics.ListCreateAPIView):
+    """History of the USD -> TMT rate; entering a new rate supersedes the old one."""
+
+    serializer_class = ExchangeRateSerializer
+    permission_by_method = {"GET": "exchange_rate.view", "POST": "exchange_rate.manage"}
+
+    def get_queryset(self):
+        return ExchangeRate.objects.filter(business=self.request.business).select_related("set_by")
+
+    def perform_create(self, serializer):
+        rate = serializer.save(business=self.request.business, set_by=self.request.user)
+        audit.record(
+            "exchange_rate.created",
+            actor=self.request.user,
+            business=self.request.business,
+            obj=rate,
+            metadata={"currency": rate.currency, "rate": str(rate.rate)},
+        )
 
 
 class LocationListCreateView(BusinessScopedMixin, generics.ListCreateAPIView):

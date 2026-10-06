@@ -38,7 +38,8 @@ Flutter widgets and shared theme
     │     ├── core/api: ApiClient (bearer token, one refresh, structured errors)
     │     ├── core/session: secure refresh token, profile, business and location choice
     │     ├── core/operations: pending-operation store + runner (restart-safe retries)
-    │     └── features/: auth, admin, (later) catalog, inventory, purchasing, sales...
+    │     ├── core/money: exact decimal text <-> integer hundredths/thousandths (no double)
+    │     └── features/: auth, admin, catalog, scanning, (later) inventory, purchasing, sales...
     ├── SharedPreferences: interface language, last business/location ids,
     │     and unconfirmed-operation retry records (no tokens, no balances)
     └── Demo mode (--dart-define=DEMO_MODE=true, or an explicit DemoStore):
@@ -46,7 +47,8 @@ Flutter widgets and shared theme
 
 Django REST API (backend/)  ->  PostgreSQL
     apps/accounts (users, sessions, recovery) · apps/businesses (tenants, locations,
-    roles) · apps/audit (audit trail, idempotency) · apps/common (errors, request IDs)
+    roles, exchange rates) · apps/catalog (products, barcodes, units, reorder levels) ·
+    apps/audit (audit trail, idempotency) · apps/common (errors, request IDs)
 ```
 
 Which pages are connected to the API is tracked in `PLAN.md` and `HANDOFF.md`. A real build shows an honest "later release" page for anything not connected yet; it never shows demo data as real.
@@ -81,8 +83,8 @@ Backend and client dependencies are pinned (`backend/uv.lock`, `mobile/pubspec.l
 | Path | Responsibility |
 | --- | --- |
 | `mobile/lib/main.dart` | Startup, language preference, localization delegates, and the choice between demo and real mode |
-| `mobile/lib/core/` | `config/` (build-time settings), `api/` (client, errors, error-code translation), `session/` (secure token store, profile, business/location choice), `operations/` (restart-safe pending operations), `connectivity/` |
-| `mobile/lib/features/` | Real-mode screens by feature: `auth/` (sign-in, password recovery), `admin/` (business profile, locations, staff, language), `workspace/` (real workspace, placeholders, unsaved-work guard), `operations/` (pending-operation banner), `shared/` (loading/error widgets) |
+| `mobile/lib/core/` | `config/` (build-time settings), `api/` (client, errors, error-code translation), `session/` (secure token store, profile, business/location choice), `operations/` (restart-safe pending operations), `money/` (exact decimal parsing and formatting), `format/`, `connectivity/` |
+| `mobile/lib/features/` | Real-mode screens by feature: `auth/` (sign-in, password recovery), `admin/` (business profile, locations, staff, language, exchange rate), `catalog/` (list, detail, form, reference pickers), `scanning/` (camera scanner behind the `BarcodeScanner` interface, `BarcodeInput`), `workspace/` (real workspace, placeholders, unsaved-work guard), `operations/` (pending-operation banner), `shared/` (loading/error widgets) |
 | `mobile/lib/demo/` | Sample records and in-memory demonstration operations |
 | `mobile/lib/screens/` | The demonstration workspace and its dashboard, products/inventory, sales, and management screens |
 | `mobile/lib/widgets/` | Shared visual components, dialogs, display helpers, and `AppShell` (navigation and header used by both workspaces) |
@@ -90,7 +92,7 @@ Backend and client dependencies are pinned (`backend/uv.lock`, `mobile/pubspec.l
 | `mobile/lib/l10n/` | Russian/Turkmen ARB files, generated strings, and Turkmen adapters |
 | `mobile/assets/fonts/` | Bundled fonts and licenses |
 | `mobile/test/` | Demo behavior, core (API client, session, operation runner), real-mode widget, and translation-parity tests |
-| `backend/` | Django REST API: `config/`, `apps/{common,accounts,businesses,audit}/`, Dockerfile |
+| `backend/` | Django REST API: `config/`, `apps/{common,accounts,businesses,catalog,audit}/`, Dockerfile |
 | `infra/` | Container stack and the staging runbook (no deployment is performed by the repository) |
 | `.github/workflows/` | CI for the app, the backend and the container image |
 | `mobile/android/` | Android host and checksum-pinned Gradle wrapper |
@@ -102,12 +104,11 @@ The browser host supports development review. It does not introduce a separate d
 
 ### Proposed Additions
 
-These paths are a plan, not existing directories (`core/`, `features/{auth,admin,workspace,operations,shared}` and `backend/apps/{common,accounts,businesses,audit}` already exist). Add the rest as their workflows are implemented rather than creating empty abstractions in advance.
+These paths are a plan, not existing directories (`core/`, `features/{auth,admin,catalog,scanning,workspace,operations,shared}` and `backend/apps/{common,accounts,businesses,catalog,audit}` already exist). Add the rest as their workflows are implemented rather than creating empty abstractions in advance.
 
 ```text
 mobile/lib/
     features/               # Feature models, repositories, controllers, screens
-        catalog/
         inventory/
         purchasing/
         sales/
@@ -116,8 +117,6 @@ mobile/lib/
 backend/
     config/                 # Django settings, URLs, environment configuration
     apps/
-        businesses/         # Businesses, locations, memberships, permissions
-        catalog/            # Products, barcodes, categories, brands, units
         inventory/          # Ledger, balances, transfers, counts, adjustments
         purchasing/         # Suppliers, purchase orders, deliveries, returns
         sales/              # Customers, sales, recorded payments, refunds
@@ -207,6 +206,16 @@ A shared database with business-scoped records is the proposed first deployment.
 - Returns lock and validate the original sale items so concurrent requests cannot exceed remaining returnable quantities. Refund amounts follow the original discounts/taxes and approved policy. Only goods accepted as sellable replenish availability.
 - Warranty terms are copied onto finalized sale items. Later catalog edits must not change an existing entitlement; a replacement or other stock effect posts through the inventory service.
 
+### Catalog (implemented)
+
+- Products belong to one business: SKU unique per business (case-insensitive), any number of barcodes, each unique per business, unit of measure, optional category and brand, `warranty_months` (0 = none) and free-text `warranty_terms` (D8a). Archive (`is_active=false`) replaces delete, so history keeps pointing at the product.
+- A unit's decimal places (0-3) cannot be changed once a product uses it (`unit_in_use`, 409); quantities are validated against the unit's precision wherever they are accepted. Default Russian/Turkmen units are created with each business; the Turkmen names are provisional.
+- Search runs on a maintained case-folded `search_key` (name, SKU, brand, category, barcodes) so Cyrillic and Turkmen letters match regardless of the database locale; it is paginated (`limit`/`offset`). `GET .../barcodes/lookup/?code=` is read-only and answers `barcode_not_found` (404) for an unknown code.
+- The selling price carries its own currency (TMT or USD). The API returns the stated price, `price_tmt` at the current rate (null when a USD price has no rate) and `price_rate_missing`. The default purchase cost (TMT) is removed by the server for roles without `catalog.cost.view`; the client also never sends it for them.
+- `ExchangeRate` (in `apps/businesses`) is an append-only history guarded by a database trigger: a rate is never edited, a new entry supersedes the old. Entering one needs `exchange_rate.manage` (owner, manager). Rates have up to 6 decimals; conversion rounds half up to 2 decimals using integer arithmetic. Phase 5 copies the rate used onto each sale line.
+- Every create, change and archive writes an audit event. Reorder levels (minimum/target per product and location) are stored now and used by the Phase 7 suggestions.
+- In the app, money and quantities are parsed from and sent as exact decimal text (`core/money/decimal_math.dart`); `double` is never used for amounts.
+
 ### Money, Reports, and Files
 
 Store money using PostgreSQL decimal/numeric fields and Python `Decimal`, with explicit currency and rounding rules. Send API monetary values as decimal strings; clients must not convert them through binary floating-point arithmetic. Choose quantity precision according to product units rather than assuming every future item is an integer piece.
@@ -268,12 +277,12 @@ Rate-limit sign-in and sensitive endpoints. Audit important changes with actor, 
 | Authentication | Django accounts; no Clerk/Firebase dependency assumed | Select maintained token library and recovery workflow |
 | Payment gateway | None; record payments and refunds | A gateway is a separate future scope decision |
 | Email | Password-recovery codes through any SMTP service configured by environment settings (decided 2026-10-06) | Choose the provider (D16) and test delivery from Turkmenistan; tests use an in-memory email backend. SMS is not planned |
-| Barcode scanning | Tablet camera is the agreed first method (decided 2026-10-06), with manual entry as a fallback | Verify camera scanning on the pilot tablet; USB/Bluetooth scanners are an optional later step |
+| Barcode scanning | Tablet camera (`mobile_scanner`) is the agreed first method (decided 2026-10-06), with manual entry as a fallback. Implemented behind a `BarcodeScanner` interface; the app asks for the Android `CAMERA` permission only when a scan starts | **Verify camera scanning on the pilot tablet** (HANDOFF has the checklist); USB/Bluetooth scanners are an optional later step. The browser build has no camera scanner (manual entry only) |
 | Receipt/label printing | Optional device integration; generated documents planned | Select printer/protocol and test Russian/Turkmen glyphs |
 | File and backup storage | Private storage with separate protected backups | Select provider, retention, and restore procedures |
 | Error monitoring | Server metrics/logs first; optional hosted error tracker | Select provider and redact business data |
 
-A barcode lookup maps to an authorized product search; it does not bypass sale or inventory validation. Keep a manual-entry fallback. Do not promise compatibility with arbitrary scanners or printers.
+A barcode lookup maps to an authorized product search; it does not bypass sale or inventory validation. In the app a scan only returns a code: the screen that asked decides what to do with it (fill the search box, add the code to a product draft). A scan never saves a product, completes a sale or moves stock, and an unknown code only offers to add a new product, pre-filled but unsaved. Keep a manual-entry fallback. Do not promise compatibility with arbitrary scanners or printers.
 
 Provider availability and API connectivity must be tested from the pilot's network in Turkmenistan. No payment, email, analytics, storage, or monitoring vendor has been chosen. Server-side integration secrets belong in deployment configuration, never in Flutter assets.
 

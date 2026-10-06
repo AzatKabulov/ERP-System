@@ -2,10 +2,12 @@ import zoneinfo
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.functions import Lower
+from django.utils import timezone
 
-from apps.common.models import TimestampedModel, UUIDModel
+from apps.common.models import AppendOnlyModel, TimestampedModel, UUIDModel
 
 LANGUAGES = [("ru", "Русский"), ("tk", "Türkmençe")]
 
@@ -95,3 +97,26 @@ class Membership(UUIDModel, TimestampedModel):
         if self.all_locations or self.role in (Role.OWNER, Role.MANAGER):
             return None
         return set(self.locations.filter(is_active=True).values_list("id", flat=True))
+
+
+class ExchangeRate(UUIDModel, AppendOnlyModel):
+    """The USD -> TMT rate entered by an owner or manager. Rates are never edited: a new
+    entry supersedes the old one, and the rate used for a sale is copied onto the sale,
+    so history can never change. The business currency itself stays TMT."""
+
+    class Currency(models.TextChoices):
+        USD = "USD", "USD"
+
+    business = models.ForeignKey(Business, on_delete=models.PROTECT, related_name="exchange_rates")
+    currency = models.CharField(max_length=3, choices=Currency.choices, default=Currency.USD)
+    # TMT per 1 unit of `currency`
+    rate = models.DecimalField(max_digits=18, decimal_places=6, validators=[MinValueValidator(0)])
+    set_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["business", "currency", "-created_at"])]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(rate__gt=0), name="businesses_rate_positive")
+        ]

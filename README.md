@@ -1,16 +1,15 @@
 # ERP System
 
-Flutter interface prototype for an inventory ERP sold in Turkmenistan, with Russian and Turkmen interfaces. Android tablets are the first target; iPad and iPhone follow later.
+Inventory ERP for shops in Turkmenistan, with Russian and Turkmen interfaces. Android tablets are the first target; iPad and iPhone follow later. A Flutter app (`mobile/`) talks to a Django REST API on PostgreSQL (`backend/`); the delivery plan is in [PLAN.md](PLAN.md).
 
 ## What is included
 
-- Dashboard, products, inventory, purchasing, sales and returns, expenses, warranties, reports, and administration screens.
-- Three demonstration locations and a searchable car-part catalog.
-- Interactive in-memory cart, checkout, linked returns, receiving, transfers, counts, and expenses.
+- **Real build (default):** sign-in against the Django API, session restore, restart-safe pending operations, administration (business, locations, staff, language, USD→TMT rate) and the product catalog with camera barcode scanning. Pages for later phases show a "later release" notice, never sample data.
+- **Demonstration build** (`--dart-define=DEMO_MODE=true`): the earlier interface prototype with dashboard, products, inventory, purchasing, sales and returns, expenses, warranties, reports and administration screens on in-memory sample data, three demonstration locations and a searchable car-part catalog.
 - Persistent language selection, ARB translations, and custom Turkmen delegates for the controls used here.
 - Bundled Inter and Noto Serif fonts, their licenses, and Android and web platform scaffolds.
 
-The visible demonstration banner is intentional. Operations change sample data in memory and reset when the application restarts. Transfers complete immediately in the demo; the production transfer workflow will separately track dispatch, transit, and receipt. Warranty cards are examples. Camera scanning, printing, authentication, role enforcement, imports/exports, backups, and real payments are not connected. TMT is an illustrative currency, not a confirmed production configuration. Turkmen terminology needs fluent-speaker review.
+The visible demonstration banner is intentional. In the demonstration build operations change sample data in memory and reset when the application restarts; warranty cards are examples, and transfers complete immediately (the production transfer workflow will track dispatch, transit and receipt). Printing, role-aware sales, imports/exports, backups and real payments are not connected yet. TMT is the business currency (decided); selling prices may be stated in TMT or USD. Turkmen terminology needs fluent-speaker review.
 
 ## Interface preview
 
@@ -83,18 +82,9 @@ The app starts at sign-in and talks to the API at `API_BASE_URL` (`--dart-define
 
 ### Current validation status
 
-Verified in the cloud environment:
+The exact results of the last checks, and what has **not** been verified, are in [HANDOFF.md](HANDOFF.md) section 4. In short: the app's format, analysis and tests, the backend's lint, checks and PostgreSQL tests, the web build, and (in GitHub Actions) the debug Android APK and the container image build all pass. Camera scanning on a real tablet, a deployed staging server, real email delivery, TalkBack and iOS have not been verified.
 
-- Repeatable setup, frozen dependency resolution, and localization generation.
-- Clean Dart formatting and Flutter analysis; all **12 unit/widget tests passed**.
-- Web build and debug Android APK build; APK signature verification passed.
-- Chromium interaction checks: dashboard, product search, cart preservation during language switching, checkout stock reduction, linked return/restocking, and language persistence after reload. No browser errors were observed.
-- Phone and tablet rendering; widget layout checks at widths 360, 800, and 1400 with doubled text size.
-- Russian/Turkmen font glyph coverage, matching translation keys, and official Gradle wrapper checksums.
-
-Build artifacts are `mobile/build/web/` and `mobile/build/app/outputs/flutter-apk/app-debug.apk`. These are ignored outputs and can be recreated with the commands above. The Android APK uses development signing; it is not a store release. No physical-device, iOS, camera scanner, printer, or production backend checks have been performed.
-
-Reusable installation and startup instructions are saved in the cloud environment configuration draft. Saving the draft does not publish it or prove readiness in a future restored session; services must restart and readiness checks must run there.
+Build artifacts are `mobile/build/web/` and `mobile/build/app/outputs/flutter-apk/app-debug.apk`. These are ignored outputs and can be recreated with the commands above. The Android APK uses development signing; it is not a store release.
 
 ## Project documents
 

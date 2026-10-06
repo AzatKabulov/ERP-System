@@ -3,6 +3,7 @@ from django.db import IntegrityError, transaction
 from apps.accounts import services as account_services
 from apps.accounts.models import User
 from apps.audit import services as audit
+from apps.catalog import services as catalog_services
 from apps.common.errors import ApiError
 
 from .models import Business, Location, Membership, Role
@@ -26,6 +27,7 @@ def create_business(*, name: str, owner: User, location_name: str = "") -> Busin
     Membership.objects.create(user=owner, business=business, role=Role.OWNER, all_locations=True)
     if location_name:
         Location.objects.create(business=business, name=location_name)
+    catalog_services.create_default_units(business)
     audit.record("business.created", actor=owner, business=business, obj=business)
     return business
 
