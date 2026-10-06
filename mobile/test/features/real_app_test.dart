@@ -78,7 +78,7 @@ void main() {
       await rig.launch(tester);
       await tester.enterText(key('sign-in-username'), 'aman');
       await tester.enterText(key('sign-in-password'), 'right-password');
-      await tapKey(tester, 'sign-in-submit');
+      await tester.tap(key('sign-in-submit'));
       await tester.tap(key('sign-in-submit'), warnIfMissed: false);
       await settle(tester);
       expect(

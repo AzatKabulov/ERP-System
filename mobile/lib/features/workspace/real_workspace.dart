@@ -11,7 +11,11 @@ import '../admin/admin_repository.dart';
 import '../admin/administration_screen.dart';
 import '../catalog/catalog_repository.dart';
 import '../catalog/catalog_screen.dart';
+import '../inventory/inventory_repository.dart';
+import '../inventory/stock_screen.dart';
 import '../operations/pending_operations_banner.dart';
+import '../purchasing/purchasing_repository.dart';
+import '../purchasing/purchasing_screen.dart';
 import 'placeholder_screens.dart';
 import 'unsaved_work.dart';
 
@@ -77,6 +81,24 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         key: ValueKey('catalog-${membership.id}'),
         session: session,
         repository: CatalogRepository(widget.api, membership.businessId),
+        unsaved: widget.unsaved,
+      ),
+      AppPage.inventory => StockScreen(
+        key: ValueKey('stock-${membership.id}-$_reloadCounter'),
+        session: session,
+        repository: InventoryRepository(widget.api, membership.businessId),
+        catalog: CatalogRepository(widget.api, membership.businessId),
+        runner: widget.runner,
+        monitor: widget.monitor,
+        unsaved: widget.unsaved,
+      ),
+      AppPage.purchasing => PurchasingScreen(
+        key: ValueKey('purchasing-${membership.id}-$_reloadCounter'),
+        session: session,
+        repository: PurchasingRepository(widget.api, membership.businessId),
+        catalog: CatalogRepository(widget.api, membership.businessId),
+        runner: widget.runner,
+        monitor: widget.monitor,
         unsaved: widget.unsaved,
       ),
       AppPage.administration => RealAdministrationScreen(

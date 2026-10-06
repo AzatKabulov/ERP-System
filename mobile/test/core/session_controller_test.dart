@@ -60,7 +60,7 @@ void main() {
       expect(s.membership!.role, 'owner');
       expect(s.location!.name, 'Esasy dükan');
       expect(s.can('purchasing.receive'), isTrue);
-      expect(s.can('stock.adjust'), isFalse);
+      expect(s.can('reports.view'), isFalse);
     },
   );
 

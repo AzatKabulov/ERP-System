@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+import 'fake_ledger.dart';
+
 /// A tiny in-memory stand-in for the real API, with the same idempotency rules:
 /// the same key replays the stored outcome, a different body with the same key is
 /// refused, and an action is performed once per key.
@@ -13,6 +15,9 @@ class FakeServer {
   }
 
   late final MockClient client;
+
+  /// Stock ledger, suppliers and purchase orders (see fake_ledger.dart).
+  late final FakeLedger ledger = FakeLedger(this);
 
   // --- configuration -------------------------------------------------------
   String accessToken = 'access-1';
@@ -55,8 +60,16 @@ class FakeServer {
     'staff.manage',
     'catalog.view',
     'stock.view',
+    'stock.history.view',
+    'stock.cost.view',
+    'stock.opening.post',
+    'stock.adjust',
+    'supplier.view',
+    'supplier.manage',
     'purchasing.view',
+    'purchasing.manage',
     'purchasing.receive',
+    'purchasing.cost.view',
     'catalog.manage',
     'catalog.cost.view',
     'exchange_rate.view',
@@ -190,6 +203,70 @@ class FakeServer {
     },
   });
 
+  http.Response jsonResponse(int status, Object? body) => _json(status, body);
+
+  http.Response errorResponse(
+    int status,
+    String code, {
+    Map<String, dynamic>? fields,
+    Map<String, dynamic>? params,
+  }) => _json(status, {
+    'error': {
+      'code': code,
+      'message': 'diagnostic',
+      'request_id': 'req-1',
+      'fields': ?fields,
+      'params': ?params,
+    },
+  });
+
+  /// A stock-changing command with the server's idempotency rules: the same key
+  /// replays the stored outcome, another body under the same key is refused, and
+  /// the action runs once. [perform] returns the outcome, or an [http.Response]
+  /// to refuse (nothing is recorded then, as on the real server).
+  http.Response runCommand(
+    http.Request request,
+    Map<String, dynamic> body,
+    Object Function() perform,
+  ) {
+    final key = request.headers['Idempotency-Key'];
+    if (key == null) return _error(400, 'idempotency_key_required');
+    final fingerprint = jsonEncode(body);
+    final existing = records[key];
+    if (existing != null) {
+      if (existing.fingerprint != fingerprint) {
+        return _error(422, 'idempotency_key_reused');
+      }
+      return _json(
+        existing.status,
+        existing.body,
+        headers: {'idempotent-replay': 'true'},
+      );
+    }
+    if (rejectWith != null) {
+      final code = rejectWith!;
+      rejectWith = null;
+      return _error(409, code);
+    }
+    if (failBeforeCommit > 0) {
+      failBeforeCommit--;
+      return _error(500, 'server_error');
+    }
+    final outcome = perform();
+    if (outcome is http.Response) return outcome;
+    final result = outcome as ({int status, Map<String, dynamic> body});
+    records[key] = (
+      fingerprint: fingerprint,
+      status: result.status,
+      body: result.body,
+    );
+    if (dropResponseAfterCommit > 0) {
+      dropResponseAfterCommit--;
+      throw http.ClientException('connection lost after the server committed');
+    }
+    return _json(result.status, result.body);
+  }
+
   Future<http.Response> _handle(http.Request request) async {
     if (!reachable) throw http.ClientException('offline');
     final path = request.url.path;
@@ -271,6 +348,8 @@ class FakeServer {
       if (admin != null) return admin;
       final catalog = _catalog(request, base.group(1)!, body);
       if (catalog != null) return catalog;
+      final inventory = ledger.handle(request, base.group(1)!, body);
+      if (inventory != null) return inventory;
     }
 
     final status = RegExp(
@@ -287,39 +366,13 @@ class FakeServer {
     }
 
     if (RegExp(r'^/api/v1/businesses/[^/]+/demo/$').hasMatch(path)) {
-      final key = request.headers['Idempotency-Key'];
-      if (key == null) return _error(400, 'idempotency_key_required');
-      final fingerprint = jsonEncode(body);
-      final existing = records[key];
-      if (existing != null) {
-        if (existing.fingerprint != fingerprint) {
-          return _error(422, 'idempotency_key_reused');
-        }
-        return _json(
-          existing.status,
-          existing.body,
-          headers: {'idempotent-replay': 'true'},
+      return runCommand(request, body, () {
+        performed.add(body);
+        return (
+          status: 201,
+          body: {'ok': true, 'n': body['n'], 'note': body['note']},
         );
-      }
-      if (rejectWith != null) {
-        final code = rejectWith!;
-        rejectWith = null;
-        return _error(409, code);
-      }
-      if (failBeforeCommit > 0) {
-        failBeforeCommit--;
-        return _error(500, 'server_error');
-      }
-      performed.add(body);
-      final result = {'ok': true, 'n': body['n'], 'note': body['note']};
-      records[key] = (fingerprint: fingerprint, status: 201, body: result);
-      if (dropResponseAfterCommit > 0) {
-        dropResponseAfterCommit--;
-        throw http.ClientException(
-          'connection lost after the server committed',
-        );
-      }
-      return _json(201, result);
+      });
     }
     return _error(404, 'not_found');
   }

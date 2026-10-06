@@ -458,5 +458,163 @@
         "type": "String"
       }
     }
-  }
+  },
+  "stockEmpty": "Остатков пока нет",
+  "stockEmptyHint": "Введите начальные остатки или примите первую поставку.",
+  "movementHistory": "История движений",
+  "historyEmpty": "Движений пока нет",
+  "openingStock": "Начальные остатки",
+  "adjustStock": "Корректировка остатков",
+  "stockValueLabel": "Стоимость: {amount}",
+  "@stockValueLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "conditionLabel": "Состояние",
+  "conditionSellable": "Годный к продаже",
+  "conditionDamaged": "Повреждённый",
+  "conditionInspection": "Ожидает проверки",
+  "conditionInTransit": "В пути",
+  "unitCostLabel": "Себестоимость за единицу, TMT",
+  "addLineProduct": "Добавить товар",
+  "removeLine": "Убрать строку",
+  "directionIn": "Приход",
+  "directionOut": "Расход",
+  "reasonLabel": "Причина (обязательно)",
+  "noteLabel": "Примечание",
+  "postOpening": "Провести начальные остатки",
+  "postAdjustment": "Провести корректировку",
+  "entryNeedsLines": "Добавьте хотя бы один товар.",
+  "entryPosted": "Проведено.",
+  "locationFieldLabel": "Точка",
+  "movementOpening": "Начальный остаток",
+  "movementReceipt": "Поступление по заказу",
+  "movementAdjustmentIn": "Корректировка (приход)",
+  "movementAdjustmentOut": "Корректировка (расход)",
+  "movementOther": "Движение",
+  "pickProductTitle": "Выбор товара",
+  "outcomeUnknownNotice": "Ответ сервера не получен. Действие сохранено и будет проверено: смотрите уведомление вверху. Не повторяйте его вручную.",
+  "errorInsufficientStock": "Недостаточно товара на складе.",
+  "errorOpeningExists": "По этому товару в этой точке уже есть движения. Используйте корректировку.",
+  "errorProductArchived": "Товар в архиве.",
+  "errorLocationInactive": "Точка не активна.",
+  "errorOverReceipt": "Нельзя принять больше, чем осталось по заказу.",
+  "errorOrderNotDraft": "Редактировать и оформлять можно только черновик.",
+  "errorOrderNotReceivable": "Этот заказ сейчас не принимается: он не оформлен, уже принят или отменён.",
+  "errorOrderNotCancellable": "Этот заказ уже нельзя отменить.",
+  "errorOrderNoLines": "Добавьте в заказ хотя бы одну строку.",
+  "fieldDuplicateProduct": "Этот товар уже есть в списке.",
+  "suppliersTitle": "Поставщики",
+  "addSupplier": "Добавить поставщика",
+  "editSupplier": "Изменить поставщика",
+  "supplierName": "Название поставщика",
+  "contactName": "Контактное лицо",
+  "phoneLabel": "Телефон",
+  "addressLabel": "Адрес",
+  "notesLabel": "Заметки",
+  "noSuppliers": "Поставщиков пока нет",
+  "noSuppliersHint": "Добавьте поставщика, чтобы создавать заказы.",
+  "supplierSaved": "Поставщик сохранён.",
+  "newOrder": "Новый заказ поставщику",
+  "editOrder": "Изменить заказ",
+  "orderSaved": "Заказ сохранён.",
+  "statusAll": "Все",
+  "statusDraft": "Черновик",
+  "statusOrdered": "Оформлен",
+  "statusPartial": "Принят частично",
+  "statusReceived": "Принят полностью",
+  "statusCancelled": "Отменён",
+  "supplierFieldLabel": "Поставщик",
+  "deliverToLabel": "Принять в точку",
+  "expectedDateLabel": "Ожидаемая дата поставки",
+  "pickDate": "Выбрать дату",
+  "orderLinesTitle": "Строки заказа",
+  "orderTotal": "Итого: {amount}",
+  "@orderTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "orderProgress": "Заказано {ordered}, принято {received}",
+  "@orderProgress": {
+    "placeholders": {
+      "ordered": {
+        "type": "String"
+      },
+      "received": {
+        "type": "String"
+      }
+    }
+  },
+  "submitOrder": "Оформить заказ",
+  "submitOrderConfirm": "После оформления заказ нельзя редактировать. Оформить?",
+  "orderSubmitted": "Заказ оформлен.",
+  "cancelOrder": "Отменить заказ",
+  "cancelOrderConfirm": "Невыполненный остаток заказа будет отменён, уже принятые товары останутся на складе. Продолжить?",
+  "cancelReasonLabel": "Причина отмены (необязательно)",
+  "orderCancelled": "Заказ отменён.",
+  "receiveTitle": "Приём по заказу {number}",
+  "@receiveTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "receiveQuantityLabel": "Принять сейчас",
+  "outstandingLabel": "Осталось принять: {quantity}",
+  "@outstandingLabel": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "receiveAll": "Принять всё оставшееся",
+  "receiveNothing": "Укажите количество хотя бы по одной строке.",
+  "deliveryPosted": "Поставка принята, остатки обновлены.",
+  "deliveriesTitle": "Принятые поставки",
+  "deliveryEntry": "Поставка №{number} · {when} · {who}",
+  "@deliveryEntry": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "when": {
+        "type": "String"
+      },
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "noDeliveries": "Поставок ещё не было.",
+  "noOrders": "Заказов пока нет",
+  "noOrdersHint": "Создайте заказ поставщику, чтобы принимать товары партиями.",
+  "expectedOn": "Ожидается {date}",
+  "@expectedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelledBecause": "Причина отмены: {reason}",
+  "@cancelledBecause": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "viewHistoryFor": "История движений по товару",
+  "costVisibleNote": "Себестоимость видна только владельцу и менеджеру.",
+  "actionReceive": "Приём товара",
+  "actionOpening": "Начальные остатки",
+  "actionAdjust": "Корректировка остатков"
 }
