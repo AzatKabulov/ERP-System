@@ -20,6 +20,8 @@ MATRIX: dict[str, frozenset[str]] = {
     "catalog.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
     "catalog.manage": frozenset({Role.OWNER, Role.MANAGER}),
     "catalog.cost.view": frozenset({Role.OWNER, Role.MANAGER}),
+    "catalog.import": frozenset({Role.OWNER, Role.MANAGER}),
+    "catalog.export": frozenset({Role.OWNER, Role.MANAGER}),
     # inventory
     "stock.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
     "stock.history.view": frozenset({Role.OWNER, Role.MANAGER, Role.WAREHOUSE}),
