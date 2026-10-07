@@ -59,6 +59,12 @@ MATRIX: dict[str, frozenset[str]] = {
     "attachment.view": frozenset({Role.OWNER, Role.MANAGER}),
     "expense.view": frozenset({Role.OWNER, Role.MANAGER}),
     "expense.manage": frozenset({Role.OWNER, Role.MANAGER}),
+    # warranty claims (owner, 2026-10-07: a seller opens one; only owner or manager may accept
+    # an expired or absent warranty, and only they close a claim with an outcome)
+    "warranty.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES}),
+    "warranty.open": frozenset({Role.OWNER, Role.MANAGER, Role.SALES}),
+    "warranty.override": frozenset({Role.OWNER, Role.MANAGER}),
+    "warranty.resolve": frozenset({Role.OWNER, Role.MANAGER}),
     # every member may look up the outcome of their own operations
     "operations.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
 }
