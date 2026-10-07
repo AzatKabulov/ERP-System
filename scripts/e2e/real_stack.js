@@ -20,13 +20,22 @@ from apps.inventory import services
 from apps.purchasing import services as ps
 from apps.sales import services as ss
 from apps.sales.models import Sale
+from apps.stockops import services as xs
+from apps.stockops.models import StockCount, Transfer
 from apps.businesses.models import Business
-d = services.reconcile() + ps.reconcile() + ss.reconcile()
+d = services.reconcile() + ps.reconcile() + ss.reconcile() + xs.reconcile()
 sales = [{'id': str(x.pk), 'number': x.number, 'total': str(x.total), 'method': x.payment_method, 'prices': [str(l.unit_price) for l in x.lines.all()], 'cost': str(sum(l.cost_total for l in x.lines.all()))} for x in Sale.objects.order_by('created_at')]
-print('FACTS' + json.dumps({'business': str(Business.objects.first().pk), 'deliveries': Delivery.objects.count(), 'sales': sales, 'balances': [{'q': str(b.quantity), 'c': b.condition} for b in StockBalance.objects.all()], 'reconcile': 'consistent' if not d else d}))
+print('FACTS' + json.dumps({'business': str(Business.objects.first().pk), 'deliveries': Delivery.objects.count(), 'sales': sales, 'balances': [{'q': str(b.quantity), 'c': b.condition, 'at': b.location.name} for b in StockBalance.objects.select_related('location').all()], 'transfers': [{'n': t.number, 'status': t.status} for t in Transfer.objects.order_by('number')], 'counts': [{'n': c.number, 'status': c.status} for c in StockCount.objects.order_by('number')], 'reconcile': 'consistent' if not d else d}))
 `;
   const out = execSync('cd ' + BACKEND + ' && export PATH="$HOME/.local/bin:$PATH" && uv run python manage.py shell', { input: py, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
   return JSON.parse(out.split('FACTS')[1]);
+}
+
+
+// Quantity of the product at a place in a condition, from the database facts.
+function stockAt(facts, place, condition = 'sellable') {
+  const row = facts.balances.find((b) => b.at === place && b.c === condition);
+  return row ? row.q : '0.000';
 }
 
 const API = process.env.E2E_API_URL || 'http://127.0.0.1:8000';
@@ -142,7 +151,7 @@ let PAGE = null;
   await expectText(page, 'a partial delivery is accepted', /Принят частично/);
   await expectText(page, 'progress shows 4 of 10', /принято 4 шт/);
   facts = dbFacts();
-  check('stock rose by 4 at the warehouse', facts.balances.length === 1 && facts.balances[0].q === '4.000', JSON.stringify(facts.balances));
+  check('stock rose by 4 at the warehouse', stockAt(facts, 'Warehouse') === '4.000', JSON.stringify(facts.balances));
   check('one delivery recorded', facts.deliveries === 1);
 
   await page.route('**/deliveries/', async (route) => {
@@ -156,7 +165,7 @@ let PAGE = null;
   await expectText(page, 'the app says the outcome is unknown', /Ответ сервера не получен/);
   await expectText(page, 'the unconfirmed action is listed', /Ожидают подтверждения: 1/);
   facts = dbFacts();
-  check('the server did commit the second delivery', facts.deliveries === 2 && facts.balances[0].q === '10.000', JSON.stringify(facts));
+  check('the server did commit the second delivery', facts.deliveries === 2 && stockAt(facts, 'Warehouse') === '10.000', JSON.stringify(facts));
   await page.screenshot({ path: path.join(OUT, 'e2e-5-unknown.png') });
   await page.unroute('**/deliveries/');
 
@@ -171,7 +180,7 @@ let PAGE = null;
   check('the confirmed operation left the pending list by itself', !/Ожидают подтверждения/.test(afterRestart));
   facts = dbFacts();
   check('exactly two deliveries exist after the restart (no duplicate)', facts.deliveries === 2, JSON.stringify(facts));
-  check('stock is exactly 10', facts.balances[0].q === '10.000');
+  check('stock is exactly 10', stockAt(facts, 'Warehouse') === '10.000');
   check('reconcile finds no difference', facts.reconcile === 'consistent', facts.reconcile);
   await nav(page, 'Закупки');
   await expectText(page, 'order list shows it fully received', /Принят полностью/);
@@ -209,7 +218,7 @@ let PAGE = null;
   await page.screenshot({ path: path.join(OUT, 'e2e-11-sale-done.png') });
   facts = dbFacts();
   check('one sale at the seller price, paid in cash, with the FIFO cost', facts.sales.length === 1 && facts.sales[0].total === '300.00' && facts.sales[0].method === 'cash' && facts.sales[0].prices[0] === '100.00' && parseFloat(facts.sales[0].cost) === 150, JSON.stringify(facts.sales));
-  check('stock fell from 10 to 7', facts.balances[0].q === '7.000', JSON.stringify(facts.balances));
+  check('stock fell from 10 to 7', stockAt(facts, 'Warehouse') === '7.000', JSON.stringify(facts.balances));
   check('reconcile is consistent after the sale', facts.reconcile === 'consistent', facts.reconcile);
 
   // the receipt button asks the server for the PDF
@@ -235,7 +244,7 @@ let PAGE = null;
   await expectText(page, 'the app does not claim the sale: outcome unknown', /Ответ сервера не получен/);
   await expectText(page, 'the unconfirmed sale is listed', /Ожидают подтверждения: 1/);
   facts = dbFacts();
-  check('the server did record the second sale (card, catalog price 120)', facts.sales.length === 2 && facts.balances[0].q === '5.000' && facts.sales[1].method === 'card' && facts.sales[1].total === '240.00', JSON.stringify(facts.sales));
+  check('the server did record the second sale (card, catalog price 120)', facts.sales.length === 2 && stockAt(facts, 'Warehouse') === '5.000' && facts.sales[1].method === 'card' && facts.sales[1].total === '240.00', JSON.stringify(facts.sales));
   await page.unroute('**/sales/');
   await page.reload({ waitUntil: 'load' });
   await page.waitForSelector('flt-glass-pane', { state: 'attached', timeout: 60000 });
@@ -246,7 +255,7 @@ let PAGE = null;
   check('the confirmed sale left the pending list by itself', !/Ожидают подтверждения/.test(afterSaleRestart));
   facts = dbFacts();
   check('exactly two sales exist after the restart (no duplicate)', facts.sales.length === 2 && facts.sales[1].number !== facts.sales[0].number, JSON.stringify(facts.sales));
-  check('stock is exactly 5 (10 - 3 - 2)', facts.balances[0].q === '5.000', JSON.stringify(facts.balances));
+  check('stock is exactly 5 (10 - 3 - 2)', stockAt(facts, 'Warehouse') === '5.000', JSON.stringify(facts.balances));
   check('receipt numbers run without a gap', facts.sales.map((x) => x.number).join() === '1,2', facts.sales.map((x) => x.number).join());
   check('reconcile finds no difference after the restart', facts.reconcile === 'consistent', facts.reconcile);
   await nav(page, 'Продажи');
@@ -264,6 +273,70 @@ let PAGE = null;
   check('no cost, profit, change, discount or invoice wording on a receipt', !/Себестоимость|Прибыль|150,00|Сдача|Скидка|Накладная/.test(ru.text));
   const tk = await documentText(facts.business, facts.sales[1].id, 'lang=tk');
   check('the Turkmen receipt uses Turkmen labels and says card', /Çek/.test(tk.text) && /Jemi/.test(tk.text) && /Kart/.test(tk.text), tk.text.slice(0, 200));
+
+  // ---- Phase 6: a transfer (short on arrival, answer lost) and a stock count --------------------
+  await nav(page, 'Склад');
+  await clickLabel(page, 'Перемещения', { role: 'button', wait: 1800 });
+  await expectText(page, 'no transfers yet', /Перемещений пока нет/);
+  await clickLabel(page, 'Новое перемещение', { role: 'button', wait: 1500 });
+  await pickFromDropdown(page, '^Откуда', 'Warehouse');
+  await pickFromDropdown(page, '^Куда', 'Main store');
+  await clickLabel(page, 'Добавить товар', { role: 'button', wait: 1500 });
+  await clickLabel(page, 'Тормозные колодки', { exact: false, role: 'button', wait: 1000 }); // the list's group node holds both products
+  await fill(page, '^Количество', '2');
+  await page.screenshot({ path: path.join(OUT, 'e2e-13-transfer-form.png') });
+  await clickLabel(page, 'Отправить', { role: 'button', wait: 2500 });
+  await expectText(page, 'the transfer is listed as in transit', /T-0001/);
+  await expectText(page, 'with its status', /В пути/);
+  facts = dbFacts();
+  check('goods left the warehouse and wait in transit at the shop', stockAt(facts, 'Warehouse') === '3.000' && stockAt(facts, 'Main store', 'in_transit') === '2.000' && stockAt(facts, 'Main store') === '0.000', JSON.stringify(facts.balances));
+  check('one transfer exists and the ledger agrees', facts.transfers.length === 1 && facts.transfers[0].status === 'dispatched' && facts.reconcile === 'consistent', JSON.stringify(facts.transfers) + facts.reconcile);
+
+  // the shop receives only 1 of 2, and the answer is lost after the server committed
+  await clickLabel(page, 'T-0001', { exact: false, wait: 1800 });
+  await expectText(page, 'goods in transit say they cannot be sold yet', /пока не доступен для продажи/);
+  await clickLabel(page, 'Принять', { role: 'button', wait: 1500 });
+  await fill(page, '^Пришло', '1');
+  await fill(page, 'Причина недостачи', 'Коробка повреждена');
+  await page.route('**/receive/', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    await route.fetch(); // the server really receives it ...
+    await route.abort('failed'); // ... but the answer never reaches the tablet
+  });
+  await clickLabel(page, 'Принять', { role: 'button', which: 'last', wait: 3500 });
+  await expectText(page, 'the app says the outcome is unknown', /Ответ сервера не получен/);
+  await expectText(page, 'the unconfirmed receipt is listed', /Ожидают подтверждения: 1/);
+  facts = dbFacts();
+  check('the server did record the short receipt', facts.transfers[0].status === 'partially_received' && stockAt(facts, 'Main store') === '1.000' && stockAt(facts, 'Main store', 'in_transit') === '0.000', JSON.stringify(facts.transfers) + JSON.stringify(facts.balances));
+  await page.unroute('**/receive/');
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForSelector('flt-glass-pane', { state: 'attached', timeout: 60000 });
+  await page.waitForTimeout(4500);
+  await L.enableSemantics(page);
+  await page.waitForTimeout(2500);
+  check('the confirmed receipt left the pending list by itself', !/Ожидают подтверждения/.test(await text(page)));
+  facts = dbFacts();
+  check('still exactly one transfer, one piece at the shop, one written off, ledger consistent', facts.transfers.length === 1 && stockAt(facts, 'Main store') === '1.000' && facts.reconcile === 'consistent', JSON.stringify(facts.balances) + facts.reconcile);
+
+  // a count at the warehouse: 3 in the system, 2 on the shelf
+  await nav(page, 'Склад');
+  await clickLabel(page, 'Инвентаризация', { role: 'button', wait: 1800 });
+  await clickLabel(page, 'Начать инвентаризацию', { role: 'button', wait: 1500 });
+  await pickFromDropdown(page, '^Точка', 'Warehouse');
+  await clickLabel(page, 'Начать инвентаризацию', { role: 'button', which: 'last', wait: 2500 });
+  await expectText(page, 'the count opens with what the system shows', /В системе: 3 шт/);
+  await fill(page, '^Посчитано', '2');
+  await expectText(page, 'the difference shows at once', /Разница: −1 шт/);
+  await page.screenshot({ path: path.join(OUT, 'e2e-14-count.png') });
+  await clickLabel(page, 'Отправить на утверждение', { role: 'button', wait: 2500 });
+  await expectText(page, 'the count waits for approval', /Ждёт утверждения/);
+  await fill(page, 'Объяснение расхождений', 'Одна коробка оказалась пустой');
+  await clickLabel(page, 'Утвердить', { role: 'button', wait: 2500 });
+  await expectText(page, 'the count is approved', /Утверждена/);
+  facts = dbFacts();
+  check('the warehouse now holds what was counted and the ledger agrees', stockAt(facts, 'Warehouse') === '2.000' && facts.counts.length === 1 && facts.counts[0].status === 'approved' && facts.reconcile === 'consistent', JSON.stringify(facts.balances) + JSON.stringify(facts.counts));
+  await clickLabel(page, 'Назад', { role: 'button', wait: 1200 });
+  await clickLabel(page, 'Назад', { role: 'button', wait: 1200 });
 
   // ---- Turkmen, and it survives a reload ----------------------------------------------
   await clickLabel(page, 'Язык интерфейса', { exact: false, wait: 800 });
@@ -292,7 +365,7 @@ let PAGE = null;
   check('warehouse sees no money on the order', !/TMT/.test(warehouseText), (warehouseText.match(/.{20}TMT.{10}/) || [''])[0]);
   await clickLabel(w.page, 'Назад', { role: 'button', wait: 1200 });
   await nav(w.page, 'Склад');
-  await expectText(w.page, 'warehouse sees stock (10 received, 5 sold)', /5 шт/);
+  await expectText(w.page, 'warehouse sees stock (10 received, 5 sold, 2 sent, 1 written off)', /2 шт/);
   const stockText = await text(w.page);
   check('warehouse sees no stock value', !/Стоимость/.test(stockText) && !/TMT/.test(stockText));
   check('the warehouse role has no Sales page and no Customers', !/Продажи/.test(await text(w.page)));

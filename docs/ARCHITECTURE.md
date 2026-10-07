@@ -39,7 +39,7 @@ Flutter widgets and shared theme
     │     ├── core/session: secure refresh token, profile, business and location choice
     │     ├── core/operations: pending-operation store + runner (restart-safe retries)
     │     ├── core/money: exact decimal text <-> integer hundredths/thousandths (no double)
-    │     └── features/: auth, admin, catalog, scanning, inventory, purchasing, sales, (later) transfers...
+    │     └── features/: auth, admin, catalog, scanning, inventory, purchasing, sales, transfers, counts, (later) returns...
     ├── SharedPreferences: interface language, last business/location ids,
     │     and unconfirmed-operation retry records (no tokens, no balances)
     └── Demo mode (--dart-define=DEMO_MODE=true, or an explicit DemoStore):
@@ -49,7 +49,7 @@ Django REST API (backend/)  ->  PostgreSQL
     apps/accounts (users, sessions, recovery) · apps/businesses (tenants, locations,
     roles, exchange rates) · apps/catalog (products, barcodes, units, reorder levels) ·
     apps/inventory (stock ledger, FIFO layers) · apps/purchasing (suppliers, orders,
-    deliveries) · apps/sales (customers, sales, the receipt PDF) · apps/audit (audit trail, idempotency) · apps/common (errors, request IDs)
+    deliveries) · apps/sales (customers, sales, the receipt PDF) · apps/stockops (transfers, stock counts) · apps/audit (audit trail, idempotency) · apps/common (errors, request IDs)
 ```
 
 Which pages are connected to the API is tracked in `PLAN.md` and `HANDOFF.md`. A real build shows an honest "later release" page for anything not connected yet; it never shows demo data as real.
@@ -218,7 +218,7 @@ A shared database with business-scoped records is the proposed first deployment.
 
 ### Stock ledger, purchasing and receiving (implemented)
 
-- **One writer.** `apps/inventory/services.post()` is the only code that creates stock movements, balances or cost layers (a test scans the source to keep it that way). Opening stock, adjustments, purchase receipts and sales call it; later transfers and returns will too. Admin screens for these tables are read-only.
+- **One writer.** `apps/inventory/services.post()` is the only code that creates stock movements, balances or cost layers (a test scans the source to keep it that way). Opening stock, adjustments, purchase receipts, sales, transfers and count approvals call it; later returns will too. Admin screens for these tables are read-only.
 - **Three tables, one invariant.** `StockMovement` is append-only (PostgreSQL trigger plus an ORM guard). `StockBalance` holds the current quantity per product, location and condition (`sellable`, `damaged`, `inspection`, `in_transit`) with a `CHECK quantity >= 0`. `CostLayer` holds one FIFO layer per incoming line (`CHECK 0 <= remaining <= initial`). `reconcile()` (and `manage.py reconcile_stock`) proves balance = sum of movements = sum of layer remainders, and that each layer equals its own movements. Every backend scenario test finishes by asserting it returns no differences.
 - **FIFO (D6).** Outgoing goods consume the oldest layer first and record one movement per layer slice, each with that layer's exact unit cost, so the cost of a sale is known per slice. Opening stock and receipts each create a layer at their own unit cost (TMT).
 - **Locking.** A posting creates missing balance rows (`INSERT ... ON CONFLICT DO NOTHING`), then locks the balances one by one in sorted order, then the layers oldest first. A shortfall is `insufficient_stock` (409) and nothing is written. Tests run real threads: two outflows of the last unit, twelve outflows of five units, concurrent first receipts of a new product, and opposite lock order.
@@ -237,6 +237,15 @@ A shared database with business-scoped records is the proposed first deployment.
 - **The receipt.** `GET .../sales/<id>/document/[?lang=ru|tk]` returns one `application/pdf` (`sales.view`, location-scoped), an 80 mm roll measured in a first pass so the height fits. The language defaults to `Business.document_language` (a setting; the app sends none). Content: business name, address and phone (optional, edited in Settings), number, date, cashier, location, customer, each line as `quantity x price = sum` with the warranty months, the total, how it was paid, a note, a thank-you. ReportLab with **DejaVu Sans regular and bold vendored in `backend/assets/fonts/` (with its licence) and embedded in every file**, which covers Russian and the Turkmen letters Ä Ç Ň Ö Ş Ü Ý Ž. Fixed ru/tk label tables (the Turkmen is a draft). **No cost or profit ever appears.** File responses opt out of client content negotiation (`apps/common/negotiation.py`). Invoices, tax and a legal format were dropped by the owner.
 - **App (`features/sales`).** The cart is a `CartController` owned by the workspace, so it survives page and language changes and is cleared on a location change (after confirmation) and on sign-out. Search and camera scanning (a scan only adds the product), live availability at the current location (a hint; the server decides), quantity by unit precision, **a price box on every line** (catalog price prefilled in TMT, empty for a USD price without a rate), optional customer with quick-add. Totals use integer hundredths. The last step shows the lines and total, **Cash | Card** (cash by default) and Complete sale, sent through `OperationRunner`. Outcomes: confirmed (number, total, and a Receipt row to print or share); refused (message, cart kept; `insufficient_stock` names the product); **unknown** (the cart is emptied because the saved record now owns that sale, and the pending banner lists it until the server confirms). Sales history (`sales.view`) lists with search and shows the detail and how it was paid, with cost and profit only when the server sent them. The receipt is fetched with `ApiClient.download` and handed to the `printing` package (system print or share dialogs) through an injectable `DocumentActions`.
 - **Checks.** `reconcile()` for sales verifies that each sale's total equals the sum of its line totals and that the stock movements recorded for the sale add up to exactly the quantity its lines sold; it is asserted empty after every sales scenario, and `manage.py reconcile_stock` runs it together with the ledger and purchasing checks.
+
+### Transfers and stock counts (implemented)
+
+- **One writer, one queue.** Both go through `inventory.services.post()`. Transfer and count-approval postings run under one PostgreSQL advisory lock per business (`pg_advisory_xact_lock`): a cancel takes the destination's in-transit row and then the source's shelf while a dispatch takes them the other way round, and a test that repeats exactly that race gets a `deadlock detected` from PostgreSQL when the lock is removed.
+- **Transfers (`apps/stockops`).** `Transfer` (number `T-0001`, from, to, status `dispatched`, `received`, `partially_received` or `cancelled`, who and when, discrepancy and cancel reasons) with `TransferLine` (quantity sent, quantity received). **Dispatch** (`POST .../transfers/`, `transfer.create`, needs access to the source) posts the goods out of the source's `sellable` stock (FIFO slices) and mirrors every slice into the destination's `in_transit` condition with the **same unit cost**, so cost layers travel with the goods and goods in transit are not sellable (never in two places). **Receive** (`.../receive/`, `transfer.receive`, access to the destination) takes the sent quantity out of in transit: what arrived becomes `sellable` at the same layer costs, what is missing is a `transfer_loss` movement carrying the mandatory reason (status `partially_received`). **Cancel** (`.../cancel/`, reason required, access to the source) returns everything to the source's shelf with its costs. All three are `run_idempotent` actions (`transfer_dispatch`, `transfer_receive`, `transfer_cancel`) and only work on a transfer that is still in transit (`transfer_not_receivable`, `transfer_not_cancellable` 409). Movement types `transfer_out`, `transfer_in`, `transfer_loss`. No cost is ever shown in a transfer.
+- **Stock counts.** `StockCount` (number `C-0001`, location, `full` or `partial`, status `open`, `submitted`, `approved`, `cancelled`, `started_at`) with `StockCountLine` (baseline, counted, note). Starting notes the system's sellable quantities as the **baseline** (the stock now, less whatever moved since `started_at`, so it is exact even for a product added later). People enter counted quantities (`PUT .../counts/<id>/lines/`, by hand or scan; products not on the list can be added), submit, and an owner or manager **approves** with an explanation (`count.approve`, `run_idempotent` action `count_approve`). **D13 (provisional): nothing is frozen.** Sales and receipts continue during a count; the API flags lines whose sellable stock moved since the start (`moved_since_start`), and approval posts `counted - baseline` as `adjustment_in` / `adjustment_out` movements (document type `count`, reason `Stock count C-0001: ...`) on top of the current stock, so what happened meanwhile is kept. If goods were sold meanwhile and the decrease no longer fits, approval fails with `insufficient_stock` and the count stays submitted (the approver recounts or cancels). A surplus found costs the latest layer's unit cost here (else anywhere, else the product's default cost, else zero): provisional, D7.
+- **Permissions (provisional).** `transfer.view/create/receive` and `count.view/perform` for owner, manager and warehouse; `count.approve` for owner and manager. Location access is enforced by the server (send from, receive at, count at your own locations).
+- **Checks.** `reconcile()` verifies every transfer's movements (net zero, minus what was written off; goods in transit exactly what a dispatched transfer sent); `manage.py reconcile_stock` runs it with the ledger, purchasing and sales checks.
+- **App (`features/transfers`, `features/counts`).** Two buttons on the stock page. Transfers: list with a status filter, a form (from one of your locations, to any other, products by search or scan), a detail page, a receive page (every line starts as "everything arrived"; typing less asks for the reason) and cancel with a reason. Counts: list, start (full or partial), the count page (type counted quantities, add a product, save, send for approval), and for approvers the review (differences, moved lines, explanation, approve). Dispatch, receive, cancel and approve go through the `OperationRunner`; an unknown outcome returns to the workspace, where the pending banner is shown.
 
 ### Money, Reports, and Files
 
@@ -291,6 +300,12 @@ Server-managed accounts and memberships, with owner, manager, sales, and warehou
 | `sales.cost.view` | ✓ | ✓ |  |  |
 | `customer.view` | ✓ | ✓ | ✓ |  |
 | `customer.manage` | ✓ | ✓ | ✓ |  |
+| `transfer.view` | ✓ | ✓ |  | ✓ |
+| `transfer.create` | ✓ | ✓ |  | ✓ |
+| `transfer.receive` | ✓ | ✓ |  | ✓ |
+| `count.view` | ✓ | ✓ |  | ✓ |
+| `count.perform` | ✓ | ✓ |  | ✓ |
+| `count.approve` | ✓ | ✓ |  |  |
 | `operations.view` | ✓ | ✓ | ✓ | ✓ |
 
 **Idempotent commands and the audit trail.** A stock-changing command carries an `Idempotency-Key` (a UUID chosen by the app). The server claims the key inside the same database transaction as the work: the same key and request replays the stored outcome, the same key with a different request is refused (422), simultaneous duplicates serialise on a PostgreSQL advisory lock, and a failed attempt rolls back and frees the key. `GET /api/v1/businesses/<id>/operations/<action>/<key>/` tells the app what became of a key after a timeout, crash or restart. Audit events are append-only: the ORM refuses updates and deletes and a PostgreSQL trigger refuses them for raw SQL too.
@@ -364,7 +379,7 @@ Backend checks must cover cross-business and role denial, atomic rollback, concu
 | --- | --- |
 | Backend dependency versions, token library, API contracts | Implementing backend/client integration |
 | (Closed 2026-10-07: no tax, no invoices, no legal receipt format; currency and rounding were decided 2026-10-06) | Nothing outstanding |
-| Count reconciliation policy (FIFO costing was decided 2026-10-06) | Stock counts |
+| (Provisional 2026-10-07: sales and receipts continue during a count; owner and manager approve; surplus costed at the latest layer) | Owner review |
 | Refund/adjustment approvals and warranty terms | Finalizing those workflows |
 | Pilot tablet, scanning method, printer, approved translations | Pilot acceptance |
 | Hosting/storage provider, backup retention, RPO/RTO | Production deployment |
