@@ -16,4 +16,16 @@ urlpatterns = [
     path(
         f"{B}sales/<uuid:sale_id>/document/", views.SaleDocumentView.as_view(), name="sale-document"
     ),
+    path(
+        f"{B}sales/<uuid:sale_id>/returns/",
+        views.SaleReturnCreateView.as_view(),
+        name="sale-return-create",
+    ),
+    path(f"{B}returns/", views.ReturnListView.as_view(), name="return-list"),
+    path(f"{B}returns/<uuid:return_id>/", views.ReturnDetailView.as_view(), name="return-detail"),
+    path(
+        f"{B}returns/<uuid:return_id>/inspections/",
+        views.ReturnInspectView.as_view(),
+        name="return-inspect",
+    ),
 ]

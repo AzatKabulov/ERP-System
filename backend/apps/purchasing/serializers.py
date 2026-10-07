@@ -7,7 +7,15 @@ from apps.catalog.models import Product
 from apps.common.fields import BusinessScopedField
 from apps.inventory.serializers import LocationRefSerializer, ProductRefSerializer
 
-from .models import Delivery, DeliveryLine, PurchaseOrder, PurchaseOrderLine, Supplier
+from .models import (
+    Delivery,
+    DeliveryLine,
+    PurchaseOrder,
+    PurchaseOrderLine,
+    Supplier,
+    SupplierReturn,
+    SupplierReturnLine,
+)
 from .services import line_total
 
 
@@ -72,6 +80,9 @@ class DeliveryLineSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        returned = sum((r.quantity for r in instance.return_lines.all()), Decimal(0))
+        data["returned_quantity"] = str(returned)
+        data["returnable_quantity"] = str(instance.quantity - returned)
         if not self.context.get("can_view_cost"):
             data.pop("unit_cost", None)
         return data
@@ -216,3 +227,100 @@ class ReceiveSerializer(serializers.Serializer):
 
 class CancelSerializer(serializers.Serializer):
     reason = serializers.CharField(max_length=500, allow_blank=True, default="")
+
+
+# ---- returns to a supplier -----------------------------------------------------------------
+
+
+class SupplierReturnLineInputSerializer(serializers.Serializer):
+    delivery_line = serializers.UUIDField()
+    quantity = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal("0.001"))
+    condition = serializers.ChoiceField(choices=["sellable", "damaged"], default="sellable")
+
+
+class SupplierReturnInputSerializer(serializers.Serializer):
+    delivery = BusinessScopedField(queryset=Delivery.objects.all())
+    reason = serializers.CharField(max_length=300)
+    note = serializers.CharField(max_length=500, allow_blank=True, default="")
+    lines = SupplierReturnLineInputSerializer(many=True, allow_empty=False, max_length=200)
+
+    def validate_reason(self, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("This field may not be blank.", code="blank")
+        return value
+
+
+class SupplierReturnLineSerializer(serializers.ModelSerializer):
+    delivery_line = serializers.UUIDField(source="delivery_line_id")
+    product = ProductRefSerializer()
+
+    class Meta:
+        model = SupplierReturnLine
+        fields = ["id", "delivery_line", "product", "quantity", "condition", "unit_cost"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not self.context.get("can_view_cost"):
+            data.pop("unit_cost", None)
+        return data
+
+
+class SupplierReturnSerializer(serializers.ModelSerializer):
+    supplier = SupplierRefSerializer()
+    location = LocationRefSerializer()
+    delivery = serializers.SerializerMethodField()
+    created_by = serializers.SerializerMethodField()
+    lines = SupplierReturnLineSerializer(many=True)
+
+    class Meta:
+        model = SupplierReturn
+        fields = [
+            "id",
+            "number",
+            "created_at",
+            "supplier",
+            "location",
+            "delivery",
+            "created_by",
+            "reason",
+            "note",
+            "credit_total",
+            "lines",
+        ]
+
+    def get_delivery(self, ret):
+        delivery = ret.delivery
+        return {
+            "id": str(delivery.pk),
+            "number": delivery.number,
+            "order": str(delivery.order_id),
+            "order_number": delivery.order.number,
+        }
+
+    def get_created_by(self, ret):
+        user = ret.created_by
+        return {"id": str(user.pk), "name": user.full_name or user.username}
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not self.context.get("can_view_cost"):
+            data.pop("credit_total", None)
+        return data
+
+
+class ReorderRowSerializer(serializers.Serializer):
+    product = serializers.SerializerMethodField()
+    location = LocationRefSerializer()
+    on_hand = serializers.DecimalField(max_digits=14, decimal_places=3)
+    on_order = serializers.DecimalField(max_digits=14, decimal_places=3)
+    minimum = serializers.DecimalField(max_digits=14, decimal_places=3)
+    target = serializers.DecimalField(max_digits=14, decimal_places=3)
+    suggested = serializers.DecimalField(max_digits=14, decimal_places=3)
+
+    def get_product(self, row):
+        data = ProductRefSerializer(row["product"]).data
+        if self.context.get("can_view_cost"):
+            cost = row["product"].default_purchase_cost
+            data["default_purchase_cost"] = None if cost is None else str(cost)
+        return data

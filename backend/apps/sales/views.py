@@ -1,7 +1,8 @@
 from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 
-from django.db.models import Q
+from django.db.models import DecimalField, Prefetch, Q, Sum, Value
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
@@ -18,11 +19,15 @@ from apps.businesses.permissions import has_permission
 from apps.common.errors import ApiError
 from apps.common.negotiation import IgnoreClientContentNegotiation
 
-from . import services
+from . import returns, services
 from .documents import LABELS, number, render_receipt
-from .models import Customer, Sale
+from .models import Customer, Sale, SaleLine, SaleReturn
 from .serializers import (
     CustomerSerializer,
+    InspectionInputSerializer,
+    ReturnInputSerializer,
+    ReturnSerializer,
+    ReturnSummarySerializer,
     SaleInputSerializer,
     SaleSerializer,
     SaleSummarySerializer,
@@ -33,7 +38,18 @@ def _sales(request):
     return restrict_to_locations(
         Sale.objects.filter(business=request.business)
         .select_related("location", "cashier", "business")
-        .prefetch_related("lines"),
+        .prefetch_related(
+            Prefetch(
+                "lines",
+                queryset=SaleLine.objects.annotate(
+                    returned_quantity=Coalesce(
+                        Sum("return_lines__quantity"),
+                        Value(0, output_field=DecimalField(max_digits=14, decimal_places=3)),
+                    )
+                ),
+            ),
+            "returns",
+        ),
         request.membership,
     )
 
@@ -173,3 +189,90 @@ class SaleDocumentView(BusinessAPIView):
         response["Content-Disposition"] = f'inline; filename="receipt-{number(sale)}.pdf"'
         response["Cache-Control"] = "private, no-store"
         return response
+
+
+# ---- returns -------------------------------------------------------------------------------
+
+
+def _returns(request):
+    return restrict_to_locations(
+        SaleReturn.objects.filter(business=request.business)
+        .select_related("sale", "location", "created_by")
+        .prefetch_related("lines__inspections"),
+        request.membership,
+    )
+
+
+class SaleReturnCreateView(BusinessAPIView):
+    """Bring goods back against a sale. Needs an Idempotency-Key: the app keeps the same key
+    across a timeout, crash or restart, so a refund can never be issued twice."""
+
+    required_permission = "return.create"
+
+    def post(self, request, business_id, sale_id):
+        serializer = ReturnInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        get_object_or_404(_sales(request), pk=sale_id)  # a sale the caller may see
+        data = serializer.validated_data
+
+        def handler():
+            made = returns.create_return(
+                request.business, request.user, request.membership, sale_id, data
+            )
+            fresh = get_object_or_404(_returns(request), pk=made.pk)
+            return 201, ReturnSerializer(fresh, context=_context(request)).data
+
+        return run_idempotent(
+            request, business=request.business, action="return_complete", handler=handler
+        )
+
+
+class ReturnListView(BusinessScopedMixin, generics.GenericAPIView):
+    required_permission = "return.view"
+
+    def get(self, request, business_id):
+        params = request.query_params
+        qs = _returns(request)
+        if params.get("location"):
+            qs = qs.filter(location_id=params["location"])
+        if params.get("sale"):
+            qs = qs.filter(sale_id=params["sale"])
+        if params.get("date_from"):
+            qs = qs.filter(created_at__gte=_day_bound(request, params["date_from"], False))
+        if params.get("date_to"):
+            qs = qs.filter(created_at__lte=_day_bound(request, params["date_to"], True))
+        query = params.get("q", "").strip()
+        if query:
+            digits = query.upper().removeprefix("R-").lstrip("0")
+            qs = qs.filter(number=int(digits)) if digits.isdigit() else qs.none()
+        page = self.paginate_queryset(qs)
+        return self.get_paginated_response(ReturnSummarySerializer(page, many=True).data)
+
+
+class ReturnDetailView(BusinessAPIView):
+    required_permission = "return.view"
+
+    def get(self, request, business_id, return_id):
+        found = get_object_or_404(_returns(request), pk=return_id)
+        return Response(ReturnSerializer(found, context=_context(request)).data)
+
+
+class ReturnInspectView(BusinessAPIView):
+    required_permission = "return.inspect"
+
+    def post(self, request, business_id, return_id):
+        serializer = InspectionInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        get_object_or_404(_returns(request), pk=return_id)
+        rows = serializer.validated_data["lines"]
+
+        def handler():
+            returns.inspect_return(
+                request.business, request.user, request.membership, return_id, rows
+            )
+            fresh = get_object_or_404(_returns(request), pk=return_id)
+            return 200, ReturnSerializer(fresh, context=_context(request)).data
+
+        return run_idempotent(
+            request, business=request.business, action="return_inspect", handler=handler
+        )

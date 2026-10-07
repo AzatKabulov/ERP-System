@@ -10,7 +10,7 @@ import uuid
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from django.db import transaction
+from django.db import connection, transaction
 from django.db.models import F, Sum
 
 from apps.audit import services as audit
@@ -23,6 +23,15 @@ from .models import Condition, CostLayer, MovementType, StockBalance, StockMovem
 ZERO = Decimal("0")
 # Conditions that ordinary documents may post to today. In-transit is reserved for transfers.
 POSTABLE_CONDITIONS = (Condition.SELLABLE, Condition.DAMAGED, Condition.INSPECTION)
+
+
+def lock_business_stock(business) -> None:
+    """Queue behind any other multi-step stock posting of this business (transfers, counts,
+    inspections of returned goods, warranty swaps). Those do several `post()` calls that touch
+    stock rows in different orders; one queue per business rules out deadlocks. The lock is
+    released at the end of the transaction."""
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [f"stockops:{business.pk}"])
 
 
 @dataclass

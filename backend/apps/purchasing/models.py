@@ -140,3 +140,51 @@ class DeliveryLine(UUIDModel, AppendOnlyModel):
                 condition=models.Q(quantity__gt=0), name="purchasing_delivery_line_positive"
             )
         ]
+
+
+class SupplierReturn(UUIDModel, AppendOnlyModel):
+    """Goods sent back to a supplier, linked to the delivery they came with. The credit is
+    what the delivery charged for them; the stock leaves at its FIFO cost."""
+
+    business = models.ForeignKey("businesses.Business", on_delete=models.PROTECT, related_name="+")
+    number = models.PositiveIntegerField()  # SR-0001, per business
+    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name="returns")
+    delivery = models.ForeignKey(Delivery, on_delete=models.PROTECT, related_name="returns")
+    location = models.ForeignKey("businesses.Location", on_delete=models.PROTECT, related_name="+")
+    created_by = models.ForeignKey("accounts.User", on_delete=models.PROTECT, related_name="+")
+    reason = models.CharField(max_length=300)
+    note = models.CharField(max_length=500, blank=True)
+    credit_total = models.DecimalField(max_digits=14, decimal_places=2)  # TMT, informational
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-number"]
+        constraints = [
+            models.UniqueConstraint(fields=["business", "number"], name="purchasing_sr_number"),
+        ]
+        indexes = [models.Index(fields=["business", "-created_at"])]
+
+    def __str__(self) -> str:
+        return f"SR-{self.number:04d}"
+
+
+class SupplierReturnLine(UUIDModel, AppendOnlyModel):
+    supplier_return = models.ForeignKey(
+        SupplierReturn, on_delete=models.PROTECT, related_name="lines"
+    )
+    delivery_line = models.ForeignKey(
+        DeliveryLine, on_delete=models.PROTECT, related_name="return_lines"
+    )
+    product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="+")
+    quantity = models.DecimalField(max_digits=14, decimal_places=3)
+    condition = models.CharField(max_length=16)  # sellable or damaged: where it was taken from
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=2)  # the delivery's, TMT
+    # What the goods cost in stock (FIFO, the oldest layers). Exact, so five decimals.
+    cost_total = models.DecimalField(max_digits=18, decimal_places=5)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(quantity__gt=0), name="purchasing_sr_line_positive"
+            )
+        ]

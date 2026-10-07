@@ -37,7 +37,14 @@ class MovementType(models.TextChoices):
     TRANSFER_OUT = "transfer_out", "Transfer (out)"
     TRANSFER_IN = "transfer_in", "Transfer (in)"
     TRANSFER_LOSS = "transfer_loss", "Transfer (missing on arrival)"
-    # Later phases add: return_in, supplier_return.
+    # Returns: goods a customer brought back (at the cost they were sold at), the decision on
+    # goods that were awaiting inspection, goods sent back to a supplier, and warranty swaps.
+    RETURN_IN = "return_in", "Customer return"
+    INSPECTION_OUT = "inspection_out", "Inspection decided (out)"
+    INSPECTION_IN = "inspection_in", "Inspection decided (in)"
+    SUPPLIER_RETURN = "supplier_return", "Return to supplier"
+    WARRANTY_OUT = "warranty_out", "Warranty replacement (out)"
+    WARRANTY_IN = "warranty_in", "Warranty defective unit (in)"
 
 
 class StockBalance(UUIDModel):
