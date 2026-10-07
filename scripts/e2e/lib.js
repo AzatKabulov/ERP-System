@@ -64,6 +64,7 @@ async function clickLabel(page, label, opts = {}) {
 }
 // focus the text field whose label matches, replace its content (and check it took)
 async function fill(page, labelRegex, value) {
+  let scrolls = 0;
   for (let attempt = 1; attempt <= 3; attempt++) {
     const box = await page.evaluate((src) => {
       const re = new RegExp(src);
@@ -73,6 +74,16 @@ async function fill(page, labelRegex, value) {
       return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
     }, labelRegex);
     if (!box) throw new Error(`no text field labelled /${labelRegex}/`);
+    const view = page.viewportSize();
+    if (box.y > view.height - 40 || box.y < 60) {
+      // below (or above) the visible part of a scrolling page: scroll like a person would
+      await page.mouse.move(view.width / 2, view.height / 2);
+      await page.mouse.wheel(0, box.y < 60 ? -500 : Math.min(500, box.y - view.height / 2));
+      await page.waitForTimeout(600);
+      attempt--; // looking again, not a failed try
+      if (++scrolls > 12) throw new Error(`could not scroll /${labelRegex}/ into view`);
+      continue;
+    }
     await page.mouse.click(box.x, box.y);
     await page.waitForTimeout(450);
     await page.keyboard.press('Control+A');

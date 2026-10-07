@@ -34,49 +34,55 @@ class BarcodeInput extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = strings(context);
     final scanner = ScannerScope.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: TextField(
-            key: fieldKey,
-            controller: controller,
-            enabled: enabled,
-            autocorrect: false,
-            enableSuggestions: false,
-            onSubmitted: onSubmitted,
-            onChanged: onChanged,
-            decoration: InputDecoration(
-              labelText: label,
-              prefixIcon: const Icon(Icons.qr_code_2),
-              errorText: errorText,
-              errorMaxLines: 3,
+    // Its own semantics container: without it a text field next to plain texts can absorb
+    // them into one node, and a screen reader then reads the whole page as the field's name.
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: TextField(
+              key: fieldKey,
+              controller: controller,
+              enabled: enabled,
+              autocorrect: false,
+              enableSuggestions: false,
+              onSubmitted: onSubmitted,
+              onChanged: onChanged,
+              decoration: InputDecoration(
+                labelText: label,
+                prefixIcon: const Icon(Icons.qr_code_2),
+                errorText: errorText,
+                errorMaxLines: 3,
+              ),
             ),
           ),
-        ),
-        if (scanner.isAvailable) ...[
-          const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: IconButton.filledTonal(
-              key: const ValueKey('scan-button'),
-              tooltip: l.scanWithCamera,
-              iconSize: 28,
-              constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
-              onPressed: enabled
-                  ? () async {
-                      final code = await scanner.scan(context);
-                      if (code == null || !context.mounted) return;
-                      controller.text = code;
-                      onChanged?.call(code);
-                      onScanned?.call(code);
-                    }
-                  : null,
-              icon: const Icon(Icons.qr_code_scanner),
+          if (scanner.isAvailable) ...[
+            const SizedBox(width: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: IconButton.filledTonal(
+                key: const ValueKey('scan-button'),
+                tooltip: l.scanWithCamera,
+                iconSize: 28,
+                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                onPressed: enabled
+                    ? () async {
+                        final code = await scanner.scan(context);
+                        if (code == null || !context.mounted) return;
+                        controller.text = code;
+                        onChanged?.call(code);
+                        onScanned?.call(code);
+                      }
+                    : null,
+                icon: const Icon(Icons.qr_code_scanner),
+              ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

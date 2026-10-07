@@ -18,13 +18,34 @@ from apps.purchasing.models import Delivery
 from apps.inventory.models import StockBalance
 from apps.inventory import services
 from apps.purchasing import services as ps
-d = services.reconcile() + ps.reconcile()
-print('FACTS' + json.dumps({'deliveries': Delivery.objects.count(), 'balances': [{'q': str(b.quantity), 'c': b.condition} for b in StockBalance.objects.all()], 'reconcile': 'consistent' if not d else d}))
+from apps.sales import services as ss
+from apps.sales.models import Sale
+from apps.businesses.models import Business
+d = services.reconcile() + ps.reconcile() + ss.reconcile()
+sales = [{'id': str(x.pk), 'number': x.number, 'total': str(x.total), 'change': str(x.change_given), 'cost': str(sum(l.cost_total for l in x.lines.all())), 'payments': [[p.method, str(p.amount)] for p in x.payments.all()]} for x in Sale.objects.order_by('created_at')]
+print('FACTS' + json.dumps({'business': str(Business.objects.first().pk), 'deliveries': Delivery.objects.count(), 'sales': sales, 'balances': [{'q': str(b.quantity), 'c': b.condition} for b in StockBalance.objects.all()], 'reconcile': 'consistent' if not d else d}))
 `;
   const out = execSync('cd ' + BACKEND + ' && export PATH="$HOME/.local/bin:$PATH" && uv run python manage.py shell', { input: py, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
   return JSON.parse(out.split('FACTS')[1]);
 }
 
+const API = process.env.E2E_API_URL || 'http://127.0.0.1:8000';
+// Fetches a document straight from the API (a real HTTP request) and returns its type and its text,
+// extracted with pypdf from the PDF the server produced.
+async function documentText(businessId, saleId, query) {
+  const login = await (await fetch(API + '/api/v1/auth/login/', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'owner', password: PASS }),
+  })).json();
+  const res = await fetch(`${API}/api/v1/businesses/${businessId}/sales/${saleId}/document/?${query}`, {
+    headers: { Authorization: 'Bearer ' + login.access, Accept: 'application/pdf' },
+  });
+  const bytes = Buffer.from(await res.arrayBuffer());
+  const file = path.join(OUT, 'document.pdf');
+  fs.writeFileSync(file, bytes);
+  const out = execSync('cd ' + BACKEND + ' && export PATH="$HOME/.local/bin:$PATH" && uv run python ' + path.join(__dirname, 'pdf_text.py') + ' ' + file, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
+  return { status: res.status, type: res.headers.get('content-type'), text: out.split('TEXT')[1] || '' };
+}
 
 async function signIn(page, user) {
   await fill(page, '^Логин$', user);
@@ -165,11 +186,90 @@ let PAGE = null;
   await page.screenshot({ path: path.join(OUT, 'e2e-6-history.png') });
   await clickLabel(page, 'Назад', { role: 'button', wait: 1200 });
 
+  // ---- selling (Phase 5): from the Warehouse, where the 10 pieces are ---------------------
+  await nav(page, 'Продажи');
+  await clickLabel(page, '^Местоположение', { exact: false, role: 'button', wait: 900 });
+  await clickLabel(page, 'Warehouse', { exact: false, wait: 1500 });
+  await expectNoText(page, 'the real sales page shows no demonstration sale', /Завершить демо-продажу/);
+  await fill(page, 'Название, артикул или штрихкод', 'колодки');
+  await page.waitForTimeout(1500);
+  await clickLabel(page, 'BP-100', { exact: false, wait: 1500 });
+  await expectText(page, 'the product is in the cart with its availability', /В наличии здесь: 10 шт/);
+  await fill(page, '^Количество', '3');
+  await fill(page, 'Скидка, TMT', '20');
+  await expectText(page, 'total = 3 x 120 - 20 discount = 340,00', /Итого: 340,00/);
+  await page.screenshot({ path: path.join(OUT, 'e2e-9-cart.png') });
+  await clickLabel(page, 'К оплате', { role: 'button', wait: 1500 });
+  await expectText(page, 'the payment page opens', /Оплата/);
+  await fill(page, '^Сумма, TMT', '500');
+  await expectText(page, 'cash 500 against 340 gives 160 change', /Сдача: 160,00/);
+  await page.screenshot({ path: path.join(OUT, 'e2e-10-payment.png') });
+  await clickLabel(page, 'Завершить продажу', { role: 'button', wait: 2500 });
+  await expectText(page, 'the sale is confirmed with its number', /Продажа S-000001 оформлена/);
+  await expectText(page, 'the change to hand over is shown', /Выдать сдачу: 160,00/);
+  await page.screenshot({ path: path.join(OUT, 'e2e-11-sale-done.png') });
+  facts = dbFacts();
+  check('one sale with the right total, change and FIFO cost', facts.sales.length === 1 && facts.sales[0].total === '340.00' && facts.sales[0].change === '160.00' && parseFloat(facts.sales[0].cost) === 150, JSON.stringify(facts.sales));
+  check('stock fell from 10 to 7', facts.balances[0].q === '7.000', JSON.stringify(facts.balances));
+  check('reconcile is consistent after the sale', facts.reconcile === 'consistent', facts.reconcile);
+
+  // the receipt button asks the server for the PDF
+  const receiptReply = page.waitForResponse((r) => /\/document\//.test(r.url()), { timeout: 15000 }).catch(() => null);
+  await clickLabel(page, 'Печать', { role: 'button', which: 'first', wait: 1500 }); // the receipt row comes first
+  const reply = await receiptReply;
+  check('the Receipt button downloads a PDF from the server', !!reply && reply.status() === 200 && /application\/pdf/.test(reply.headers()['content-type'] || ''), reply ? String(reply.status()) : 'no request seen');
+
+  // a sale whose answer is lost after the server committed, then a "restart"
+  await clickLabel(page, 'Новая продажа', { exact: false, role: 'button', wait: 1200 });
+  await fill(page, 'Название, артикул или штрихкод', 'колодки');
+  await page.waitForTimeout(1500);
+  await clickLabel(page, 'BP-100', { exact: false, wait: 1500 });
+  await fill(page, '^Количество', '2');
+  await clickLabel(page, 'К оплате', { role: 'button', wait: 1500 });
+  await page.route('**/sales/', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    await route.fetch(); // the server really sells ...
+    await route.abort('failed'); // ... but the answer never reaches the tablet
+  });
+  await clickLabel(page, 'Завершить продажу', { role: 'button', wait: 3500 });
+  await expectText(page, 'the app does not claim the sale: outcome unknown', /Ответ сервера не получен/);
+  await expectText(page, 'the unconfirmed sale is listed', /Ожидают подтверждения: 1/);
+  facts = dbFacts();
+  check('the server did record the second sale', facts.sales.length === 2 && facts.balances[0].q === '5.000', JSON.stringify(facts.sales));
+  await page.unroute('**/sales/');
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForSelector('flt-glass-pane', { state: 'attached', timeout: 60000 });
+  await page.waitForTimeout(4500);
+  await L.enableSemantics(page);
+  await page.waitForTimeout(2500);
+  const afterSaleRestart = await text(page);
+  check('the confirmed sale left the pending list by itself', !/Ожидают подтверждения/.test(afterSaleRestart));
+  facts = dbFacts();
+  check('exactly two sales exist after the restart (no duplicate)', facts.sales.length === 2 && facts.sales[1].number !== facts.sales[0].number, JSON.stringify(facts.sales));
+  check('stock is exactly 5 (10 - 3 - 2)', facts.balances[0].q === '5.000', JSON.stringify(facts.balances));
+  check('receipt numbers run without a gap', facts.sales.map((x) => x.number).join() === '1,2', facts.sales.map((x) => x.number).join());
+  check('reconcile finds no difference after the restart', facts.reconcile === 'consistent', facts.reconcile);
+  await nav(page, 'Продажи');
+  await clickLabel(page, 'История продаж', { role: 'button', wait: 1800 });
+  await expectText(page, 'the history lists both sales', /S-000002/);
+  await expectText(page, 'and the first one', /S-000001/);
+  await page.screenshot({ path: path.join(OUT, 'e2e-12-sales-history.png') });
+  await clickLabel(page, 'Назад', { role: 'button', wait: 1200 });
+
+  // documents: real PDFs from the real API, text read back with pypdf
+  const ru = await documentText(facts.business, facts.sales[0].id, 'lang=ru&kind=receipt');
+  check('the receipt is a PDF', ru.status === 200 && /application\/pdf/.test(ru.type || ''), ru.type);
+  check('the Russian receipt names the product and the number', /Тормозные колодки/.test(ru.text) && /S-000001/.test(ru.text), ru.text.slice(0, 200));
+  check('the Russian receipt shows the paid total and the change', /340,00/.test(ru.text) && /160,00/.test(ru.text), ru.text.slice(0, 300));
+  check('no cost or profit appears on a receipt', !/Себестоимость|Прибыль|150,00/.test(ru.text));
+  const tk = await documentText(facts.business, facts.sales[0].id, 'lang=tk&kind=invoice');
+  check('the Turkmen invoice uses Turkmen labels', /Nakladnoý/.test(tk.text) && /Jemi/.test(tk.text), tk.text.slice(0, 200));
+
   // ---- Turkmen, and it survives a reload ----------------------------------------------
   await clickLabel(page, 'Язык интерфейса', { exact: false, wait: 800 });
   await clickLabel(page, 'Türkmençe', { exact: false, wait: 1800 });
   await expectText(page, 'the interface switches to Turkmen', /Harytlar/);
-  await expectText(page, 'stock page labels are Turkmen', /Hereketleriň taryhy/);
+  await expectText(page, 'the cash desk is in Turkmen too (cart title)', /Sebet/);
   await page.screenshot({ path: path.join(OUT, 'e2e-7-turkmen.png') });
   await page.reload({ waitUntil: 'load' });
   await page.waitForSelector('flt-glass-pane', { state: 'attached', timeout: 60000 });
@@ -192,14 +292,15 @@ let PAGE = null;
   check('warehouse sees no money on the order', !/TMT/.test(warehouseText), (warehouseText.match(/.{20}TMT.{10}/) || [''])[0]);
   await clickLabel(w.page, 'Назад', { role: 'button', wait: 1200 });
   await nav(w.page, 'Склад');
-  await expectText(w.page, 'warehouse sees stock', /10 шт/);
+  await expectText(w.page, 'warehouse sees stock (10 received, 5 sold)', /5 шт/);
   const stockText = await text(w.page);
   check('warehouse sees no stock value', !/Стоимость/.test(stockText) && !/TMT/.test(stockText));
+  check('the warehouse role has no Sales page and no Customers', !/Продажи/.test(await text(w.page)));
   await w.page.screenshot({ path: path.join(OUT, 'e2e-8-warehouse.png') });
   problems.push(...w.problems);
 
   console.log('--- run finished; browser problems seen:', problems.length);
-  const expectedAbort = /ERR_FAILED/; // the deliberately dropped answer in the lost-response step
+  const expectedAbort = /ERR_FAILED/; // the deliberately dropped answers in the lost-response steps
   const unexpected = problems.filter((p) => !expectedAbort.test(p));
   check('no unexpected browser errors', unexpected.length === 0, unexpected.join(' | '));
   console.log(problems.join('\n'));
