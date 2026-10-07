@@ -17,10 +17,13 @@ abstract class TokenStore {
 
 @immutable
 class ApiResponse {
-  const ApiResponse(this.status, this.json, this.headers);
+  const ApiResponse(this.status, this.json, this.headers, {this.bytes});
   final int status;
   final Object? json;
   final Map<String, String> headers;
+
+  /// The raw body of a file download (a PDF); null for JSON answers.
+  final Uint8List? bytes;
 
   /// True when the server answered from its stored record of an operation key.
   bool get isReplay => headers['idempotent-replay'] == 'true';
@@ -67,6 +70,10 @@ class ApiClient {
 
   Future<ApiResponse> get(String path, {Map<String, String>? query}) =>
       send('GET', path, query: query);
+
+  /// Downloads a file (a PDF receipt): the answer's [ApiResponse.bytes].
+  Future<ApiResponse> download(String path, {Map<String, String>? query}) =>
+      send('GET', path, query: query, binary: true);
 
   Future<ApiResponse> post(
     String path, {
@@ -144,6 +151,7 @@ class ApiClient {
     Object? body,
     String? idempotencyKey,
     bool authenticated = true,
+    bool binary = false,
   }) async {
     try {
       return await _once(
@@ -153,13 +161,22 @@ class ApiClient {
         body,
         idempotencyKey,
         authenticated,
+        binary,
       );
     } on ApiException catch (e) {
       if (authenticated &&
           e.kind == ApiErrorKind.unauthorized &&
           await tokens.readRefreshToken() != null) {
         await _refresh(); // may throw: session over, or server unreachable
-        return _once(method, path, query, body, idempotencyKey, authenticated);
+        return _once(
+          method,
+          path,
+          query,
+          body,
+          idempotencyKey,
+          authenticated,
+          binary,
+        );
       }
       rethrow;
     }
@@ -180,6 +197,7 @@ class ApiClient {
         null,
         {'refresh': refresh},
         null,
+        false,
         false,
       );
       final data = response.map;
@@ -209,13 +227,16 @@ class ApiClient {
     Object? body,
     String? idempotencyKey,
     bool authenticated,
+    bool binary,
   ) async {
     final uri = _base.replace(
       path: '${_base.path}$path',
       queryParameters: query == null || query.isEmpty ? null : query,
     );
     final request = http.Request(method, uri)
-      ..headers['Accept'] = 'application/json'
+      ..headers['Accept'] = binary
+          ? 'application/pdf, application/json'
+          : 'application/json'
       ..headers['X-Request-ID'] = _uuid.v4();
     if (body != null) {
       request.headers['Content-Type'] = 'application/json; charset=utf-8';
@@ -244,6 +265,14 @@ class ApiClient {
       throw const ApiException(kind: ApiErrorKind.network, code: 'network');
     }
     monitor?.reportSuccess();
+    if (binary && response.statusCode >= 200 && response.statusCode < 300) {
+      return ApiResponse(
+        response.statusCode,
+        null,
+        response.headers,
+        bytes: response.bodyBytes,
+      );
+    }
 
     // The server sends UTF-8 without a charset header; `http` would assume Latin-1
     // and garble Russian and Turkmen text, so decode the bytes ourselves.

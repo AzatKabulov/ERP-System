@@ -16,6 +16,9 @@ import '../inventory/stock_screen.dart';
 import '../operations/pending_operations_banner.dart';
 import '../purchasing/purchasing_repository.dart';
 import '../purchasing/purchasing_screen.dart';
+import '../sales/cart_controller.dart';
+import '../sales/sales_repository.dart';
+import '../sales/sales_screen.dart';
 import 'placeholder_screens.dart';
 import 'unsaved_work.dart';
 
@@ -50,12 +53,25 @@ class _RealWorkspaceState extends State<RealWorkspace> {
   AppPage _page = AppPage.dashboard;
   int _reloadCounter = 0;
 
+  /// One cart per business, kept here (not in the sales screen) so it survives moving to
+  /// another page and switching the language. It is dropped with the workspace on sign-out.
+  final Map<String, CartController> _carts = {};
+
+  @override
+  void dispose() {
+    for (final cart in _carts.values) {
+      cart.dispose();
+    }
+    super.dispose();
+  }
+
   SessionController get session => widget.session;
 
   bool _allowed(AppPage page) => switch (page) {
     AppPage.products => session.can('catalog.view'),
     AppPage.inventory => session.can('stock.view'),
     AppPage.purchasing => session.can('purchasing.view'),
+    AppPage.sales => session.can('sales.create') || session.can('sales.view'),
     _ => true,
   };
 
@@ -100,6 +116,18 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         runner: widget.runner,
         monitor: widget.monitor,
         unsaved: widget.unsaved,
+      ),
+      AppPage.sales => SalesScreen(
+        // No reload counter in the key: a recovered operation must not empty the cart.
+        key: ValueKey('sales-${membership.id}'),
+        session: session,
+        catalog: CatalogRepository(widget.api, membership.businessId),
+        inventory: InventoryRepository(widget.api, membership.businessId),
+        repository: SalesRepository(widget.api, membership.businessId),
+        runner: widget.runner,
+        monitor: widget.monitor,
+        unsaved: widget.unsaved,
+        cart: _carts.putIfAbsent(membership.id, CartController.new),
       ),
       AppPage.administration => RealAdministrationScreen(
         key: ValueKey('admin-${membership.id}-$_reloadCounter'),

@@ -48,6 +48,12 @@ String apiErrorText(AppLocalizations l, ApiException e) {
       return l.errorOrderNotCancellable;
     case 'order_has_no_lines':
       return l.errorOrderNoLines;
+    case 'price_changed':
+      return l.errorPriceChanged;
+    case 'rate_missing':
+      return l.errorRateMissing;
+    case 'payment_mismatch':
+      return l.errorPaymentMismatch;
     case 'validation_error':
       return l.errorValidation;
     case 'network':
@@ -89,6 +95,7 @@ String fieldErrorText(AppLocalizations l, FieldError e) => switch (e.code) {
   'min_value' || 'max_value' => l.fieldOutOfRange,
   'quantity_precision' => l.fieldQuantityPrecision,
   'duplicate_product' || 'duplicate_line' => l.fieldDuplicateProduct,
+  'discount_too_large' => l.errorDiscountTooLarge,
   _ => l.fieldInvalid,
 };
 

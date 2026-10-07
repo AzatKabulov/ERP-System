@@ -12,6 +12,7 @@ import 'core/operations/pending_operation_store.dart';
 import 'core/session/session_controller.dart';
 import 'core/session/token_stores.dart';
 import 'demo/demo_store.dart';
+import 'features/sales/document_actions.dart';
 import 'features/scanning/barcode_scanner.dart';
 import 'features/workspace/real_home.dart';
 import 'l10n/app_localizations.dart';
@@ -46,6 +47,7 @@ class ErpApp extends StatefulWidget {
     this.tokenStore,
     this.pendingStore,
     this.scanner = const CameraBarcodeScanner(),
+    this.documents = const DevicePrintingDocumentActions(),
   });
 
   final SharedPreferences preferences;
@@ -61,6 +63,9 @@ class ErpApp extends StatefulWidget {
 
   /// How barcodes are read (the camera in the app, a fake in tests).
   final BarcodeScanner scanner;
+
+  /// How receipts and invoices are printed or shared (the device dialogs; a fake in tests).
+  final DocumentActions documents;
 
   @override
   State<ErpApp> createState() => _ErpAppState();
@@ -131,8 +136,10 @@ class _ErpAppState extends State<ErpApp> {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      builder: (context, child) =>
-          ScannerScope(scanner: widget.scanner, child: child!),
+      builder: (context, child) => ScannerScope(
+        scanner: widget.scanner,
+        child: DocumentsScope(actions: widget.documents, child: child!),
+      ),
       home: _demo
           ? Workspace(
               store: _store!,

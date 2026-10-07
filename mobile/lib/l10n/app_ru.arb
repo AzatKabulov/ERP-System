@@ -616,5 +616,205 @@
   "costVisibleNote": "Себестоимость видна только владельцу и менеджеру.",
   "actionReceive": "Приём товара",
   "actionOpening": "Начальные остатки",
-  "actionAdjust": "Корректировка остатков"
+  "actionAdjust": "Корректировка остатков",
+  "salesStartHint": "Найдите товар по названию или артикулу либо отсканируйте штрихкод, чтобы добавить его в корзину.",
+  "salesNoMatch": "Ничего не найдено. Проверьте написание или код.",
+  "cartTitle": "Корзина",
+  "cartEmpty": "Корзина пуста",
+  "cartScannedNotFound": "Товар с кодом {code} не найден.",
+  "@cartScannedNotFound": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "cartAdded": "Добавлено: {name}",
+  "@cartAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "availableHere": "В наличии здесь: {qty}",
+  "@availableHere": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "exceedsAvailable": "Больше, чем в наличии ({qty}).",
+  "@exceedsAvailable": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "unitPriceLine": "{price} за единицу",
+  "@unitPriceLine": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "discountFieldLabel": "Скидка, TMT",
+  "discountPercentLabel": "Скидка в процентах на всё",
+  "applyAction": "Применить",
+  "saleTotal": "Итого: {amount}",
+  "@saleTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "saleDiscountSum": "Скидка: {amount}",
+  "@saleDiscountSum": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "customerNone": "Без покупателя",
+  "customerChoose": "Выбрать покупателя",
+  "customerNew": "Новый покупатель",
+  "customerNameLabel": "Имя покупателя",
+  "customersEmpty": "Покупатели не найдены",
+  "toPayment": "К оплате",
+  "paymentTitle": "Оплата",
+  "payCash": "Наличные",
+  "payCard": "Карта",
+  "payTransfer": "Перевод",
+  "payAmountLabel": "Сумма, TMT",
+  "addPayment": "Добавить оплату",
+  "paidSum": "Оплачено: {amount}",
+  "@paidSum": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "changeSum": "Сдача: {amount}",
+  "@changeSum": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "remainingSum": "Осталось оплатить: {amount}",
+  "@remainingSum": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "completeSale": "Завершить продажу",
+  "paymentCashOnlyChange": "Сдачу можно дать только с наличных.",
+  "saleDoneTitle": "Продажа {number} оформлена",
+  "@saleDoneTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "changeToGive": "Выдать сдачу: {amount}",
+  "@changeToGive": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "newSaleAction": "Новая продажа",
+  "receiptAction": "Чек",
+  "invoiceAction": "Накладная",
+  "printAction": "Печать",
+  "shareAction": "Поделиться",
+  "documentLangAuto": "Как в настройках",
+  "documentFailed": "Не удалось получить документ. Попробуйте ещё раз.",
+  "saleHistoryTitle": "История продаж",
+  "salesHistoryEmpty": "Продаж пока нет",
+  "saleSearchHint": "Номер (S-000012) или имя покупателя",
+  "saleDetailTitle": "Продажа {number}",
+  "@saleDetailTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierLine": "Кассир: {name}",
+  "@cashierLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saleCostLine": "Себестоимость: {amount}",
+  "@saleCostLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "saleProfitLine": "Прибыль: {amount}",
+  "@saleProfitLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "saleRateLine": "Курс USD на момент продажи: {rate}",
+  "@saleRateLine": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "saleUnitsLine": "{qty} × {price}",
+  "@saleUnitsLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "errorPriceChanged": "Цены изменились. Корзина обновлена: проверьте итог и продолжите.",
+  "errorRateMissing": "Для товара с ценой в USD не задан курс. Задайте курс в настройках.",
+  "errorPaymentMismatch": "Сумма оплат не совпадает с итогом.",
+  "errorDiscountTooLarge": "Скидка больше суммы строки.",
+  "errorInsufficientNamed": "Недостаточно товара «{name}»: в наличии {available}.",
+  "@errorInsufficientNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "available": {
+        "type": "String"
+      }
+    }
+  },
+  "priceChangedRefreshed": "Цены обновлены.",
+  "actionSale": "Продажа",
+  "salesNoPermission": "У вас нет прав оформлять продажи. Доступна только история.",
+  "businessAddress": "Адрес",
+  "businessPhone": "Телефон",
+  "businessTaxNumber": "Налоговый номер",
+  "businessDocumentNote": "Эти данные печатаются на чеках и накладных."
 }

@@ -332,6 +332,9 @@ class _BusinessForm extends StatefulWidget {
 
 class _BusinessFormState extends State<_BusinessForm> {
   late final _name = TextEditingController(text: widget.info.name);
+  late final _address = TextEditingController(text: widget.info.address);
+  late final _phone = TextEditingController(text: widget.info.phone);
+  late final _taxNumber = TextEditingController(text: widget.info.taxNumber);
   late String _defaultLanguage = widget.info.defaultLanguage;
   late String _documentLanguage = widget.info.documentLanguage;
   bool _busy = false;
@@ -341,6 +344,9 @@ class _BusinessFormState extends State<_BusinessForm> {
   @override
   void dispose() {
     _name.dispose();
+    _address.dispose();
+    _phone.dispose();
+    _taxNumber.dispose();
     super.dispose();
   }
 
@@ -356,6 +362,9 @@ class _BusinessFormState extends State<_BusinessForm> {
         name: _name.text.trim(),
         defaultLanguage: _defaultLanguage,
         documentLanguage: _documentLanguage,
+        address: _address.text.trim(),
+        phone: _phone.text.trim(),
+        taxNumber: _taxNumber.text.trim(),
       );
       await widget.onSaved();
       if (mounted) setState(() => _saved = true);
@@ -380,6 +389,39 @@ class _BusinessFormState extends State<_BusinessForm> {
           decoration: InputDecoration(
             labelText: l.businessName,
             errorText: fieldError(l, _error, 'name'),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          key: const ValueKey('business-address'),
+          controller: _address,
+          enabled: enabled,
+          decoration: InputDecoration(
+            labelText: l.businessAddress,
+            errorText: fieldError(l, _error, 'address'),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          key: const ValueKey('business-phone'),
+          controller: _phone,
+          enabled: enabled,
+          keyboardType: TextInputType.phone,
+          decoration: InputDecoration(
+            labelText: l.businessPhone,
+            errorText: fieldError(l, _error, 'phone'),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          key: const ValueKey('business-tax-number'),
+          controller: _taxNumber,
+          enabled: enabled,
+          decoration: InputDecoration(
+            labelText: l.businessTaxNumber,
+            helperText: l.businessDocumentNote,
+            helperMaxLines: 2,
+            errorText: fieldError(l, _error, 'tax_number'),
           ),
         ),
         const SizedBox(height: 16),

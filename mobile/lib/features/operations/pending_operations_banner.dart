@@ -14,6 +14,7 @@ String operationActionLabel(AppLocalizations l, String action) =>
       'purchase_receive' => l.actionReceive,
       'stock_opening' => l.actionOpening,
       'stock_adjust' => l.actionAdjust,
+      'sale_complete' => l.actionSale,
       _ => l.unknownActionLabel,
     };
 
