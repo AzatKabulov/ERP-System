@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.db import DatabaseError, connection, connections, transaction
 
 from apps.audit.models import AuditEvent
-from apps.businesses.models import ExchangeRate, Role
+from apps.businesses.models import Role
 from apps.catalog.models import Product
 from apps.common.testing import APITestCase, APITransactionTestCase, client_for
 from apps.inventory.models import StockBalance, StockMovement
@@ -31,21 +31,14 @@ class SalesCase(APITestCase):
 
     # -- helpers ------------------------------------------------------------------------
     @staticmethod
-    def line(product, quantity=1, discount=None):
-        body = {"product": str(product.pk), "quantity": str(quantity)}
-        if discount is not None:
-            body["discount"] = str(discount)
-        return body
+    def line(product, quantity=1, price="100.00"):
+        """One cart line: the seller sets the price, so every line carries one."""
+        return {"product": str(product.pk), "quantity": str(quantity), "unit_price": str(price)}
 
-    @staticmethod
-    def pay(amount, method="cash"):
-        return {"method": method, "amount": str(amount)}
-
-    def sell(self, lines=None, payments=None, *, client=None, location=None, key=None, **extra):
+    def sell(self, lines=None, *, client=None, location=None, key=None, **extra):
         body = {
             "location": str((location or self.store).pk),
             "lines": lines if lines is not None else [self.line(self.w.pad, 3)],
-            "payments": payments if payments is not None else [self.pay("300.00")],
             **extra,
         }
         return (client or self.sales).post(
@@ -73,17 +66,13 @@ class SalesCase(APITestCase):
         self.w.stock(product, self.store, 20, "20.00")
         return product
 
-    def set_rate(self, rate="3.5"):
-        ExchangeRate.objects.create(business=self.w.a, rate=D(rate), set_by=self.w.owner)
-
 
 class SaleBasicsTests(SalesCase):
-    def test_a_cash_sale_takes_the_goods_out_and_records_everything(self):
+    def test_a_sale_takes_the_goods_out_and_records_everything(self):
         sale = self.ok()
         self.assertEqual(sale["number"], 1)
         self.assertEqual(sale["total"], "300.00")
-        self.assertEqual(sale["paid"], "300.00")
-        self.assertEqual(sale["change_given"], "0.00")
+        self.assertEqual(sale["payment_method"], "cash")  # the default
         self.assertEqual(self.on_hand(self.w.pad), D(7))
         line = sale["lines"][0]
         self.assertEqual(
@@ -107,45 +96,56 @@ class SaleBasicsTests(SalesCase):
 
     def test_numbers_run_on_without_gaps_and_per_business(self):
         self.assertEqual([self.ok()["number"] for _ in range(2)], [1, 2])
-        refused = self.sell(lines=[self.line(self.w.pad, 99)], payments=[self.pay("9900")])
+        refused = self.sell(lines=[self.line(self.w.pad, 99)])
         self.assertEqual(refused.status_code, 409)
         self.assertEqual(self.ok()["number"], 3)  # the refused attempt used no number
 
     def test_rounding_is_half_up_to_two_decimals(self):
-        self.w.oil.price_amount = D("0.35")
-        self.w.oil.save()
         self.w.stock(self.w.oil, self.store, 10, "0.10")
-        sale = self.ok(lines=[self.line(self.w.oil, "0.50")], payments=[self.pay("1.00")])
-        self.assertEqual(sale["lines"][0]["gross"], "0.18")  # 0.175 rounds up
-        self.assertEqual(sale["change_given"], "0.82")
+        sale = self.ok(lines=[self.line(self.w.oil, "0.50", price="0.35")])
+        self.assertEqual(sale["lines"][0]["line_total"], "0.18")  # 0.175 rounds up
+        self.assertEqual(sale["total"], "0.18")
 
     def test_fractional_quantities_follow_the_unit(self):
         self.w.stock(self.w.oil, self.store, 10, "8.00")
-        bad = self.sell(lines=[self.line(self.w.pad, "1.5")], payments=[self.pay(150)])
+        bad = self.sell(lines=[self.line(self.w.pad, "1.5")])
         self.assertEqual(bad.status_code, 400)
-        good = self.sell(lines=[self.line(self.w.oil, "2.5")], payments=[self.pay(250)])
+        good = self.sell(lines=[self.line(self.w.oil, "2.5", price="100")])
         self.assertEqual(good.status_code, 201, good.content)
 
-    def test_usd_prices_are_converted_at_the_current_rate_and_the_rate_is_kept(self):
-        product = self.usd_product("10.10")
-        self.set_rate("3.5")
-        sale = self.ok(lines=[self.line(product, 3)], payments=[self.pay("110.00")])
-        line = sale["lines"][0]
-        self.assertEqual((line["price_amount"], line["price_currency"]), ("10.10", "USD"))
-        self.assertEqual(line["unit_price"], "35.35")  # 10.10 x 3.5
-        self.assertEqual(line["line_total"], "106.05")
-        self.assertEqual(sale["usd_rate"], "3.500000")
-        self.set_rate("4.0")  # a later rate never touches the sale
-        detail = self.sales.get(f"{self.w.base}/sales/{sale['id']}/").json()
-        self.assertEqual((detail["usd_rate"], detail["total"]), ("3.500000", "106.05"))
+    def test_the_seller_may_charge_any_price(self):
+        for price, expected in (("60.00", "180.00"), ("150.00", "450.00"), ("0.00", "0.00")):
+            with self.subTest(price=price):
+                sale = self.ok(lines=[self.line(self.w.pad, 3, price=price)])
+                line = sale["lines"][0]
+                self.assertEqual((line["unit_price"], line["line_total"]), (price, expected))
+                self.assertEqual(sale["total"], expected)
+                # the catalog price at that moment stays on the line for reference
+                self.assertEqual((line["price_amount"], line["price_currency"]), ("100.00", "TMT"))
 
-    def test_a_usd_price_without_a_rate_cannot_be_sold(self):
-        product = self.usd_product()
-        response = self.sell(lines=[self.line(product, 1)], payments=[self.pay(100)])
-        self.assertEqual(
-            (response.status_code, response.json()["error"]["code"]), (409, "rate_missing")
-        )
+    def test_a_price_is_required_and_cannot_be_negative(self):
+        missing = {"product": str(self.w.pad.pk), "quantity": "1"}
+        self.assertEqual(self.sell(lines=[missing]).status_code, 400)
+        self.assertEqual(self.sell(lines=[self.line(self.w.pad, 1, price="-1")]).status_code, 400)
+        self.assertEqual(self.sell(lines=[self.line(self.w.pad, 1, price="abc")]).status_code, 400)
         self.assertEqual(Sale.objects.count(), 0)
+
+    def test_a_later_catalog_price_change_never_touches_a_sale(self):
+        sale = self.ok(lines=[self.line(self.w.pad, 2, price="80.00")])
+        Product.objects.filter(pk=self.w.pad.pk).update(price_amount=D("200.00"))
+        detail = self.sales.get(f"{self.w.base}/sales/{sale['id']}/").json()
+        line = detail["lines"][0]
+        self.assertEqual(
+            (line["unit_price"], line["line_total"], line["price_amount"]),
+            ("80.00", "160.00", "100.00"),
+        )
+
+    def test_a_usd_priced_product_sells_at_the_price_the_seller_types_with_no_rate(self):
+        product = self.usd_product("10.00")  # no exchange rate has been entered
+        sale = self.ok(lines=[self.line(product, 2, price="35.00")])
+        line = sale["lines"][0]
+        self.assertEqual((line["price_amount"], line["price_currency"]), ("10.00", "USD"))
+        self.assertEqual((line["unit_price"], sale["total"]), ("35.00", "70.00"))
 
     def test_customer_is_optional_and_copied_onto_the_sale(self):
         customer = Customer.objects.create(business=self.w.a, name="Ýusup Ataýew", phone="+993 65")
@@ -174,85 +174,28 @@ class SaleBasicsTests(SalesCase):
 
     def test_fifo_cost_across_layers(self):
         self.w.stock(self.w.pad, self.store, 10, "60.00")  # now 10 @50 then 10 @60
-        sale = self.ok(
-            client=self.owner, lines=[self.line(self.w.pad, 15)], payments=[self.pay(1500)]
-        )
+        sale = self.ok(client=self.owner, lines=[self.line(self.w.pad, 15)])
         self.assertEqual(sale["lines"][0]["cost_total"], "800.00")  # 10x50 + 5x60
 
 
-class DiscountTests(SalesCase):
-    def test_a_line_discount_lowers_the_total_and_is_recorded(self):
-        sale = self.ok(lines=[self.line(self.w.pad, 3, discount="20.00")], payments=[self.pay(280)])
-        self.assertEqual((sale["total"], sale["discount_total"]), ("280.00", "20.00"))
-        line = sale["lines"][0]
-        self.assertEqual(
-            (line["gross"], line["discount"], line["line_total"]), ("300.00", "20.00", "280.00")
-        )
+class PaymentMethodTests(SalesCase):
+    """Only how the customer paid is recorded: cash or card. No amounts, no change."""
 
-    def test_anyone_who_sells_may_discount_without_a_limit(self):
-        sale = self.ok(lines=[self.line(self.w.pad, 3, discount="300.00")], payments=[])
-        self.assertEqual(sale["total"], "0.00")  # a free item is a (logged) discount of 100%
+    def test_cash_is_the_default_and_card_can_be_chosen(self):
+        self.assertEqual(self.ok()["payment_method"], "cash")
+        self.assertEqual(self.ok(payment_method="card")["payment_method"], "card")
+        listed = self.owner.get(f"{self.w.base}/sales/").json()["results"]
+        self.assertEqual([row["payment_method"] for row in listed], ["card", "cash"])
 
-    def test_a_discount_cannot_exceed_the_line(self):
-        response = self.sell(lines=[self.line(self.w.pad, 3, discount="300.01")])
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.json()["error"]["fields"]["lines.0.discount"][0]["code"], "discount_too_large"
-        )
-        negative = self.sell(lines=[self.line(self.w.pad, 3, discount="-1")])
-        self.assertEqual(negative.status_code, 400)
+    def test_other_methods_are_refused(self):
+        for method in ("credit", "transfer", "", None):
+            with self.subTest(method=method):
+                self.assertEqual(self.sell(payment_method=method).status_code, 400)
         self.assertEqual(Sale.objects.count(), 0)
 
-
-class PaymentTests(SalesCase):
-    def test_split_payments_must_add_up(self):
-        sale = self.ok(payments=[self.pay("100.00"), self.pay("200.00", "card")])
-        self.assertEqual([p["method"] for p in sale["payments"]], ["cash", "card"])
-        self.assertEqual(sale["change_given"], "0.00")
-
-    def test_cash_over_the_total_is_change(self):
-        sale = self.ok(payments=[self.pay("500.00")])
-        self.assertEqual((sale["paid"], sale["change_given"]), ("500.00", "200.00"))
-
-    def test_only_cash_can_give_change(self):
-        for payments in (
-            [self.pay("350.00", "card")],
-            [self.pay("100.00"), self.pay("500.00", "transfer")],
-        ):
-            with self.subTest(payments=payments):
-                response = self.sell(payments=payments)
-                self.assertEqual(response.status_code, 400)
-                self.assertEqual(response.json()["error"]["code"], "payment_mismatch")
-        self.assertEqual(Sale.objects.count(), 0)
-
-    def test_a_sale_must_be_paid_in_full(self):
-        for payments in ([self.pay("299.99")], []):
-            with self.subTest(payments=payments):
-                response = self.sell(payments=payments)
-                self.assertEqual(response.status_code, 400)
-                self.assertEqual(response.json()["error"]["code"], "payment_mismatch")
-        self.assertEqual(self.on_hand(self.w.pad), D(10))
-
-    def test_a_zero_total_needs_no_payment_and_takes_none(self):
-        free = [self.line(self.w.pad, 1, discount="100.00")]
-        self.assertEqual(self.sell(lines=free, payments=[self.pay("1.00")]).status_code, 400)
-        self.assertEqual(self.sell(lines=free, payments=[]).status_code, 201)
-
-    def test_bad_payment_input(self):
-        for payments in (
-            [self.pay("0.00")],
-            [self.pay("-5")],
-            [{"method": "credit", "amount": "300"}],
-        ):
-            with self.subTest(payments=payments):
-                self.assertEqual(self.sell(payments=payments).status_code, 400)
-
-    def test_an_outdated_total_is_refused_instead_of_charging_something_else(self):
-        stale = self.sell(expected_total="250.00")
-        self.assertEqual((stale.status_code, stale.json()["error"]["code"]), (409, "price_changed"))
-        self.assertEqual(stale.json()["error"]["params"]["total"], "300.00")
-        self.assertEqual(Sale.objects.count(), 0)
-        self.assertEqual(self.sell(expected_total="300.00").status_code, 201)
+    def test_a_free_sale_is_allowed(self):
+        sale = self.ok(lines=[self.line(self.w.pad, 1, price="0")])
+        self.assertEqual(sale["total"], "0.00")
 
 
 class ValidationAndAccessTests(SalesCase):
@@ -265,7 +208,7 @@ class ValidationAndAccessTests(SalesCase):
         }
         for name, lines in cases.items():
             with self.subTest(name):
-                self.assertEqual(self.sell(lines=lines, payments=[self.pay(100)]).status_code, 400)
+                self.assertEqual(self.sell(lines=lines).status_code, 400)
         self.assertEqual(Sale.objects.count(), 0)
 
     def test_an_archived_product_cannot_be_sold(self):
@@ -276,7 +219,7 @@ class ValidationAndAccessTests(SalesCase):
         )
 
     def test_selling_more_than_there_is_is_refused_and_changes_nothing(self):
-        response = self.sell(lines=[self.line(self.w.pad, 11)], payments=[self.pay(1100)])
+        response = self.sell(lines=[self.line(self.w.pad, 11)])
         self.assertEqual(
             (response.status_code, response.json()["error"]["code"]), (409, "insufficient_stock")
         )
@@ -289,9 +232,7 @@ class ValidationAndAccessTests(SalesCase):
 
     def test_one_short_line_stops_the_whole_sale(self):
         self.w.stock(self.w.oil, self.store, 1, "8.00")
-        response = self.sell(
-            lines=[self.line(self.w.pad, 2), self.line(self.w.oil, 5)], payments=[self.pay(1000)]
-        )
+        response = self.sell(lines=[self.line(self.w.pad, 2), self.line(self.w.oil, 5)])
         self.assertEqual(response.status_code, 409)
         self.assertEqual(self.on_hand(self.w.pad), D(10))  # the good line was not sold either
 
@@ -330,7 +271,7 @@ class ReadingTests(SalesCase):
             client=self.owner,
             location=self.w.warehouse,
             lines=[self.line(self.w.pad, 1)],
-            payments=[self.pay(100, "card")],
+            payment_method="card",
         )
 
     def listing(self, client=None, query=""):
@@ -346,7 +287,9 @@ class ReadingTests(SalesCase):
 
     def test_summary_fields(self):
         row = self.listing()["results"][0]
-        self.assertEqual((row["total"], row["line_count"], row["methods"]), ("100.00", 1, ["card"]))
+        self.assertEqual(
+            (row["total"], row["line_count"], row["payment_method"]), ("100.00", 1, "card")
+        )
         self.assertEqual(row["location"]["name"], "A Warehouse")
 
     def test_filters(self):
@@ -375,7 +318,7 @@ class ReadingTests(SalesCase):
 class HistoryIsFixedTests(SalesCase):
     def test_sales_cannot_be_edited_or_deleted_even_with_raw_sql(self):
         self.ok()
-        for table in ("sales_sale", "sales_saleline", "sales_salepayment"):
+        for table in ("sales_sale", "sales_saleline"):
             for sql in (f"DELETE FROM {table}",):
                 with self.subTest(table=table, sql=sql):
                     with self.assertRaises(DatabaseError), transaction.atomic():
@@ -450,7 +393,7 @@ class RetryTests(SalesCase):
     def test_same_key_with_another_cart_is_refused(self):
         key = uuid.uuid4()
         self.sell(key=key)
-        clash = self.sell(key=key, lines=[self.line(self.w.pad, 4)], payments=[self.pay(400)])
+        clash = self.sell(key=key, lines=[self.line(self.w.pad, 4)])
         self.assertEqual(
             (clash.status_code, clash.json()["error"]["code"]), (422, "idempotency_key_reused")
         )
@@ -462,7 +405,6 @@ class RetryTests(SalesCase):
             {
                 "location": str(self.store.pk),
                 "lines": [self.line(self.w.pad)],
-                "payments": [self.pay(100)],
             },
             format="json",
         )
@@ -470,10 +412,10 @@ class RetryTests(SalesCase):
 
     def test_a_refused_sale_does_not_burn_the_key(self):
         key = uuid.uuid4()
-        too_many = self.sell(key=key, lines=[self.line(self.w.pad, 11)], payments=[self.pay(1100)])
+        too_many = self.sell(key=key, lines=[self.line(self.w.pad, 11)])
         self.assertEqual(too_many.status_code, 409)
         self.w.stock(self.w.pad, self.store, 5, "50.00")
-        retry = self.sell(key=key, lines=[self.line(self.w.pad, 11)], payments=[self.pay(1100)])
+        retry = self.sell(key=key, lines=[self.line(self.w.pad, 11)])
         self.assertEqual(retry.status_code, 201)
 
     def test_the_restart_scenario(self):
@@ -513,8 +455,13 @@ class SaleConcurrencyTests(APITransactionTestCase):
                 f"{self.w.base}/sales/",
                 {
                     "location": str(self.w.store.pk),
-                    "lines": [{"product": str(self.w.pad.pk), "quantity": str(quantity)}],
-                    "payments": [{"method": "cash", "amount": str(100 * quantity)}],
+                    "lines": [
+                        {
+                            "product": str(self.w.pad.pk),
+                            "quantity": str(quantity),
+                            "unit_price": "100.00",
+                        }
+                    ],
                 },
                 format="json",
                 HTTP_IDEMPOTENCY_KEY=str(key or uuid.uuid4()),
