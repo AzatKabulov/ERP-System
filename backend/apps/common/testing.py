@@ -1,6 +1,11 @@
 """Shared helpers for backend tests (PostgreSQL only)."""
 
+import shutil
+import tempfile
+from pathlib import Path
+
 from django.core.cache import cache
+from django.test import override_settings
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase as DRFAPITestCase
 from rest_framework.test import APITransactionTestCase as DRFAPITransactionTestCase
@@ -43,6 +48,19 @@ def client_for(user=None) -> APIClient:
     if user is not None:
         client.force_authenticate(user)
     return client
+
+
+class PrivateFilesMixin:
+    """Put uploaded files in a fresh temporary folder for each test and delete it afterwards.
+    Put it before the test case class: `class T(PrivateFilesMixin, APITestCase)`."""
+
+    def setUp(self):
+        super().setUp()
+        self.private_root = Path(tempfile.mkdtemp(prefix="erp-private-"))
+        self.addCleanup(shutil.rmtree, self.private_root, ignore_errors=True)
+        override = override_settings(PRIVATE_FILES_ROOT=self.private_root)
+        override.enable()
+        self.addCleanup(override.disable)
 
 
 class APITestCase(DRFAPITestCase):

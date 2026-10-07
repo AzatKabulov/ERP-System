@@ -49,6 +49,10 @@ class Business(UUIDModel, TimestampedModel):
     def __str__(self) -> str:
         return self.name
 
+    def local_today(self):
+        """Today's date in the business's own time zone (the shop's calendar day)."""
+        return timezone.now().astimezone(zoneinfo.ZoneInfo(self.timezone)).date()
+
 
 class Location(UUIDModel, TimestampedModel):
     class Kind(models.TextChoices):

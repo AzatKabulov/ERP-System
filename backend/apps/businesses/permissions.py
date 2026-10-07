@@ -54,6 +54,11 @@ MATRIX: dict[str, frozenset[str]] = {
     "count.view": frozenset({Role.OWNER, Role.MANAGER, Role.WAREHOUSE}),
     "count.perform": frozenset({Role.OWNER, Role.MANAGER, Role.WAREHOUSE}),
     "count.approve": frozenset({Role.OWNER, Role.MANAGER}),
+    # private files (receipt photos) and shop expenses (owner and manager only)
+    "attachment.upload": frozenset({Role.OWNER, Role.MANAGER}),
+    "attachment.view": frozenset({Role.OWNER, Role.MANAGER}),
+    "expense.view": frozenset({Role.OWNER, Role.MANAGER}),
+    "expense.manage": frozenset({Role.OWNER, Role.MANAGER}),
     # every member may look up the outcome of their own operations
     "operations.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
 }

@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "apps.purchasing",
     "apps.sales",
     "apps.stockops",
+    "apps.attachments",
+    "apps.expenses",
 ]
 
 CORS_ALLOWED_ORIGINS = env.get_list("DJANGO_CORS_ALLOWED_ORIGINS")  # empty = CORS disabled
@@ -121,6 +123,11 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Uploaded files (receipt photos, scans) live here and are only ever served by the API after a
+# permission check: never by static or media URLs. Keep this directory out of the web server's
+# document root, outside the code tree in production, and back it up with the database.
+PRIVATE_FILES_ROOT = Path(env.get("PRIVATE_FILES_ROOT", str(BASE_DIR / "private_files")))
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
