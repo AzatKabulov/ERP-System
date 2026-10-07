@@ -755,5 +755,135 @@
       }
     }
   },
-  "paidBy": "Оплата"
+  "paidBy": "Оплата",
+  "transfersTitle": "Перемещения",
+  "transfersEmpty": "Перемещений пока нет",
+  "transferNew": "Новое перемещение",
+  "transferNumberTitle": "Перемещение {number}",
+  "@transferNumberTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "transferFromLabel": "Откуда",
+  "transferToLabel": "Куда",
+  "transferRoute": "{from} → {to}",
+  "@transferRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "transferStatusInTransit": "В пути",
+  "transferStatusReceived": "Принято",
+  "transferStatusPartial": "Принято не полностью",
+  "transferStatusCancelled": "Отменено",
+  "transferSend": "Отправить",
+  "transferReceive": "Принять",
+  "transferCancel": "Отменить перемещение",
+  "transferSentLine": "Отправлено: {qty}",
+  "@transferSentLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "transferReceivedLine": "Принято: {qty}",
+  "@transferReceivedLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "transferArrivedLabel": "Пришло",
+  "transferShortReasonLabel": "Причина недостачи",
+  "transferShortHint": "Пришло меньше, чем отправлено: недостающее будет списано. Укажите причину.",
+  "transferInTransitNote": "Товар в пути и пока не доступен для продажи.",
+  "transferSentDone": "Перемещение отправлено.",
+  "transferReceivedDone": "Перемещение принято.",
+  "transferCancelledDone": "Перемещение отменено, товар вернулся.",
+  "transferSamePlace": "Выберите другую точку.",
+  "errorTransferNotReceivable": "Это перемещение уже принято или отменено.",
+  "errorTransferNotCancellable": "Это перемещение уже нельзя отменить.",
+  "actionTransferSend": "Перемещение: отправка",
+  "actionTransferReceive": "Перемещение: приёмка",
+  "actionTransferCancel": "Перемещение: отмена",
+  "countsTitle": "Инвентаризация",
+  "countsEmpty": "Инвентаризаций пока нет",
+  "countStart": "Начать инвентаризацию",
+  "countNumberTitle": "Инвентаризация {number}",
+  "@countNumberTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "countScopeFull": "Всё в точке",
+  "countScopePartial": "Выбранные товары",
+  "countStatusOpen": "Идёт подсчёт",
+  "countStatusSubmitted": "Ждёт утверждения",
+  "countStatusApproved": "Утверждена",
+  "countStatusCancelled": "Отменена",
+  "countSystemLine": "В системе: {qty}",
+  "@countSystemLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "countCountedLabel": "Посчитано",
+  "countVarianceLine": "Разница: {qty}",
+  "@countVarianceLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "countMovedNote": "Были продажи или поступления после начала подсчёта: проверьте.",
+  "countSaveEntries": "Сохранить подсчёт",
+  "countSubmit": "Отправить на утверждение",
+  "countApprove": "Утвердить",
+  "countCancel": "Отменить инвентаризацию",
+  "countExplainLabel": "Объяснение расхождений",
+  "countNoDifferences": "Расхождений нет.",
+  "countDifferences": "Расхождений: {n}",
+  "@countDifferences": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "countProgress": "Посчитано {done} из {total}",
+  "@countProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "countEntriesSaved": "Подсчёт сохранён.",
+  "countSubmittedDone": "Отправлено на утверждение.",
+  "countApprovedDone": "Инвентаризация утверждена, остатки исправлены.",
+  "countCancelledDone": "Инвентаризация отменена.",
+  "countNeedsEntries": "Сначала посчитайте хотя бы один товар.",
+  "errorCountNotOpen": "Подсчёт уже закрыт.",
+  "errorCountEmpty": "Ничего не посчитано.",
+  "errorCountNotSubmitted": "Эту инвентаризацию нельзя утвердить: она не ждёт утверждения.",
+  "errorCountNotCancellable": "Эта инвентаризация уже закрыта.",
+  "actionCountApprove": "Инвентаризация: утверждение"
 }
