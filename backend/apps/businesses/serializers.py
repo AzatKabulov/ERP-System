@@ -22,7 +22,6 @@ class BusinessSerializer(serializers.ModelSerializer):
             "timezone",
             "address",
             "phone",
-            "tax_number",
             "is_active",
             "created_at",
         ]

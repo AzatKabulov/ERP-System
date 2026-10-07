@@ -6,7 +6,7 @@ from apps.businesses.models import Location
 from apps.catalog.models import Product
 from apps.common.fields import BusinessScopedField
 
-from .models import Customer, PaymentMethod, Sale, SaleLine, SalePayment
+from .models import Customer, PaymentMethod, Sale, SaleLine
 
 CENT = Decimal("0.01")
 
@@ -34,26 +34,16 @@ class CustomerSerializer(serializers.ModelSerializer):
 class SaleLineInputSerializer(serializers.Serializer):
     product = BusinessScopedField(queryset=Product.objects.select_related("unit"))
     quantity = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal("0.001"))
-    discount = serializers.DecimalField(
-        max_digits=14, decimal_places=2, min_value=Decimal("0"), default=Decimal("0")
-    )
-
-
-class PaymentInputSerializer(serializers.Serializer):
-    method = serializers.ChoiceField(choices=PaymentMethod.choices)
-    amount = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=CENT)
+    # What the seller charges for one unit (TMT). Prices are not fixed: any amount from zero up.
+    unit_price = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=Decimal("0"))
 
 
 class SaleInputSerializer(serializers.Serializer):
     location = BusinessScopedField(queryset=Location.objects.all())
     customer = BusinessScopedField(queryset=Customer.objects.all(), allow_null=True, required=False)
     note = serializers.CharField(max_length=500, allow_blank=True, default="")
-    # What the cashier saw. If prices moved meanwhile the sale is refused (price_changed).
-    expected_total = serializers.DecimalField(
-        max_digits=14, decimal_places=2, min_value=Decimal("0"), required=False
-    )
+    payment_method = serializers.ChoiceField(choices=PaymentMethod.choices, default="cash")
     lines = SaleLineInputSerializer(many=True, allow_empty=False, max_length=100)
-    payments = PaymentInputSerializer(many=True, required=False, default=list, max_length=10)
 
     def validate_customer(self, customer):
         if customer is not None and not customer.is_active:
@@ -84,8 +74,6 @@ class SaleLineSerializer(serializers.ModelSerializer):
             "price_amount",
             "price_currency",
             "unit_price",
-            "gross",
-            "discount",
             "line_total",
             "cost_total",
             "warranty_months",
@@ -101,20 +89,6 @@ class SaleLineSerializer(serializers.ModelSerializer):
         return data
 
 
-class SalePaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SalePayment
-        fields = ["method", "amount"]
-
-
-def _paid(sale: Sale) -> Decimal:
-    return sum((p.amount for p in sale.payments.all()), Decimal(0))
-
-
-def _discount(sale: Sale) -> Decimal:
-    return sum((line.discount for line in sale.lines.all()), Decimal(0))
-
-
 class SaleSerializer(serializers.ModelSerializer):
     """The full sale. `cost_total` and `profit` are removed on the server for roles without
     `sales.cost.view`."""
@@ -123,9 +97,6 @@ class SaleSerializer(serializers.ModelSerializer):
     cashier = serializers.SerializerMethodField()
     customer = serializers.SerializerMethodField()
     lines = SaleLineSerializer(many=True)
-    payments = SalePaymentSerializer(many=True)
-    paid = serializers.SerializerMethodField()
-    discount_total = serializers.SerializerMethodField()
 
     class Meta:
         model = Sale
@@ -139,13 +110,9 @@ class SaleSerializer(serializers.ModelSerializer):
             "customer_name",
             "customer_phone",
             "total",
-            "discount_total",
-            "paid",
-            "change_given",
-            "usd_rate",
+            "payment_method",
             "note",
             "lines",
-            "payments",
         ]
 
     def get_location(self, sale):
@@ -158,12 +125,6 @@ class SaleSerializer(serializers.ModelSerializer):
         if sale.customer_id is None:
             return None
         return {"id": str(sale.customer_id), "name": sale.customer_name}
-
-    def get_paid(self, sale):
-        return str(_paid(sale))
-
-    def get_discount_total(self, sale):
-        return str(_discount(sale))
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -178,8 +139,6 @@ class SaleSummarySerializer(serializers.ModelSerializer):
     location = serializers.SerializerMethodField()
     cashier = serializers.SerializerMethodField()
     line_count = serializers.SerializerMethodField()
-    discount_total = serializers.SerializerMethodField()
-    methods = serializers.SerializerMethodField()
 
     class Meta:
         model = Sale
@@ -191,9 +150,8 @@ class SaleSummarySerializer(serializers.ModelSerializer):
             "cashier",
             "customer_name",
             "total",
-            "discount_total",
+            "payment_method",
             "line_count",
-            "methods",
         ]
 
     def get_location(self, sale):
@@ -204,9 +162,3 @@ class SaleSummarySerializer(serializers.ModelSerializer):
 
     def get_line_count(self, sale):
         return len(sale.lines.all())
-
-    def get_discount_total(self, sale):
-        return str(_discount(sale))
-
-    def get_methods(self, sale):
-        return sorted({p.method for p in sale.payments.all()})

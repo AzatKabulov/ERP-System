@@ -19,7 +19,7 @@ from apps.common.errors import ApiError
 from apps.common.negotiation import IgnoreClientContentNegotiation
 
 from . import services
-from .documents import LABELS, number, render_document
+from .documents import LABELS, number, render_receipt
 from .models import Customer, Sale
 from .serializers import (
     CustomerSerializer,
@@ -33,7 +33,7 @@ def _sales(request):
     return restrict_to_locations(
         Sale.objects.filter(business=request.business)
         .select_related("location", "cashier", "business")
-        .prefetch_related("lines", "payments"),
+        .prefetch_related("lines"),
         request.membership,
     )
 
@@ -136,7 +136,7 @@ class SaleListCreateView(BusinessScopedMixin, generics.GenericAPIView):
         require_location(request.membership, data["location"].pk)
 
         def handler():
-            sale = services.complete_sale(request.business, request.user, request.membership, data)
+            sale = services.complete_sale(request.business, request.user, data)
             fresh = _sales(request).get(pk=sale.pk)
             return 201, SaleSerializer(fresh, context=_context(request)).data
 
@@ -154,29 +154,22 @@ class SaleDetailView(BusinessAPIView):
 
 
 class SaleDocumentView(BusinessAPIView):
-    """The receipt (80 mm roll) or invoice (A4) as a PDF, in the requested language. The
-    language defaults to the business's document language, whatever the interface language is."""
+    """The receipt (80 mm roll) as a PDF. The language is the business's document language
+    unless `?lang=ru|tk` says otherwise."""
 
     required_permission = "sales.view"
     content_negotiation_class = IgnoreClientContentNegotiation
 
     def get(self, request, business_id, sale_id):
-        kind = request.query_params.get("kind", "receipt")
         lang = request.query_params.get("lang") or request.business.document_language
-        if kind not in ("receipt", "invoice") or lang not in LABELS:
+        if lang not in LABELS:
             raise ApiError(
                 "validation_error",
-                "kind is receipt or invoice; lang is ru or tk",
-                fields={
-                    "kind" if kind not in ("receipt", "invoice") else "lang": [
-                        {"code": "invalid_choice", "message": "Invalid"}
-                    ]
-                },
+                "lang is ru or tk",
+                fields={"lang": [{"code": "invalid_choice", "message": "Invalid"}]},
             )
         sale = get_object_or_404(_sales(request), pk=sale_id)
-        response = HttpResponse(
-            render_document(sale, kind=kind, lang=lang), content_type="application/pdf"
-        )
-        response["Content-Disposition"] = f'inline; filename="{kind}-{number(sale)}.pdf"'
+        response = HttpResponse(render_receipt(sale, lang=lang), content_type="application/pdf")
+        response["Content-Disposition"] = f'inline; filename="receipt-{number(sale)}.pdf"'
         response["Cache-Control"] = "private, no-store"
         return response

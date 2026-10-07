@@ -38,10 +38,9 @@ class Business(UUIDModel, TimestampedModel):
     timezone = models.CharField(
         max_length=64, default="Asia/Ashgabat", validators=[validate_timezone]
     )
-    # Printed on receipts and invoices. Free text: the legal wording is decided later (D4).
+    # Printed at the top of the receipt. Free text.
     address = models.CharField(max_length=300, blank=True)
     phone = models.CharField(max_length=60, blank=True)
-    tax_number = models.CharField(max_length=60, blank=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Customer, Sale, SaleLine, SalePayment
+from .models import Customer, Sale, SaleLine
 
 admin.site.register(Customer)
 
@@ -18,5 +18,5 @@ class ReadOnlyAdmin(admin.ModelAdmin):
         return False
 
 
-for model in (Sale, SaleLine, SalePayment):
+for model in (Sale, SaleLine):
     admin.site.register(model, ReadOnlyAdmin)
