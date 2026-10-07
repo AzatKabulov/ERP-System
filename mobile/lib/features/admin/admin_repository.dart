@@ -13,7 +13,6 @@ class BusinessInfo {
     required this.timezone,
     this.address = '',
     this.phone = '',
-    this.taxNumber = '',
   });
 
   final String id;
@@ -23,10 +22,9 @@ class BusinessInfo {
   final String documentLanguage;
   final String timezone;
 
-  /// Printed on receipts and invoices.
+  /// Printed at the top of the receipt.
   final String address;
   final String phone;
-  final String taxNumber;
 
   factory BusinessInfo.fromJson(Map<String, dynamic> json) => BusinessInfo(
     id: json['id'] as String,
@@ -37,7 +35,6 @@ class BusinessInfo {
     timezone: json['timezone'] as String,
     address: json['address'] as String? ?? '',
     phone: json['phone'] as String? ?? '',
-    taxNumber: json['tax_number'] as String? ?? '',
   );
 }
 
@@ -128,7 +125,6 @@ class AdminRepository {
     String? documentLanguage,
     String? address,
     String? phone,
-    String? taxNumber,
   }) async => BusinessInfo.fromJson(
     (await api.patch(
       '$_base/',
@@ -138,7 +134,6 @@ class AdminRepository {
         'document_language': ?documentLanguage,
         'address': ?address,
         'phone': ?phone,
-        'tax_number': ?taxNumber,
       },
     )).map,
   );

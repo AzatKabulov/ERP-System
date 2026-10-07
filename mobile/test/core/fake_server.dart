@@ -72,7 +72,6 @@ class FakeServer {
     'purchasing.cost.view',
     'sales.view',
     'sales.create',
-    'sales.discount',
     'sales.cost.view',
     'customer.view',
     'customer.manage',
@@ -92,7 +91,6 @@ class FakeServer {
     'timezone': 'Asia/Ashgabat',
     'address': '',
     'phone': '',
-    'tax_number': '',
     'is_active': true,
   };
   final List<Map<String, dynamic>> locationsData = [

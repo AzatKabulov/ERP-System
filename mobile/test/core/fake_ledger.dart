@@ -741,13 +741,9 @@ class FakeLedger {
       final sale = sales.where((s) => s['id'] == oneSale.group(1)).firstOrNull;
       if (sale == null) return server.errorResponse(404, 'not_found');
       if (oneSale.group(2) != null) {
-        documentRequests.add({
-          'id': '${sale['id']}',
-          'kind': q['kind'] ?? 'receipt',
-          'lang': q['lang'] ?? '',
-        });
+        documentRequests.add({'id': '${sale['id']}', 'lang': q['lang'] ?? ''});
         return http.Response.bytes(
-          '%PDF-1.4 fake ${q['kind']} ${_saleNumberText(sale)}'.codeUnits,
+          '%PDF-1.4 fake receipt ${_saleNumberText(sale)}'.codeUnits,
           200,
           headers: {'content-type': 'application/pdf'},
         );
@@ -765,9 +761,6 @@ class FakeLedger {
     bool summary = false,
   }) {
     final lines = (sale['lines'] as List).cast<Map<String, dynamic>>();
-    final payments = (sale['payments'] as List).cast<Map<String, dynamic>>();
-    final discount = lines.fold<int>(0, (a, l) => a + (l['discount'] as int));
-    final paid = payments.fold<int>(0, (a, p) => a + (p['amount'] as int));
     final location = _location(sale['location'] as String);
     final base = {
       'id': sale['id'],
@@ -777,15 +770,10 @@ class FakeLedger {
       'cashier': {'id': 'u-1', 'name': 'Aman Ataýew'},
       'customer_name': sale['customer_name'],
       'total': _dec(sale['total'] as int, 2),
-      'discount_total': _dec(discount, 2),
+      'payment_method': sale['payment_method'],
     };
     if (summary) {
-      return {
-        ...base,
-        'line_count': lines.length,
-        'methods': ({for (final p in payments) p['method'] as String}.toList()
-          ..sort()),
-      };
+      return {...base, 'line_count': lines.length};
     }
     final showCost = _can('sales.cost.view');
     final cost = lines.fold<int>(0, (a, l) => a + (l['cost'] as int));
@@ -795,9 +783,6 @@ class FakeLedger {
           ? null
           : {'id': sale['customer_id'], 'name': sale['customer_name']},
       'customer_phone': sale['customer_phone'],
-      'paid': _dec(paid, 2),
-      'change_given': _dec(sale['change'] as int, 2),
-      'usd_rate': sale['usd_rate'],
       'note': sale['note'],
       'lines': [
         for (final l in lines)
@@ -810,17 +795,11 @@ class FakeLedger {
             'unit_decimals': l['unit_decimals'],
             'quantity': _dec(l['quantity'] as int, 3),
             'unit_price': _dec(l['unit_price'] as int, 2),
-            'gross': _dec(l['gross'] as int, 2),
-            'discount': _dec(l['discount'] as int, 2),
             'line_total': _dec(l['line_total'] as int, 2),
             'warranty_months': l['warranty_months'],
             'warranty_terms': l['warranty_terms'],
             if (showCost) 'cost_total': _dec(l['cost'] as int, 2),
           },
-      ],
-      'payments': [
-        for (final p in payments)
-          {'method': p['method'], 'amount': _dec(p['amount'] as int, 2)},
       ],
       if (showCost) ...{
         'cost_total': _dec(cost, 2),
@@ -829,35 +808,26 @@ class FakeLedger {
     };
   }
 
-  /// The sale command with the real server's rules: priced on the server, discounts within
-  /// the line, the cart's total checked, paid in full with change only from cash, stock
-  /// taken FIFO (nothing changes when any line is short), numbered last.
+  /// The sale command with the real server's rules: the seller's price on every line (any
+  /// amount from zero up), cash or card, stock taken FIFO (nothing changes when any line is
+  /// short), numbered last.
   Object _completeSale(Map<String, dynamic> body) {
     final lines = (body['lines'] as List).cast<Map<String, dynamic>>();
+    final method = '${body['payment_method'] ?? 'cash'}';
+    if (method != 'cash' && method != 'card') {
+      return server.errorResponse(400, 'validation_error');
+    }
     final priced = <Map<String, dynamic>>[];
     for (final l in lines) {
       final raw = server.productsData.firstWhere(
         (p) => p['id'] == l['product'],
       );
-      final shown = server.presentProduct(raw);
-      if (shown['price_tmt'] == null) {
-        return server.errorResponse(409, 'rate_missing');
+      if (l['unit_price'] == null) {
+        return server.errorResponse(400, 'validation_error');
       }
-      final unit = _minor(shown['price_tmt']);
+      final unit = _minor(l['unit_price']);
       final quantity = _milli(l['quantity']);
-      final gross = (quantity * unit / 1000 + 0.0000001).round();
-      final discount = _minor(l['discount'] ?? '0');
-      if (discount > gross) {
-        return server.errorResponse(
-          400,
-          'validation_error',
-          fields: {
-            'lines.${priced.length}.discount': [
-              {'code': 'discount_too_large', 'message': 'too large'},
-            ],
-          },
-        );
-      }
+      final lineTotal = (quantity * unit / 1000 + 0.0000001).round();
       final unitRef = server.unitsData.firstWhere(
         (u) => u['id'] == raw['unit'],
       );
@@ -870,30 +840,13 @@ class FakeLedger {
         'unit_decimals': unitRef['decimal_places'],
         'quantity': quantity,
         'unit_price': unit,
-        'gross': gross,
-        'discount': discount,
-        'line_total': gross - discount,
+        'line_total': lineTotal,
         'cost': 0,
         'warranty_months': raw['warranty_months'] ?? 0,
         'warranty_terms': raw['warranty_terms'] ?? '',
       });
     }
     final total = priced.fold<int>(0, (a, l) => a + (l['line_total'] as int));
-    if (body['expected_total'] != null &&
-        _minor(body['expected_total']) != total) {
-      return server.errorResponse(409, 'price_changed');
-    }
-    final payments = (body['payments'] as List? ?? const [])
-        .cast<Map<String, dynamic>>()
-        .map((p) => {'method': p['method'], 'amount': _minor(p['amount'])})
-        .toList();
-    final paid = payments.fold<int>(0, (a, p) => a + (p['amount'] as int));
-    final cash = payments
-        .where((p) => p['method'] == 'cash')
-        .fold<int>(0, (a, p) => a + (p['amount'] as int));
-    if (paid < total || paid - total > cash || (total == 0 && paid != 0)) {
-      return server.errorResponse(400, 'payment_mismatch');
-    }
     final saleId = _id('sale');
     final error = _postAll([
       for (final l in priced)
@@ -938,11 +891,9 @@ class FakeLedger {
       'customer_name': customer?['name'] ?? '',
       'customer_phone': customer?['phone'] ?? '',
       'total': total,
-      'change': paid - total,
-      'usd_rate': null,
+      'payment_method': method,
       'note': body['note'] ?? '',
       'lines': priced,
-      'payments': payments,
     };
     salesRecorded++;
     sales.insert(0, sale);

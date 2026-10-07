@@ -54,6 +54,16 @@ int? parseServerDecimal(String? input, int scale) {
   return int.parse(whole) * _pow10(scale) + fractionValue;
 }
 
+/// Like [parseServerDecimal], but accepts a leading minus sign: a profit can be a loss
+/// (the seller may charge less than the goods cost).
+int? parseSignedServerDecimal(String? input, int scale) {
+  if (input == null) return null;
+  final text = input.trim();
+  if (!text.startsWith('-')) return parseServerDecimal(text, scale);
+  final value = parseServerDecimal(text.substring(1), scale);
+  return value == null ? null : -value;
+}
+
 /// The decimal string the server expects ("85.00"): a dot, exactly [scale] digits.
 String toServerDecimal(int value, int scale) {
   final negative = value < 0;

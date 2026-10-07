@@ -5,27 +5,34 @@ import '../catalog/catalog_models.dart';
 import '../inventory/quantity_input.dart';
 import 'sales_models.dart';
 
-/// One line of the cart: a product with the typed quantity and discount.
+/// One line of the cart: a product with the typed quantity and the price the seller
+/// charges. Prices are not fixed, so the price starts as the catalog price in TMT (empty
+/// when a USD price has no rate yet) and the seller may change it to anything.
 class CartLine {
   CartLine({
     required this.product,
     this.quantityText = '1',
-    this.discountText = '',
+    String? priceText,
     this.availableMilli,
-  });
+  }) : priceText = priceText ?? _catalogPriceText(product);
 
   Product product;
   String quantityText;
-  String discountText;
+  String priceText;
 
   /// Sellable stock at the current location when it was last looked up; null when unknown.
-  /// Only a hint: the cart reserves nothing, and the server decides at checkout.
+  /// Only a hint: the cart reserves nothing, and the server decides when the sale is saved.
   int? availableMilli;
+
+  static String _catalogPriceText(Product product) {
+    final minor = product.priceTmtMinor;
+    return minor == null ? '' : toServerDecimal(minor, 2).replaceAll('.', ',');
+  }
 }
 
 /// The cart, with exact integer arithmetic (hundredths of TMT, thousandths of a unit). It
-/// reserves no stock. Totals follow the server's rules: line gross = quantity x unit price
-/// rounded half up to hundredths, the discount comes off the line, the total is the sum.
+/// reserves no stock. The line total is quantity x price rounded half up to hundredths, as
+/// the server does it; the total is the sum of the lines.
 class CartController extends ChangeNotifier {
   final List<CartLine> _lines = [];
   Customer? _customer;
@@ -73,8 +80,8 @@ class CartController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setDiscountText(CartLine line, String text) {
-    line.discountText = text;
+  void setPriceText(CartLine line, String text) {
+    line.priceText = text;
     notifyListeners();
   }
 
@@ -86,75 +93,34 @@ class CartController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Gives every line the same percentage off ([percentText] like "10" or "7,5").
-  /// Returns false when the percentage is not a number from 0 to 100.
-  bool applyPercentToAll(String percentText) {
-    final percent = parseScaled(percentText, 2); // hundredths of a percent
-    if (percent == null || percent > 10000) return false;
-    for (final line in _lines) {
-      final gross = grossMinor(line);
-      if (gross == null) continue;
-      final discount = (gross * percent + 5000) ~/ 10000;
-      line.discountText = discount == 0
-          ? ''
-          : toServerDecimal(discount, 2).replaceAll('.', ',');
-    }
-    notifyListeners();
-    return true;
-  }
-
-  /// Replaces a product with a freshly loaded copy (after the prices changed).
-  void refreshProduct(Product fresh) {
-    for (final line in _lines) {
-      if (line.product.id == fresh.id) line.product = fresh;
-    }
-    notifyListeners();
-  }
-
   // ---- arithmetic -------------------------------------------------------------
 
   int? quantityMilli(CartLine line) =>
       parseQuantity(line.quantityText, line.product.unit);
 
-  /// The unit price in TMT hundredths; null for a USD price while no rate exists.
-  int? unitPriceMinor(CartLine line) => line.product.priceTmtMinor;
-
-  int? grossMinor(CartLine line) {
-    final quantity = quantityMilli(line);
-    final unit = unitPriceMinor(line);
-    if (quantity == null || unit == null) return null;
-    return (quantity * unit + 500) ~/ 1000;
-  }
-
-  int? discountMinor(CartLine line) {
-    if (line.discountText.trim().isEmpty) return 0;
-    return parseScaled(line.discountText, 2);
-  }
+  /// The price the seller charges for one unit, in TMT hundredths; null while it is empty
+  /// or not a number. Zero is allowed.
+  int? priceMinor(CartLine line) => parseScaled(line.priceText, 2);
 
   int? lineTotalMinor(CartLine line) {
-    final gross = grossMinor(line);
-    final discount = discountMinor(line);
-    if (gross == null || discount == null || discount > gross) return null;
-    return gross - discount;
+    final quantity = quantityMilli(line);
+    final price = priceMinor(line);
+    if (quantity == null || price == null) return null;
+    return (quantity * price + 500) ~/ 1000;
   }
 
   int get totalMinor =>
       _lines.fold(0, (sum, line) => sum + (lineTotalMinor(line) ?? 0));
 
-  int get discountTotalMinor =>
-      _lines.fold(0, (sum, line) => sum + (discountMinor(line) ?? 0));
-
   /// What is wrong with a line, as a code the screen translates; null when it is fine.
   String? problem(CartLine line) {
-    if (line.product.priceTmtMinor == null) return 'rate_missing';
     if (line.quantityText.trim().isEmpty) return 'required';
     final quantity = quantityMilli(line);
     if (quantity == null) return 'quantity';
     final available = line.availableMilli;
     if (available != null && quantity > available) return 'exceeds_available';
-    final discount = discountMinor(line);
-    if (discount == null) return 'discount_invalid';
-    if (discount > (grossMinor(line) ?? 0)) return 'discount_too_large';
+    if (line.priceText.trim().isEmpty) return 'price_required';
+    if (priceMinor(line) == null) return 'price_invalid';
     return null;
   }
 
@@ -162,13 +128,13 @@ class CartController extends ChangeNotifier {
       _lines.isNotEmpty && _lines.every((l) => problem(l) == null);
 
   /// The lines as the sale command wants them (call only when [isReady]).
-  List<({String productId, int quantityMilli, int discountMinor})>
+  List<({String productId, int quantityMilli, int unitPriceMinor})>
   get saleLines => [
     for (final l in _lines)
       (
         productId: l.product.id,
         quantityMilli: quantityMilli(l)!,
-        discountMinor: discountMinor(l)!,
+        unitPriceMinor: priceMinor(l)!,
       ),
   ];
 }

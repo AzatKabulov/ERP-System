@@ -563,13 +563,11 @@ void main() {
         'Aşgabat, Garaşsyzlyk 12',
       );
       await tester.enterText(key('business-phone'), '+993 12 34 56 78');
-      await tester.enterText(key('business-tax-number'), 'TIN-4455');
       await tapKey(tester, 'business-save');
       await settle(tester);
       expect(key('business-saved'), findsOneWidget);
       expect(rig.server.businessData['address'], 'Aşgabat, Garaşsyzlyk 12');
       expect(rig.server.businessData['phone'], '+993 12 34 56 78');
-      expect(rig.server.businessData['tax_number'], 'TIN-4455');
       // a fresh load of the page shows what the server keeps
       await tapKey(tester, 'nav-inventory');
       await settle(tester);

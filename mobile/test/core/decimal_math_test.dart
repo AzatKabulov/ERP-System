@@ -54,6 +54,17 @@ void main() {
     });
   });
 
+  group('parseSignedServerDecimal', () {
+    test('accepts a minus sign, because a profit can be a loss', () {
+      expect(parseSignedServerDecimal('-20.00', 2), -2000);
+      expect(parseSignedServerDecimal('20.00', 2), 2000);
+      expect(parseSignedServerDecimal('-0.05', 2), -5);
+      expect(parseSignedServerDecimal('--1.00', 2), isNull);
+      expect(parseSignedServerDecimal('-', 2), isNull);
+      expect(parseSignedServerDecimal(null, 2), isNull);
+    });
+  });
+
   group('parseServerDecimal', () {
     test('reads the decimal strings the API sends', () {
       expect(parseServerDecimal('85.00', 2), 8500);

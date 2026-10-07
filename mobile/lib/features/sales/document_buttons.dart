@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import 'document_actions.dart';
 import 'sales_models.dart';
 import 'sales_repository.dart';
 
-/// Print or share the receipt or the invoice of one sale, in a chosen language. The PDF is
-/// made by the server (permission-checked, fonts embedded); the device's own dialogs print
-/// or share it.
+/// Print or share the receipt of one sale. The PDF is made by the server (permission-checked,
+/// fonts embedded, in the business's document language); the device's own dialogs print or
+/// share it.
 class DocumentButtons extends StatefulWidget {
   const DocumentButtons({
     super.key,
@@ -26,21 +25,16 @@ class DocumentButtons extends StatefulWidget {
 }
 
 class _DocumentButtonsState extends State<DocumentButtons> {
-  String? _lang; // null = the business's document language
   bool _busy = false;
 
-  Future<void> _run(String kind, bool print) async {
+  Future<void> _run(bool print) async {
     if (_busy) return;
     final l = strings(context);
     final actions = DocumentsScope.of(context);
     setState(() => _busy = true);
     try {
-      final bytes = await widget.repository.document(
-        widget.saleId,
-        kind: kind,
-        lang: _lang,
-      );
-      final name = '$kind-${saleNumber(widget.saleNumber)}';
+      final bytes = await widget.repository.receipt(widget.saleId);
+      final name = 'receipt-${saleNumber(widget.saleNumber)}';
       if (print) {
         await actions.printDocument(bytes, name);
       } else {
@@ -53,93 +47,32 @@ class _DocumentButtonsState extends State<DocumentButtons> {
     }
   }
 
-  Widget _row(String kind, String label) {
+  @override
+  Widget build(BuildContext context) {
     final l = strings(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        SizedBox(
-          width: 110,
-          child: Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
         OutlinedButton.icon(
-          key: ValueKey('doc-$kind-print'),
-          onPressed: _busy ? null : () => _run(kind, true),
+          key: const ValueKey('doc-receipt-print'),
+          onPressed: _busy ? null : () => _run(true),
           icon: const Icon(Icons.print_outlined),
-          label: Text(l.printAction),
+          label: Text('${l.receiptAction} · ${l.printAction}'),
         ),
         OutlinedButton.icon(
-          key: ValueKey('doc-$kind-share'),
-          onPressed: _busy ? null : () => _run(kind, false),
+          key: const ValueKey('doc-receipt-share'),
+          onPressed: _busy ? null : () => _run(false),
           icon: const Icon(Icons.ios_share_outlined),
-          label: Text(l.shareAction),
+          label: Text('${l.receiptAction} · ${l.shareAction}'),
         ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = strings(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(
-              l.documentLanguage,
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
-            ),
-            SegmentedButton<String>(
-              key: const ValueKey('doc-lang'),
-              showSelectedIcon: false,
-              segments: [
-                ButtonSegment(
-                  value: 'auto',
-                  label: Text(
-                    l.documentLangAuto,
-                    key: const ValueKey('doc-lang-auto'),
-                  ),
-                ),
-                ButtonSegment(
-                  value: 'ru',
-                  label: Text(
-                    l.languageRussian,
-                    key: const ValueKey('doc-lang-ru'),
-                  ),
-                ),
-                ButtonSegment(
-                  value: 'tk',
-                  label: Text(
-                    l.languageTurkmen,
-                    key: const ValueKey('doc-lang-tk'),
-                  ),
-                ),
-              ],
-              selected: {_lang ?? 'auto'},
-              onSelectionChanged: (s) =>
-                  setState(() => _lang = s.first == 'auto' ? null : s.first),
-            ),
-            if (_busy)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _row('receipt', l.receiptAction),
-        const SizedBox(height: 8),
-        _row('invoice', l.invoiceAction),
+        if (_busy)
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
       ],
     );
   }
