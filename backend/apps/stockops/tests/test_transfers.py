@@ -495,7 +495,7 @@ class TransferConcurrencyTests(APITransactionTestCase):
             cancel_path = f"transfers/{self.send(1).json()['id']}/cancel/"
             responses = self.parallel(
                 [
-                    lambda: self.call(cancel_path, {"reason": "x"}),
+                    lambda path=cancel_path: self.call(path, {"reason": "x"}),
                     lambda: self.send(1),
                 ]
             )
