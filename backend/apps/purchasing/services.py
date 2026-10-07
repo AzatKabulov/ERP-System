@@ -363,4 +363,6 @@ def reconcile(business=None) -> list[str]:
             differences.append(
                 f"delivery={delivery_id}: lines={total} movements={moved.get(delivery_id, ZERO)}"
             )
-    return differences
+    from . import returns  # imported here: returns builds on this module
+
+    return differences + returns.reconcile(business)

@@ -32,4 +32,19 @@ urlpatterns = [
         views.DeliveryCreateView.as_view(),
         name="order-receive",
     ),
+    path(
+        f"{B}supplier-returns/",
+        views.SupplierReturnListCreateView.as_view(),
+        name="supplier-return-list",
+    ),
+    path(
+        f"{B}supplier-returns/<uuid:return_id>/",
+        views.SupplierReturnDetailView.as_view(),
+        name="supplier-return-detail",
+    ),
+    path(
+        f"{B}reorder-suggestions/",
+        views.ReorderSuggestionsView.as_view(),
+        name="reorder-suggestions",
+    ),
 ]

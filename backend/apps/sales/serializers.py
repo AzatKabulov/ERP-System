@@ -1,12 +1,22 @@
 from decimal import Decimal
 
+from django.db.models import Sum
 from rest_framework import serializers
 
 from apps.businesses.models import Location
 from apps.catalog.models import Product
 from apps.common.fields import BusinessScopedField
 
-from .models import Customer, PaymentMethod, Sale, SaleLine
+from . import returns
+from .models import (
+    Customer,
+    PaymentMethod,
+    ReturnCondition,
+    Sale,
+    SaleLine,
+    SaleReturn,
+    SaleReturnLine,
+)
 
 CENT = Decimal("0.01")
 
@@ -78,10 +88,16 @@ class SaleLineSerializer(serializers.ModelSerializer):
             "cost_total",
             "warranty_months",
             "warranty_terms",
+            "return_days",
         ]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        returned = getattr(instance, "returned_quantity", None)
+        if returned is None:
+            returned = instance.return_lines.aggregate(t=Sum("quantity"))["t"] or Decimal(0)
+        data["returned_quantity"] = str(returned)
+        data["returnable_quantity"] = str(instance.quantity - returned)
         if not self.context.get("can_view_cost"):
             data.pop("cost_total", None)
         else:
@@ -97,6 +113,7 @@ class SaleSerializer(serializers.ModelSerializer):
     cashier = serializers.SerializerMethodField()
     customer = serializers.SerializerMethodField()
     lines = SaleLineSerializer(many=True)
+    returns = serializers.SerializerMethodField()
 
     class Meta:
         model = Sale
@@ -113,6 +130,18 @@ class SaleSerializer(serializers.ModelSerializer):
             "payment_method",
             "note",
             "lines",
+            "returns",
+        ]
+
+    def get_returns(self, sale):
+        return [
+            {
+                "id": str(r.pk),
+                "number": r.number,
+                "created_at": r.created_at,
+                "refund_total": str(r.refund_total),
+            }
+            for r in sorted(sale.returns.all(), key=lambda r: r.number)
         ]
 
     def get_location(self, sale):
@@ -128,6 +157,9 @@ class SaleSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        for line_data, line in zip(data["lines"], instance.lines.all(), strict=True):
+            until = returns.return_until(instance.business, instance, line)
+            line_data["return_until"] = until.isoformat() if until else None
         if self.context.get("can_view_cost"):
             cost = sum((line.cost_total for line in instance.lines.all()), Decimal(0))
             data["cost_total"] = str(cost.quantize(CENT))
@@ -162,3 +194,133 @@ class SaleSummarySerializer(serializers.ModelSerializer):
 
     def get_line_count(self, sale):
         return len(sale.lines.all())
+
+
+# ---- returns -------------------------------------------------------------------------------
+
+
+class ReturnLineInputSerializer(serializers.Serializer):
+    sale_line = serializers.UUIDField()
+    quantity = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal("0.001"))
+    condition = serializers.ChoiceField(choices=ReturnCondition.choices, default="sellable")
+
+
+class ReturnInputSerializer(serializers.Serializer):
+    reason = serializers.CharField(max_length=300)
+    note = serializers.CharField(max_length=500, allow_blank=True, default="")
+    lines = ReturnLineInputSerializer(many=True, allow_empty=False, max_length=100)
+
+    def validate_reason(self, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("This field may not be blank.", code="blank")
+        return value
+
+
+class InspectionRowSerializer(serializers.Serializer):
+    return_line = serializers.UUIDField()
+    outcome = serializers.ChoiceField(choices=["sellable", "damaged"])
+    quantity = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal("0.001"))
+
+
+class InspectionInputSerializer(serializers.Serializer):
+    lines = InspectionRowSerializer(many=True, allow_empty=False, max_length=100)
+
+
+class ReturnLineSerializer(serializers.ModelSerializer):
+    product = serializers.UUIDField(source="product_id")
+    sale_line = serializers.UUIDField(source="sale_line_id")
+
+    class Meta:
+        model = SaleReturnLine
+        fields = [
+            "id",
+            "sale_line",
+            "product",
+            "sku",
+            "name",
+            "unit_symbol",
+            "unit_decimals",
+            "quantity",
+            "condition",
+            "refund_amount",
+            "cost_total",
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        waiting = Decimal(0)
+        if instance.condition == ReturnCondition.INSPECTION:
+            decided = sum((i.quantity for i in instance.inspections.all()), Decimal(0))
+            waiting = instance.quantity - decided
+        data["awaiting_inspection"] = str(waiting)
+        if not self.context.get("can_view_cost"):
+            data.pop("cost_total", None)
+        else:
+            data["cost_total"] = str(instance.cost_total.quantize(CENT))
+        return data
+
+
+class ReturnSerializer(serializers.ModelSerializer):
+    sale = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+    created_by = serializers.SerializerMethodField()
+    lines = ReturnLineSerializer(many=True)
+
+    class Meta:
+        model = SaleReturn
+        fields = [
+            "id",
+            "number",
+            "created_at",
+            "sale",
+            "location",
+            "created_by",
+            "reason",
+            "note",
+            "refund_total",
+            "payment_method",
+            "lines",
+        ]
+
+    def get_sale(self, ret):
+        return {"id": str(ret.sale_id), "number": ret.sale.number}
+
+    def get_location(self, ret):
+        return {"id": str(ret.location_id), "name": ret.location.name}
+
+    def get_created_by(self, ret):
+        return _person(ret.created_by)
+
+
+class ReturnSummarySerializer(serializers.ModelSerializer):
+    sale = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+    awaiting_inspection = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SaleReturn
+        fields = [
+            "id",
+            "number",
+            "created_at",
+            "sale",
+            "location",
+            "reason",
+            "refund_total",
+            "awaiting_inspection",
+        ]
+
+    def get_sale(self, ret):
+        return {"id": str(ret.sale_id), "number": ret.sale.number}
+
+    def get_location(self, ret):
+        return {"id": str(ret.location_id), "name": ret.location.name}
+
+    def get_awaiting_inspection(self, ret) -> bool:
+        for line in ret.lines.all():
+            if line.condition == ReturnCondition.INSPECTION:
+                decided = sum((i.quantity for i in line.inspections.all()), Decimal(0))
+                if line.quantity > decided:
+                    return True
+        return False

@@ -103,6 +103,12 @@ class Product(UUIDModel, TimestampedModel):
         default=0, validators=[MaxValueValidator(120)]
     )
     warranty_terms = models.TextField(blank=True)
+    # How many days after the sale a customer may bring it back (counted from the sale date;
+    # the owner sets it per product). Empty = no limit, 0 = this product cannot be returned.
+    # Copied onto each sale line so a later edit never changes a sale's conditions.
+    return_days = models.PositiveSmallIntegerField(
+        null=True, blank=True, validators=[MaxValueValidator(3650)]
+    )
 
     is_active = models.BooleanField(default=True)
     # Case-folded name, SKU, brand, category and barcodes; searched with `contains` so
@@ -118,6 +124,10 @@ class Product(UUIDModel, TimestampedModel):
             ),
             models.CheckConstraint(
                 condition=models.Q(warranty_months__lte=120), name="catalog_product_warranty_max"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(return_days__isnull=True) | models.Q(return_days__lte=3650),
+                name="catalog_product_return_days_max",
             ),
         ]
         indexes = [models.Index(fields=["business", "is_active", "name"])]

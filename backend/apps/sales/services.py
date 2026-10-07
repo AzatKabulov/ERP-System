@@ -147,6 +147,7 @@ def complete_sale(business, actor, data: dict) -> Sale:
                 cost_total=cost_by_product[line["product"].pk],
                 warranty_months=line["product"].warranty_months,
                 warranty_terms=line["product"].warranty_terms,
+                return_days=line["product"].return_days,
             )
             for index, line in enumerate(priced)
         ]
@@ -196,4 +197,6 @@ def reconcile(business=None) -> list[str]:
             differences.append(
                 f"S-{sale.number:06d}: sold={quantity} movements={moved.get(sale.pk, ZERO)}"
             )
-    return differences
+    from . import returns  # imported here: returns builds on this module
+
+    return differences + returns.reconcile(business)

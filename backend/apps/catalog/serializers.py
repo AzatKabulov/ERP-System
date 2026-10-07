@@ -80,6 +80,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "default_purchase_cost",
             "warranty_months",
             "warranty_terms",
+            "return_days",
             "barcodes",
             "is_active",
             "created_at",
@@ -122,6 +123,9 @@ class ProductWriteSerializer(serializers.Serializer):
     )
     warranty_months = serializers.IntegerField(min_value=0, max_value=120, default=0)
     warranty_terms = serializers.CharField(max_length=2000, allow_blank=True, default="")
+    return_days = serializers.IntegerField(
+        min_value=0, max_value=3650, allow_null=True, required=False
+    )
     barcodes = serializers.ListField(
         child=serializers.CharField(max_length=64, allow_blank=False),
         required=False,

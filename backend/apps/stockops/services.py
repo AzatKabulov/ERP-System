@@ -18,7 +18,7 @@ stock rows in different orders, and a single queue is the simplest way to rule o
 import uuid
 from decimal import Decimal
 
-from django.db import connection, transaction
+from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -39,8 +39,7 @@ ZERO = Decimal("0")
 def _lock(business) -> None:
     """Queue behind any other transfer or count posting of this business (released at the end
     of the transaction)."""
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [f"stockops:{business.pk}"])
+    inventory.lock_business_stock(business)
 
 
 def _need_reason(reason: str, field: str = "reason") -> str:

@@ -12,14 +12,18 @@ from apps.businesses.access import (
 )
 from apps.businesses.permissions import has_permission
 
-from . import services
-from .models import PurchaseOrder, Supplier
+from . import reorder, services
+from . import returns as supplier_returns
+from .models import PurchaseOrder, Supplier, SupplierReturn
 from .serializers import (
     CancelSerializer,
     OrderWriteSerializer,
     PurchaseOrderSerializer,
     PurchaseOrderSummarySerializer,
     ReceiveSerializer,
+    ReorderRowSerializer,
+    SupplierReturnInputSerializer,
+    SupplierReturnSerializer,
     SupplierSerializer,
 )
 
@@ -39,6 +43,7 @@ def _orders(request):
         .prefetch_related(
             "lines__product__unit",
             "deliveries__lines__order_line__product__unit",
+            "deliveries__lines__return_lines",
             "deliveries__received_by",
         ),
         request.membership,
@@ -204,4 +209,79 @@ class DeliveryCreateView(BusinessAPIView):
 
         return run_idempotent(
             request, business=request.business, action="purchase_receive", handler=handler
+        )
+
+
+# ---- returns to a supplier -----------------------------------------------------------------
+
+
+def _supplier_returns(request):
+    return restrict_to_locations(
+        SupplierReturn.objects.filter(business=request.business)
+        .select_related("supplier", "location", "created_by", "delivery__order")
+        .prefetch_related("lines__product__unit"),
+        request.membership,
+    )
+
+
+class SupplierReturnListCreateView(BusinessScopedMixin, generics.GenericAPIView):
+    permission_by_method = {"GET": "supplier_return.view", "POST": "supplier_return.create"}
+
+    def get(self, request, business_id):
+        params = request.query_params
+        qs = _supplier_returns(request)
+        if params.get("supplier"):
+            qs = qs.filter(supplier_id=params["supplier"])
+        if params.get("delivery"):
+            qs = qs.filter(delivery_id=params["delivery"])
+        if params.get("location"):
+            qs = qs.filter(location_id=params["location"])
+        page = self.paginate_queryset(qs)
+        return self.get_paginated_response(
+            SupplierReturnSerializer(page, many=True, context=_context(request)).data
+        )
+
+    def post(self, request, business_id):
+        serializer = SupplierReturnInputSerializer(
+            data=request.data, context={"business": request.business}
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        def handler():
+            made = supplier_returns.return_to_supplier(
+                request.business, request.user, request.membership, data
+            )
+            fresh = get_object_or_404(_supplier_returns(request), pk=made.pk)
+            return 201, SupplierReturnSerializer(fresh, context=_context(request)).data
+
+        return run_idempotent(
+            request, business=request.business, action="supplier_return_create", handler=handler
+        )
+
+
+class SupplierReturnDetailView(BusinessAPIView):
+    required_permission = "supplier_return.view"
+
+    def get(self, request, business_id, return_id):
+        found = get_object_or_404(_supplier_returns(request), pk=return_id)
+        return Response(SupplierReturnSerializer(found, context=_context(request)).data)
+
+
+# ---- what to buy again ---------------------------------------------------------------------
+
+
+class ReorderSuggestionsView(BusinessAPIView):
+    required_permission = "reorder.view"
+
+    def get(self, request, business_id):
+        rows = reorder.suggestions(
+            request.business, request.membership, request.query_params.get("location")
+        )
+        context = {"can_view_cost": has_permission(request.membership.role, "purchasing.cost.view")}
+        return Response(
+            {
+                "count": len(rows),
+                "results": ReorderRowSerializer(rows, many=True, context=context).data,
+            }
         )

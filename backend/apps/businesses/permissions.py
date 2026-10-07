@@ -39,6 +39,14 @@ MATRIX: dict[str, frozenset[str]] = {
     "sales.cost.view": frozenset({Role.OWNER, Role.MANAGER}),
     "customer.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES}),
     "customer.manage": frozenset({Role.OWNER, Role.MANAGER, Role.SALES}),
+    # returns and refunds (owner, 2026-10-07: any seller may refund; every return records who)
+    "return.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES}),
+    "return.create": frozenset({Role.OWNER, Role.MANAGER, Role.SALES}),
+    "return.inspect": frozenset({Role.OWNER, Role.MANAGER}),
+    # goods sent back to a supplier, and what to reorder
+    "supplier_return.view": frozenset({Role.OWNER, Role.MANAGER, Role.WAREHOUSE}),
+    "supplier_return.create": frozenset({Role.OWNER, Role.MANAGER, Role.WAREHOUSE}),
+    "reorder.view": frozenset({Role.OWNER, Role.MANAGER}),
     # moving goods and counting them (provisional, D7/D13); only owner and manager approve a count
     "transfer.view": frozenset({Role.OWNER, Role.MANAGER, Role.WAREHOUSE}),
     "transfer.create": frozenset({Role.OWNER, Role.MANAGER, Role.WAREHOUSE}),
