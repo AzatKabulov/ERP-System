@@ -4,7 +4,7 @@ Status: approved roadmap, 2026-10-06; revised the same day after Codex's review 
 
 Starting point: a bilingual Flutter interface prototype that runs on demonstration data only (see [HANDOFF.md](HANDOFF.md)).
 
-**Progress (2026-10-07): Phases 1, 2, 3, 4, 5 and 6 are implemented and verified** (Phase 5 was simplified the same day after the owner's feedback: free prices, cash or card only, one plain receipt, no invoice, no tax) (backend, app, CI, and a real-browser run against the real backend; HANDOFF section 4 has the evidence). Still open and needing the owner: step 0.1/0.2, 0.3's branch protection, 2.1 (a deployed staging server), 3.3 (camera scan on the pilot tablet) and 5.5 (the pilot-tablet walkthrough, which also covers printing and sharing receipts on the device, transfers and counts). Phase 7 (returns, refunds and reordering) is next.
+**Progress (2026-10-07): Phases 1 to 8 are implemented and verified** (Phase 5 was simplified the same day after the owner's feedback: free prices, cash or card only, one plain receipt, no invoice, no tax; Phases 7 and 8 were built after the owner's answers about return periods, refunds, warranty and receipt photos) (backend, app, CI, and a real-browser run against the real backend; HANDOFF section 4 has the evidence). Still open and needing the owner: step 0.1/0.2, 0.3's branch protection, 2.1 (a deployed staging server), 3.3 (camera scan on the pilot tablet), 5.5 (the pilot-tablet walkthrough, which also covers printing and sharing receipts on the device, transfers and counts) and 7.5 (the Stage 2 checkpoint, which also covers returns, the receipt photo from the real camera and sharing a CSV on the tablet). Phase 9 (reports, dashboard and activity history) is next.
 
 ## How to use this plan
 
@@ -55,16 +55,16 @@ Agents must not invent these (AGENTS.md "Boundaries"). Record each answer in the
 | D4 | Receipt/invoice format, tax rules, document numbering | Phase 5 | **Closed 2026-10-07 (owner):** no tax, no invoices, no legal format. One simple receipt; sales are numbered `S-000001...` per business as a plain reference |
 | D5 | What each role (owner, manager, sales, warehouse) may see and do | Phase 1 (draft from the PRD is acceptable) | **Provisional draft implemented** (`backend/apps/businesses/permissions.py`, table in ARCHITECTURE); owner review pending |
 | D6 | Inventory costing method | Needed before Phase 4 | **Decided 2026-10-06: FIFO.** Each purchase keeps its own unit cost and the oldest stock is used first when selling. Opening stock records a unit cost with every quantity. |
-| D7 | Who approves discounts, refunds and stock adjustments, and limits | Phases 5–7 | **Discounts moot, 2026-10-07:** prices are not fixed, so any seller sets any price (no discount concept, no limit). Refunds and adjustments: open |
+| D7 | Who approves discounts, refunds and stock adjustments, and limits | Phases 5–7 | **Discounts moot, 2026-10-07:** prices are not fixed, so any seller sets any price (no discount concept, no limit). **Refunds closed 2026-10-07 (owner): any seller may take a return and refund; there is no approval step, everything is recorded (who, when).** Stock adjustments stay owner/manager only (provisional) |
 | D8a | Warranty terms stored on products and copied onto each sale | Phase 3 | **Decided 2026-10-06:** a period in months (0 = no warranty) plus free-text conditions per product |
-| D8b | Warranty claim policies: who is eligible, outcomes, approvals | Phase 8 | Open |
+| D8b | Warranty claim policies: who is eligible, outcomes, approvals | Phase 8 | **Decided 2026-10-07 (owner):** an expired or missing warranty can be accepted only by an owner or manager, with a mandatory note. Outcomes (repair, replacement, refund, rejection) and the rules around them are my provisional reading (HANDOFF section 3) |
 | D9 | Pilot tablet model, scanning method, receipt/label printer | Phase 3 (scanning); Phase 5 (printing) | **Scanning method decided 2026-10-06: tablet camera.** The receipt is a PDF that the tablet prints or shares through its own dialogs; no printer is integrated. Tablet model and printer still open |
 | D10 | Default language for new users; default document language | Phase 2 | Provisional: Russian (current prototype behavior); please confirm |
 | D11 | Backup frequency, retention, acceptable data loss and recovery time | Phase 10 | Open |
 | D12 | Android app identifier and distribution channel (Google Play or direct install) | Phase 5 (identifier); Phase 10 (channel) | Open |
 | D13 | Stock-count policy for sales and receipts during a count | Phase 6 | **Provisional 2026-10-07:** sales and receipts continue during a count; moved lines are flagged and approval adjusts on top of the current stock |
 | D14 | Fluent Russian and Turkmen reviewers for terminology | Arranged by Phase 5; review in Phase 10 | Open |
-| D15 | Return window and refund eligibility | Phase 7 | Open |
+| D15 | Return window and refund eligibility | Phase 7 | **Decided 2026-10-07 (owner):** each product has its own return period in days, typed by hand and counted from the day of the sale (empty = no limit, 0 = not returnable). The warranty stays in months, a separate field. The refund is the price that was charged. Provisional: the period also binds the owner and manager |
 | D16 | Email provider (any SMTP service) for password-recovery codes, tested from Turkmenistan | Before real staff use staging (Phase 2 owner step) | Open. Password recovery by emailed code was decided 2026-10-06 |
 
 ---
@@ -203,16 +203,16 @@ Done when: PRD flows 4 (transfer) and 5 (count) work end to end on the tablet. (
 
 Goal: returns linked to the original sale, correct refunds and stock, and a reviewed reorder list.
 
-Before you start: D7 (refund approval), D15.
+Before you start: D7 (refund approval) and D15 (return window) were answered by the owner on 2026-10-07 (see the decision table).
 
-- [ ] 7.1 Customer returns:
+- [x] 7.1 Customer returns (done 2026-10-07):
   - find the original sale; lock and enforce the remaining returnable quantities
-  - record the reason and the condition of each item (sellable, damaged, awaiting inspection, plus a later inspection outcome); only sellable goods return to available stock
-  - refund amount follows the original discounts and taxes, and the refund is recorded
-  - approvals; exchanges as a linked return plus a new sale
-- [ ] 7.2 Supplier returns, recorded separately and linked to the supplier and the delivery.
-- [ ] 7.3 Reorder suggestions from the minimum and target levels, counting outstanding purchase orders. Staff review the list and create a draft purchase order (no automatic ordering).
-- [ ] 7.4 Screens replacing the demo refund dialog, using the restart-safe pending-operation records (a refund must never be issued twice after a restart). Tests for partial returns, concurrent returns of the same sale, refund rounding, and the lost-answer restart scenario.
+  - record the reason and the condition of each item (sellable, damaged, awaiting inspection, plus a later inspection outcome); only sellable goods return to available stock; each piece goes back at the cost it was sold at
+  - the refund is the price that was charged (prices are not fixed: no discounts or taxes), recorded with who and when; the return period is per product (`return_days`, copied onto the sale line)
+  - no approval step (any seller); an exchange is a return plus an ordinary new sale
+- [x] 7.2 Supplier returns, recorded separately and linked to the supplier and the delivery (done 2026-10-07).
+- [x] 7.3 Reorder suggestions from the minimum and target levels, counting outstanding purchase orders. Staff review the list and create a draft purchase order (no automatic ordering) (done 2026-10-07).
+- [x] 7.4 Screens replacing the demo refund dialog, using the restart-safe pending-operation records (a refund must never be issued twice after a restart). Tests for partial returns, concurrent returns of the same sale, refund rounding, and the lost-answer restart scenario (done 2026-10-07; the browser run covers the lost answer and the restart).
 - [ ] 7.5 Stage 2 checkpoint on the pilot tablet; record the results in HANDOFF.
 
 Done when: PRD flow 6 (return) works, and a reorder suggestion becomes a purchase order.
@@ -221,16 +221,16 @@ Done when: PRD flow 6 (return) works, and a reorder suggestion becomes a purchas
 
 Goal: expense tracking with receipt photos, warranty claims based on what was sold, and safe CSV import and export.
 
-Before you start: D8b (claim policies; the warranty terms themselves were captured in Phases 3 and 5); a list of expense categories.
+Before you start: D8b (claim policies) was answered by the owner on 2026-10-07 for the expired-warranty rule; the default expense categories are mine (Аренда, Зарплата, Коммунальные услуги, Транспорт, Прочее) and the owner can edit them in the app. The receipt photo is optional (owner).
 
-- [ ] 8.1 Private file storage: local in development, a private storage service on the servers. Validate file type and size; downloads are permission-checked and short-lived.
-- [ ] 8.2 Expenses: categories, decimal amount, date, location, description, optional receipt attachment, filters and summaries.
-- [ ] 8.3 Warranties:
+- [x] 8.1 Private file storage (done 2026-10-07): a private folder (`PRIVATE_FILES_ROOT`, a volume in the compose file), local in development. File type judged by signature (JPEG, PNG, WebP, PDF), at most 5 MB; downloads only through the API for a member with the right (the caller's own short-lived access token, no public or signed links). **Owner step: back the folder up with the database (D11).**
+- [x] 8.2 Expenses (done 2026-10-07): categories, decimal amount, date, location, description, optional receipt attachment, filters and summaries.
+- [x] 8.3 Warranties (done 2026-10-07):
   - eligibility from the sale-line snapshot taken in Phase 5
   - claims with status history and an outcome (repair, replacement, refund or rejection)
   - replacements move stock through the ledger
   - screens replacing the sample cards
-- [ ] 8.4 CSV import and export:
+- [x] 8.4 CSV import and export (done 2026-10-07):
   - product import: upload, validation preview (errors and duplicate identifiers), then apply **all-or-nothing in one transaction**. Files above a row/size limit are rejected with a request to split them, so there are never half-applied or resumable batches. Importing never changes stock. Test: a failure on a late row, after earlier rows were already processed, leaves no change at all
   - catalog export keeping Russian and Turkmen text, with spreadsheet-formula protection and permission checks
 
@@ -308,3 +308,4 @@ Anything listed under "Out of Scope" in the PRD stays out unless the owner chang
 - 2026-10-07, Phase 5 built after the owner's answers (discounts: anyone who can sell; tax: none for now; payments: mainly cash or card). Assumptions made without the owner, for review: receipt numbers `S-000001`; prices always come from the catalog on the server (no manual price override at the desk); one cart line per product; a completed sale is immutable (returns and corrections arrive in Phase 7); cost and profit are shown only to owner and manager; the cart reserves no stock, so another tablet may sell the goods first (the server then refuses and names the product); a sale of zero total (everything discounted) needs no payment; cash overpayment is change, card or transfer overpayment is refused; Turkmen document wording is a draft.
 - 2026-10-07, Phase 5 simplified after the owner's review: prices are not fixed (the seller sets every price), it is an ERP and not a cash register (no cash received, change, split payments or bank transfer; only a Cash/Card label), one plain receipt (no invoice, no tax, no legal format, no language chooser), selling is in-store and online only, customers stay optional. The earlier discount, price-changed, USD-conversion-at-sale and payment-amount code was removed (migrations `sales/0003`, `businesses/0005`). Assumptions to review: the receipt language is the business setting; address and phone stay on the receipt; `S-000001` numbering stays; the Turkmen receipt wording is a draft.
 - 2026-10-07, Phase 6 built (transfers and stock counts) with the owner's "keep it simple" in mind. Assumptions made without the owner, for review: no separate draft state for transfers (sending dispatches at once); one receipt per transfer, anything missing is written off with a reason; the sender cancels (the destination cannot); sales and receipts are not frozen during a count (D13); only owner and manager approve a count (D7) and everyone with count access sees the system quantities while counting; surplus found in a count is costed at the latest layer's cost; one advisory lock per business serialises transfer and approval postings.
+- 2026-10-07, Phases 7 and 8 built after the owner's answers (the return period is per product, typed by hand, counted from the sale day; the warranty stays in months as a separate field; any seller may refund; an expired or missing warranty is accepted only by an owner or manager with a note; the receipt photo is optional). Assumptions made without the owner, for review (also in HANDOFF section 3): a return goes back to the sale's location and the refund is exactly the price charged x quantity (the last piece of a line takes the remainder), paid back by the sale's own label (cash or card); the return period binds everybody; an exchange is a return plus a normal sale; a supplier return credits the delivery's price and takes the oldest layers; the default expense categories above, editable; an expense is corrected (audited) or voided with a reason, never deleted; attachments are JPEG, PNG, WebP or PDF up to 5 MB; CSV import only creates new products (an existing SKU is a row error), at most 2000 rows and 1 MB, `;` with a BOM on export; a warranty refund is an ordinary customer return into `damaged` and a replacement gives out one sellable piece and takes one damaged piece back at the line's average cost. Old wording about "discounts and taxes" for refunds was removed.

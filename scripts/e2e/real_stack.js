@@ -14,18 +14,27 @@ const BACKEND = path.resolve(__dirname, '../../backend');
 function dbFacts() {
   const py = `
 import json
-from apps.purchasing.models import Delivery
+from apps.purchasing.models import Delivery, PurchaseOrder, SupplierReturn
 from apps.inventory.models import StockBalance
 from apps.inventory import services
 from apps.purchasing import services as ps
 from apps.sales import services as ss
-from apps.sales.models import Sale
+from apps.sales.models import Sale, SaleReturn
 from apps.stockops import services as xs
 from apps.stockops.models import StockCount, Transfer
+from apps.warranties import services as ws
+from apps.warranties.models import WarrantyClaim
+from apps.expenses.models import Expense
+from apps.catalog.models import Product
 from apps.businesses.models import Business
-d = services.reconcile() + ps.reconcile() + ss.reconcile() + xs.reconcile()
+d = services.reconcile() + ps.reconcile() + ss.reconcile() + xs.reconcile() + ws.reconcile()
 sales = [{'id': str(x.pk), 'number': x.number, 'total': str(x.total), 'method': x.payment_method, 'prices': [str(l.unit_price) for l in x.lines.all()], 'cost': str(sum(l.cost_total for l in x.lines.all()))} for x in Sale.objects.order_by('created_at')]
-print('FACTS' + json.dumps({'business': str(Business.objects.first().pk), 'deliveries': Delivery.objects.count(), 'sales': sales, 'balances': [{'q': str(b.quantity), 'c': b.condition, 'at': b.location.name} for b in StockBalance.objects.select_related('location').all()], 'transfers': [{'n': t.number, 'status': t.status} for t in Transfer.objects.order_by('number')], 'counts': [{'n': c.number, 'status': c.status} for c in StockCount.objects.order_by('number')], 'reconcile': 'consistent' if not d else d}))
+returns = [{'n': r.number, 'sale': r.sale.number, 'refund': str(r.refund_total), 'method': r.payment_method, 'claim': r.warranty_claim_id is not None, 'lines': [{'q': str(l.quantity), 'c': l.condition, 'refund': str(l.refund_amount)} for l in r.lines.all()]} for r in SaleReturn.objects.order_by('number')]
+supplier_returns = [{'n': r.number, 'credit': str(r.credit_total), 'lines': [{'q': str(l.quantity), 'c': l.condition} for l in r.lines.all()]} for r in SupplierReturn.objects.order_by('number')]
+orders = [{'n': o.number, 'status': o.status, 'lines': [str(l.quantity) for l in o.lines.all()]} for o in PurchaseOrder.objects.order_by('number')]
+expenses = [{'amount': str(e.amount), 'category': e.category.name, 'voided': e.voided_at is not None, 'file': e.attachment_id is not None, 'file_id': str(e.attachment_id), 'place': e.location.name} for e in Expense.objects.order_by('created_at')]
+claims = [{'n': c.number, 'status': c.status, 'outcome': c.outcome, 'out': c.out_of_warranty, 'q': str(c.quantity), 'events': c.events.count()} for c in WarrantyClaim.objects.order_by('number')]
+print('FACTS' + json.dumps({'business': str(Business.objects.first().pk), 'deliveries': Delivery.objects.count(), 'sales': sales, 'balances': [{'q': str(b.quantity), 'c': b.condition, 'at': b.location.name, 'sku': b.product.sku} for b in StockBalance.objects.select_related('location', 'product').all()], 'transfers': [{'n': t.number, 'status': t.status} for t in Transfer.objects.order_by('number')], 'counts': [{'n': c.number, 'status': c.status} for c in StockCount.objects.order_by('number')], 'returns': returns, 'supplier_returns': supplier_returns, 'orders': orders, 'expenses': expenses, 'claims': claims, 'products': [p.sku for p in Product.objects.order_by('sku')], 'product_names': {p.sku: p.name for p in Product.objects.all()}, 'reconcile': 'consistent' if not d else d}))
 `;
   const out = execSync('cd ' + BACKEND + ' && export PATH="$HOME/.local/bin:$PATH" && uv run python manage.py shell', { input: py, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
   return JSON.parse(out.split('FACTS')[1]);
@@ -33,8 +42,8 @@ print('FACTS' + json.dumps({'business': str(Business.objects.first().pk), 'deliv
 
 
 // Quantity of the product at a place in a condition, from the database facts.
-function stockAt(facts, place, condition = 'sellable') {
-  const row = facts.balances.find((b) => b.at === place && b.c === condition);
+function stockAt(facts, place, condition = 'sellable', sku = 'BP-100') {
+  const row = facts.balances.find((b) => b.at === place && b.c === condition && b.sku === sku);
   return row ? row.q : '0.000';
 }
 
@@ -82,6 +91,10 @@ let PAGE = null;
   await expectText(page, 'owner is signed in (welcome page)', /Здравствуйте, Sample/);
   await page.screenshot({ path: path.join(OUT, 'e2e-1-welcome.png') });
 
+  // Development aid: E2E_RESUME=phase78 skips Phases 1-6 and continues from a database snapshot taken with
+  // E2E_STOP_AFTER=phase6 (see README.md); the owner still signs in above.
+  let facts;
+  if (process.env.E2E_RESUME !== 'phase78') {
   // ---- exchange rate ---------------------------------------------------------------
   await nav(page, 'Настройки');
   await expectText(page, 'administration shows the exchange-rate section', /Курс ещё не задан/);
@@ -98,6 +111,8 @@ let PAGE = null;
   await pickFromDropdown(page, 'Единица измерения', 'Штука');
   await fill(page, '^Цена продажи', '120');
   await fill(page, 'Закупочная цена по умолчанию', '70');
+  await fill(page, 'Гарантия, месяцев', '12'); // the warranty claim in Phase 8 needs one
+  await fill(page, 'Срок возврата, дней', '30'); // the return window of Phase 7: 30 days from the sale
   await page.screenshot({ path: path.join(OUT, 'e2e-2-product-form.png') });
   await clickLabel(page, 'Сохранить', { wait: 2000 });
   await expectText(page, 'product saved and listed with its TMT price', /BP-100/);
@@ -141,7 +156,7 @@ let PAGE = null;
   await clickLabel(page, 'Оформить заказ', { role: 'button', wait: 900 });
   await clickLabel(page, 'Подтвердить', { role: 'button', wait: 2000 });
   await expectText(page, 'order is submitted', /Оформлен/);
-  let facts = dbFacts();
+  facts = dbFacts();
   check('submitting an order does not move stock', facts.balances.length === 0, JSON.stringify(facts.balances));
 
   // ---- receiving: partial, then lost answer, then restart -----------------------------
@@ -341,6 +356,17 @@ let PAGE = null;
   await clickLabel(page, 'Назад', { role: 'button', wait: 1200 });
   await nav(page, 'Продажи'); // the Turkmen check below looks at the sales page
 
+  } // end of Phases 1-6 (skipped when resuming)
+
+  // ---- Phases 7 and 8: returns, reorder, expenses, warranty, CSV (phase78.js) ----------------------
+  if (process.env.E2E_STOP_AFTER === 'phase6') { // development aid: stop here to take a database snapshot
+    console.log('stopping after Phase 6 (E2E_STOP_AFTER)');
+    await browser.close();
+    process.exit(0);
+  }
+  await require('./phase78.js')(page, { L, dbFacts, stockAt, nav, pickFromDropdown, OUT, PASS, API, BACKEND });
+  await nav(page, 'Продажи'); // the Turkmen check below looks at the sales page
+
   // ---- Turkmen, and it survives a reload ----------------------------------------------
   await clickLabel(page, 'Язык интерфейса', { exact: false, wait: 800 });
   await clickLabel(page, 'Türkmençe', { exact: false, wait: 1800 });
@@ -367,8 +393,12 @@ let PAGE = null;
   const warehouseText = await text(w.page);
   check('warehouse sees no money on the order', !/TMT/.test(warehouseText), (warehouseText.match(/.{20}TMT.{10}/) || [''])[0]);
   await clickLabel(w.page, 'Назад', { role: 'button', wait: 1200 });
+  await clickLabel(w.page, 'Возвраты поставщикам', { role: 'button', wait: 1800 });
+  await expectText(w.page, 'warehouse sees the supplier return it may make', /SR-0001/);
+  check('and no credit amount on it', !/Зачёт|TMT/.test(await text(w.page)));
+  await clickLabel(w.page, 'Назад', { role: 'button', wait: 1200 });
   await nav(w.page, 'Склад');
-  await expectText(w.page, 'warehouse sees stock (10 received, 5 sold, 2 sent, 1 written off)', /2 шт/);
+  await expectText(w.page, 'warehouse sees stock (3 sellable after the returns and the warranty swap)', /3 шт/);
   const stockText = await text(w.page);
   check('warehouse sees no stock value', !/Стоимость/.test(stockText) && !/TMT/.test(stockText));
   check('the warehouse role has no Sales page and no Customers', !/Продажи/.test(await text(w.page)));
