@@ -4,7 +4,7 @@ Status: approved roadmap, 2026-10-06; revised the same day after Codex's review 
 
 Starting point: a bilingual Flutter interface prototype that runs on demonstration data only (see [HANDOFF.md](HANDOFF.md)).
 
-**Progress (2026-10-07): Phases 1, 2, 3, 4 and 5 are implemented and verified** (Phase 5 was simplified the same day after the owner's feedback: free prices, cash or card only, one plain receipt, no invoice, no tax) (backend, app, CI, and a real-browser run against the real backend; HANDOFF section 4 has the evidence). Still open and needing the owner: step 0.1/0.2, 0.3's branch protection, 2.1 (a deployed staging server), 3.3 (camera scan on the pilot tablet) and 5.5 (the pilot-tablet walkthrough, which also covers printing and sharing receipts on the device). Phase 6 (transfers and stock counts) is next.
+**Progress (2026-10-07): Phases 1, 2, 3, 4, 5 and 6 are implemented and verified** (Phase 5 was simplified the same day after the owner's feedback: free prices, cash or card only, one plain receipt, no invoice, no tax) (backend, app, CI, and a real-browser run against the real backend; HANDOFF section 4 has the evidence). Still open and needing the owner: step 0.1/0.2, 0.3's branch protection, 2.1 (a deployed staging server), 3.3 (camera scan on the pilot tablet) and 5.5 (the pilot-tablet walkthrough, which also covers printing and sharing receipts on the device, transfers and counts). Phase 7 (returns, refunds and reordering) is next.
 
 ## How to use this plan
 
@@ -62,7 +62,7 @@ Agents must not invent these (AGENTS.md "Boundaries"). Record each answer in the
 | D10 | Default language for new users; default document language | Phase 2 | Provisional: Russian (current prototype behavior); please confirm |
 | D11 | Backup frequency, retention, acceptable data loss and recovery time | Phase 10 | Open |
 | D12 | Android app identifier and distribution channel (Google Play or direct install) | Phase 5 (identifier); Phase 10 (channel) | Open |
-| D13 | Stock-count policy for sales and receipts during a count | Phase 6 | Open |
+| D13 | Stock-count policy for sales and receipts during a count | Phase 6 | **Provisional 2026-10-07:** sales and receipts continue during a count; moved lines are flagged and approval adjusts on top of the current stock |
 | D14 | Fluent Russian and Turkmen reviewers for terminology | Arranged by Phase 5; review in Phase 10 | Open |
 | D15 | Return window and refund eligibility | Phase 7 | Open |
 | D16 | Email provider (any SMTP service) for password-recovery codes, tested from Turkmenistan | Before real staff use staging (Phase 2 owner step) | Open. Password recovery by emailed code was decided 2026-10-06 |
@@ -186,19 +186,18 @@ Goal: goods move between locations with a visible in-transit state; physical cou
 
 Before you start: D7 (adjustment approval), D13.
 
-- [ ] 6.1 Transfers:
-  - dispatch removes goods from the source's available stock and puts them in transit; receipt adds the actually received quantity at the destination
-  - discrepancies need a reason, and cancellation is an explicit step
-  - states run draft → dispatched → received or partially received or cancelled, with location permissions
-  - screens for all of this, replacing the demo's instant transfer; dispatch and receipt use the same restart-safe pending-operation records
-- [ ] 6.2 Stock counts:
-  - a count per location (full or partial) with a recorded baseline; entries by scan or hand
-  - detection of sales or receipts during the count, handled per D13
-  - a variance review, then an adjustment submitted for approval and posted through the ledger
-  - count-entry and review screens designed for the tablet
-- [ ] 6.3 Tests: goods never available in two places at once, a count running while sales happen, and approval permissions.
+- [x] 6.1 Transfers (done 2026-10-07; kept simple at the owner's request):
+  - dispatch removes the goods from the source's sellable stock and puts them in transit at the destination with their FIFO cost layers; receipt moves what arrived into the destination's sellable stock; goods in transit cannot be sold
+  - receiving less than was sent needs a reason and the missing goods are written off (one receipt per transfer; no repeated partial receipts); cancellation is an explicit step with a reason and sends everything back
+  - states: in transit, received, received with some missing, cancelled (there is no separate draft: sending creates and dispatches in one step); sending needs access to the source, receiving access to the destination, cancelling access to the source
+  - screens for all of this (stock page > Transfers); dispatch, receive and cancel use the same restart-safe pending-operation records
+- [x] 6.2 Stock counts (done 2026-10-07):
+  - a count per location, full or partial, with the system quantities noted when it starts as the baseline; entries by hand or by search/scan; products not on the list can be added
+  - **D13 (provisional): sales and receipts continue during a count; nothing is frozen.** Lines whose sellable stock moved since the start are flagged; approval posts (counted - baseline) on top of the current stock, so what happened meanwhile is kept, and is refused (409) if the goods were sold meanwhile
+  - a variance review, then approval by an owner or manager with an explanation, posted as adjustments through the ledger (**provisional D7**: only owner and manager approve; goods found that the system did not know about cost the latest layer's cost); count-entry and review screens for the tablet
+- [x] 6.3 Tests: goods never available in two places (in-transit goods cannot be sold), two tablets sending the last unit, a transfer racing a sale, receive racing cancel, opposite transfers and a cancel racing a dispatch (which deadlocks without the per-business lock, proven by removing it), a count running while sales happen, approval permissions, and the restart scenario for dispatch, receive and approval (app and server).
 
-Done when: PRD flows 4 (transfer) and 5 (count) work end to end on the tablet.
+Done when: PRD flows 4 (transfer) and 5 (count) work end to end on the tablet. (Verified through a real browser against the real backend; the tablet check is part of the pilot walkthrough, step 5.5.)
 
 ## Phase 7. Returns, refunds and reordering (completes Stage 2)
 
@@ -308,3 +307,4 @@ Anything listed under "Out of Scope" in the PRD stays out unless the owner chang
 - 2026-10-06, implementation: Phases 1-4 built autonomously while the owner was away. Assumptions made without the owner (listed for review in the session's final message and in HANDOFF): FIFO reading of D6; USD only for selling prices; opening stock once per product and location; over-receipt refused; receipt cost equals the order line cost; opening stock and adjustments by owner/manager only (provisional D7); PO numbers `PO-0001`.
 - 2026-10-07, Phase 5 built after the owner's answers (discounts: anyone who can sell; tax: none for now; payments: mainly cash or card). Assumptions made without the owner, for review: receipt numbers `S-000001`; prices always come from the catalog on the server (no manual price override at the desk); one cart line per product; a completed sale is immutable (returns and corrections arrive in Phase 7); cost and profit are shown only to owner and manager; the cart reserves no stock, so another tablet may sell the goods first (the server then refuses and names the product); a sale of zero total (everything discounted) needs no payment; cash overpayment is change, card or transfer overpayment is refused; Turkmen document wording is a draft.
 - 2026-10-07, Phase 5 simplified after the owner's review: prices are not fixed (the seller sets every price), it is an ERP and not a cash register (no cash received, change, split payments or bank transfer; only a Cash/Card label), one plain receipt (no invoice, no tax, no legal format, no language chooser), selling is in-store and online only, customers stay optional. The earlier discount, price-changed, USD-conversion-at-sale and payment-amount code was removed (migrations `sales/0003`, `businesses/0005`). Assumptions to review: the receipt language is the business setting; address and phone stay on the receipt; `S-000001` numbering stays; the Turkmen receipt wording is a draft.
+- 2026-10-07, Phase 6 built (transfers and stock counts) with the owner's "keep it simple" in mind. Assumptions made without the owner, for review: no separate draft state for transfers (sending dispatches at once); one receipt per transfer, anything missing is written off with a reason; the sender cancels (the destination cannot); sales and receipts are not frozen during a count (D13); only owner and manager approve a count (D7) and everyone with count access sees the system quantities while counting; surplus found in a count is costed at the latest layer's cost; one advisory lock per business serialises transfer and approval postings.
