@@ -39,7 +39,7 @@ Flutter widgets and shared theme
     │     ├── core/session: secure refresh token, profile, business and location choice
     │     ├── core/operations: pending-operation store + runner (restart-safe retries)
     │     ├── core/money: exact decimal text <-> integer hundredths/thousandths (no double)
-    │     └── features/: auth, admin, catalog, scanning, inventory, purchasing, (later) sales...
+    │     └── features/: auth, admin, catalog, scanning, inventory, purchasing, sales, (later) transfers...
     ├── SharedPreferences: interface language, last business/location ids,
     │     and unconfirmed-operation retry records (no tokens, no balances)
     └── Demo mode (--dart-define=DEMO_MODE=true, or an explicit DemoStore):
@@ -49,7 +49,7 @@ Django REST API (backend/)  ->  PostgreSQL
     apps/accounts (users, sessions, recovery) · apps/businesses (tenants, locations,
     roles, exchange rates) · apps/catalog (products, barcodes, units, reorder levels) ·
     apps/inventory (stock ledger, FIFO layers) · apps/purchasing (suppliers, orders,
-    deliveries) · apps/audit (audit trail, idempotency) · apps/common (errors, request IDs)
+    deliveries) · apps/sales (customers, sales, payments, receipt and invoice PDFs) · apps/audit (audit trail, idempotency) · apps/common (errors, request IDs)
 ```
 
 Which pages are connected to the API is tracked in `PLAN.md` and `HANDOFF.md`. A real build shows an honest "later release" page for anything not connected yet; it never shows demo data as real.
@@ -164,6 +164,8 @@ Use a versioned REST API, provisionally `/api/v1/`. Public resource identifiers 
 5. The service creates the sale, item/price snapshots, recorded payments, stock movements, balance changes, and audit entry together. Any validation failure rolls the transaction back.
 6. After commit, the API returns the finalized sale and updated values. The client updates the UI and offers the receipt. PDF generation can retry separately without completing another sale.
 
+**Implemented (Phase 5), see "Sales, payments and documents (implemented)" below.** Differences from the generic flow above: the client sends only product, quantity, an optional TMT discount per line, the payments and the total it showed (`expected_total`); prices always come from the catalog on the server; the cart reserves no stock, so step 4 can refuse with `insufficient_stock` (naming the product); and a stale price is refused with `price_changed` so a cart never charges a different amount than the one the cashier confirmed.
+
 If the connection times out, the outcome may be unknown. Query the operation status or retry with the **same key**; a new key could create another sale. Idempotency records use a unique business/actor/action/key scope and a request fingerprint. Reusing a key with a different payload is rejected. Concurrent duplicate requests return one committed outcome.
 
 ### Reads and Errors
@@ -210,13 +212,13 @@ A shared database with business-scoped records is the proposed first deployment.
 - A unit's decimal places (0-3) cannot be changed once a product uses it (`unit_in_use`, 409); quantities are validated against the unit's precision wherever they are accepted. Default Russian/Turkmen units are created with each business; the Turkmen names are provisional.
 - Search runs on a maintained case-folded `search_key` (name, SKU, brand, category, barcodes) so Cyrillic and Turkmen letters match regardless of the database locale; it is paginated (`limit`/`offset`). `GET .../barcodes/lookup/?code=` is read-only and answers `barcode_not_found` (404) for an unknown code.
 - The selling price carries its own currency (TMT or USD). The API returns the stated price, `price_tmt` at the current rate (null when a USD price has no rate) and `price_rate_missing`. The default purchase cost (TMT) is removed by the server for roles without `catalog.cost.view`; the client also never sends it for them.
-- `ExchangeRate` (in `apps/businesses`) is an append-only history guarded by a database trigger: a rate is never edited, a new entry supersedes the old. Entering one needs `exchange_rate.manage` (owner, manager). Rates have up to 6 decimals; conversion rounds half up to 2 decimals using integer arithmetic. Phase 5 copies the rate used onto each sale line.
+- `ExchangeRate` (in `apps/businesses`) is an append-only history guarded by a database trigger: a rate is never edited, a new entry supersedes the old. Entering one needs `exchange_rate.manage` (owner, manager). Rates have up to 6 decimals; conversion rounds half up to 2 decimals using integer arithmetic. Each sale line keeps the rate used (`usd_rate`) and the converted price.
 - Every create, change and archive writes an audit event. Reorder levels (minimum/target per product and location) are stored now and used by the Phase 7 suggestions.
 - In the app, money and quantities are parsed from and sent as exact decimal text (`core/money/decimal_math.dart`); `double` is never used for amounts.
 
 ### Stock ledger, purchasing and receiving (implemented)
 
-- **One writer.** `apps/inventory/services.post()` is the only code that creates stock movements, balances or cost layers (a test scans the source to keep it that way). Opening stock, adjustments and purchase receipts call it; later sales, transfers and returns will too. Admin screens for these tables are read-only.
+- **One writer.** `apps/inventory/services.post()` is the only code that creates stock movements, balances or cost layers (a test scans the source to keep it that way). Opening stock, adjustments, purchase receipts and sales call it; later transfers and returns will too. Admin screens for these tables are read-only.
 - **Three tables, one invariant.** `StockMovement` is append-only (PostgreSQL trigger plus an ORM guard). `StockBalance` holds the current quantity per product, location and condition (`sellable`, `damaged`, `inspection`, `in_transit`) with a `CHECK quantity >= 0`. `CostLayer` holds one FIFO layer per incoming line (`CHECK 0 <= remaining <= initial`). `reconcile()` (and `manage.py reconcile_stock`) proves balance = sum of movements = sum of layer remainders, and that each layer equals its own movements. Every backend scenario test finishes by asserting it returns no differences.
 - **FIFO (D6).** Outgoing goods consume the oldest layer first and record one movement per layer slice, each with that layer's exact unit cost, so the cost of a sale is known per slice. Opening stock and receipts each create a layer at their own unit cost (TMT).
 - **Locking.** A posting creates missing balance rows (`INSERT ... ON CONFLICT DO NOTHING`), then locks the balances one by one in sorted order, then the layers oldest first. A shortfall is `insufficient_stock` (409) and nothing is written. Tests run real threads: two outflows of the last unit, twelve outflows of five units, concurrent first receipts of a new product, and opposite lock order.
@@ -225,6 +227,15 @@ A shared database with business-scoped records is the proposed first deployment.
 - **Purchasing.** `Supplier`; `PurchaseOrder` numbered per business from a locked counter (`PO-0001`) with states draft, ordered, partially received, received, cancelled; lines carry quantity and unit cost (TMT). An order never changes stock. Draft orders can be edited; submit moves a draft to ordered; cancelling stops what is still outstanding and keeps what already arrived.
 - **Receiving.** `POST .../purchase-orders/<id>/deliveries/` (`purchasing.receive`, action `purchase_receive`) runs in `run_idempotent`: the order and its lines are locked, receiving more than is outstanding is refused (`over_receipt`), the `Delivery` rows are append-only, and the goods enter stock at the order's location at the line cost through the inventory service. Concurrent copies of one receipt produce one delivery; concurrent receipts with different keys cannot exceed the order. The warehouse role receives goods but never sees costs: cost fields are removed from order, delivery, stock and history responses on the server.
 - **Restart safety (end to end).** The app saves the request and its key before sending and clears it only after a definite answer. After a lost answer the app asks `GET .../operations/purchase_receive/<key>/`; a resend always reuses the key. Verified in widget tests (answer lost then app restart; a 5xx before commit resent with the same key) and in a real browser run against the real backend (HANDOFF section 4).
+
+### Sales, payments and documents (implemented)
+
+- **Records (`apps/sales`).** `Customer` (optional: name, phone, notes, active flag); `Sale` (receipt number `S-000001` per business from the same locked `DocumentCounter` as purchase orders, location, cashier, optional customer and a copy of the customer's name, total, change given, the USD rate in force, note, time); `SaleLine` (product with SKU and name copied, quantity, the unit's symbol and decimals, the stated price and currency, `unit_price_tmt`, `discount` in TMT, `line_total`, `cost_total` from the FIFO slices, and the product's **`warranty_months` and `warranty_terms` as they were at the sale**); `SalePayment` (method and amount). Sales, lines and payments are append-only (ORM guard plus PostgreSQL trigger), so a later catalog or price edit never changes a past sale. A mistake is corrected by a return or correction workflow (Phase 7), never by editing.
+- **The command.** `POST .../sales/` (`sales.create`, action `sale_complete`) runs inside `run_idempotent` in one transaction: it checks the location is the caller's and active, rejects archived products and duplicate lines, converts USD prices at the current rate (`rate_missing` 409 if none), applies per-line TMT discounts (0 up to the line gross; needs `sales.discount`; anyone who can sell has it, D7), rounds half up to 2 decimals (line gross = quantity times unit price, rounded), compares `expected_total` (`price_changed` 409), validates the payments (paid in full; only cash may exceed the total, and the excess is change; a zero total takes no payment; otherwise `payment_mismatch`), posts the negative lines through `inventory.post` (movement type `sale`, document type `sale`; `insufficient_stock` 409 names the product), writes the sale, lines, payments and an audit event, and takes the receipt number **last**, so the counter lock is brief and a failed attempt leaves no gap in the numbers. There is no tax (D4 open): no tax columns exist yet.
+- **Reads.** `GET .../sales/` (`sales.view`; filters for location, dates, number text, cashier; only the caller's locations) and `GET .../sales/<id>/`. `cost_total` per line and the sale's cost and profit are removed by the server unless the role has `sales.cost.view` (owner, manager). Customers: list with search, create, edit (`customer.view`, `customer.manage`). After a lost answer: `GET .../operations/sale_complete/<key>/`.
+- **Documents.** `GET .../sales/<id>/document/?kind=receipt|invoice&lang=ru|tk` returns `application/pdf` (`sales.view`, location-scoped). The language comes from the request and defaults to `Business.document_language`, independent of the interface language. A receipt is an 80 mm roll (measured in a first pass, so the height fits the content); an invoice is A4 with business details, customer, a line table over several pages when needed, payments and total. They use ReportLab with **DejaVu Sans regular and bold vendored in `backend/assets/fonts/` (with its licence) and embedded in every file**, which covers Russian and the Turkmen letters Ä Ç Ň Ö Ş Ü Ý Ž. The business's address, phone and tax number (editable in Settings) are printed when present. Labels are fixed ru/tk dictionaries (the Turkmen is a draft). **No cost or profit ever appears in a document.** File responses opt out of client content negotiation (`apps/common/negotiation.py`), so a request for `Accept: application/pdf` is never refused.
+- **App (`features/sales`).** The cash desk keeps its cart in a `CartController` owned by the workspace, so it survives page and language changes and is cleared on a location change (after confirmation) and on sign-out. Product search and camera scanning (a scan only adds the product; it never completes a sale), live availability at the current location (a hint; the server decides), quantity by unit precision, per-line and "percent on everything" discounts, optional customer with quick-add. Totals use integer hundredths; the client never sends prices. Checkout takes cash, card or transfer rows (up to four in the app; the server accepts up to 10 payments and 100 lines per sale), shows change (cash only), and sends through `OperationRunner`. Outcomes: confirmed (success page with the number, the document language choice, print and share buttons for the receipt and the invoice); refused (message, cart kept; `price_changed` refreshes the prices instead); **unknown** (the cart is emptied because the saved record now owns that sale, and the pending banner lists it until the server confirms). Sales history (`sales.view`) lists with search and shows the detail, with cost and profit only when the server sent them. Documents are fetched with `ApiClient.download` and handed to the `printing` package (system print or share dialogs) through an injectable `DocumentActions`.
+- **Checks.** `reconcile()` for sales verifies that each sale's total equals the sum of its line totals, that payments minus total equals the change given (never negative), and that the stock movements recorded for the sale add up to exactly the quantity its lines sold; it is asserted empty after every sales scenario, and `manage.py reconcile_stock` runs it together with the ledger and purchasing checks.
 
 ### Money, Reports, and Files
 
@@ -274,6 +285,12 @@ Server-managed accounts and memberships, with owner, manager, sales, and warehou
 | `purchasing.manage` | ✓ | ✓ |  |  |
 | `purchasing.receive` | ✓ | ✓ |  | ✓ |
 | `purchasing.cost.view` | ✓ | ✓ |  |  |
+| `sales.view` | ✓ | ✓ | ✓ |  |
+| `sales.create` | ✓ | ✓ | ✓ |  |
+| `sales.discount` | ✓ | ✓ | ✓ |  |
+| `sales.cost.view` | ✓ | ✓ |  |  |
+| `customer.view` | ✓ | ✓ | ✓ |  |
+| `customer.manage` | ✓ | ✓ | ✓ |  |
 | `operations.view` | ✓ | ✓ | ✓ | ✓ |
 
 **Idempotent commands and the audit trail.** A stock-changing command carries an `Idempotency-Key` (a UUID chosen by the app). The server claims the key inside the same database transaction as the work: the same key and request replays the stored outcome, the same key with a different request is refused (422), simultaneous duplicates serialise on a PostgreSQL advisory lock, and a failed attempt rolls back and frees the key. `GET /api/v1/businesses/<id>/operations/<action>/<key>/` tells the app what became of a key after a timeout, crash or restart. Audit events are append-only: the ORM refuses updates and deletes and a PostgreSQL trigger refuses them for raw SQL too.
@@ -288,7 +305,7 @@ Rate-limit sign-in and sensitive endpoints. Audit important changes with actor, 
 | Payment gateway | None; record payments and refunds | A gateway is a separate future scope decision |
 | Email | Password-recovery codes through any SMTP service configured by environment settings (decided 2026-10-06) | Choose the provider (D16) and test delivery from Turkmenistan; tests use an in-memory email backend. SMS is not planned |
 | Barcode scanning | Tablet camera (`mobile_scanner`) is the agreed first method (decided 2026-10-06), with manual entry as a fallback. Implemented behind a `BarcodeScanner` interface; the app asks for the Android `CAMERA` permission only when a scan starts | **Verify camera scanning on the pilot tablet** (HANDOFF has the checklist); USB/Bluetooth scanners are an optional later step. The browser build has no camera scanner (manual entry only) |
-| Receipt/label printing | Optional device integration; generated documents planned | Select printer/protocol and test Russian/Turkmen glyphs |
+| Receipt/label printing | Receipts and invoices are server-generated PDFs (embedded DejaVu Sans) that the tablet prints or shares through the system dialogs (`printing` package). No printer protocol is integrated | Select the printer (D9), test Russian/Turkmen glyphs and the 80 mm width on it, and verify the system dialogs on the pilot tablet; label printing is not started |
 | File and backup storage | Private storage with separate protected backups | Select provider, retention, and restore procedures |
 | Error monitoring | Server metrics/logs first; optional hosted error tracker | Select provider and redact business data |
 
@@ -346,7 +363,7 @@ Backend checks must cover cross-business and role denial, atomic rollback, concu
 | Decision | Resolve before |
 | --- | --- |
 | Backend dependency versions, token library, API contracts | Implementing backend/client integration |
-| Invoice numbering and local tax/document requirements (currency and rounding were decided 2026-10-06) | Finalizing production sales and documents |
+| Local tax and legal invoice requirements (currency and rounding were decided 2026-10-06; no tax and `S-000001` numbering are provisional, 2026-10-07) | Finalizing production sales and documents |
 | Count reconciliation policy (FIFO costing was decided 2026-10-06) | Stock counts |
 | Refund/adjustment approvals and warranty terms | Finalizing those workflows |
 | Pilot tablet, scanning method, printer, approved translations | Pilot acceptance |

@@ -4,12 +4,12 @@ Inventory ERP for shops in Turkmenistan, with Russian and Turkmen interfaces. An
 
 ## What is included
 
-- **Real build (default):** sign-in against the Django API, session restore, restart-safe pending operations, administration (business, locations, staff, language, USD→TMT rate), the product catalog with camera barcode scanning, stock (ledger with FIFO costs, opening stock, adjustments, history), suppliers, purchase orders and partial deliveries. Pages for later phases (sales, expenses, warranties, reports) show a "later release" notice, never sample data.
+- **Real build (default):** sign-in against the Django API, session restore, restart-safe pending operations, administration (business, locations, staff, language, USD→TMT rate), the product catalog with camera barcode scanning, stock (ledger with FIFO costs, opening stock, adjustments, history), suppliers, purchase orders and partial deliveries, and sales: a cash desk with a restart-safe checkout (cash, card or transfer, discounts, change), customers, sales history, and receipts and invoices as PDFs in Russian or Turkmen. Pages for later phases (transfers, expenses, warranties, reports) show a "later release" notice, never sample data.
 - **Demonstration build** (`--dart-define=DEMO_MODE=true`): the earlier interface prototype with dashboard, products, inventory, purchasing, sales and returns, expenses, warranties, reports and administration screens on in-memory sample data, three demonstration locations and a searchable car-part catalog.
 - Persistent language selection, ARB translations, and custom Turkmen delegates for the controls used here.
 - Bundled Inter and Noto Serif fonts, their licenses, and Android and web platform scaffolds.
 
-The visible demonstration banner is intentional. In the demonstration build operations change sample data in memory and reset when the application restarts; warranty cards are examples, and transfers complete immediately (the production transfer workflow will track dispatch, transit and receipt). Printing, role-aware sales, imports/exports, backups and real payments are not connected yet. TMT is the business currency (decided); selling prices may be stated in TMT or USD. Turkmen terminology needs fluent-speaker review.
+The visible demonstration banner is intentional. In the demonstration build operations change sample data in memory and reset when the application restarts; warranty cards are examples, and transfers complete immediately (the production transfer workflow will track dispatch, transit and receipt). A dedicated receipt printer, imports/exports, backups and card or other payment gateways are not connected (payments are recorded, not processed; there is no tax yet). TMT is the business currency (decided); selling prices may be stated in TMT or USD. Turkmen terminology needs fluent-speaker review.
 
 ## Interface preview
 

@@ -133,9 +133,11 @@ On the Claude Code cloud VM, run `bash scripts/claude_cloud_postgres.sh` once pe
 | Lint and format check | `uv run ruff check .` and `uv run ruff format --check .` |
 | Apply formatting | `uv run ruff format .` |
 | Run the local development server | `uv run python manage.py runserver 127.0.0.1:8000` |
-| Check that stock balances, movements, FIFO layers and purchase-order receipts agree (non-zero exit on any difference) | `uv run python manage.py reconcile_stock` |
+| Check that stock balances, movements, FIFO layers, purchase-order receipts and sales agree (non-zero exit on any difference) | `uv run python manage.py reconcile_stock` |
 | Create sample data for development and staging tests only (refuses in production; password from `ERP_SAMPLE_PASSWORD`) | `uv run python manage.py create_sample_business` |
 | Create a business with its first owner (operator tool; password from `ERP_OWNER_PASSWORD` or a prompt) | `uv run python manage.py create_business --name ... --owner-username ... --owner-email ... --location ...` |
+
+Receipts and invoices are generated with ReportLab (runtime dependency) and the DejaVu Sans fonts vendored in `backend/assets/fonts/` (do not replace them with fonts that lack Cyrillic or the Turkmen letters); the tests read the PDFs back with `pypdf` (dev dependency). The real-browser run in `scripts/e2e/` (README there) drives the web build against the real API and PostgreSQL; run it after changing a workflow that stock or money depends on.
 
 Health check: `GET /api/v1/health/`. Concurrency tests use real threads against PostgreSQL and run as part of `manage.py test`. Add a dependency only through `pyproject.toml` and commit the updated `uv.lock`.
 

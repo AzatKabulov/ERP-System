@@ -4,7 +4,7 @@ Status: approved roadmap, 2026-10-06; revised the same day after Codex's review 
 
 Starting point: a bilingual Flutter interface prototype that runs on demonstration data only (see [HANDOFF.md](HANDOFF.md)).
 
-**Progress (2026-10-06): Phases 1, 2, 3 and 4 are implemented and verified** (backend, app, CI, and a real-browser run against the real backend; HANDOFF section 4 has the evidence). Still open and needing the owner: step 0.1/0.2, 0.3's branch protection, 2.1 (a deployed staging server), and 3.3 (camera scan on the pilot tablet). Phase 5 (sales) is next.
+**Progress (2026-10-07): Phases 1, 2, 3, 4 and 5 are implemented and verified** (backend, app, CI, and a real-browser run against the real backend; HANDOFF section 4 has the evidence). Still open and needing the owner: step 0.1/0.2, 0.3's branch protection, 2.1 (a deployed staging server), 3.3 (camera scan on the pilot tablet) and 5.5 (the pilot-tablet walkthrough, which also covers printing and sharing receipts on the device). Phase 6 (transfers and stock counts) is next.
 
 ## How to use this plan
 
@@ -52,13 +52,13 @@ Agents must not invent these (AGENTS.md "Boundaries"). Record each answer in the
 | D1 | Backend technology | Phase 1 | **Confirmed 2026-10-06: Django + DRF + PostgreSQL** |
 | D2 | Hosting provider and region, reachable from the pilot store's internet in Turkmenistan | Phase 2 (test server, provisional); Phase 10 (final) | Open |
 | D3 | Business currency, decimal places, rounding | Phase 3 | **Decided 2026-10-06:** business currency TMT (2 decimals, rounded half up). A product's selling price may be stated in TMT or USD and is converted to TMT at an owner/manager-entered rate that is saved on each sale. Costs, totals, payments and reports are TMT only. Recorded as a scope change in the PRD. |
-| D4 | Receipt/invoice format, tax rules, document numbering (confirm with a local accountant) | Phase 5 (provisional); Phase 10 (final) | Open |
+| D4 | Receipt/invoice format, tax rules, document numbering (confirm with a local accountant) | Phase 5 (provisional); Phase 10 (final) | **Provisional, 2026-10-07:** no tax at all for now (owner), so documents show totals only; receipts are numbered `S-000001...` per business. The legal format and any tax remain open |
 | D5 | What each role (owner, manager, sales, warehouse) may see and do | Phase 1 (draft from the PRD is acceptable) | **Provisional draft implemented** (`backend/apps/businesses/permissions.py`, table in ARCHITECTURE); owner review pending |
 | D6 | Inventory costing method | Needed before Phase 4 | **Decided 2026-10-06: FIFO.** Each purchase keeps its own unit cost and the oldest stock is used first when selling. Opening stock records a unit cost with every quantity. |
-| D7 | Who approves discounts, refunds and stock adjustments, and limits | Phases 5–7 | Open |
+| D7 | Who approves discounts, refunds and stock adjustments, and limits | Phases 5–7 | **Discounts decided 2026-10-07:** anyone who can sell may give any discount; each is stored with the sale (a separate `sales.discount` permission makes a later limit a small change). Refunds and adjustments: open |
 | D8a | Warranty terms stored on products and copied onto each sale | Phase 3 | **Decided 2026-10-06:** a period in months (0 = no warranty) plus free-text conditions per product |
 | D8b | Warranty claim policies: who is eligible, outcomes, approvals | Phase 8 | Open |
-| D9 | Pilot tablet model, scanning method, receipt/label printer | Phase 3 (scanning); Phase 5 (printing) | **Scanning method decided 2026-10-06: tablet camera.** Tablet model and printer still open |
+| D9 | Pilot tablet model, scanning method, receipt/label printer | Phase 3 (scanning); Phase 5 (printing) | **Scanning method decided 2026-10-06: tablet camera.** Receipts and invoices are PDFs that the tablet prints or shares through its own dialogs (Phase 5); a dedicated printer is not chosen. Tablet model and printer still open |
 | D10 | Default language for new users; default document language | Phase 2 | Provisional: Russian (current prototype behavior); please confirm |
 | D11 | Backup frequency, retention, acceptable data loss and recovery time | Phase 10 | Open |
 | D12 | Android app identifier and distribution channel (Google Play or direct install) | Phase 5 (identifier); Phase 10 (channel) | Open |
@@ -162,20 +162,20 @@ Goal: real sales that cannot oversell or duplicate, with receipts and invoices i
 
 Before you start: D3, D4 (provisional), D7 (discount limits), D9 (printer, if any), D12 (app identifier), D14 (reviewers arranged).
 
-- [ ] 5.1 Sales API:
+- [x] 5.1 Sales API (done 2026-10-07; owner answers: anyone may discount, no tax, payments mainly cash or card):
   - optional customer records (walk-in sales need none)
-  - a sale command protected by an operation key: it rechecks stock and prices under locks, applies discount permissions, and calculates final decimal totals with the D3 rounding and D4 tax settings
-  - recorded payments (method and amount; no payment gateway), and sale numbering per D4
-  - snapshots of price, discount, tax and **warranty terms** on each sale line, which Phase 8 depends on
-  - stock decreased through the inventory service, an audit entry, and an operation-status endpoint for unknown outcomes
-- [ ] 5.2 PostgreSQL concurrency tests: two tablets selling the last unit; a retry with the same key returns the same sale; the same key with a different request is rejected.
-- [ ] 5.3 Sales screen on the API:
+  - a sale command protected by an operation key: it rechecks stock and prices under locks, applies discount permissions, and calculates final decimal totals with the D3 rounding (no tax, D4)
+  - recorded payments (cash, card or transfer; split allowed; paid in full; change only from cash; no payment gateway and no debt), and sale numbering `S-000001` per business
+  - snapshots of price, rate, discount and **warranty terms** on each sale line, which Phase 8 depends on
+  - stock decreased through the inventory service (FIFO cost per line), an audit entry, and the operation-status endpoint for unknown outcomes
+- [x] 5.2 PostgreSQL concurrency tests: two tablets selling the last unit; twelve concurrent sales of five units never oversell and leave no gap in the numbers; eight concurrent copies of one sale give one sale; a retry with the same key returns the same sale; the same key with a different request is rejected.
+- [x] 5.3 Sales screen on the API:
   - product search and scanning, and a cart that does not reserve stock
   - confirmation before checkout, and a single submission
-  - after a timeout, crash or restart, the saved pending-operation record is resolved by asking the server for that key's outcome, or retried with the **same** key (test: sale committed, answer lost, tablet restarted, exactly one sale)
-  - success shown only after the server confirms; the cart is kept when the language changes (an existing test covers this)
-- [ ] 5.4 Receipts and invoices: generated on the server as PDFs with embedded fonts covering Russian and Turkmen, with business details. Document language is chosen separately from interface language. Downloads are permission-checked, and the file can be shared or printed through the device. A dedicated printer integration happens only once the D9 printer is chosen and tested.
-- [ ] 5.5 Stage 1 checkpoint: install a test build on the pilot tablet connected to staging and walk through PRD flows 1–3 in both languages. Fix the issues found and record the results in HANDOFF.
+  - after a timeout, crash or restart, the saved pending-operation record is resolved by asking the server for that key's outcome, or retried with the **same** key (tests: sale committed, answer lost, tablet restarted, exactly one sale; a 5xx before commit resent with the same key; the same in a real browser against the real backend)
+  - success shown only after the server confirms; the cart is kept when the language changes
+- [x] 5.4 Receipts and invoices: generated on the server as PDFs (80 mm receipt, A4 invoice) with embedded DejaVu Sans fonts covering Russian and Turkmen, with business details (name, address, phone, tax number). Document language is chosen separately from interface language. Downloads are permission-checked, and the app hands the file to the device's print and share dialogs (`printing` package). *Not verified:* the print and share dialogs on a real tablet and any real printer; a dedicated printer integration waits for the D9 printer. Both belong to step 5.5.
+- [ ] 5.5 Stage 1 checkpoint: install a test build on the pilot tablet connected to staging and walk through PRD flows 1–3 in both languages, including printing or sharing a receipt. Fix the issues found and record the results in HANDOFF. **Owner step: needs the tablet and a staging server.**
 
 Done when: the Stage 1 parts of the PRD acceptance criteria pass on the pilot tablet: no duplicate or oversold sales, stock matches movements, and both languages work.
 
@@ -305,3 +305,4 @@ Anything listed under "Out of Scope" in the PRD stays out unless the owner chang
   - agents pause only decision-dependent work ("How to use" item 5);
   - currency decision D3 recorded: TMT business currency, selling prices may be stated in TMT or USD.
 - 2026-10-06, implementation: Phases 1-4 built autonomously while the owner was away. Assumptions made without the owner (listed for review in the session's final message and in HANDOFF): FIFO reading of D6; USD only for selling prices; opening stock once per product and location; over-receipt refused; receipt cost equals the order line cost; opening stock and adjustments by owner/manager only (provisional D7); PO numbers `PO-0001`.
+- 2026-10-07, Phase 5 built after the owner's answers (discounts: anyone who can sell; tax: none for now; payments: mainly cash or card). Assumptions made without the owner, for review: receipt numbers `S-000001`; prices always come from the catalog on the server (no manual price override at the desk); one cart line per product; a completed sale is immutable (returns and corrections arrive in Phase 7); cost and profit are shown only to owner and manager; the cart reserves no stock, so another tablet may sell the goods first (the server then refuses and names the product); a sale of zero total (everything discounted) needs no payment; cash overpayment is change, card or transfer overpayment is refused; Turkmen document wording is a draft.
