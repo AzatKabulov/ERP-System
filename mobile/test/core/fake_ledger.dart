@@ -894,6 +894,7 @@ class FakeLedger {
             'warranty_terms': l['warranty_terms'],
             'return_days': l['return_days'],
             'return_until': _returnUntil(l),
+            'warranty_until': l['warranty_until'],
             'returned_quantity': _dec(l['returned'] as int, 3),
             'returnable_quantity': _dec(
               (l['quantity'] as int) - (l['returned'] as int),
@@ -959,6 +960,13 @@ class FakeLedger {
         'return_days': raw['return_days'],
         'returned': 0,
         'refunded': 0,
+        'warranty_until': ((raw['warranty_months'] ?? 0) as int) > 0
+            ? _day(
+                DateTime.now().add(
+                  Duration(days: 30 * (raw['warranty_months'] as int)),
+                ),
+              )
+            : null,
       });
     }
     final total = priced.fold<int>(0, (a, l) => a + (l['line_total'] as int));
@@ -1017,6 +1025,9 @@ class FakeLedger {
 
   // ---- returns, supplier returns, reorder -------------------------------------------
 
+  String _day(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
   String? _returnUntil(Map<String, dynamic> line) {
     final days = line['return_days'] as int?;
     if (days == null) return null;
@@ -1071,7 +1082,11 @@ class FakeLedger {
 
   /// The return command with the real server's rules: only what is still returnable, a window
   /// per product, the refund at the price charged (the last piece takes the remainder).
-  Object _makeReturn(Map<String, dynamic> sale, Map<String, dynamic> body) {
+  Object _makeReturn(
+    Map<String, dynamic> sale,
+    Map<String, dynamic> body, {
+    bool ignoreWindow = false,
+  }) {
     if ('${body['reason'] ?? ''}'.trim().isEmpty) {
       return server.errorResponse(
         400,
@@ -1100,14 +1115,14 @@ class FakeLedger {
         );
       }
       final days = line['return_days'] as int?;
-      if (days == 0) {
+      if (!ignoreWindow && days == 0) {
         return server.errorResponse(
           409,
           'returns_not_accepted',
           params: {'product': line['product']},
         );
       }
-      if (days != null && returnWindowOver) {
+      if (!ignoreWindow && days != null && returnWindowOver) {
         return server.errorResponse(
           409,
           'return_window_expired',
@@ -1181,6 +1196,58 @@ class FakeLedger {
     saleReturns.insert(0, record);
     return (status: 201, body: _presentReturn(record));
   }
+
+  /// A warranty replacement: one sellable piece out, the defective one in as damaged.
+  http.Response? warrantyReplacement(
+    Map<String, dynamic> sale,
+    Map<String, dynamic> line,
+    int milli,
+    String documentId,
+  ) {
+    final unitCost = (line['quantity'] as int) == 0
+        ? 0
+        : ((line['cost'] as int) * 1000 / (line['quantity'] as int)).round();
+    return _postAll([
+      () => _post(
+        productId: line['product'] as String,
+        locationId: sale['location'] as String,
+        condition: 'sellable',
+        milli: -milli,
+        type: 'warranty_out',
+        reason: 'warranty',
+        documentType: 'warranty',
+        documentId: documentId,
+      ),
+      () => _post(
+        productId: line['product'] as String,
+        locationId: sale['location'] as String,
+        condition: 'damaged',
+        milli: milli,
+        costMinor: unitCost,
+        type: 'warranty_in',
+        reason: 'warranty',
+        documentType: 'warranty',
+        documentId: documentId,
+      ),
+    ]);
+  }
+
+  /// A warranty refund is an ordinary customer return of the defective goods (damaged).
+  Object warrantyRefund(
+    Map<String, dynamic> sale,
+    Map<String, dynamic> line,
+    int milli,
+    String reason,
+  ) => _makeReturn(sale, {
+    'reason': reason,
+    'lines': [
+      {
+        'sale_line': line['id'],
+        'quantity': _dec(milli, 3),
+        'condition': 'damaged',
+      },
+    ],
+  }, ignoreWindow: true);
 
   Map<String, dynamic> _presentSupplierReturn(Map<String, dynamic> r) => {
     'id': r['id'],

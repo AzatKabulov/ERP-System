@@ -17,9 +17,13 @@ import '../operations/pending_operations_banner.dart';
 import '../purchasing/purchasing_repository.dart';
 import '../purchasing/purchasing_screen.dart';
 import '../sales/cart_controller.dart';
+import '../expenses/expenses_repository.dart';
+import '../expenses/expenses_screen.dart';
 import '../sales/sales_repository.dart';
 import '../sales/sales_screen.dart';
 import 'placeholder_screens.dart';
+import '../warranties/warranties_repository.dart';
+import '../warranties/warranties_screen.dart';
 import 'unsaved_work.dart';
 
 /// The signed-in workspace. Navigation shows only what the role may use, the
@@ -72,6 +76,8 @@ class _RealWorkspaceState extends State<RealWorkspace> {
     AppPage.inventory => session.can('stock.view'),
     AppPage.purchasing => session.can('purchasing.view'),
     AppPage.sales => session.can('sales.create') || session.can('sales.view'),
+    AppPage.expenses => session.can('expense.view'),
+    AppPage.warranties => session.can('warranty.view'),
     _ => true,
   };
 
@@ -128,6 +134,21 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         monitor: widget.monitor,
         unsaved: widget.unsaved,
         cart: _carts.putIfAbsent(membership.id, CartController.new),
+      ),
+      AppPage.expenses => ExpensesScreen(
+        key: ValueKey('expenses-${membership.id}-$_reloadCounter'),
+        session: session,
+        repository: ExpensesRepository(widget.api, membership.businessId),
+        unsaved: widget.unsaved,
+      ),
+      AppPage.warranties => WarrantiesScreen(
+        key: ValueKey('warranties-${membership.id}-$_reloadCounter'),
+        session: session,
+        repository: WarrantiesRepository(widget.api, membership.businessId),
+        sales: SalesRepository(widget.api, membership.businessId),
+        runner: widget.runner,
+        monitor: widget.monitor,
+        unsaved: widget.unsaved,
       ),
       AppPage.administration => RealAdministrationScreen(
         key: ValueKey('admin-${membership.id}-$_reloadCounter'),

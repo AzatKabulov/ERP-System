@@ -70,6 +70,36 @@ String apiErrorText(AppLocalizations l, ApiException e) {
       return l.errorOverInspection;
     case 'not_awaiting_inspection':
       return l.errorNotAwaitingInspection;
+    case 'file_too_large':
+      return l.errorFileTooLarge;
+    case 'file_type_not_allowed':
+      return l.errorFileType;
+    case 'file_required':
+      return l.errorFileRequired;
+    case 'future_date':
+      return l.errorFutureDate;
+    case 'expense_void':
+      return l.errorExpenseVoid;
+    case 'already_void':
+      return l.errorAlreadyVoid;
+    case 'no_warranty':
+      return l.errorNoWarranty;
+    case 'warranty_expired':
+      return l.errorWarrantyExpired('${e.params['until'] ?? ''}');
+    case 'claim_closed':
+      return l.errorClaimClosed;
+    case 'import_too_large':
+      return l.errorImportTooLarge;
+    case 'invalid_header':
+      return l.errorImportHeader;
+    case 'import_invalid':
+      return l.errorImportInvalid;
+    case 'over_claim':
+      return l.errorOverClaim;
+    case 'invalid_file':
+      return l.errorInvalidFile;
+    case 'file_missing':
+      return l.errorFileMissing;
     case 'validation_error':
       return l.errorValidation;
     case 'network':
@@ -107,11 +137,25 @@ String fieldErrorText(AppLocalizations l, FieldError e) => switch (e.code) {
   'barcode_taken' => l.fieldBarcodeTaken,
   'max_decimal_places' ||
   'max_digits' ||
-  'max_whole_digits' => l.fieldTooManyDecimals,
-  'min_value' || 'max_value' => l.fieldOutOfRange,
+  'max_whole_digits' ||
+  'too_many_decimals' => l.fieldTooManyDecimals,
+  'min_value' ||
+  'max_value' ||
+  'negative_number' ||
+  'out_of_range' => l.fieldOutOfRange,
   'quantity_precision' => l.fieldQuantityPrecision,
   'duplicate_product' || 'duplicate_line' => l.fieldDuplicateProduct,
   'target_below_minimum' => l.errorTargetBelowMinimum,
+  'unknown_unit' => l.importErrUnknownUnit,
+  'sku_exists' => l.importErrSkuExists,
+  'sku_duplicate_in_file' => l.importErrSkuDuplicate,
+  'barcode_exists' => l.fieldBarcodeTaken,
+  'barcode_duplicate_in_file' => l.importErrBarcodeDuplicate,
+  'invalid_currency' => l.importErrCurrency,
+  'value_out_of_range' => l.fieldOutOfRange,
+  'too_long' => l.importErrTooLong,
+  'invalid_number' => l.fieldInvalid,
+  'future_date' => l.errorFutureDate,
   _ => l.fieldInvalid,
 };
 

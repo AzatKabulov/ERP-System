@@ -227,3 +227,50 @@ class ReorderLevel {
     targetMilli: parseServerDecimal(json['target'] as String, 3) ?? 0,
   );
 }
+
+/// One problem found in an import file: the data row (1 = the first row after the header), the
+/// column and what is wrong (a code the app translates).
+@immutable
+class ImportError {
+  const ImportError({
+    required this.row,
+    required this.field,
+    required this.code,
+  });
+  final int row;
+  final String field;
+  final String code;
+
+  factory ImportError.fromJson(Map<String, dynamic> json) => ImportError(
+    row: (json['row'] as int?) ?? 0,
+    field: (json['field'] as String?) ?? '',
+    code: (json['code'] as String?) ?? '',
+  );
+}
+
+/// What checking an import file found. Nothing has been changed yet.
+@immutable
+class ImportPreview {
+  const ImportPreview({
+    required this.rows,
+    required this.valid,
+    required this.errorCount,
+    required this.errors,
+  });
+  final int rows;
+  final int valid;
+  final int errorCount;
+  final List<ImportError> errors;
+
+  bool get canApply => rows > 0 && errorCount == 0;
+
+  factory ImportPreview.fromJson(Map<String, dynamic> json) => ImportPreview(
+    rows: (json['rows'] as int?) ?? 0,
+    valid: (json['valid'] as int?) ?? 0,
+    errorCount: (json['error_count'] as int?) ?? 0,
+    errors: [
+      for (final e in (json['errors'] as List?) ?? const [])
+        ImportError.fromJson((e as Map).cast<String, dynamic>()),
+    ],
+  );
+}

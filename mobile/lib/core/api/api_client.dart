@@ -32,6 +32,20 @@ class ApiResponse {
   List<dynamic> get list => json as List<dynamic>;
 }
 
+/// A file to send with a request (a receipt photo, a CSV to import). The server checks what the
+/// file really is by its content, so no content type is claimed here.
+@immutable
+class ApiUpload {
+  const ApiUpload({
+    required this.field,
+    required this.filename,
+    required this.bytes,
+  });
+  final String field;
+  final String filename;
+  final Uint8List bytes;
+}
+
 /// The only place that talks to the server. It adds the bearer token, refreshes
 /// it once when it has expired, turns failures into [ApiException] and keeps the
 /// [ConnectionMonitor] informed. It never retries a request by itself, except
@@ -42,6 +56,7 @@ class ApiClient {
     required this.tokens,
     http.Client? httpClient,
     this.timeout = const Duration(seconds: 15),
+    this.longTimeout = const Duration(seconds: 60),
     this.monitor,
     this.onSessionExpired,
     Uuid uuid = const Uuid(),
@@ -58,6 +73,9 @@ class ApiClient {
   final Uuid _uuid;
   final TokenStore tokens;
   final Duration timeout;
+
+  /// For file uploads and downloads, which take longer than a small JSON answer.
+  final Duration longTimeout;
   final ConnectionMonitor? monitor;
 
   /// Called when the refresh token is no longer accepted (the user must sign in again).
@@ -71,9 +89,17 @@ class ApiClient {
   Future<ApiResponse> get(String path, {Map<String, String>? query}) =>
       send('GET', path, query: query);
 
-  /// Downloads a file (a PDF receipt): the answer's [ApiResponse.bytes].
-  Future<ApiResponse> download(String path, {Map<String, String>? query}) =>
-      send('GET', path, query: query, binary: true);
+  /// Downloads a file (a PDF receipt, a CSV, a receipt photo): the answer's
+  /// [ApiResponse.bytes]. [accept] says what kind of file is expected.
+  Future<ApiResponse> download(
+    String path, {
+    Map<String, String>? query,
+    String accept = 'application/pdf, application/json',
+  }) => send('GET', path, query: query, binary: true, accept: accept);
+
+  /// Sends a file (multipart). Not retried by itself: the caller decides.
+  Future<ApiResponse> upload(String path, ApiUpload file) =>
+      send('POST', path, upload: file);
 
   Future<ApiResponse> post(
     String path, {
@@ -152,6 +178,8 @@ class ApiClient {
     String? idempotencyKey,
     bool authenticated = true,
     bool binary = false,
+    String? accept,
+    ApiUpload? upload,
   }) async {
     try {
       return await _once(
@@ -162,6 +190,8 @@ class ApiClient {
         idempotencyKey,
         authenticated,
         binary,
+        accept,
+        upload,
       );
     } on ApiException catch (e) {
       if (authenticated &&
@@ -176,6 +206,8 @@ class ApiClient {
           idempotencyKey,
           authenticated,
           binary,
+          accept,
+          upload,
         );
       }
       rethrow;
@@ -199,6 +231,8 @@ class ApiClient {
         null,
         false,
         false,
+        null,
+        null,
       );
       final data = response.map;
       await _adopt(data['access'] as String, data['refresh'] as String);
@@ -228,20 +262,36 @@ class ApiClient {
     String? idempotencyKey,
     bool authenticated,
     bool binary,
+    String? accept,
+    ApiUpload? upload,
   ) async {
     final uri = _base.replace(
       path: '${_base.path}$path',
       queryParameters: query == null || query.isEmpty ? null : query,
     );
-    final request = http.Request(method, uri)
-      ..headers['Accept'] = binary
-          ? 'application/pdf, application/json'
-          : 'application/json'
-      ..headers['X-Request-ID'] = _uuid.v4();
-    if (body != null) {
-      request.headers['Content-Type'] = 'application/json; charset=utf-8';
-      request.bodyBytes = utf8.encode(jsonEncode(body));
+    final http.BaseRequest request;
+    if (upload != null) {
+      request = http.MultipartRequest(method, uri)
+        ..files.add(
+          http.MultipartFile.fromBytes(
+            upload.field,
+            upload.bytes,
+            filename: upload.filename,
+          ),
+        );
+    } else {
+      final plain = http.Request(method, uri);
+      if (body != null) {
+        plain.headers['Content-Type'] = 'application/json; charset=utf-8';
+        plain.bodyBytes = utf8.encode(jsonEncode(body));
+      }
+      request = plain;
     }
+    request.headers['Accept'] = binary
+        ? (accept ?? 'application/pdf, application/json')
+        : 'application/json';
+    request.headers['X-Request-ID'] = _uuid.v4();
+    final limit = binary || upload != null ? longTimeout : timeout;
     if (idempotencyKey != null) {
       request.headers['Idempotency-Key'] = idempotencyKey;
     }
@@ -251,8 +301,8 @@ class ApiClient {
 
     final http.Response response;
     try {
-      final streamed = await _http.send(request).timeout(timeout);
-      response = await http.Response.fromStream(streamed).timeout(timeout);
+      final streamed = await _http.send(request).timeout(limit);
+      response = await http.Response.fromStream(streamed).timeout(limit);
     } on TimeoutException {
       monitor?.reportFailure();
       throw const ApiException(kind: ApiErrorKind.timeout, code: 'timeout');

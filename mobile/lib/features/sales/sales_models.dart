@@ -48,6 +48,7 @@ class SaleLineRecord {
     this.refundedMinor = 0,
     this.returnDays,
     this.returnUntil,
+    this.warrantyUntil,
     this.costTotalMinor,
   });
   final String id;
@@ -73,6 +74,9 @@ class SaleLineRecord {
   /// The last day to return it (a date, "2026-10-14"), null when there is no limit.
   final String? returnUntil;
 
+  /// The last day of the warranty (a date), null when the line has none.
+  final String? warrantyUntil;
+
   /// Only for roles that may see costs.
   final int? costTotalMinor;
 
@@ -96,6 +100,7 @@ class SaleLineRecord {
         parseServerDecimal(json['refunded_total'] as String?, 2) ?? 0,
     returnDays: json['return_days'] as int?,
     returnUntil: json['return_until'] as String?,
+    warrantyUntil: json['warranty_until'] as String?,
     costTotalMinor: parseServerDecimal(json['cost_total'] as String?, 2),
   );
 }

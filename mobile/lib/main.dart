@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api/api_client.dart';
 import 'core/config/app_config.dart';
+import 'core/files/file_services.dart';
 import 'core/connectivity/connection_monitor.dart';
 import 'core/operations/pending_operation_store.dart';
 import 'core/session/session_controller.dart';
@@ -48,6 +49,8 @@ class ErpApp extends StatefulWidget {
     this.pendingStore,
     this.scanner = const CameraBarcodeScanner(),
     this.documents = const DevicePrintingDocumentActions(),
+    this.picking = const DeviceFilePicking(),
+    this.sharing = const DeviceFileSharing(),
   });
 
   final SharedPreferences preferences;
@@ -66,6 +69,10 @@ class ErpApp extends StatefulWidget {
 
   /// How receipts and invoices are printed or shared (the device dialogs; a fake in tests).
   final DocumentActions documents;
+
+  /// How photos and files are chosen and sent on (the device dialogs; fakes in tests).
+  final FilePicking picking;
+  final FileSharing sharing;
 
   @override
   State<ErpApp> createState() => _ErpAppState();
@@ -138,7 +145,11 @@ class _ErpAppState extends State<ErpApp> {
       ],
       builder: (context, child) => ScannerScope(
         scanner: widget.scanner,
-        child: DocumentsScope(actions: widget.documents, child: child!),
+        child: FilesScope(
+          picking: widget.picking,
+          sharing: widget.sharing,
+          child: DocumentsScope(actions: widget.documents, child: child!),
+        ),
       ),
       home: _demo
           ? Workspace(
