@@ -10,6 +10,7 @@ from apps.common.testing import client_for, make_business, make_member
 from apps.inventory import services
 from apps.inventory.models import Condition, MovementType
 from apps.purchasing import services as purchasing_services
+from apps.sales import services as sales_services
 
 D = Decimal
 
@@ -103,4 +104,4 @@ class World:
 
 def ledger_differences() -> list[str]:
     """Everything the ledger and the purchasing checks can find wrong, for every business."""
-    return services.reconcile() + purchasing_services.reconcile()
+    return services.reconcile() + purchasing_services.reconcile() + sales_services.reconcile()

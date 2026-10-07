@@ -31,7 +31,8 @@ class MovementType(models.TextChoices):
     RECEIPT = "receipt", "Purchase receipt"
     ADJUSTMENT_IN = "adjustment_in", "Adjustment (increase)"
     ADJUSTMENT_OUT = "adjustment_out", "Adjustment (decrease)"
-    # Later phases add: sale, transfer_out, transfer_in, return_in, supplier_return, count.
+    SALE = "sale", "Sale"
+    # Later phases add: transfer_out, transfer_in, return_in, supplier_return, count.
 
 
 class StockBalance(UUIDModel):

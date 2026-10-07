@@ -20,6 +20,9 @@ class BusinessSerializer(serializers.ModelSerializer):
             "default_language",
             "document_language",
             "timezone",
+            "address",
+            "phone",
+            "tax_number",
             "is_active",
             "created_at",
         ]

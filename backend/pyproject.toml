@@ -12,10 +12,12 @@ dependencies = [
     "gunicorn>=23.0",
     "whitenoise>=6.9",
     "django-cors-headers>=4.7",
+    "reportlab>=4.2",
 ]
 
 [dependency-groups]
 dev = [
+    "pypdf>=5",
     "ruff>=0.9",
 ]
 
