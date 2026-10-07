@@ -429,7 +429,8 @@ class ReceivingTests(PurchasingCase):
         detail = warehouse.get(f"{self.w.base}/purchase-orders/{self.order['id']}/")
         self.assertEqual(detail.status_code, 200)
         text = detail.content.decode()
-        for forbidden in ("unit_cost", "line_total", '"total"', "50.00", "30.00"):
+        # whole JSON values: a bare "30.00" also matches a timestamp such as 08:10:30.000972Z
+        for forbidden in ("unit_cost", "line_total", '"total"', '"50.00"', '"30.00"'):
             self.assertNotIn(forbidden, text)
         self.assertIn('"outstanding"', text)
         listing = warehouse.get(f"{self.w.base}/purchase-orders/").content.decode()

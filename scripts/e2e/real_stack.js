@@ -22,7 +22,7 @@ from apps.sales import services as ss
 from apps.sales.models import Sale
 from apps.businesses.models import Business
 d = services.reconcile() + ps.reconcile() + ss.reconcile()
-sales = [{'id': str(x.pk), 'number': x.number, 'total': str(x.total), 'change': str(x.change_given), 'cost': str(sum(l.cost_total for l in x.lines.all())), 'payments': [[p.method, str(p.amount)] for p in x.payments.all()]} for x in Sale.objects.order_by('created_at')]
+sales = [{'id': str(x.pk), 'number': x.number, 'total': str(x.total), 'method': x.payment_method, 'prices': [str(l.unit_price) for l in x.lines.all()], 'cost': str(sum(l.cost_total for l in x.lines.all()))} for x in Sale.objects.order_by('created_at')]
 print('FACTS' + json.dumps({'business': str(Business.objects.first().pk), 'deliveries': Delivery.objects.count(), 'sales': sales, 'balances': [{'q': str(b.quantity), 'c': b.condition} for b in StockBalance.objects.all()], 'reconcile': 'consistent' if not d else d}))
 `;
   const out = execSync('cd ' + BACKEND + ' && export PATH="$HOME/.local/bin:$PATH" && uv run python manage.py shell', { input: py, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
@@ -195,27 +195,26 @@ let PAGE = null;
   await page.waitForTimeout(1500);
   await clickLabel(page, 'BP-100', { exact: false, wait: 1500 });
   await expectText(page, 'the product is in the cart with its availability', /В наличии здесь: 10 шт/);
+  await expectText(page, 'the price box starts with the catalog price', /В каталоге: 120,00/);
   await fill(page, '^Количество', '3');
-  await fill(page, 'Скидка, TMT', '20');
-  await expectText(page, 'total = 3 x 120 - 20 discount = 340,00', /Итого: 340,00/);
+  await fill(page, 'Цена за единицу, TMT', '100'); // prices are not fixed: the seller charges 100, not 120
+  await expectText(page, 'total = 3 x 100 = 300,00', /Итого: 300,00/);
   await page.screenshot({ path: path.join(OUT, 'e2e-9-cart.png') });
   await clickLabel(page, 'К оплате', { role: 'button', wait: 1500 });
-  await expectText(page, 'the payment page opens', /Оплата/);
-  await fill(page, '^Сумма, TMT', '500');
-  await expectText(page, 'cash 500 against 340 gives 160 change', /Сдача: 160,00/);
+  await expectText(page, 'the last step opens and offers cash and card', /Оплата/);
+  await expectNoText(page, 'no change to work out, no amounts to type', /Сдача|Осталось оплатить|Сумма, TMT/);
   await page.screenshot({ path: path.join(OUT, 'e2e-10-payment.png') });
   await clickLabel(page, 'Завершить продажу', { role: 'button', wait: 2500 });
   await expectText(page, 'the sale is confirmed with its number', /Продажа S-000001 оформлена/);
-  await expectText(page, 'the change to hand over is shown', /Выдать сдачу: 160,00/);
   await page.screenshot({ path: path.join(OUT, 'e2e-11-sale-done.png') });
   facts = dbFacts();
-  check('one sale with the right total, change and FIFO cost', facts.sales.length === 1 && facts.sales[0].total === '340.00' && facts.sales[0].change === '160.00' && parseFloat(facts.sales[0].cost) === 150, JSON.stringify(facts.sales));
+  check('one sale at the seller price, paid in cash, with the FIFO cost', facts.sales.length === 1 && facts.sales[0].total === '300.00' && facts.sales[0].method === 'cash' && facts.sales[0].prices[0] === '100.00' && parseFloat(facts.sales[0].cost) === 150, JSON.stringify(facts.sales));
   check('stock fell from 10 to 7', facts.balances[0].q === '7.000', JSON.stringify(facts.balances));
   check('reconcile is consistent after the sale', facts.reconcile === 'consistent', facts.reconcile);
 
   // the receipt button asks the server for the PDF
   const receiptReply = page.waitForResponse((r) => /\/document\//.test(r.url()), { timeout: 15000 }).catch(() => null);
-  await clickLabel(page, 'Печать', { role: 'button', which: 'first', wait: 1500 }); // the receipt row comes first
+  await clickLabel(page, 'Чек · Печать', { role: 'button', wait: 1500 });
   const reply = await receiptReply;
   check('the Receipt button downloads a PDF from the server', !!reply && reply.status() === 200 && /application\/pdf/.test(reply.headers()['content-type'] || ''), reply ? String(reply.status()) : 'no request seen');
 
@@ -226,6 +225,7 @@ let PAGE = null;
   await clickLabel(page, 'BP-100', { exact: false, wait: 1500 });
   await fill(page, '^Количество', '2');
   await clickLabel(page, 'К оплате', { role: 'button', wait: 1500 });
+  await clickLabel(page, 'Карта', { role: 'checkbox', wait: 600 }); // this customer paid by card
   await page.route('**/sales/', async (route) => {
     if (route.request().method() !== 'POST') return route.continue();
     await route.fetch(); // the server really sells ...
@@ -235,7 +235,7 @@ let PAGE = null;
   await expectText(page, 'the app does not claim the sale: outcome unknown', /Ответ сервера не получен/);
   await expectText(page, 'the unconfirmed sale is listed', /Ожидают подтверждения: 1/);
   facts = dbFacts();
-  check('the server did record the second sale', facts.sales.length === 2 && facts.balances[0].q === '5.000', JSON.stringify(facts.sales));
+  check('the server did record the second sale (card, catalog price 120)', facts.sales.length === 2 && facts.balances[0].q === '5.000' && facts.sales[1].method === 'card' && facts.sales[1].total === '240.00', JSON.stringify(facts.sales));
   await page.unroute('**/sales/');
   await page.reload({ waitUntil: 'load' });
   await page.waitForSelector('flt-glass-pane', { state: 'attached', timeout: 60000 });
@@ -256,20 +256,20 @@ let PAGE = null;
   await page.screenshot({ path: path.join(OUT, 'e2e-12-sales-history.png') });
   await clickLabel(page, 'Назад', { role: 'button', wait: 1200 });
 
-  // documents: real PDFs from the real API, text read back with pypdf
-  const ru = await documentText(facts.business, facts.sales[0].id, 'lang=ru&kind=receipt');
+  // the receipt: a real PDF from the real API, text read back with pypdf
+  const ru = await documentText(facts.business, facts.sales[0].id, 'lang=ru');
   check('the receipt is a PDF', ru.status === 200 && /application\/pdf/.test(ru.type || ''), ru.type);
   check('the Russian receipt names the product and the number', /Тормозные колодки/.test(ru.text) && /S-000001/.test(ru.text), ru.text.slice(0, 200));
-  check('the Russian receipt shows the paid total and the change', /340,00/.test(ru.text) && /160,00/.test(ru.text), ru.text.slice(0, 300));
-  check('no cost or profit appears on a receipt', !/Себестоимость|Прибыль|150,00/.test(ru.text));
-  const tk = await documentText(facts.business, facts.sales[0].id, 'lang=tk&kind=invoice');
-  check('the Turkmen invoice uses Turkmen labels', /Nakladnoý/.test(tk.text) && /Jemi/.test(tk.text), tk.text.slice(0, 200));
+  check('it shows the price charged (100,00 not 120,00), the total and how it was paid', /100,00/.test(ru.text) && /300,00/.test(ru.text) && /Наличные/.test(ru.text) && !/120,00/.test(ru.text), ru.text.slice(0, 300));
+  check('no cost, profit, change, discount or invoice wording on a receipt', !/Себестоимость|Прибыль|150,00|Сдача|Скидка|Накладная/.test(ru.text));
+  const tk = await documentText(facts.business, facts.sales[1].id, 'lang=tk');
+  check('the Turkmen receipt uses Turkmen labels and says card', /Çek/.test(tk.text) && /Jemi/.test(tk.text) && /Kart/.test(tk.text), tk.text.slice(0, 200));
 
   // ---- Turkmen, and it survives a reload ----------------------------------------------
   await clickLabel(page, 'Язык интерфейса', { exact: false, wait: 800 });
   await clickLabel(page, 'Türkmençe', { exact: false, wait: 1800 });
   await expectText(page, 'the interface switches to Turkmen', /Harytlar/);
-  await expectText(page, 'the cash desk is in Turkmen too (cart title)', /Sebet/);
+  await expectText(page, 'the sales page is in Turkmen too (cart title)', /Sebet/);
   await page.screenshot({ path: path.join(OUT, 'e2e-7-turkmen.png') });
   await page.reload({ waitUntil: 'load' });
   await page.waitForSelector('flt-glass-pane', { state: 'attached', timeout: 60000 });

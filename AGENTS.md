@@ -137,7 +137,7 @@ On the Claude Code cloud VM, run `bash scripts/claude_cloud_postgres.sh` once pe
 | Create sample data for development and staging tests only (refuses in production; password from `ERP_SAMPLE_PASSWORD`) | `uv run python manage.py create_sample_business` |
 | Create a business with its first owner (operator tool; password from `ERP_OWNER_PASSWORD` or a prompt) | `uv run python manage.py create_business --name ... --owner-username ... --owner-email ... --location ...` |
 
-Receipts and invoices are generated with ReportLab (runtime dependency) and the DejaVu Sans fonts vendored in `backend/assets/fonts/` (do not replace them with fonts that lack Cyrillic or the Turkmen letters); the tests read the PDFs back with `pypdf` (dev dependency). The real-browser run in `scripts/e2e/` (README there) drives the web build against the real API and PostgreSQL; run it after changing a workflow that stock or money depends on.
+The receipt is generated with ReportLab (runtime dependency) and the DejaVu Sans fonts vendored in `backend/assets/fonts/` (do not replace them with fonts that lack Cyrillic or the Turkmen letters); the tests read the PDFs back with `pypdf` (dev dependency). The real-browser run in `scripts/e2e/` (README there) drives the web build against the real API and PostgreSQL; run it after changing a workflow that stock or money depends on.
 
 Health check: `GET /api/v1/health/`. Concurrency tests use real threads against PostgreSQL and run as part of `manage.py test`. Add a dependency only through `pyproject.toml` and commit the updated `uv.lock`.
 
@@ -152,6 +152,8 @@ Health check: `GET /api/v1/health/`. Concurrency tests use real threads against 
 - Report what changed, what was verified, and any remaining limitations. A successful build does not prove a scanner, printer, stock workflow, or backup restore works.
 
 ## Boundaries
+
+- Product principle (owner, 2026-10-07): this is an ERP, not a cash register. Keep entry forms short and the system simple (little internet, an old-fashioned market). Do not add features, fields or options the owner did not ask for; prices are not fixed (the seller sets them); there is no tax, discount, change calculation or invoice.
 
 - Do not change the agreed framework, product scope, offline operating model, or major architecture without authorization. A user request explicitly directing that change is sufficient; do not request duplicate approval.
 - Do not invent tax rules, inventory costing policies, warranty terms, refund eligibility, or approval limits. Use documented decisions or clarify the decision before finalizing the affected behavior.
