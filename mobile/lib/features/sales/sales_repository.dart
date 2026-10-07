@@ -4,7 +4,7 @@ import '../../core/api/api_client.dart';
 import '../../core/money/decimal_math.dart';
 import 'sales_models.dart';
 
-/// Sales, customers and the PDF documents over the API. A sale itself is a stock-changing
+/// Sales, customers and the receipt PDF over the API. A sale itself is a stock-changing
 /// command and is sent by the OperationRunner (see [salePath] and [saleBody]).
 class SalesRepository {
   SalesRepository(this.api, this.businessId);
@@ -15,33 +15,27 @@ class SalesRepository {
   String get _base => '/api/v1/businesses/$businessId';
   String get salePath => '$_base/sales/';
 
-  /// Quantities, discounts and the expected total go as exact decimal text. Prices are
-  /// never sent: the server prices every line itself, and refuses the sale (`price_changed`)
-  /// if the total the cashier saw is no longer right.
+  /// Quantities and prices go as exact decimal text. The seller sets every price, so each
+  /// line carries the price shown on screen; the server only checks it is not negative.
   Map<String, dynamic> saleBody({
     required String locationId,
     required String? customerId,
-    required int expectedTotalMinor,
-    required List<({String productId, int quantityMilli, int discountMinor})>
+    required String paymentMethod,
+    required List<({String productId, int quantityMilli, int unitPriceMinor})>
     lines,
-    required List<({String method, int amountMinor})> payments,
     String note = '',
   }) => {
     'location': locationId,
     'customer': customerId,
     'note': note,
-    'expected_total': toServerDecimal(expectedTotalMinor, 2),
+    'payment_method': paymentMethod,
     'lines': [
       for (final l in lines)
         {
           'product': l.productId,
           'quantity': toServerDecimal(l.quantityMilli, 3),
-          'discount': toServerDecimal(l.discountMinor, 2),
+          'unit_price': toServerDecimal(l.unitPriceMinor, 2),
         },
-    ],
-    'payments': [
-      for (final p in payments)
-        {'method': p.method, 'amount': toServerDecimal(p.amountMinor, 2)},
     ],
   };
 
@@ -67,15 +61,11 @@ class SalesRepository {
   Future<SaleDetail> sale(String id) async =>
       SaleDetail.fromJson((await api.get('$salePath$id/')).map);
 
-  /// The PDF bytes of a receipt or invoice. [lang] null = the business's document language.
-  Future<Uint8List> document(
-    String id, {
-    String kind = 'receipt',
-    String? lang,
-  }) async {
+  /// The PDF bytes of the receipt. [lang] null = the business's document language.
+  Future<Uint8List> receipt(String id, {String? lang}) async {
     final response = await api.download(
       '$salePath$id/document/',
-      query: {'kind': kind, 'lang': ?lang},
+      query: {'lang': ?lang},
     );
     return response.bytes ?? Uint8List(0);
   }

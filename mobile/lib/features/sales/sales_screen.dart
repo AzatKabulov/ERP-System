@@ -23,9 +23,10 @@ import 'sales_history_screen.dart';
 import 'sales_models.dart';
 import 'sales_repository.dart';
 
-/// The cash desk: find or scan products, build a cart (which reserves no stock), pick an
-/// optional customer, give discounts, and take payment. The sale itself is decided by the
-/// server at checkout; this screen never shows success before the server confirms.
+/// Recording a sale: find or scan products, build a cart (which reserves no stock), set the
+/// quantity and the price of every line (prices are not fixed: the seller charges what they
+/// agree with the customer), pick an optional customer, and save. The sale itself is decided
+/// by the server; this screen never shows success before the server confirms.
 class SalesScreen extends StatefulWidget {
   const SalesScreen({
     super.key,
@@ -56,11 +57,9 @@ class SalesScreen extends StatefulWidget {
 
 class _SalesScreenState extends State<SalesScreen> {
   final _search = TextEditingController();
-  final _percent = TextEditingController();
   Timer? _debounce;
   List<Product> _results = const [];
   bool _searching = false;
-  bool _percentInvalid = false;
   Object? _searchError;
   int _request = 0;
   SaleDetail? _done;
@@ -91,7 +90,6 @@ class _SalesScreenState extends State<SalesScreen> {
     widget.unsaved.mark(this, dirty: false);
     _debounce?.cancel();
     _search.dispose();
-    _percent.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -201,17 +199,6 @@ class _SalesScreenState extends State<SalesScreen> {
     if (choice != null) cart.customer = choice.customer;
   }
 
-  Future<void> _refreshPrices() async {
-    for (final line in cart.lines) {
-      try {
-        cart.refreshProduct(await widget.catalog.product(line.product.id));
-      } catch (_) {
-        // the server will refuse again if something is still off
-      }
-    }
-    if (mounted) showFeedback(context, strings(context).priceChangedRefreshed);
-  }
-
   Future<void> _checkout() async {
     final locationId = _locationId;
     if (locationId == null || !cart.isReady) return;
@@ -235,7 +222,6 @@ class _SalesScreenState extends State<SalesScreen> {
       case SaleCompleted(:final sale):
         cart.clear();
         _search.clear();
-        _percent.clear();
         setState(() {
           _done = sale;
           _results = const [];
@@ -247,14 +233,7 @@ class _SalesScreenState extends State<SalesScreen> {
         // is emptied so the same goods cannot be sold a second time by hand.
         cart.clear();
         showFeedback(context, l.outcomeUnknownNotice);
-      case PricesChanged():
-        await _refreshPrices();
     }
-  }
-
-  void _applyPercent() {
-    final ok = cart.applyPercentToAll(_percent.text);
-    setState(() => _percentInvalid = !ok);
   }
 
   @override
@@ -427,40 +406,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   index: cart.lines.indexOf(line),
                 ),
               ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                SizedBox(
-                  width: 260,
-                  child: TextField(
-                    key: const ValueKey('cart-percent'),
-                    controller: _percent,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: l.discountPercentLabel,
-                      errorText: _percentInvalid ? l.fieldInvalid : null,
-                      errorMaxLines: 2,
-                    ),
-                  ),
-                ),
-                OutlinedButton(
-                  key: const ValueKey('cart-percent-apply'),
-                  onPressed: _applyPercent,
-                  child: Text(l.applyAction),
-                ),
-              ],
-            ),
             const Divider(height: 28),
-            if (cart.discountTotalMinor > 0)
-              Text(
-                l.saleDiscountSum(formatMoney(cart.discountTotalMinor, 'TMT')),
-                key: const ValueKey('cart-discount-total'),
-                style: const TextStyle(color: AppColors.muted),
-              ),
             Text(
               l.saleTotal(formatMoney(cart.totalMinor, 'TMT')),
               key: const ValueKey('cart-total'),
@@ -503,15 +449,6 @@ class _SalesScreenState extends State<SalesScreen> {
           ),
           const SizedBox(height: 8),
           Text(l.saleTotal(formatMoney(sale.totalMinor, 'TMT'))),
-          if (sale.changeMinor > 0)
-            Text(
-              l.changeToGive(formatMoney(sale.changeMinor, 'TMT')),
-              key: const ValueKey('sale-done-change'),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.success,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
           const SizedBox(height: 16),
           DocumentButtons(
             repository: widget.repository,
@@ -609,7 +546,7 @@ class _CartLineCard extends StatefulWidget {
 
 class _CartLineCardState extends State<_CartLineCard> {
   late final _quantity = TextEditingController(text: widget.line.quantityText);
-  late final _discount = TextEditingController(text: widget.line.discountText);
+  late final _price = TextEditingController(text: widget.line.priceText);
 
   @override
   void initState() {
@@ -621,18 +558,18 @@ class _CartLineCardState extends State<_CartLineCard> {
   void dispose() {
     widget.cart.removeListener(_sync);
     _quantity.dispose();
-    _discount.dispose();
+    _price.dispose();
     super.dispose();
   }
 
-  /// Keeps the text fields in step when the cart itself changes them (a step button,
-  /// "% on all"). Runs when the cart notifies, never during a build.
+  /// Keeps the text fields in step when the cart itself changes them (a step button). Runs
+  /// when the cart notifies, never during a build.
   void _sync() {
     if (_quantity.text != widget.line.quantityText) {
       _quantity.text = widget.line.quantityText;
     }
-    if (_discount.text != widget.line.discountText) {
-      _discount.text = widget.line.discountText;
+    if (_price.text != widget.line.priceText) {
+      _price.text = widget.line.priceText;
     }
   }
 
@@ -640,14 +577,12 @@ class _CartLineCardState extends State<_CartLineCard> {
     final l = strings(context);
     final line = widget.line;
     return switch (problem) {
-      'rate_missing' => l.errorRateMissing,
-      'required' => l.fieldRequired,
+      'required' || 'price_required' => l.fieldRequired,
+      'price_invalid' => l.fieldInvalid,
       'quantity' => l.fieldQuantityPrecision,
       'exceeds_available' => l.exceedsAvailable(
         quantityWithUnit(line.availableMilli ?? 0, line.product.unit),
       ),
-      'discount_invalid' => l.fieldInvalid,
-      'discount_too_large' => l.errorDiscountTooLarge,
       _ => null,
     };
   }
@@ -658,7 +593,7 @@ class _CartLineCardState extends State<_CartLineCard> {
     final cart = widget.cart;
     final line = widget.line;
     final problem = cart.problem(line);
-    final unit = cart.unitPriceMinor(line);
+    final catalogPrice = line.product.priceTmtMinor;
     final lineTotal = cart.lineTotalMinor(line);
     final step = 1000; // one whole unit
     return Container(
@@ -689,7 +624,8 @@ class _CartLineCardState extends State<_CartLineCard> {
           Text(
             [
               line.product.sku,
-              if (unit != null) l.unitPriceLine(formatMoney(unit, 'TMT')),
+              if (catalogPrice != null)
+                l.catalogPriceLine(formatMoney(catalogPrice, 'TMT')),
               if (line.availableMilli != null)
                 l.availableHere(
                   quantityWithUnit(line.availableMilli!, line.product.unit),
@@ -729,15 +665,15 @@ class _CartLineCardState extends State<_CartLineCard> {
                 icon: const Icon(Icons.add),
               ),
               SizedBox(
-                width: 140,
+                width: 190,
                 child: TextField(
-                  key: ValueKey('cart-discount-${widget.index}'),
-                  controller: _discount,
+                  key: ValueKey('cart-price-${widget.index}'),
+                  controller: _price,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  onChanged: (v) => cart.setDiscountText(line, v),
-                  decoration: InputDecoration(labelText: l.discountFieldLabel),
+                  onChanged: (v) => cart.setPriceText(line, v),
+                  decoration: InputDecoration(labelText: l.priceFieldLabel),
                 ),
               ),
             ],

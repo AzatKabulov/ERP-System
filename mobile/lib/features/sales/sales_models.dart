@@ -5,7 +5,8 @@ import '../../core/money/decimal_math.dart';
 /// "S-000012": how a sale is named on screen and on documents.
 String saleNumber(int number) => 'S-${number.toString().padLeft(6, '0')}';
 
-const paymentMethods = ['cash', 'card', 'transfer'];
+/// How the customer paid. Only the fact is recorded, never amounts or change.
+const paymentMethods = ['cash', 'card'];
 
 @immutable
 class Customer {
@@ -29,19 +30,6 @@ class Customer {
 }
 
 @immutable
-class SalePaymentRecord {
-  const SalePaymentRecord({required this.method, required this.amountMinor});
-  final String method;
-  final int amountMinor;
-
-  factory SalePaymentRecord.fromJson(Map<String, dynamic> json) =>
-      SalePaymentRecord(
-        method: json['method'] as String,
-        amountMinor: parseServerDecimal(json['amount'] as String, 2) ?? 0,
-      );
-}
-
-@immutable
 class SaleLineRecord {
   const SaleLineRecord({
     required this.productId,
@@ -51,8 +39,6 @@ class SaleLineRecord {
     required this.unitDecimals,
     required this.quantityMilli,
     required this.unitPriceMinor,
-    required this.grossMinor,
-    required this.discountMinor,
     required this.lineTotalMinor,
     required this.warrantyMonths,
     required this.warrantyTerms,
@@ -65,8 +51,6 @@ class SaleLineRecord {
   final int unitDecimals;
   final int quantityMilli;
   final int unitPriceMinor;
-  final int grossMinor;
-  final int discountMinor;
   final int lineTotalMinor;
   final int warrantyMonths;
   final String warrantyTerms;
@@ -82,8 +66,6 @@ class SaleLineRecord {
     unitDecimals: json['unit_decimals'] as int,
     quantityMilli: parseServerDecimal(json['quantity'] as String, 3) ?? 0,
     unitPriceMinor: parseServerDecimal(json['unit_price'] as String, 2) ?? 0,
-    grossMinor: parseServerDecimal(json['gross'] as String, 2) ?? 0,
-    discountMinor: parseServerDecimal(json['discount'] as String, 2) ?? 0,
     lineTotalMinor: parseServerDecimal(json['line_total'] as String, 2) ?? 0,
     warrantyMonths: (json['warranty_months'] as int?) ?? 0,
     warrantyTerms: (json['warranty_terms'] as String?) ?? '',
@@ -101,9 +83,8 @@ class SaleSummary {
     required this.cashierName,
     required this.customerName,
     required this.totalMinor,
-    required this.discountMinor,
     required this.lineCount,
-    required this.methods,
+    required this.paymentMethod,
   });
   final String id;
   final int number;
@@ -112,9 +93,8 @@ class SaleSummary {
   final String cashierName;
   final String customerName;
   final int totalMinor;
-  final int discountMinor;
   final int lineCount;
-  final List<String> methods;
+  final String paymentMethod;
 
   factory SaleSummary.fromJson(Map<String, dynamic> json) => SaleSummary(
     id: json['id'] as String,
@@ -124,9 +104,8 @@ class SaleSummary {
     cashierName: (json['cashier'] as Map)['name'] as String,
     customerName: (json['customer_name'] as String?) ?? '',
     totalMinor: parseServerDecimal(json['total'] as String, 2) ?? 0,
-    discountMinor: parseServerDecimal(json['discount_total'] as String, 2) ?? 0,
     lineCount: json['line_count'] as int,
-    methods: [for (final m in json['methods'] as List) m as String],
+    paymentMethod: json['payment_method'] as String,
   );
 }
 
@@ -146,13 +125,9 @@ class SaleDetail {
     required this.cashierName,
     required this.customerName,
     required this.totalMinor,
-    required this.discountMinor,
-    required this.paidMinor,
-    required this.changeMinor,
-    required this.usdRate,
+    required this.paymentMethod,
     required this.note,
     required this.lines,
-    required this.payments,
     this.costTotalMinor,
     this.profitMinor,
   });
@@ -163,15 +138,9 @@ class SaleDetail {
   final String cashierName;
   final String customerName;
   final int totalMinor;
-  final int discountMinor;
-  final int paidMinor;
-  final int changeMinor;
-
-  /// TMT per USD at the moment of sale, when any line was priced in USD.
-  final String? usdRate;
+  final String paymentMethod;
   final String note;
   final List<SaleLineRecord> lines;
-  final List<SalePaymentRecord> payments;
   final int? costTotalMinor;
   final int? profitMinor;
 
@@ -183,20 +152,13 @@ class SaleDetail {
     cashierName: (json['cashier'] as Map)['name'] as String,
     customerName: (json['customer_name'] as String?) ?? '',
     totalMinor: parseServerDecimal(json['total'] as String, 2) ?? 0,
-    discountMinor: parseServerDecimal(json['discount_total'] as String, 2) ?? 0,
-    paidMinor: parseServerDecimal(json['paid'] as String, 2) ?? 0,
-    changeMinor: parseServerDecimal(json['change_given'] as String, 2) ?? 0,
-    usdRate: json['usd_rate'] as String?,
+    paymentMethod: json['payment_method'] as String,
     note: (json['note'] as String?) ?? '',
     lines: [
       for (final l in json['lines'] as List)
         SaleLineRecord.fromJson((l as Map).cast<String, dynamic>()),
     ],
-    payments: [
-      for (final p in json['payments'] as List)
-        SalePaymentRecord.fromJson((p as Map).cast<String, dynamic>()),
-    ],
     costTotalMinor: parseServerDecimal(json['cost_total'] as String?, 2),
-    profitMinor: parseServerDecimal(json['profit'] as String?, 2),
+    profitMinor: parseSignedServerDecimal(json['profit'] as String?, 2),
   );
 }

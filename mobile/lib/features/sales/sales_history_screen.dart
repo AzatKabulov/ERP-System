@@ -13,15 +13,8 @@ import 'document_buttons.dart';
 import 'sales_models.dart';
 import 'sales_repository.dart';
 
-String _methodsText(AppLocalizations l, List<String> methods) => methods
-    .map(
-      (m) => switch (m) {
-        'cash' => l.payCash,
-        'card' => l.payCard,
-        _ => l.payTransfer,
-      },
-    )
-    .join(' + ');
+String _methodText(AppLocalizations l, String method) =>
+    method == 'cash' ? l.payCash : l.payCard;
 
 /// Past sales, newest first, searchable by number or customer. Read-only: a completed sale
 /// is a historical record; returns and corrections are separate documents.
@@ -223,7 +216,7 @@ class _SaleTile extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   Text(
-                    _methodsText(l, sale.methods),
+                    _methodText(l, sale.paymentMethod),
                     style: const TextStyle(
                       color: AppColors.muted,
                       fontSize: 12,
@@ -296,11 +289,6 @@ class SaleDetailScreen extends StatelessWidget {
               Text(l.cashierLine(sale.cashierName)),
               if (sale.customerName.isNotEmpty)
                 Text('${l.customer}: ${sale.customerName}'),
-              if (sale.usdRate != null)
-                Text(
-                  l.saleRateLine(sale.usdRate!),
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
-                ),
               if (sale.note.isNotEmpty) Text(sale.note),
             ],
           ),
@@ -336,13 +324,6 @@ class SaleDetailScreen extends StatelessWidget {
                                 fontSize: 13,
                               ),
                             ),
-                            if (line.discountMinor > 0)
-                              Text(
-                                l.saleDiscountSum(
-                                  formatMoney(line.discountMinor, 'TMT'),
-                                ),
-                                style: const TextStyle(fontSize: 13),
-                              ),
                             if (line.warrantyMonths > 0)
                               Text(
                                 l.warrantyMonthsValue(line.warrantyMonths),
@@ -370,22 +351,14 @@ class SaleDetailScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              for (final p in sale.payments)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '${_methodsText(l, [p.method])}: ${formatMoney(p.amountMinor, 'TMT')}',
-                    style: const TextStyle(color: AppColors.muted),
-                  ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${l.paidBy}: ${_methodText(l, sale.paymentMethod)}',
+                  key: const ValueKey('sd-method'),
+                  style: const TextStyle(color: AppColors.muted),
                 ),
-              if (sale.changeMinor > 0)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l.changeSum(formatMoney(sale.changeMinor, 'TMT')),
-                    style: const TextStyle(color: AppColors.muted),
-                  ),
-                ),
+              ),
               if (sale.costTotalMinor != null && sale.profitMinor != null) ...[
                 const Divider(),
                 Text(

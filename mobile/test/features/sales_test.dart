@@ -16,6 +16,10 @@ String tmt(int minor) => formatMoney(minor, 'TMT');
 bool canPress(WidgetTester tester, String name) =>
     tester.widget<GradientButton>(key(name)).onPressed != null;
 
+/// What is typed in the text field with this key.
+String typed(WidgetTester tester, String name) =>
+    tester.widget<TextField>(key(name)).controller!.text;
+
 /// The names a screen reader gives every text field on screen.
 List<String> fieldNames(WidgetTester tester) {
   final names = <String>[];
@@ -53,7 +57,7 @@ List<String> fieldNames(WidgetTester tester) {
   return (rig: r, pad: pad);
 }
 
-Future<void> openDesk(WidgetTester tester, RealRig rig) async {
+Future<void> openSales(WidgetTester tester, RealRig rig) async {
   await rig.launchSignedIn(tester);
   await tapKey(tester, 'nav-sales');
   await settle(tester);
@@ -80,6 +84,12 @@ Future<void> setQuantity(
   await tester.pump();
 }
 
+Future<void> setPrice(WidgetTester tester, String text, {int line = 0}) async {
+  await tester.enterText(key('cart-price-$line'), text);
+  await tester.pump();
+}
+
+/// "Continue" on the cart: opens the last step, where the customer's payment is chosen.
 Future<void> checkout(WidgetTester tester) async {
   await tapKey(tester, 'cart-checkout');
   await settle(tester);
@@ -91,29 +101,28 @@ Future<void> confirm(WidgetTester tester) async {
 }
 
 void main() {
-  group('the cash desk', () {
+  group('the cart', () {
     testWidgets('every text field keeps its own name for a screen reader', (
       tester,
     ) async {
       final handle = tester.ensureSemantics();
       final t = deskRig();
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       expect(fieldNames(tester), ['Название, артикул или штрихкод']);
       await addToCart(tester);
       expect(fieldNames(tester), [
         'Название, артикул или штрихкод',
         'Количество',
-        'Скидка, TMT',
-        'Скидка в процентах на всё',
+        'Цена за единицу, TMT',
       ]);
       await checkout(tester);
-      expect(fieldNames(tester), ['Сумма, TMT']);
+      expect(fieldNames(tester), isEmpty); // the last step has no typing at all
       handle.dispose();
     });
 
     testWidgets('starts empty, with a hint and no demo data', (tester) async {
       final t = deskRig();
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       expect(key('sales-start'), findsOneWidget);
       expect(key('cart-empty'), findsOneWidget);
       expect(find.text('Завершить демо-продажу'), findsNothing);
@@ -122,14 +131,21 @@ void main() {
     });
 
     testWidgets(
-      'search finds a product, adding it shows price and availability',
+      'search finds a product; adding it shows the price to change and what is in stock',
       (tester) async {
         final t = deskRig();
-        await openDesk(tester, t.rig);
+        await openSales(tester, t.rig);
         await addToCart(tester);
         expect(key('cart-qty-0'), findsOneWidget);
+        expect(
+          typed(tester, 'cart-price-0'),
+          '100,00',
+        ); // the catalog price, editable
         expect(find.textContaining('В наличии здесь: 10 шт'), findsOneWidget);
-        expect(find.textContaining('${tmt(10000)} за единицу'), findsOneWidget);
+        expect(
+          find.textContaining('В каталоге: ${tmt(10000)}'),
+          findsOneWidget,
+        );
         expect(find.text('Итого: ${tmt(10000)}'), findsOneWidget);
         expect(find.text('Добавлено: Тормозные колодки'), findsOneWidget);
         expect(t.rig.server.ledger.salesRecorded, 0); // adding sells nothing
@@ -143,7 +159,7 @@ void main() {
       'quantity buttons and typing follow the unit; totals use exact maths',
       (tester) async {
         final t = deskRig();
-        await openDesk(tester, t.rig);
+        await openSales(tester, t.rig);
         await addToCart(tester);
         await tapKey(tester, 'cart-plus-0');
         await tapKey(tester, 'cart-plus-0');
@@ -163,42 +179,55 @@ void main() {
     );
 
     testWidgets(
-      'more than is on the shelf is flagged, and checkout stays off',
+      'more than is on the shelf is flagged, and the next step stays off',
       (tester) async {
         final t = deskRig(stock: 10);
-        await openDesk(tester, t.rig);
+        await openSales(tester, t.rig);
         await addToCart(tester);
         await setQuantity(tester, '11');
         expect(find.text('Больше, чем в наличии (10 шт).'), findsOneWidget);
-        await tester.tap(key('cart-checkout'), warnIfMissed: false);
-        await settle(tester, ms: 300);
-        expect(key('checkout-confirm'), findsNothing);
+        expect(canPress(tester, 'cart-checkout'), isFalse);
       },
     );
 
-    testWidgets('line discounts and a percentage on everything', (
+    testWidgets('the seller can charge any price: lower, higher or nothing', (
       tester,
     ) async {
       final t = deskRig();
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       await addToCart(tester);
       await setQuantity(tester, '3');
-      await tester.enterText(key('cart-discount-0'), '20');
-      await tester.pump();
-      expect(find.text('Итого: ${tmt(28000)}'), findsOneWidget);
-      expect(find.text('Скидка: ${tmt(2000)}'), findsOneWidget);
-      await tester.enterText(key('cart-percent'), '10');
-      await tapKey(tester, 'cart-percent-apply');
+      await setPrice(tester, '60');
+      expect(find.text('Итого: ${tmt(18000)}'), findsOneWidget);
+      await setPrice(tester, '150,50');
+      expect(find.text('Итого: ${tmt(45150)}'), findsOneWidget);
+      await setPrice(tester, '0');
+      expect(find.text('Итого: ${tmt(0)}'), findsOneWidget);
       expect(
-        find.text('Итого: ${tmt(27000)}'),
-        findsOneWidget,
-      ); // 10% of 300 = 30
-      await tester.enterText(
-        key('cart-discount-0'),
-        '400',
-      ); // more than the line
-      await tester.pump();
-      expect(find.text('Скидка больше суммы строки.'), findsOneWidget);
+        canPress(tester, 'cart-checkout'),
+        isTrue,
+      ); // a free item is allowed
+      await setPrice(tester, '');
+      expect(key('cart-problem-0'), findsOneWidget);
+      expect(canPress(tester, 'cart-checkout'), isFalse);
+      await setPrice(tester, '12,345'); // not a price: more than two decimals
+      expect(key('cart-problem-0'), findsOneWidget);
+      expect(canPress(tester, 'cart-checkout'), isFalse);
+      await setPrice(tester, '-5');
+      expect(canPress(tester, 'cart-checkout'), isFalse);
+    });
+
+    testWidgets('adding the same product again adds a unit, not a price', (
+      tester,
+    ) async {
+      final t = deskRig();
+      await openSales(tester, t.rig);
+      await addToCart(tester);
+      await setPrice(tester, '80');
+      await addToCart(tester); // the same product once more
+      expect(typed(tester, 'cart-qty-0'), '2');
+      expect(typed(tester, 'cart-price-0'), '80'); // the seller's price is kept
+      expect(find.text('Итого: ${tmt(16000)}'), findsOneWidget);
     });
 
     testWidgets('scanning puts the product in the cart and sells nothing', (
@@ -206,7 +235,7 @@ void main() {
     ) async {
       final scanner = FakeScanner(results: ['4006381333931', '0000000000000']);
       final t = deskRig(rig: RealRig(scanner: scanner));
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       await tapKey(tester, 'scan-button');
       await settle(tester);
       expect(key('cart-qty-0'), findsOneWidget);
@@ -221,40 +250,52 @@ void main() {
       expect(t.rig.server.ledger.salesRecorded, 0);
     });
 
-    testWidgets('a USD price without a rate cannot be sold', (tester) async {
-      final rig = RealRig();
-      final usd = seedProduct(
-        rig.server,
-        sku: 'USD-1',
-        name: 'Imported filter',
-        price: '10.00',
-        currency: 'USD',
-      );
-      rig.server.ledger.seedStock(usd['id'] as String, store, '5', '20');
-      await openDesk(tester, rig);
-      await addToCart(tester, query: 'imported', sku: 'USD-1');
-      expect(
-        find.text(
-          'Для товара с ценой в USD не задан курс. Задайте курс в настройках.',
-        ),
-        findsOneWidget,
-      );
-      await tester.tap(key('cart-checkout'), warnIfMissed: false);
-      await settle(tester, ms: 300);
-      expect(key('checkout-confirm'), findsNothing);
-    });
+    testWidgets(
+      'a USD-priced product with no rate is sold at the price the seller types',
+      (tester) async {
+        final rig = RealRig();
+        final usd = seedProduct(
+          rig.server,
+          sku: 'USD-1',
+          name: 'Imported filter',
+          price: '10.00',
+          currency: 'USD',
+        );
+        rig.server.ledger.seedStock(usd['id'] as String, store, '5', '20');
+        await openSales(tester, rig);
+        await addToCart(tester, query: 'imported', sku: 'USD-1');
+        expect(
+          typed(tester, 'cart-price-0'),
+          '',
+        ); // no rate: nothing to suggest
+        expect(canPress(tester, 'cart-checkout'), isFalse);
+        await setPrice(tester, '35');
+        expect(canPress(tester, 'cart-checkout'), isTrue);
+        await checkout(tester);
+        await confirm(tester);
+        expect(key('sale-done'), findsOneWidget);
+        final line =
+            (rig.server.ledger.sales.single['lines'] as List).single as Map;
+        expect(line['unit_price'], 3500);
+      },
+    );
 
     testWidgets('the cart survives a page change and a language change', (
       tester,
     ) async {
       final t = deskRig();
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       await addToCart(tester);
+      await setPrice(tester, '90');
       await tapKey(tester, 'nav-inventory');
       await settle(tester);
       await tapKey(tester, 'nav-sales');
       await settle(tester);
       expect(key('cart-qty-0'), findsOneWidget);
+      expect(
+        typed(tester, 'cart-price-0'),
+        '90',
+      ); // the typed price is kept too
       await tapKey(tester, 'language-selector');
       await settle(tester, ms: 400);
       await tester.tap(find.text('Türkmençe').last);
@@ -264,14 +305,14 @@ void main() {
         find.text('Sebet'),
         findsOneWidget,
       ); // the cart title, now in Turkmen
-      expect(find.text('Jemi: ${tmt(10000)}'), findsOneWidget);
+      expect(find.text('Jemi: ${tmt(9000)}'), findsOneWidget);
     });
 
     testWidgets('leaving with a cart asks before switching location', (
       tester,
     ) async {
       final t = deskRig();
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       await addToCart(tester);
       await tapKey(tester, 'location-selector');
       await settle(tester, ms: 400);
@@ -287,23 +328,28 @@ void main() {
     });
   });
 
-  group('paying', () {
+  group('saving a sale', () {
     testWidgets(
-      'cash in full: the sale is confirmed, stock falls once, change is shown',
+      'the price typed by the seller is what is saved; cash is the default; stock falls once',
       (tester) async {
         final t = deskRig();
-        await openDesk(tester, t.rig);
+        await openSales(tester, t.rig);
         await addToCart(tester);
         await setQuantity(tester, '3');
+        await setPrice(tester, '90');
         await checkout(tester);
-        expect(find.text('Итого: ${tmt(30000)}'), findsWidgets);
-        await tester.enterText(key('pay-amount-0'), '500');
-        await tester.pump();
-        expect(find.text('Сдача: ${tmt(20000)}'), findsOneWidget);
+        expect(find.text('Итого: ${tmt(27000)}'), findsWidgets);
+        expect(
+          tester.widget<ChoiceChip>(key('pay-cash')).selected,
+          isTrue,
+        ); // cash unless said otherwise
         await confirm(tester);
         expect(key('sale-done'), findsOneWidget);
         expect(find.text('Продажа S-000001 оформлена'), findsOneWidget);
-        expect(find.text('Выдать сдачу: ${tmt(20000)}'), findsOneWidget);
+        expect(
+          find.textContaining('Сдача'),
+          findsNothing,
+        ); // no change to work out
         expect(t.rig.server.ledger.salesRecorded, 1);
         expect(
           t.rig.server.ledger.quantityOf(t.pad['id'] as String, store),
@@ -311,60 +357,49 @@ void main() {
         );
         expect(key('cart-empty'), findsOneWidget);
         expect(t.rig.store.backing, isEmpty);
-        // what was sent: no prices, only what the cashier decided
+        final sale = t.rig.server.ledger.sales.single;
+        expect((sale['total'], sale['payment_method']), (27000, 'cash'));
+        // what was sent: the seller's price and how it was paid, nothing else about money
         final sent = t.rig.server.records.values.single;
         expect(sent.status, 201);
+        expect(sent.body['payment_method'], 'cash');
+        expect(sent.body.containsKey('payments'), isFalse);
+        expect(sent.body.containsKey('expected_total'), isFalse);
         final line = ((sent.body['lines'] as List).single as Map);
         expect(line['quantity'], '3.000');
+        expect(line['unit_price'], '90.00');
+        expect(line.containsKey('discount'), isFalse);
       },
     );
 
-    testWidgets('card or a split payment must add up; only cash gives change', (
-      tester,
-    ) async {
+    testWidgets('card can be chosen instead', (tester) async {
       final t = deskRig();
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       await addToCart(tester);
-      await setQuantity(tester, '3');
       await checkout(tester);
-      // 300 total: 100 cash + 150 card leaves 50 to pay
-      await tester.enterText(key('pay-amount-0'), '100');
-      await tapKey(tester, 'pay-add');
-      await tester.enterText(key('pay-amount-1'), '150');
-      await tester.pump();
-      expect(find.text('Осталось оплатить: ${tmt(5000)}'), findsOneWidget);
-      expect(canPress(tester, 'checkout-confirm'), isFalse);
-      // 100 cash + 300 card: the 100 over the total is covered by the cash
-      await tester.enterText(key('pay-amount-1'), '300');
-      await tester.pump();
-      expect(key('checkout-change-error'), findsNothing);
-      expect(canPress(tester, 'checkout-confirm'), isTrue);
-      // 50 cash + 350 card: 100 over, but only 50 of it is cash, so it cannot be change
-      await tester.enterText(key('pay-amount-0'), '50');
-      await tester.enterText(key('pay-amount-1'), '350');
-      await tester.pump();
-      expect(key('checkout-change-error'), findsOneWidget);
-      expect(canPress(tester, 'checkout-confirm'), isFalse);
-      // exactly covered: no change at all
-      await tester.enterText(key('pay-amount-0'), '100');
-      await tester.enterText(key('pay-amount-1'), '200');
-      await tester.pump();
-      expect(key('checkout-change'), findsNothing);
-      expect(canPress(tester, 'checkout-confirm'), isTrue);
+      await tapKey(tester, 'pay-card');
+      expect(tester.widget<ChoiceChip>(key('pay-card')).selected, isTrue);
+      expect(tester.widget<ChoiceChip>(key('pay-cash')).selected, isFalse);
+      await confirm(tester);
+      expect(t.rig.server.ledger.sales.single['payment_method'], 'card');
+    });
+
+    testWidgets('a free sale (price zero) can be saved', (tester) async {
+      final t = deskRig();
+      await openSales(tester, t.rig);
+      await addToCart(tester);
+      await setPrice(tester, '0');
+      await checkout(tester);
       await confirm(tester);
       expect(key('sale-done'), findsOneWidget);
-      final payments = (t.rig.server.ledger.sales.single['payments'] as List);
-      expect(payments.map((p) => (p as Map)['method']).toList(), [
-        'cash',
-        'card',
-      ]);
+      expect(t.rig.server.ledger.sales.single['total'], 0);
     });
 
     testWidgets(
       'selling more than another tablet left is refused, naming the product',
       (tester) async {
         final t = deskRig();
-        await openDesk(tester, t.rig);
+        await openSales(tester, t.rig);
         await addToCart(tester);
         await setQuantity(tester, '3');
         await checkout(tester);
@@ -388,43 +423,7 @@ void main() {
       },
     );
 
-    testWidgets(
-      'prices that moved since the cart was built refresh the cart instead of charging',
-      (tester) async {
-        final t = deskRig();
-        await openDesk(tester, t.rig);
-        await addToCart(tester);
-        await checkout(tester);
-        t.pad['price_amount'] =
-            '120.00'; // the manager changed the price meanwhile
-        await confirm(tester);
-        expect(find.text('Цены обновлены.'), findsOneWidget);
-        expect(t.rig.server.ledger.salesRecorded, 0);
-        expect(
-          find.text('Итого: ${tmt(12000)}'),
-          findsOneWidget,
-        ); // the cart shows the new price
-      },
-    );
-
-    testWidgets('a free sale (everything discounted) needs no payment', (
-      tester,
-    ) async {
-      final t = deskRig();
-      await openDesk(tester, t.rig);
-      await addToCart(tester);
-      await tester.enterText(key('cart-percent'), '100');
-      await tapKey(tester, 'cart-percent-apply');
-      await checkout(tester);
-      expect(key('pay-amount-0'), findsNothing);
-      await confirm(tester);
-      expect(key('sale-done'), findsOneWidget);
-      expect(t.rig.server.ledger.salesRecorded, 1);
-    });
-
-    testWidgets('the customer chosen at the desk goes on the sale', (
-      tester,
-    ) async {
+    testWidgets('the customer chosen on the sale goes on it', (tester) async {
       final t = deskRig();
       t.rig.server.ledger.customers.add({
         'id': 'cu-seed',
@@ -434,7 +433,7 @@ void main() {
         'is_active': true,
         'created_at': '2026-10-06T10:00:00Z',
       });
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       await addToCart(tester);
       await tapKey(tester, 'cart-customer');
       await settle(tester, ms: 600);
@@ -449,7 +448,7 @@ void main() {
 
     testWidgets('a new customer can be created on the spot', (tester) async {
       final t = deskRig();
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       await addToCart(tester);
       await tapKey(tester, 'cart-customer');
       await settle(tester, ms: 600);
@@ -462,58 +461,49 @@ void main() {
     });
   });
 
-  group('receipts and invoices', () {
+  group('the receipt', () {
     Future<void> sellOne(WidgetTester tester, RealRig rig) async {
-      await openDesk(tester, rig);
+      await openSales(tester, rig);
       await addToCart(tester);
       await checkout(tester);
       await confirm(tester);
     }
 
-    testWidgets(
-      'print and share the receipt and the invoice through the device',
-      (tester) async {
-        final t = deskRig();
-        await sellOne(tester, t.rig);
-        await tapKey(tester, 'doc-receipt-print');
-        await settle(tester, ms: 400);
-        await tapKey(tester, 'doc-invoice-share');
-        await settle(tester, ms: 400);
-        final docs = t.rig.documents;
-        expect(docs.printed.single.name, 'receipt-S-000001');
-        expect(
-          String.fromCharCodes(docs.printed.single.bytes),
-          startsWith('%PDF'),
-        );
-        expect(docs.shared.single.name, 'invoice-S-000001');
-        expect(t.rig.server.ledger.documentRequests.map((r) => r['kind']), [
-          'receipt',
-          'invoice',
-        ]);
-        expect(
-          t.rig.server.ledger.documentRequests.first['lang'],
-          '',
-        ); // the business default
-      },
-    );
+    testWidgets('print and share the receipt through the device', (
+      tester,
+    ) async {
+      final t = deskRig();
+      await sellOne(tester, t.rig);
+      await tapKey(tester, 'doc-receipt-print');
+      await settle(tester, ms: 400);
+      await tapKey(tester, 'doc-receipt-share');
+      await settle(tester, ms: 400);
+      final docs = t.rig.documents;
+      expect(docs.printed.single.name, 'receipt-S-000001');
+      expect(
+        String.fromCharCodes(docs.printed.single.bytes),
+        startsWith('%PDF'),
+      );
+      expect(docs.shared.single.name, 'receipt-S-000001');
+      // the language is the business's setting: the app does not choose one
+      expect(t.rig.server.ledger.documentRequests.map((r) => r['lang']), [
+        '',
+        '',
+      ]);
+    });
 
-    testWidgets(
-      'the document language is chosen separately from the interface language',
-      (tester) async {
-        final t = deskRig();
-        await sellOne(tester, t.rig);
-        await tapKey(tester, 'doc-lang-tk');
-        await tapKey(tester, 'doc-receipt-print');
-        await settle(tester, ms: 400);
-        expect(t.rig.server.ledger.documentRequests.single['lang'], 'tk');
-        expect(
-          find.text('Продажа S-000001 оформлена'),
-          findsOneWidget,
-        ); // the interface stays Russian
-      },
-    );
+    testWidgets('there is only a receipt: no invoice, no language to pick', (
+      tester,
+    ) async {
+      final t = deskRig();
+      await sellOne(tester, t.rig);
+      expect(key('doc-receipt-print'), findsOneWidget);
+      expect(key('doc-invoice-print'), findsNothing);
+      expect(key('doc-lang'), findsNothing);
+      expect(find.textContaining('Накладная'), findsNothing);
+    });
 
-    testWidgets('a document that cannot be fetched says so', (tester) async {
+    testWidgets('a receipt that cannot be fetched says so', (tester) async {
       final t = deskRig();
       await sellOne(tester, t.rig);
       t.rig.server.reachable = false;
@@ -539,7 +529,7 @@ void main() {
 
   group('lost answers and restarts', () {
     Future<void> prepare(WidgetTester tester, RealRig rig) async {
-      await openDesk(tester, rig);
+      await openSales(tester, rig);
       await addToCart(tester);
       await setQuantity(tester, '3');
       await checkout(tester);
@@ -640,7 +630,7 @@ void main() {
       'history lists sales, searches by number, and shows the detail with cost for an owner',
       (tester) async {
         final t = deskRig();
-        await openDesk(tester, t.rig);
+        await openSales(tester, t.rig);
         for (var i = 0; i < 2; i++) {
           await addToCart(tester);
           await checkout(tester);
@@ -658,12 +648,33 @@ void main() {
         await settle(tester);
         expect(key('sd-number'), findsOneWidget);
         expect(find.text('Итого: ${tmt(10000)}'), findsOneWidget);
-        expect(find.text('Наличные: ${tmt(10000)}'), findsOneWidget);
+        expect(find.text('Оплата: Наличные'), findsOneWidget);
         expect(find.text('Себестоимость: ${tmt(5000)}'), findsOneWidget);
         expect(find.text('Прибыль: ${tmt(5000)}'), findsOneWidget);
         expect(key('doc-receipt-print'), findsOneWidget);
       },
     );
+
+    testWidgets('a sale below cost still goes through, and the owner sees it', (
+      tester,
+    ) async {
+      final t = deskRig();
+      await openSales(tester, t.rig);
+      await addToCart(tester);
+      await setPrice(tester, '30'); // the shelf cost is 50
+      await checkout(tester);
+      await confirm(tester);
+      expect(t.rig.server.ledger.sales.single['total'], 3000);
+      await tapKey(tester, 'sales-history');
+      await settle(tester);
+      await tapKey(tester, 'sale-S-000001');
+      await settle(tester);
+      expect(find.text('Себестоимость: ${tmt(5000)}'), findsOneWidget);
+      expect(
+        find.text('Прибыль: ${tmt(-2000)}'),
+        findsOneWidget,
+      ); // a loss of 20
+    });
 
     testWidgets('a salesperson sells and sees no cost', (tester) async {
       final t = deskRig();
@@ -674,14 +685,15 @@ void main() {
         'location.view',
         'sales.view',
         'sales.create',
-        'sales.discount',
         'customer.view',
         'customer.manage',
       ];
-      await openDesk(tester, t.rig);
+      await openSales(tester, t.rig);
       await addToCart(tester);
+      await setPrice(tester, '70'); // any seller may set the price
       await checkout(tester);
       await confirm(tester);
+      expect(t.rig.server.ledger.sales.single['total'], 7000);
       await tapKey(tester, 'sales-history');
       await settle(tester);
       await tapKey(tester, 'sale-S-000001');
@@ -700,7 +712,7 @@ void main() {
           'location.view',
           'sales.view',
         ];
-        await openDesk(tester, t.rig);
+        await openSales(tester, t.rig);
         expect(key('sales-no-permission'), findsOneWidget);
         expect(key('sales-search'), findsNothing);
         expect(key('sales-history'), findsOneWidget);
@@ -721,9 +733,7 @@ void main() {
   });
 
   for (final size in [const Size(360, 800), const Size(800, 1100)]) {
-    testWidgets('the cash desk fits at $size with doubled text', (
-      tester,
-    ) async {
+    testWidgets('selling fits at $size with doubled text', (tester) async {
       tester.platformDispatcher.textScaleFactorTestValue = 2;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       final t = deskRig();
@@ -749,6 +759,7 @@ void main() {
       await tapKey(tester, 'cart-checkout');
       await settle(tester);
       expect(tester.takeException(), isNull);
+      await tapKey(tester, 'pay-card');
       await tapKey(tester, 'checkout-confirm');
       await settle(tester);
       expect(tester.takeException(), isNull);

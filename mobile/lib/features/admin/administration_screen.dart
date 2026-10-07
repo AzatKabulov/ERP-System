@@ -334,7 +334,6 @@ class _BusinessFormState extends State<_BusinessForm> {
   late final _name = TextEditingController(text: widget.info.name);
   late final _address = TextEditingController(text: widget.info.address);
   late final _phone = TextEditingController(text: widget.info.phone);
-  late final _taxNumber = TextEditingController(text: widget.info.taxNumber);
   late String _defaultLanguage = widget.info.defaultLanguage;
   late String _documentLanguage = widget.info.documentLanguage;
   bool _busy = false;
@@ -346,7 +345,6 @@ class _BusinessFormState extends State<_BusinessForm> {
     _name.dispose();
     _address.dispose();
     _phone.dispose();
-    _taxNumber.dispose();
     super.dispose();
   }
 
@@ -364,7 +362,6 @@ class _BusinessFormState extends State<_BusinessForm> {
         documentLanguage: _documentLanguage,
         address: _address.text.trim(),
         phone: _phone.text.trim(),
-        taxNumber: _taxNumber.text.trim(),
       );
       await widget.onSaved();
       if (mounted) setState(() => _saved = true);
@@ -409,19 +406,9 @@ class _BusinessFormState extends State<_BusinessForm> {
           keyboardType: TextInputType.phone,
           decoration: InputDecoration(
             labelText: l.businessPhone,
-            errorText: fieldError(l, _error, 'phone'),
-          ),
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          key: const ValueKey('business-tax-number'),
-          controller: _taxNumber,
-          enabled: enabled,
-          decoration: InputDecoration(
-            labelText: l.businessTaxNumber,
             helperText: l.businessDocumentNote,
             helperMaxLines: 2,
-            errorText: fieldError(l, _error, 'tax_number'),
+            errorText: fieldError(l, _error, 'phone'),
           ),
         ),
         const SizedBox(height: 16),
