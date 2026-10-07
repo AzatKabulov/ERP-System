@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_server.dart';
 import 'fake_documents.dart';
+import 'fake_files.dart';
 
 const demoBanner =
     'Демонстрационные данные · изменения действуют только в этой сессии';
@@ -27,12 +28,20 @@ class RealRig {
     List<PendingOperation>? pending,
     this.scanner,
     FakeDocuments? documents,
+    FakeFilePicking? picking,
+    FakeFileSharing? sharing,
   }) : documents = documents ?? FakeDocuments(),
+       picking = picking ?? FakeFilePicking(),
+       sharing = sharing ?? FakeFileSharing(),
        tokens = MemoryTokenStore(storedToken),
        store = MemoryPendingOperationStore(pending);
 
   /// Records what would be printed or shared.
   final FakeDocuments documents;
+
+  /// The camera, gallery and file dialog, and where files are shared to.
+  final FakeFilePicking picking;
+  final FakeFileSharing sharing;
 
   /// Replaces the camera (null keeps the real camera scanner).
   final BarcodeScanner? scanner;
@@ -60,6 +69,8 @@ class RealRig {
         pendingStore: store,
         scanner: scanner ?? const CameraBarcodeScanner(),
         documents: documents as DocumentActions,
+        picking: picking,
+        sharing: sharing,
       ),
     );
     await settle(tester);

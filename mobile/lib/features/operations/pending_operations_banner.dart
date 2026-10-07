@@ -22,6 +22,7 @@ String operationActionLabel(AppLocalizations l, String action) =>
       'return_complete' => l.actionReturnComplete,
       'return_inspect' => l.actionReturnInspect,
       'supplier_return_create' => l.actionSupplierReturn,
+      'warranty_resolve' => l.actionWarrantyResolve,
       _ => l.unknownActionLabel,
     };
 

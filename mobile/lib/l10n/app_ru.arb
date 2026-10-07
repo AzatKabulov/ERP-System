@@ -1081,5 +1081,231 @@
   },
   "reorderMinLabel": "Минимум",
   "reorderTargetLabel": "Цель",
-  "returnButton": "Вернуть товар"
+  "returnButton": "Вернуть товар",
+  "expenseAddButton": "Добавить расход",
+  "expenseDetailTitle": "Расход",
+  "expensesEmpty": "Расходов за этот период нет",
+  "expensePeriodMonth": "Этот месяц",
+  "expensePeriodLast": "Прошлый месяц",
+  "expensePeriodAll": "Всё время",
+  "expenseAllCategories": "Все категории",
+  "expenseTotalLine": "Всего за период: {amount}",
+  "@expenseTotalLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseCategoryLabel": "Категория",
+  "expenseNewCategory": "Новая категория…",
+  "expenseNewCategoryTitle": "Новая категория расходов",
+  "expenseCategoryName": "Название категории",
+  "expenseAmountLabel": "Сумма, TMT",
+  "expenseDateLabel": "Дата: {date}",
+  "@expenseDateLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseLocationLabel": "Точка",
+  "expenseDescriptionLabel": "Описание",
+  "expenseReceipt": "Чек (необязательно)",
+  "expenseTakePhoto": "Сфотографировать",
+  "expenseChoosePhoto": "Выбрать фото или файл",
+  "expenseReceiptAttached": "Чек приложен: {name}",
+  "@expenseReceiptAttached": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseRemoveReceipt": "Убрать чек",
+  "expenseReceiptNone": "Чек не приложен",
+  "expenseOpenReceipt": "Открыть или отправить чек",
+  "expenseReceiptLoadFailed": "Не удалось загрузить чек.",
+  "expenseSaved": "Расход сохранён.",
+  "expenseEdit": "Изменить",
+  "expenseVoid": "Аннулировать",
+  "expenseVoidTitle": "Аннулировать расход",
+  "expenseVoidReason": "Причина аннулирования",
+  "expenseVoided": "Расход аннулирован.",
+  "expenseVoidedBadge": "Аннулирован",
+  "errorFileTooLarge": "Файл слишком большой (не больше 5 МБ).",
+  "errorFileType": "Подходят фото JPEG, PNG, WebP и файлы PDF.",
+  "errorFileRequired": "Файл не выбран.",
+  "errorFutureDate": "Дата не может быть в будущем.",
+  "errorExpenseVoid": "Аннулированный расход нельзя изменить.",
+  "errorAlreadyVoid": "Расход уже аннулирован.",
+  "warrantiesTitle": "Гарантийные обращения",
+  "warrantiesEmpty": "Гарантийных обращений пока нет",
+  "warrantyNew": "Новое обращение",
+  "warrantyStatusOpen": "Открыто",
+  "warrantyStatusClosed": "Закрыто",
+  "warrantyNumberTitle": "Обращение {number}",
+  "@warrantyNumberTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyPickSale": "Найдите продажу, по которой обращается покупатель",
+  "warrantyPickLine": "Выберите товар",
+  "warrantyUntilLine": "Гарантия до {date}",
+  "@warrantyUntilLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyExpiredLine": "Гарантия закончилась {date}",
+  "@warrantyExpiredLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyNone": "Без гарантии",
+  "warrantyProblemLabel": "Что случилось (обязательно)",
+  "warrantyOverrideHint": "Гарантии нет или она закончилась. Вы можете принять обращение как исключение, указав причину.",
+  "warrantyOverrideNote": "Почему принимаем вне гарантии (обязательно)",
+  "warrantyBlocked": "Гарантии нет или она закончилась. Принять такое обращение может только владелец или менеджер.",
+  "warrantyOpenButton": "Открыть обращение",
+  "warrantyOpened": "Обращение {number} открыто.",
+  "@warrantyOpened": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyOutOfWarranty": "Принято вне гарантии",
+  "warrantyEvents": "История",
+  "warrantyEventOpened": "Открыто",
+  "warrantyEventNote": "Заметка",
+  "warrantyEventClosed": "Закрыто: {outcome}",
+  "@warrantyEventClosed": {
+    "placeholders": {
+      "outcome": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyNoteLabel": "Заметка",
+  "warrantyAddNote": "Добавить заметку",
+  "warrantyOutcomeLabel": "Решение по обращению",
+  "warrantyOutcomeRepair": "Ремонт",
+  "warrantyOutcomeReplacement": "Замена",
+  "warrantyOutcomeRefund": "Возврат денег",
+  "warrantyOutcomeRejected": "Отказ",
+  "warrantyCloseNote": "Комментарий (при отказе обязателен)",
+  "warrantyClose": "Закрыть обращение",
+  "warrantyCloseConfirm": "Закрыть обращение {number}: {outcome}? Замена и возврат денег меняют склад и деньги.",
+  "@warrantyCloseConfirm": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "outcome": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyClosedDone": "Обращение закрыто.",
+  "warrantyReturnLine": "Деньги возвращены: возврат {number}",
+  "@warrantyReturnLine": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyFromSale": "Гарантийное обращение",
+  "actionWarrantyResolve": "Гарантия: закрытие обращения",
+  "errorNoWarranty": "На этот товар нет гарантии.",
+  "errorWarrantyExpired": "Гарантия закончилась ({date}).",
+  "@errorWarrantyExpired": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "errorClaimClosed": "Обращение уже закрыто.",
+  "catalogImport": "Импорт CSV",
+  "catalogExport": "Экспорт CSV",
+  "catalogExported": "Файл каталога готов.",
+  "importTitle": "Импорт товаров из CSV",
+  "importHelp": "Файл CSV в кодировке UTF-8, разделитель «;». Импорт только добавляет новые товары и не меняет остатки. Файл проверяется целиком: если есть хоть одна ошибка, не добавляется ничего. Колонки:",
+  "importChoose": "Выбрать файл",
+  "importChosen": "Файл: {name}",
+  "@importChosen": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importSummary": "Строк: {rows}, без ошибок: {valid}",
+  "@importSummary": {
+    "placeholders": {
+      "rows": {
+        "type": "int"
+      },
+      "valid": {
+        "type": "int"
+      }
+    }
+  },
+  "importNoErrors": "Ошибок нет. Можно добавлять товары.",
+  "importErrorsTitle": "Ошибок: {count}",
+  "@importErrorsTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importErrorRow": "Строка {row}, {field}: {message}",
+  "@importErrorRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "field": {
+        "type": "String"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "importErrorsMore": "Показаны не все ошибки. Исправьте эти и проверьте файл снова.",
+  "importApply": "Добавить товары",
+  "importDone": "Добавлено товаров: {count}.",
+  "@importDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorImportTooLarge": "Файл слишком большой: разделите его на части (до 2000 строк в каждой).",
+  "errorImportHeader": "В файле неверные названия колонок.",
+  "errorImportInvalid": "В файле есть ошибки: ничего не добавлено.",
+  "importErrUnknownUnit": "Неизвестная единица измерения.",
+  "importErrSkuExists": "Такой артикул уже есть в каталоге.",
+  "importErrSkuDuplicate": "Артикул повторяется в файле.",
+  "importErrBarcodeDuplicate": "Штрихкод повторяется в файле.",
+  "importErrCurrency": "Валюта: TMT или USD.",
+  "importErrTooLong": "Слишком длинное значение.",
+  "errorOverClaim": "Нельзя принять больше, чем продано и ещё не возвращено.",
+  "errorInvalidFile": "Файл не читается. Сохраните его как CSV в кодировке UTF-8.",
+  "errorFileMissing": "Файл сейчас недоступен на сервере."
 }

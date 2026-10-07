@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../core/api/api_error_text.dart';
+import '../../core/api/api_exception.dart';
+import '../../core/files/file_services.dart';
 import '../../core/money/decimal_math.dart';
 import '../../core/session/session_controller.dart';
 import '../../theme/app_theme.dart';
@@ -11,6 +14,7 @@ import '../shared/async_section.dart';
 import '../workspace/unsaved_work.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
+import 'csv_import_screen.dart';
 import 'product_detail_screen.dart';
 import 'product_form_screen.dart';
 
@@ -124,6 +128,34 @@ class _CatalogScreenState extends State<CatalogScreen> {
     if (changed == true && mounted) _load(reset: true);
   }
 
+  bool _exporting = false;
+
+  Future<void> _import() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => CsvImportScreen(repository: widget.repository),
+      ),
+    );
+    if (mounted) _load(reset: true);
+  }
+
+  Future<void> _export() async {
+    setState(() => _exporting = true);
+    final l = strings(context);
+    try {
+      final bytes = await widget.repository.exportCsv();
+      if (!mounted) return;
+      await FilesScope.sharingOf(
+        context,
+      ).share(bytes, 'products.csv', 'text/csv');
+      if (mounted) showFeedback(context, l.catalogExported);
+    } on ApiException catch (e) {
+      if (mounted) showFeedback(context, apiErrorText(l, e));
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
   Future<void> _add({String? barcode}) async {
     final saved = await Navigator.of(context).push<Product>(
       MaterialPageRoute(
@@ -176,6 +208,26 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   label: l.addProduct,
                   icon: Icons.add,
                   onPressed: () => _add(),
+                ),
+              ),
+            if (widget.session.can('catalog.import'))
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('catalog-import'),
+                  onPressed: _import,
+                  icon: const Icon(Icons.upload_file),
+                  label: Text(l.catalogImport),
+                ),
+              ),
+            if (widget.session.can('catalog.export'))
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('catalog-export'),
+                  onPressed: _exporting ? null : _export,
+                  icon: const Icon(Icons.download_outlined),
+                  label: Text(l.catalogExport),
                 ),
               ),
           ],

@@ -239,7 +239,7 @@ void main() {
         ]) {
           expect(key('nav-$page'), findsOneWidget, reason: page);
         }
-        await tapKey(tester, 'nav-expenses');
+        await tapKey(tester, 'nav-reports');
         await settle(tester, ms: 300);
         expect(find.text('Раздел появится позже'), findsOneWidget);
         expect(find.text('Масляный фильтр'), findsNothing);

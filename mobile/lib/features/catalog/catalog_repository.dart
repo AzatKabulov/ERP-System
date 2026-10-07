@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import '../../core/api/api_client.dart';
+import '../../core/files/file_services.dart';
 import '../../core/money/decimal_math.dart';
 import '../../core/api/api_exception.dart';
 import 'catalog_models.dart';
@@ -61,6 +64,33 @@ class CatalogRepository {
       Product.fromJson(
         (await api.patch('$_base/products/$id/', body: draft.toJson())).map,
       );
+
+  /// The whole catalog as a CSV file (UTF-8, semicolons), ready for a spreadsheet.
+  Future<Uint8List> exportCsv() async {
+    final response = await api.download(
+      '$_base/catalog/export/',
+      accept: 'text/csv, application/json',
+    );
+    return response.bytes ?? Uint8List(0);
+  }
+
+  /// Checks a CSV file without changing anything.
+  Future<ImportPreview> previewImport(PickedFile file) async =>
+      ImportPreview.fromJson(
+        (await api.upload(
+          '$_base/catalog/import/preview/',
+          ApiUpload(field: 'file', filename: file.name, bytes: file.bytes),
+        )).map,
+      );
+
+  /// Adds every product of the file, or nothing at all. Returns how many were added.
+  Future<int> applyImport(PickedFile file) async =>
+      ((await api.upload(
+            '$_base/catalog/import/apply/',
+            ApiUpload(field: 'file', filename: file.name, bytes: file.bytes),
+          )).map['created']
+          as int?) ??
+      0;
 
   Future<List<ReorderLevel>> reorderLevels(String productId) async {
     final map = (await api.get(

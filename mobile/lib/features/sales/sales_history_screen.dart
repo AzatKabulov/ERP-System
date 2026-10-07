@@ -14,6 +14,9 @@ import '../returns/return_form_screen.dart';
 import '../returns/returns_models.dart';
 import '../returns/returns_repository.dart';
 import '../shared/async_section.dart';
+import '../warranties/warranties_repository.dart';
+import '../warranties/warranties_models.dart';
+import '../warranties/warranty_new_screen.dart';
 import '../workspace/unsaved_work.dart';
 import 'document_buttons.dart';
 import 'sales_models.dart';
@@ -308,6 +311,28 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     }
   }
 
+  Future<void> _startWarranty(SaleDetail sale) async {
+    final opened = await Navigator.of(context).push<WarrantyClaim>(
+      MaterialPageRoute(
+        builder: (_) => WarrantyNewScreen(
+          session: session,
+          repository: WarrantiesRepository(
+            widget.repository.api,
+            widget.repository.businessId,
+          ),
+          sales: widget.repository,
+          unsaved: widget.unsaved,
+          saleId: sale.id,
+        ),
+      ),
+    );
+    if (opened == null || !mounted) return;
+    showFeedback(
+      context,
+      strings(context).warrantyOpened(warrantyNumber(opened.number)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
@@ -496,6 +521,20 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
               label: l.returnButton,
               icon: Icons.assignment_return_outlined,
               onPressed: () => _startReturn(sale),
+            ),
+          ),
+        ],
+        if (session.can('warranty.open') &&
+            (sale.lines.any((x) => x.warrantyMonths > 0) ||
+                session.can('warranty.override'))) ...[
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              key: const ValueKey('sd-warranty'),
+              onPressed: () => _startWarranty(sale),
+              icon: const Icon(Icons.verified_user_outlined),
+              label: Text(l.warrantyFromSale),
             ),
           ),
         ],

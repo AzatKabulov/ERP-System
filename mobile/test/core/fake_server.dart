@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 import 'fake_ledger.dart';
+import 'fake_office.dart';
 
 /// A tiny in-memory stand-in for the real API, with the same idempotency rules:
 /// the same key replays the stored outcome, a different body with the same key is
@@ -18,6 +19,9 @@ class FakeServer {
 
   /// Stock ledger, suppliers and purchase orders (see fake_ledger.dart).
   late final FakeLedger ledger = FakeLedger(this);
+
+  /// Expenses, receipt files, warranty claims and the CSV import (see fake_office.dart).
+  late final FakeOffice office = FakeOffice(this);
 
   // --- configuration -------------------------------------------------------
   String accessToken = 'access-1';
@@ -91,6 +95,16 @@ class FakeServer {
     'supplier_return.view',
     'supplier_return.create',
     'reorder.view',
+    'expense.view',
+    'expense.manage',
+    'attachment.upload',
+    'attachment.view',
+    'warranty.view',
+    'warranty.open',
+    'warranty.override',
+    'warranty.resolve',
+    'catalog.import',
+    'catalog.export',
   ];
   String role = 'owner';
 
@@ -295,7 +309,12 @@ class FakeServer {
     final path = request.url.path;
     requestHeaders.add(Map.of(request.headers));
     log.add('${request.method} $path');
-    final body = request.body.isEmpty
+    final multipart = (request.headers['content-type'] ?? '').startsWith(
+      'multipart/',
+    );
+    final body = multipart
+        ? <String, dynamic>{'__multipart': request.bodyBytes}
+        : request.body.isEmpty
         ? <String, dynamic>{}
         : jsonDecode(utf8.decode(request.bodyBytes)) as Map<String, dynamic>;
 
@@ -373,6 +392,8 @@ class FakeServer {
       if (catalog != null) return catalog;
       final inventory = ledger.handle(request, base.group(1)!, body);
       if (inventory != null) return inventory;
+      final office = this.office.handle(request, base.group(1)!, body);
+      if (office != null) return office;
     }
 
     final status = RegExp(
