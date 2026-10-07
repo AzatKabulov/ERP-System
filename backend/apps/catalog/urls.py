@@ -21,6 +21,17 @@ urlpatterns = [
     path(
         f"{B}categories/<uuid:ref_id>/", views.CategoryDetailView.as_view(), name="category-detail"
     ),
+    path(f"{B}catalog/export/", views.CatalogExportView.as_view(), name="catalog-export"),
+    path(
+        f"{B}catalog/import/preview/",
+        views.CatalogImportPreviewView.as_view(),
+        name="catalog-import-preview",
+    ),
+    path(
+        f"{B}catalog/import/apply/",
+        views.CatalogImportApplyView.as_view(),
+        name="catalog-import-apply",
+    ),
     path(f"{B}brands/", views.BrandListCreateView.as_view(), name="brand-list"),
     path(f"{B}brands/<uuid:ref_id>/", views.BrandDetailView.as_view(), name="brand-detail"),
 ]

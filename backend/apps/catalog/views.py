@@ -1,5 +1,7 @@
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
 from apps.audit import services as audit
@@ -11,8 +13,10 @@ from apps.businesses.access import (
 from apps.businesses.permissions import has_permission
 from apps.businesses.rates import current_rate
 from apps.common.errors import ApiError
+from apps.common.negotiation import IgnoreClientContentNegotiation
+from apps.common.uploads import declared_size_exceeds
 
-from . import services
+from . import csvio, services
 from .models import Barcode, Brand, Category, Product, ReorderSetting, Unit
 from .serializers import (
     BrandSerializer,
@@ -256,3 +260,78 @@ class BrandDetailView(_ReferenceDetail):
 
     def after_update(self, obj):
         services.rename_reference(obj, obj.name)
+
+
+# ---- CSV: export and import ----------------------------------------------------------------
+
+
+class CatalogExportView(BusinessAPIView):
+    """The active products as a `;`-separated UTF-8 CSV for spreadsheets. The cost column is
+    left out for roles that may not see costs."""
+
+    required_permission = "catalog.export"
+    content_negotiation_class = IgnoreClientContentNegotiation
+
+    def get(self, request, business_id):
+        products = _products(request.business).filter(is_active=True)
+        include_cost = has_permission(request.membership.role, "catalog.cost.view")
+        content = csvio.export_csv(products, include_cost=include_cost)
+        audit.record(
+            "catalog.exported",
+            actor=request.user,
+            business=request.business,
+            metadata={"rows": len(products), "cost_column": include_cost},
+        )
+        response = HttpResponse(content, content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="products.csv"'
+        response["Cache-Control"] = "private, no-store"
+        return response
+
+
+def _csv_upload(request) -> bytes:
+    """The bytes of the uploaded file (multipart field `file`), refusing an empty or oversized
+    one before anything is parsed."""
+    if declared_size_exceeds(request, csvio.MAX_BYTES):
+        raise csvio.too_large()
+    upload = request.FILES.get("file")
+    if upload is None or not upload.size:
+        raise ApiError(
+            "file_required",
+            "Send the CSV file in the form field 'file'",
+            fields={"file": [{"code": "required", "message": "Required"}]},
+        )
+    if upload.size > csvio.MAX_BYTES:
+        raise csvio.too_large()
+    return upload.read()
+
+
+class CatalogImportPreviewView(BusinessAPIView):
+    """Check a whole file and list what is wrong with it. Changes nothing."""
+
+    required_permission = "catalog.import"
+    parser_classes = [MultiPartParser]
+    MAX_SHOWN = 200
+
+    def post(self, request, business_id):
+        analysis = csvio.analyze(request.business, _csv_upload(request))
+        return Response(
+            {
+                "rows": analysis.rows,
+                "valid": analysis.valid,
+                "errors": analysis.errors[: self.MAX_SHOWN],
+                "error_count": len(analysis.errors),
+                "truncated": len(analysis.errors) > self.MAX_SHOWN,
+            }
+        )
+
+
+class CatalogImportApplyView(BusinessAPIView):
+    """Create the products of the file, all or none (409 `import_invalid` while any row has an
+    error). Retrying the same file is safe: its products then exist, so it is refused."""
+
+    required_permission = "catalog.import"
+    parser_classes = [MultiPartParser]
+
+    def post(self, request, business_id):
+        created = services.import_products(request.business, request.user, _csv_upload(request))
+        return Response({"created": created}, status=201)
