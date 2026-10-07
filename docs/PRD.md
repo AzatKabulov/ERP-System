@@ -24,7 +24,7 @@ When several staff members or locations handle the same products, unrecorded mov
 
 - Business owners: oversee operations, expenses, inventory value, reports, and staff access.
 - Store managers: manage purchases, stock, transfers, and operational approvals.
-- Sales staff: find products, record sales, issue receipts, and handle authorized returns.
+- Sales staff: find products, record sales (at the price they agree with the customer), print or share a simple receipt, and handle authorized returns.
 - Warehouse staff: receive deliveries, locate products, transfer goods, and count stock.
 
 Each business owns its records. Access to another business's data must be denied, including through search, reports, imports, exports, and document downloads.
@@ -33,7 +33,7 @@ Each business owns its records. Access to another business's data must be denied
 
 - Provide complete Russian (`ru`) and Turkmen (`tk`, modern Latin script) interfaces, including sign-in, navigation, forms, validation, errors, notifications, reports, and accessibility labels.
 - Let each user select a language and remember the selection between sessions. Show language choices as `Русский` and `Türkmençe`. Changing language must preserve business data and work in progress.
-- Receipts, invoices, and generated report headings must support either language. Document language must be selectable independently of the staff member's interface language.
+- The receipt and generated report headings must support either language. The document language is a business setting, independent of the staff member's interface language.
 - Support Russian Cyrillic and Turkmen characters in entry, storage, search, imports, exports, and generated documents. Fonts must render these characters correctly on devices and in printed or PDF documents.
 - Localize system text without automatically translating user-entered product names, customer names, supplier details, or identifiers. A shared catalog remains the same when the interface language changes.
 - Format dates, numbers, and monetary values consistently with the selected locale and configured business currency. Interface language must not change stored amounts, currency, rounding rules, or timestamps.
@@ -71,7 +71,7 @@ Allow staff to count stock by location, compare counts with system quantities, r
 
 Record customer details when applicable, selected products, quantities, prices, discounts, and payment method. Support walk-in sales without requiring a customer account.
 
-Complete sales against available stock at the selected location. Produce receipts and invoices with business details and configurable tax information. The initial version records payments; it does not process card payments through a gateway.
+Complete sales against available stock at the selected location. **Prices are not fixed:** the seller sets the price of every line (any amount, lower or higher than the catalog price) and the catalog price is only the starting suggestion. A sale records how the customer paid, cash or card, and nothing more about the payment (no amounts tendered, no change, no split payments, no credit); it does not process payments through a gateway. A sale produces one simple receipt (business name, address and phone, the lines with the price charged, the total, how it was paid) that can be printed or shared. **Decided 2026-10-07:** no invoices, no tax and no legal receipt format. Selling happens in the store, online. **Principle:** this is an ERP, not a cash register: entry forms stay short and nothing is added that the owner did not ask for.
 
 ### Returns and Refunds
 
@@ -113,7 +113,7 @@ Restoration is a controlled administrator operation. CSV exports alone do not sa
 
 1. Business setup: an owner configures the business, locations, staff access, and initial product catalog.
 2. Purchase to receipt: staff create a purchase order, receive an actual delivery, and verify the updated stock and outstanding quantities.
-3. Sale: a cashier scans or searches for products, reviews quantities and prices, completes the sale, and issues a receipt. Stock decreases once.
+3. Sale: a seller scans or searches for products, sets the quantities and the price they agreed, completes the sale (cash or card), and can print or share a simple receipt. Stock decreases once.
 4. Transfer: staff dispatch goods from one location and confirm their arrival at another, retaining the complete transfer history.
 5. Stock count: staff record physical quantities, review discrepancies, and an authorized user approves explained adjustments.
 6. Return: staff find an original sale, record eligible returned items and their condition, and record the refund and appropriate stock changes.
@@ -155,7 +155,7 @@ All listed features remain in the agreed product scope. Stages determine deliver
 - A verified backup restores representative business records and uploaded documents successfully.
 - Barcode lookup and tablet layouts work on the selected real Android device; the equivalent iOS checks pass before the Apple release.
 - Pilot workflows can be completed in Russian and Turkmen without untranslated system messages or missing glyphs. Language selection persists, and switching language does not lose entered work or alter transaction values.
-- Imports, exports, receipts, invoices, and report documents preserve representative Russian and Turkmen text correctly.
+- Imports, exports, the receipt, and report documents preserve representative Russian and Turkmen text correctly.
 - Pilot feedback measures task completion, time spent on routine workflows, stock discrepancies, and staff satisfaction. Quantitative business targets will be set after establishing the pilot store's baseline.
 
 ## Out of Scope for the Initial Version
@@ -163,6 +163,7 @@ All listed features remain in the agreed product scope. Stages determine deliver
 - Full accounting, payroll, HR, and manufacturing.
 - Offline sales and automatic synchronization of offline stock changes.
 - Payment gateways, customer credit accounts, and installment management.
+- Invoices, tax, and any legal receipt format (owner decision, 2026-10-07).
 - Automatic supplier ordering and advanced demand forecasting.
 - Online-store integrations and a separate desktop interface.
 - Advanced vehicle compatibility catalogs and automated equivalent-part suggestions.
@@ -170,9 +171,9 @@ All listed features remain in the agreed product scope. Stages determine deliver
 
 ## Decisions to Confirm During Implementation
 
-- Turkmenistan-specific invoice formats and applicable tax requirements. (Business currency TMT with optional USD selling prices was decided 2026-10-06.)
+- (Business currency TMT with optional USD selling prices was decided 2026-10-06; invoices and tax were dropped 2026-10-07.)
 - Default language for first-time users, document-language defaults, and approved Russian/Turkmen business terminology.
-- Pilot tablet model, scanning method, and any required receipt or label printer.
+- Pilot tablet model and any required receipt or label printer (receipts are PDFs printed or shared through the tablet).
 - Warranty claim policies. (FIFO inventory costing and the warranty term fields were decided 2026-10-06.)
 - Email service for password-recovery codes, tested from Turkmenistan.
 - Refund and stock-adjustment approval rules.
