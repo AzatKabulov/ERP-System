@@ -1,6 +1,7 @@
 import 'package:erp_system/core/money/decimal_math.dart';
 import 'package:erp_system/widgets/common.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/fake_scanner.dart';
@@ -14,6 +15,25 @@ String tmt(int minor) => formatMoney(minor, 'TMT');
 /// Whether the filled button with this key can be pressed.
 bool canPress(WidgetTester tester, String name) =>
     tester.widget<GradientButton>(key(name)).onPressed != null;
+
+/// The names a screen reader gives every text field on screen.
+List<String> fieldNames(WidgetTester tester) {
+  final names = <String>[];
+  void walk(SemanticsNode node) {
+    // ignore: deprecated_member_use
+    if (node.getSemanticsData().flagsCollection.isTextField) {
+      names.add(node.label);
+    }
+    node.visitChildren((child) {
+      walk(child);
+      return true;
+    });
+  }
+
+  // ignore: deprecated_member_use
+  walk(tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!);
+  return names;
+}
 
 /// A rig with one product at 100,00 and [stock] pieces on the shelf of the current location.
 ({RealRig rig, Map<String, dynamic> pad}) deskRig({
@@ -72,6 +92,25 @@ Future<void> confirm(WidgetTester tester) async {
 
 void main() {
   group('the cash desk', () {
+    testWidgets('every text field keeps its own name for a screen reader', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final t = deskRig();
+      await openDesk(tester, t.rig);
+      expect(fieldNames(tester), ['Название, артикул или штрихкод']);
+      await addToCart(tester);
+      expect(fieldNames(tester), [
+        'Название, артикул или штрихкод',
+        'Количество',
+        'Скидка, TMT',
+        'Скидка в процентах на всё',
+      ]);
+      await checkout(tester);
+      expect(fieldNames(tester), ['Сумма, TMT']);
+      handle.dispose();
+    });
+
     testWidgets('starts empty, with a hint and no demo data', (tester) async {
       final t = deskRig();
       await openDesk(tester, t.rig);

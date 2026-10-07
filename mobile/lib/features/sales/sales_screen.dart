@@ -433,7 +433,7 @@ class _SalesScreenState extends State<SalesScreen> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 SizedBox(
-                  width: 190,
+                  width: 260,
                   child: TextField(
                     key: const ValueKey('cart-percent'),
                     controller: _percent,
@@ -709,7 +709,7 @@ class _CartLineCardState extends State<_CartLineCard> {
                 icon: const Icon(Icons.remove),
               ),
               SizedBox(
-                width: 110,
+                width: 130,
                 child: TextField(
                   key: ValueKey('cart-qty-${widget.index}'),
                   controller: _quantity,
