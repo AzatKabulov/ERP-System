@@ -69,13 +69,13 @@ Allow staff to count stock by location, compare counts with system quantities, r
 
 ### Sales, Customers, and Documents
 
-Record customer details when applicable, selected products, quantities, prices, discounts, and payment method. Support walk-in sales without requiring a customer account.
+Record customer details when applicable, selected products, quantities, the price charged on every line, and the payment method (cash or card, as a label). Support walk-in sales without requiring a customer account.
 
 Complete sales against available stock at the selected location. **Prices are not fixed:** the seller sets the price of every line (any amount, lower or higher than the catalog price) and the catalog price is only the starting suggestion. A sale records how the customer paid, cash or card, and nothing more about the payment (no amounts tendered, no change, no split payments, no credit); it does not process payments through a gateway. A sale produces one simple receipt (business name, address and phone, the lines with the price charged, the total, how it was paid) that can be printed or shared. **Decided 2026-10-07:** no invoices, no tax and no legal receipt format. Selling happens in the store, online. **Principle:** this is an ERP, not a cash register: entry forms stay short and nothing is added that the owner did not ask for.
 
 ### Returns and Refunds
 
-Link customer returns to original sales and enforce the remaining returnable quantities. Record return reasons and refund amounts, including partial returns.
+Link customer returns to original sales and enforce the remaining returnable quantities. Record return reasons and refund amounts, including partial returns. **The refund is what the customer was charged for the returned goods** (prices are not fixed, so there is no fixed list price to refund at). Any seller may take a return; everything is recorded with who and when. Each product has its own **return period in days**, typed by hand and counted from the day of the sale (empty = no limit, 0 = not returnable); after it a return is refused (owner decision, 2026-10-07; provisional detail: it binds owner and manager too).
 
 Classify returned goods as sellable, damaged, or awaiting inspection. Only sellable goods become available stock. Support exchanges through linked return and sale records, and record supplier returns separately.
 
@@ -85,11 +85,11 @@ Record expense category, amount, date, location, description, and optional recei
 
 ### Warranty Tracking
 
-Save the applicable warranty terms with the sale so later product changes do not alter the original entitlement. Track claims, eligibility, status, and repair or replacement outcomes. Record any resulting inventory movement.
+Save the applicable warranty terms with the sale so later product changes do not alter the original entitlement. The warranty is stated in months and counted from the day of the sale; the return period (above) is a separate field. Track claims, eligibility, status, and the outcome (repair, replacement, refund or rejection) with a history. Record any resulting inventory movement. An expired or missing warranty can be accepted only by an owner or manager, with a mandatory note (owner decision, 2026-10-07).
 
 ### Import and Export
 
-Provide CSV import and export for product catalogs, plus CSV export for relevant reports. Imports must preview validation errors and duplicate identifiers before applying changes. An invalid import must not leave unexplained partial updates. Exported data must respect permissions.
+Provide CSV import and export for product catalogs, plus CSV export for relevant reports. Imports must preview validation errors and duplicate identifiers before applying changes. An invalid import must not leave unexplained partial updates: the whole file is applied in one step or not at all. An import only adds new products and never changes stock. The receipt photo of an expense is optional (owner decision, 2026-10-07). Exported data must respect permissions.
 
 ### Permissions and Activity History
 
@@ -174,9 +174,9 @@ All listed features remain in the agreed product scope. Stages determine deliver
 - (Business currency TMT with optional USD selling prices was decided 2026-10-06; invoices and tax were dropped 2026-10-07.)
 - Default language for first-time users, document-language defaults, and approved Russian/Turkmen business terminology.
 - Pilot tablet model and any required receipt or label printer (receipts are PDFs printed or shared through the tablet).
-- Warranty claim policies. (FIFO inventory costing and the warranty term fields were decided 2026-10-06.)
+- Warranty claim policies beyond the rules above (provisional). (FIFO inventory costing and the warranty term fields were decided 2026-10-06.)
 - Email service for password-recovery codes, tested from Turkmenistan.
-- Refund and stock-adjustment approval rules.
+- Stock-adjustment approval rules. (Refunds: any seller, decided 2026-10-07.)
 - Hosting, backup frequency, retention, and acceptable recovery time and data loss.
 
 These decisions do not prevent starting the shared product foundation, but must be resolved before their affected workflows are finalized.

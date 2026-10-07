@@ -111,7 +111,7 @@ Working directory: `/workspace/ERP-System/mobile`. Dependency resolution, locali
 | Build a debug Android APK | `flutter build apk --debug` |
 | Build the same interface with local rendering resources | `flutter build web --no-web-resources-cdn` |
 
-Use Flutter 3.47.6 and retain `mobile/pubspec.lock`; use frozen resolution during setup. The prototype uses `ChangeNotifier`/`AnimatedBuilder`, generated ARB localizations, and `SharedPreferences` only for the selected language. iOS builds require a suitable macOS/Xcode environment or configured cloud build service; do not claim they were verified on a Linux environment.
+Use Flutter 3.47.6 and retain `mobile/pubspec.lock`; use frozen resolution during setup. Platform plugins sit behind small interfaces so widget tests use fakes: `mobile_scanner` (`BarcodeScanner`), `printing` (`DocumentActions`), and, since Phase 8, `image_picker`, `file_picker` and `share_plus` (`FilePicking`, `FileSharing`, `FilesScope` in `lib/core/files/`). A new plugin must be checked in the Android debug APK build in CI, not only in `flutter test`. The prototype uses `ChangeNotifier`/`AnimatedBuilder`, generated ARB localizations, and `SharedPreferences` only for the selected language. iOS builds require a suitable macOS/Xcode environment or configured cloud build service; do not claim they were verified on a Linux environment.
 
 For internal web smoke testing, serve a successfully built `mobile/build/web` directory using `python -m http.server 8080 --bind 127.0.0.1`. Do not expose localhost preview links in cloud onboarding. Use local requests and browser checks instead.
 
@@ -133,13 +133,13 @@ On the Claude Code cloud VM, run `bash scripts/claude_cloud_postgres.sh` once pe
 | Lint and format check | `uv run ruff check .` and `uv run ruff format --check .` |
 | Apply formatting | `uv run ruff format .` |
 | Run the local development server | `uv run python manage.py runserver 127.0.0.1:8000` |
-| Check that stock balances, movements, FIFO layers, purchase-order receipts and sales agree (non-zero exit on any difference) | `uv run python manage.py reconcile_stock` |
+| Check that stock balances, movements, FIFO layers, purchase-order receipts, sales, returns, transfers, counts and warranty claims agree (non-zero exit on any difference) | `uv run python manage.py reconcile_stock` |
 | Create sample data for development and staging tests only (refuses in production; password from `ERP_SAMPLE_PASSWORD`) | `uv run python manage.py create_sample_business` |
 | Create a business with its first owner (operator tool; password from `ERP_OWNER_PASSWORD` or a prompt) | `uv run python manage.py create_business --name ... --owner-username ... --owner-email ... --location ...` |
 
 The receipt is generated with ReportLab (runtime dependency) and the DejaVu Sans fonts vendored in `backend/assets/fonts/` (do not replace them with fonts that lack Cyrillic or the Turkmen letters); the tests read the PDFs back with `pypdf` (dev dependency). The real-browser run in `scripts/e2e/` (README there) drives the web build against the real API and PostgreSQL; run it after changing a workflow that stock or money depends on.
 
-Health check: `GET /api/v1/health/`. Concurrency tests use real threads against PostgreSQL and run as part of `manage.py test`. Add a dependency only through `pyproject.toml` and commit the updated `uv.lock`.
+Uploaded files (receipt photos) are stored under `PRIVATE_FILES_ROOT` (default `backend/private_files`, git-ignored; tests use a throw-away folder). Never serve that folder as static or media files; downloads go through the permission-checked API. Health check: `GET /api/v1/health/`. Concurrency tests use real threads against PostgreSQL and run as part of `manage.py test`. Add a dependency only through `pyproject.toml` and commit the updated `uv.lock`.
 
 ## Validation and Reporting
 

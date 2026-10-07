@@ -40,10 +40,11 @@ async function expectNoText(page, name, regex) {
   const t = await text(page);
   check(name, !regex.test(t), regex.test(t) ? `(found ${regex})` : '');
 }
-// click a semantics node whose label (aria-label or text) equals/matches
+// click a semantics node whose label (aria-label or text) equals/matches; a control below or
+// above the visible part of a scrolling page is scrolled into view first, as a person would
 async function clickLabel(page, label, opts = {}) {
   const { which = 'first', exact = true, wait = 900, role = null } = opts;
-  const box = await page.evaluate(([label, which, exact, role]) => {
+  const find = () => page.evaluate(([label, which, exact, role]) => {
     const re = exact ? null : new RegExp(label);
     const nodes = [...document.querySelectorAll('flt-semantics')].filter((n) => {
       if (role && n.getAttribute('role') !== role) return false;
@@ -58,7 +59,15 @@ async function clickLabel(page, label, opts = {}) {
     const r = n.getBoundingClientRect();
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
   }, [label, which, exact, role]);
+  let box = await find();
   if (!box) throw new Error(`no accessible element labelled "${label}"`);
+  const view = page.viewportSize();
+  for (let i = 0; i < 12 && (box.y > view.height - 12 || box.y < 0); i++) {
+    await page.mouse.move(view.width / 2, view.height / 2);
+    await page.mouse.wheel(0, box.y < 0 ? -500 : Math.min(500, box.y - view.height / 2));
+    await page.waitForTimeout(500);
+    box = (await find()) || box;
+  }
   await page.mouse.click(box.x, box.y);
   await page.waitForTimeout(wait);
 }
