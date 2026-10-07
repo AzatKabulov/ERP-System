@@ -45,7 +45,11 @@ def _sales(request):
                     returned_quantity=Coalesce(
                         Sum("return_lines__quantity"),
                         Value(0, output_field=DecimalField(max_digits=14, decimal_places=3)),
-                    )
+                    ),
+                    refunded_total=Coalesce(
+                        Sum("return_lines__refund_amount"),
+                        Value(0, output_field=DecimalField(max_digits=14, decimal_places=2)),
+                    ),
                 ),
             ),
             "returns",

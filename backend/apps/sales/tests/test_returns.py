@@ -176,6 +176,7 @@ class ReturnBasicsTests(ReturnsCase):
         self.assertEqual(
             (line["returned_quantity"], line["returnable_quantity"]), ("1.000", "3.000")
         )
+        self.assertEqual(line["refunded_total"], "100.00")
         self.assertEqual([r["number"] for r in detail["returns"]], [1])
         self.assertIsNone(line["return_until"])  # no limit set on this product
 

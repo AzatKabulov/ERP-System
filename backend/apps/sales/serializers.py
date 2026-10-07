@@ -94,10 +94,13 @@ class SaleLineSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         returned = getattr(instance, "returned_quantity", None)
-        if returned is None:
-            returned = instance.return_lines.aggregate(t=Sum("quantity"))["t"] or Decimal(0)
+        refunded = getattr(instance, "refunded_total", None)
+        if returned is None or refunded is None:
+            totals = instance.return_lines.aggregate(q=Sum("quantity"), r=Sum("refund_amount"))
+            returned, refunded = totals["q"] or Decimal(0), totals["r"] or Decimal(0)
         data["returned_quantity"] = str(returned)
         data["returnable_quantity"] = str(instance.quantity - returned)
+        data["refunded_total"] = str(refunded.quantize(CENT))
         if not self.context.get("can_view_cost"):
             data.pop("cost_total", None)
         else:
