@@ -12,6 +12,8 @@ import '../catalog/catalog_models.dart';
 import '../catalog/catalog_repository.dart';
 import '../inventory/inventory_repository.dart';
 import '../inventory/quantity_input.dart';
+import '../returns/returns_repository.dart';
+import '../returns/returns_screen.dart';
 import '../scanning/barcode_input.dart';
 import '../shared/async_section.dart';
 import '../workspace/unsaved_work.dart';
@@ -261,11 +263,34 @@ class _SalesScreenState extends State<SalesScreen> {
                         builder: (_) => SalesHistoryScreen(
                           session: session,
                           repository: widget.repository,
+                          runner: widget.runner,
+                          monitor: widget.monitor,
+                          unsaved: widget.unsaved,
                         ),
                       ),
                     ),
                     icon: const Icon(Icons.receipt_long_outlined),
                     label: Text(l.saleHistoryTitle),
+                  ),
+                if (session.can('return.view'))
+                  OutlinedButton.icon(
+                    key: const ValueKey('sales-returns'),
+                    onPressed: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => ReturnsScreen(
+                          session: session,
+                          repository: ReturnsRepository(
+                            widget.repository.api,
+                            widget.repository.businessId,
+                          ),
+                          runner: widget.runner,
+                          monitor: widget.monitor,
+                          unsaved: widget.unsaved,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.assignment_return_outlined),
+                    label: Text(l.returnsTitle),
                   ),
               ],
             ),

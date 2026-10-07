@@ -60,6 +60,16 @@ String apiErrorText(AppLocalizations l, ApiException e) {
       return l.errorCountNotSubmitted;
     case 'count_not_cancellable':
       return l.errorCountNotCancellable;
+    case 'over_return':
+      return l.errorOverReturn;
+    case 'return_window_expired':
+      return l.errorReturnWindowExpired('${e.params['until'] ?? ''}');
+    case 'returns_not_accepted':
+      return l.errorReturnsNotAccepted;
+    case 'over_inspection':
+      return l.errorOverInspection;
+    case 'not_awaiting_inspection':
+      return l.errorNotAwaitingInspection;
     case 'validation_error':
       return l.errorValidation;
     case 'network':
@@ -101,6 +111,7 @@ String fieldErrorText(AppLocalizations l, FieldError e) => switch (e.code) {
   'min_value' || 'max_value' => l.fieldOutOfRange,
   'quantity_precision' => l.fieldQuantityPrecision,
   'duplicate_product' || 'duplicate_line' => l.fieldDuplicateProduct,
+  'target_below_minimum' => l.errorTargetBelowMinimum,
   _ => l.fieldInvalid,
 };
 

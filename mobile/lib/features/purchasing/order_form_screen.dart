@@ -29,6 +29,8 @@ class OrderFormScreen extends StatefulWidget {
     required this.catalog,
     required this.unsaved,
     this.existing,
+    this.initialLines,
+    this.initialLocationId,
   });
 
   final SessionController session;
@@ -36,6 +38,10 @@ class OrderFormScreen extends StatefulWidget {
   final CatalogRepository catalog;
   final UnsavedWork unsaved;
   final PurchaseOrder? existing;
+
+  /// A new order that starts with these lines (the reorder screen's suggestions).
+  final List<OrderDraftLine>? initialLines;
+  final String? initialLocationId;
 
   @override
   State<OrderFormScreen> createState() => _OrderFormScreenState();
@@ -49,11 +55,13 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   late String? _supplierId = widget.existing?.supplierId;
   late String? _locationId =
       widget.existing?.locationId ??
+      widget.initialLocationId ??
       widget.session.location?.id ??
       widget.session.membership?.locations.firstOrNull?.id;
   late String? _date = widget.existing?.expectedDate;
   late final _notes = TextEditingController(text: widget.existing?.notes ?? '');
   late final List<OrderDraftLine> _lines = [
+    ...?widget.initialLines,
     for (final l in widget.existing?.lines ?? const <OrderLine>[])
       OrderDraftLine(
         product: l.product,
@@ -66,10 +74,16 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             : toServerDecimal(l.unitCostMinor!, 2).replaceAll('.', ','),
       ),
   ];
-  bool _dirty = false;
+  late bool _dirty = widget.initialLines != null;
   bool _submitted = false;
   bool _saving = false;
   ApiException? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_dirty) widget.unsaved.mark(this, dirty: true);
+  }
 
   @override
   void dispose() {

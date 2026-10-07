@@ -1,4 +1,5 @@
 import '../../core/api/api_client.dart';
+import '../../core/money/decimal_math.dart';
 import '../../core/api/api_exception.dart';
 import 'catalog_models.dart';
 
@@ -60,6 +61,41 @@ class CatalogRepository {
       Product.fromJson(
         (await api.patch('$_base/products/$id/', body: draft.toJson())).map,
       );
+
+  Future<List<ReorderLevel>> reorderLevels(String productId) async {
+    final map = (await api.get(
+      '$_base/products/$productId/reorder-settings/',
+    )).map;
+    return [
+      for (final r in map['settings'] as List)
+        ReorderLevel.fromJson((r as Map).cast<String, dynamic>()),
+    ];
+  }
+
+  /// Replaces the levels of the product: one row per location that has a minimum and a target.
+  Future<List<ReorderLevel>> saveReorderLevels(
+    String productId,
+    List<({String locationId, int minimumMilli, int targetMilli})> rows,
+  ) async {
+    final map = (await api.send(
+      'PUT',
+      '$_base/products/$productId/reorder-settings/',
+      body: {
+        'settings': [
+          for (final r in rows)
+            {
+              'location': r.locationId,
+              'minimum': toServerDecimal(r.minimumMilli, 3),
+              'target': toServerDecimal(r.targetMilli, 3),
+            },
+        ],
+      },
+    )).map;
+    return [
+      for (final r in map['settings'] as List)
+        ReorderLevel.fromJson((r as Map).cast<String, dynamic>()),
+    ];
+  }
 
   Future<Product> setActive(String id, bool active) async => Product.fromJson(
     (await api.patch('$_base/products/$id/', body: {'is_active': active})).map,

@@ -69,6 +69,21 @@ class FakeLedger {
   int transfersReceived = 0;
   int countsApproved = 0;
 
+  // ---- returns, supplier returns, reorder ---------------------------------------
+  final List<Map<String, dynamic>> saleReturns = []; // newest first
+  final List<Map<String, dynamic>> supplierReturns = []; // newest first
+  final Map<String, List<Map<String, dynamic>>> reorderLevels = {};
+  int _returnNumber = 0;
+  int _supplierReturnNumber = 0;
+
+  /// What the server actually carried out (to prove nothing happens twice).
+  int returnsRecorded = 0;
+  int returnInspections = 0;
+  int supplierReturnsRecorded = 0;
+
+  /// Tests flip this to make every dated return window look expired.
+  bool returnWindowOver = false;
+
   String _id(String prefix) => '$prefix-${++_ids}';
 
   bool _can(String code) => server.permissions.contains(code);
@@ -165,6 +180,64 @@ class FakeLedger {
     };
     orders.insert(0, order);
     return order;
+  }
+
+  /// Receives everything still outstanding on [order] as one delivery (test set-up).
+  void seedDelivery(Map<String, dynamic> order) {
+    final lines = (order['lines'] as List).cast<Map<String, dynamic>>();
+    final deliveryId = _id('dl');
+    final deliveryLines = <Map<String, dynamic>>[];
+    for (final line in lines) {
+      final quantity = (line['quantity'] as int) - (line['received'] as int);
+      if (quantity == 0) continue;
+      _post(
+        productId: line['product'] as String,
+        locationId: order['location'] as String,
+        condition: 'sellable',
+        milli: quantity,
+        costMinor: line['cost'] as int,
+        type: 'receipt',
+        reason: '',
+        documentType: 'delivery',
+        documentId: deliveryId,
+      );
+      line['received'] = line['quantity'];
+      deliveryLines.add({
+        'id': _id('dll'),
+        'order_line': line['id'],
+        'product': line['product'],
+        'quantity': quantity,
+        'cost': line['cost'],
+      });
+    }
+    final deliveries = order['deliveries'] as List;
+    deliveries.add({
+      'id': deliveryId,
+      'number': deliveries.length + 1,
+      'received_at': '2026-10-06T13:00:00Z',
+      'note': '',
+      'lines': deliveryLines,
+    });
+    order['status'] = 'received';
+  }
+
+  /// A completed sale of one product (test set-up). Returns the stored sale.
+  Map<String, dynamic> seedSale({
+    required String productId,
+    required String locationId,
+    required String quantity,
+    required String price,
+    String method = 'cash',
+  }) {
+    final result = _completeSale({
+      'location': locationId,
+      'payment_method': method,
+      'lines': [
+        {'product': productId, 'quantity': quantity, 'unit_price': price},
+      ],
+    });
+    assert(result is! http.Response, 'the sale was refused');
+    return sales.first;
   }
 
   // ---- posting ----------------------------------------------------------------
@@ -359,6 +432,11 @@ class FakeLedger {
                   'order_line': dl['order_line'],
                   'product': _productRef(dl['product'] as String),
                   'quantity': _dec(dl['quantity'] as int, 3),
+                  'returned_quantity': _dec((dl['returned'] ?? 0) as int, 3),
+                  'returnable_quantity': _dec(
+                    (dl['quantity'] as int) - ((dl['returned'] ?? 0) as int),
+                    3,
+                  ),
                   if (showCost) 'unit_cost': _dec(dl['cost'] as int, 2),
                 },
             ],
@@ -735,6 +813,8 @@ class FakeLedger {
 
     final ops = _stockOps(request, rest, body, page);
     if (ops != null) return ops;
+    final more = _returnsOps(request, rest, body, page);
+    if (more != null) return more;
 
     // ---- sales ----
     if (rest == 'sales/' && m == 'GET') {
@@ -812,8 +892,26 @@ class FakeLedger {
             'line_total': _dec(l['line_total'] as int, 2),
             'warranty_months': l['warranty_months'],
             'warranty_terms': l['warranty_terms'],
+            'return_days': l['return_days'],
+            'return_until': _returnUntil(l),
+            'returned_quantity': _dec(l['returned'] as int, 3),
+            'returnable_quantity': _dec(
+              (l['quantity'] as int) - (l['returned'] as int),
+              3,
+            ),
+            'refunded_total': _dec(l['refunded'] as int, 2),
             if (showCost) 'cost_total': _dec(l['cost'] as int, 2),
           },
+      ],
+      'returns': [
+        for (final r in saleReturns.reversed)
+          if (r['sale'] == sale['id'])
+            {
+              'id': r['id'],
+              'number': r['number'],
+              'created_at': r['created_at'],
+              'refund_total': _dec(r['refund'] as int, 2),
+            },
       ],
       if (showCost) ...{
         'cost_total': _dec(cost, 2),
@@ -858,6 +956,9 @@ class FakeLedger {
         'cost': 0,
         'warranty_months': raw['warranty_months'] ?? 0,
         'warranty_terms': raw['warranty_terms'] ?? '',
+        'return_days': raw['return_days'],
+        'returned': 0,
+        'refunded': 0,
       });
     }
     final total = priced.fold<int>(0, (a, l) => a + (l['line_total'] as int));
@@ -912,6 +1013,471 @@ class FakeLedger {
     salesRecorded++;
     sales.insert(0, sale);
     return (status: 201, body: _presentSale(sale));
+  }
+
+  // ---- returns, supplier returns, reorder -------------------------------------------
+
+  String? _returnUntil(Map<String, dynamic> line) {
+    final days = line['return_days'] as int?;
+    if (days == null) return null;
+    final until = DateTime.utc(2026, 10, 6).add(Duration(days: days));
+    return '${until.year}-${until.month.toString().padLeft(2, '0')}-${until.day.toString().padLeft(2, '0')}';
+  }
+
+  Map<String, dynamic> _presentReturn(
+    Map<String, dynamic> r, {
+    bool summary = false,
+  }) {
+    final sale = sales.firstWhere((s) => s['id'] == r['sale']);
+    final lines = (r['lines'] as List).cast<Map<String, dynamic>>();
+    int waiting(Map<String, dynamic> l) => l['condition'] == 'inspection'
+        ? (l['quantity'] as int) - (l['decided'] as int)
+        : 0;
+    final base = {
+      'id': r['id'],
+      'number': r['number'],
+      'created_at': r['created_at'],
+      'sale': {'id': sale['id'], 'number': sale['number']},
+      'location': _where(sale['location'] as String),
+      'reason': r['reason'],
+      'refund_total': _dec(r['refund'] as int, 2),
+    };
+    if (summary) {
+      return {...base, 'awaiting_inspection': lines.any((l) => waiting(l) > 0)};
+    }
+    return {
+      ...base,
+      'created_by': _person(),
+      'note': '',
+      'payment_method': sale['payment_method'],
+      'lines': [
+        for (final l in lines)
+          {
+            'id': l['id'],
+            'sale_line': l['sale_line'],
+            'product': l['product'],
+            'sku': l['sku'],
+            'name': l['name'],
+            'unit_symbol': l['unit_symbol'],
+            'unit_decimals': l['unit_decimals'],
+            'quantity': _dec(l['quantity'] as int, 3),
+            'condition': l['condition'],
+            'refund_amount': _dec(l['refund'] as int, 2),
+            'awaiting_inspection': _dec(waiting(l), 3),
+          },
+      ],
+    };
+  }
+
+  /// The return command with the real server's rules: only what is still returnable, a window
+  /// per product, the refund at the price charged (the last piece takes the remainder).
+  Object _makeReturn(Map<String, dynamic> sale, Map<String, dynamic> body) {
+    if ('${body['reason'] ?? ''}'.trim().isEmpty) {
+      return server.errorResponse(
+        400,
+        'validation_error',
+        fields: {
+          'reason': [
+            {'code': 'required', 'message': 'Required'},
+          ],
+        },
+      );
+    }
+    final saleLines = (sale['lines'] as List).cast<Map<String, dynamic>>();
+    final built = <Map<String, dynamic>>[];
+    for (final row in (body['lines'] as List).cast<Map<String, dynamic>>()) {
+      final line = saleLines.firstWhere((l) => l['id'] == row['sale_line']);
+      final quantity = _milli(row['quantity']);
+      final remaining = (line['quantity'] as int) - (line['returned'] as int);
+      if (quantity > remaining) {
+        return server.errorResponse(
+          409,
+          'over_return',
+          params: {
+            'product': line['product'],
+            'returnable': _dec(remaining, 3),
+          },
+        );
+      }
+      final days = line['return_days'] as int?;
+      if (days == 0) {
+        return server.errorResponse(
+          409,
+          'returns_not_accepted',
+          params: {'product': line['product']},
+        );
+      }
+      if (days != null && returnWindowOver) {
+        return server.errorResponse(
+          409,
+          'return_window_expired',
+          params: {'product': line['product'], 'until': _returnUntil(line)},
+        );
+      }
+      final left = (line['line_total'] as int) - (line['refunded'] as int);
+      var refund = quantity == remaining
+          ? left
+          : (quantity * (line['unit_price'] as int) / 1000 + 0.0000001).round();
+      if (refund > left) refund = left;
+      built.add({
+        'line': line,
+        'quantity': quantity,
+        'row': row,
+        'refund': refund,
+      });
+    }
+    final returnId = _id('ret');
+    final error = _postAll([
+      for (final b in built)
+        () {
+          final line = b['line'] as Map<String, dynamic>;
+          final unitCost = (line['quantity'] as int) == 0
+              ? 0
+              : ((line['cost'] as int) * 1000 / (line['quantity'] as int))
+                    .round();
+          return _post(
+            productId: line['product'] as String,
+            locationId: sale['location'] as String,
+            condition: '${(b['row'] as Map)['condition']}',
+            milli: b['quantity'] as int,
+            costMinor: unitCost,
+            type: 'return_in',
+            reason: '${body['reason']}',
+            documentType: 'return',
+            documentId: returnId,
+          );
+        },
+    ]);
+    if (error != null) return error;
+    final lines = <Map<String, dynamic>>[];
+    for (final b in built) {
+      final line = b['line'] as Map<String, dynamic>;
+      line['returned'] = (line['returned'] as int) + (b['quantity'] as int);
+      line['refunded'] = (line['refunded'] as int) + (b['refund'] as int);
+      lines.add({
+        'id': _id('rl'),
+        'sale_line': line['id'],
+        'product': line['product'],
+        'sku': line['sku'],
+        'name': line['name'],
+        'unit_symbol': line['unit_symbol'],
+        'unit_decimals': line['unit_decimals'],
+        'quantity': b['quantity'],
+        'condition': '${(b['row'] as Map)['condition']}',
+        'refund': b['refund'],
+        'decided': 0,
+      });
+    }
+    final record = {
+      'id': returnId,
+      'number': ++_returnNumber,
+      'created_at': '2026-10-06T15:00:00Z',
+      'sale': sale['id'],
+      'reason': '${body['reason']}'.trim(),
+      'refund': lines.fold<int>(0, (a, l) => a + (l['refund'] as int)),
+      'lines': lines,
+    };
+    returnsRecorded++;
+    saleReturns.insert(0, record);
+    return (status: 201, body: _presentReturn(record));
+  }
+
+  Map<String, dynamic> _presentSupplierReturn(Map<String, dynamic> r) => {
+    'id': r['id'],
+    'number': r['number'],
+    'created_at': r['created_at'],
+    'supplier': {'id': r['supplier'], 'name': r['supplier_name']},
+    'location': _where(r['location'] as String),
+    'delivery': {
+      'id': r['delivery'],
+      'number': r['delivery_number'],
+      'order': r['order'],
+      'order_number': r['order_number'],
+    },
+    'created_by': _person(),
+    'reason': r['reason'],
+    'note': '',
+    if (_can('purchasing.cost.view'))
+      'credit_total': _dec(r['credit'] as int, 2),
+    'lines': [
+      for (final l in (r['lines'] as List).cast<Map<String, dynamic>>())
+        {
+          'id': l['id'],
+          'delivery_line': l['delivery_line'],
+          'product': _productRef(l['product'] as String),
+          'quantity': _dec(l['quantity'] as int, 3),
+          'condition': l['condition'],
+        },
+    ],
+  };
+
+  http.Response? _returnsOps(
+    http.Request request,
+    String rest,
+    Map<String, dynamic> body,
+    http.Response Function(List<Map<String, dynamic>>) page,
+  ) {
+    final m = request.method;
+    final q = request.url.queryParameters;
+
+    final make = RegExp(r'^sales/([^/]+)/returns/$').firstMatch(rest);
+    if (make != null && m == 'POST') {
+      final sale = sales.where((s) => s['id'] == make.group(1)).firstOrNull;
+      if (sale == null) return server.errorResponse(404, 'not_found');
+      return server.runCommand(request, body, () => _makeReturn(sale, body));
+    }
+    if (rest == 'returns/' && m == 'GET') {
+      final text = (q['q'] ?? '').trim().toUpperCase();
+      return page([
+        for (final r in saleReturns)
+          if (text.isEmpty ||
+              'R-${(r['number'] as int).toString().padLeft(4, '0')}' == text)
+            _presentReturn(r, summary: true),
+      ]);
+    }
+    final one = RegExp(r'^returns/([^/]+)/(inspections/)?$').firstMatch(rest);
+    if (one != null) {
+      final record = saleReturns
+          .where((r) => r['id'] == one.group(1))
+          .firstOrNull;
+      if (record == null) return server.errorResponse(404, 'not_found');
+      if (one.group(2) == null && m == 'GET') {
+        return server.jsonResponse(200, _presentReturn(record));
+      }
+      if (one.group(2) != null && m == 'POST') {
+        return server.runCommand(request, body, () {
+          final sale = sales.firstWhere((s) => s['id'] == record['sale']);
+          final lines = (record['lines'] as List).cast<Map<String, dynamic>>();
+          final rows = (body['lines'] as List).cast<Map<String, dynamic>>();
+          for (final row in rows) {
+            final line = lines.firstWhere((l) => l['id'] == row['return_line']);
+            if (line['condition'] != 'inspection') {
+              return server.errorResponse(409, 'not_awaiting_inspection');
+            }
+            final waiting =
+                (line['quantity'] as int) - (line['decided'] as int);
+            if (_milli(row['quantity']) > waiting) {
+              return server.errorResponse(409, 'over_inspection');
+            }
+          }
+          final error = _postAll([
+            for (final row in rows) ...[
+              () {
+                final line = lines.firstWhere(
+                  (l) => l['id'] == row['return_line'],
+                );
+                return _post(
+                  productId: line['product'] as String,
+                  locationId: sale['location'] as String,
+                  condition: 'inspection',
+                  milli: -_milli(row['quantity']),
+                  type: 'inspection_out',
+                  reason: 'inspection decided',
+                  documentType: 'return',
+                  documentId: record['id'] as String,
+                );
+              },
+              () {
+                final line = lines.firstWhere(
+                  (l) => l['id'] == row['return_line'],
+                );
+                return _post(
+                  productId: line['product'] as String,
+                  locationId: sale['location'] as String,
+                  condition: '${row['outcome']}',
+                  milli: _milli(row['quantity']),
+                  costMinor: 0,
+                  type: 'inspection_in',
+                  reason: 'inspection decided',
+                  documentType: 'return',
+                  documentId: record['id'] as String,
+                );
+              },
+            ],
+          ]);
+          if (error != null) return error;
+          for (final row in rows) {
+            final line = lines.firstWhere((l) => l['id'] == row['return_line']);
+            line['decided'] =
+                (line['decided'] as int) + _milli(row['quantity']);
+          }
+          returnInspections++;
+          return (status: 200, body: _presentReturn(record));
+        });
+      }
+    }
+
+    if (rest == 'supplier-returns/' && m == 'GET') {
+      return page([for (final r in supplierReturns) _presentSupplierReturn(r)]);
+    }
+    if (rest == 'supplier-returns/' && m == 'POST') {
+      return server.runCommand(request, body, () {
+        Map<String, dynamic>? order;
+        Map<String, dynamic>? delivery;
+        for (final o in orders) {
+          for (final d
+              in (o['deliveries'] as List).cast<Map<String, dynamic>>()) {
+            if (d['id'] == body['delivery']) {
+              order = o;
+              delivery = d;
+            }
+          }
+        }
+        if (order == null || delivery == null) {
+          return server.errorResponse(404, 'not_found');
+        }
+        if ('${body['reason'] ?? ''}'.trim().isEmpty) {
+          return server.errorResponse(400, 'validation_error');
+        }
+        final dLines = (delivery['lines'] as List).cast<Map<String, dynamic>>();
+        final rows = (body['lines'] as List).cast<Map<String, dynamic>>();
+        for (final row in rows) {
+          final line = dLines.firstWhere(
+            (l) => l['id'] == row['delivery_line'],
+          );
+          final remaining =
+              (line['quantity'] as int) - ((line['returned'] ?? 0) as int);
+          if (_milli(row['quantity']) > remaining) {
+            return server.errorResponse(
+              409,
+              'over_return',
+              params: {
+                'product': line['product'],
+                'returnable': _dec(remaining, 3),
+              },
+            );
+          }
+        }
+        final returnId = _id('sret');
+        final error = _postAll([
+          for (final row in rows)
+            () {
+              final line = dLines.firstWhere(
+                (l) => l['id'] == row['delivery_line'],
+              );
+              return _post(
+                productId: line['product'] as String,
+                locationId: order!['location'] as String,
+                condition: '${row['condition'] ?? 'sellable'}',
+                milli: -_milli(row['quantity']),
+                type: 'supplier_return',
+                reason: '${body['reason']}',
+                documentType: 'supplier_return',
+                documentId: returnId,
+              );
+            },
+        ]);
+        if (error != null) return error;
+        var credit = 0;
+        final lines = <Map<String, dynamic>>[];
+        for (final row in rows) {
+          final line = dLines.firstWhere(
+            (l) => l['id'] == row['delivery_line'],
+          );
+          line['returned'] =
+              ((line['returned'] ?? 0) as int) + _milli(row['quantity']);
+          credit += (_milli(row['quantity']) * (line['cost'] as int) / 1000)
+              .round();
+          lines.add({
+            'id': _id('srl'),
+            'delivery_line': line['id'],
+            'product': line['product'],
+            'quantity': _milli(row['quantity']),
+            'condition': '${row['condition'] ?? 'sellable'}',
+          });
+        }
+        final supplier = suppliers.firstWhere(
+          (s) => s['id'] == order!['supplier'],
+        );
+        final record = {
+          'id': returnId,
+          'number': ++_supplierReturnNumber,
+          'created_at': '2026-10-06T16:00:00Z',
+          'supplier': supplier['id'],
+          'supplier_name': supplier['name'],
+          'location': order['location'],
+          'delivery': delivery['id'],
+          'delivery_number': delivery['number'],
+          'order': order['id'],
+          'order_number': order['number'],
+          'reason': '${body['reason']}'.trim(),
+          'credit': credit,
+          'lines': lines,
+        };
+        supplierReturnsRecorded++;
+        supplierReturns.insert(0, record);
+        return (status: 201, body: _presentSupplierReturn(record));
+      });
+    }
+
+    final levels = RegExp(
+      r'^products/([^/]+)/reorder-settings/$',
+    ).firstMatch(rest);
+    if (levels != null) {
+      final id = levels.group(1)!;
+      List<Map<String, dynamic>> view() => [
+        for (final r in reorderLevels[id] ?? const <Map<String, dynamic>>[])
+          {
+            'location': r['location'],
+            'location_name': _where(r['location'] as String)['name'],
+            'minimum': _dec(r['minimum'] as int, 3),
+            'target': _dec(r['target'] as int, 3),
+          },
+      ];
+      if (m == 'GET') return server.jsonResponse(200, {'settings': view()});
+      if (m == 'PUT') {
+        reorderLevels[id] = [
+          for (final r
+              in (body['settings'] as List).cast<Map<String, dynamic>>())
+            {
+              'location': r['location'],
+              'minimum': _milli(r['minimum']),
+              'target': _milli(r['target']),
+            },
+        ];
+        return server.jsonResponse(200, {'settings': view()});
+      }
+    }
+    if (rest == 'reorder-suggestions/' && m == 'GET') {
+      final rows = <Map<String, dynamic>>[];
+      reorderLevels.forEach((productId, list) {
+        for (final r in list) {
+          final place = r['location'] as String;
+          final onHand = _sellable(productId, place);
+          var onOrder = 0;
+          for (final o in orders) {
+            if (o['location'] != place) continue;
+            if (!['ordered', 'partially_received'].contains(o['status'])) {
+              continue;
+            }
+            for (final l in (o['lines'] as List).cast<Map<String, dynamic>>()) {
+              if (l['product'] == productId) {
+                onOrder += (l['quantity'] as int) - (l['received'] as int);
+              }
+            }
+          }
+          if (onHand + onOrder >= (r['minimum'] as int)) continue;
+          final product = server.productsData.firstWhere(
+            (p) => p['id'] == productId,
+          );
+          rows.add({
+            'product': {
+              ..._productRef(productId),
+              if (_can('purchasing.cost.view'))
+                'default_purchase_cost': product['default_purchase_cost'],
+            },
+            'location': _where(place),
+            'on_hand': _dec(onHand, 3),
+            'on_order': _dec(onOrder, 3),
+            'minimum': _dec(r['minimum'] as int, 3),
+            'target': _dec(r['target'] as int, 3),
+            'suggested': _dec((r['target'] as int) - onHand - onOrder, 3),
+          });
+        }
+      });
+      return server.jsonResponse(200, {'count': rows.length, 'results': rows});
+    }
+    return null;
   }
 
   // ---- transfers and counts ---------------------------------------------------
