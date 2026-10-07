@@ -15,10 +15,12 @@ import '../inventory/stock_entry_screen.dart' show EntryResult;
 import '../shared/async_section.dart';
 import '../workspace/unsaved_work.dart';
 import 'order_form_screen.dart';
+import '../returns/return_form_screen.dart' show ReturnResult;
 import 'order_labels.dart';
 import 'purchasing_models.dart';
 import 'purchasing_repository.dart';
 import 'receive_screen.dart';
+import 'supplier_return_form_screen.dart';
 
 /// One purchase order: its lines, what has arrived and the deliveries so far, with
 /// the actions the person's role allows. Closes with `true` when something changed
@@ -56,6 +58,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool get _canReceive => widget.session.can('purchasing.receive');
 
   void _reload() => _section.currentState?.reload();
+
+  Future<void> _returnToSupplier(
+    PurchaseOrder order,
+    DeliveryRecord delivery,
+  ) async {
+    final result = await Navigator.of(context).push<ReturnResult>(
+      MaterialPageRoute(
+        builder: (_) => SupplierReturnFormScreen(
+          order: order,
+          delivery: delivery,
+          session: widget.session,
+          repository: widget.repository,
+          runner: widget.runner,
+          monitor: widget.monitor,
+          unsaved: widget.unsaved,
+        ),
+      ),
+    );
+    if (result == null || !mounted) return;
+    final l = strings(context);
+    _changed = true;
+    if (result == ReturnResult.done) {
+      showFeedback(context, l.supplierReturnDone);
+      _reload();
+    } else {
+      showFeedback(context, l.outcomeUnknownNotice);
+      Navigator.of(context).popUntil((r) => r.isFirst); // where the banner is
+    }
+  }
 
   Future<void> _run(
     Future<PurchaseOrder> Function() action,
@@ -366,6 +397,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           '${dl.product.name}: '
                           '${quantityWithUnit(dl.quantityMilli, dl.product.unit)}',
                           style: const TextStyle(fontSize: 13),
+                        ),
+                      if (widget.session.can('supplier_return.create') &&
+                          d.hasReturnable &&
+                          d.id.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: OutlinedButton.icon(
+                            key: ValueKey('od-return-${d.number}'),
+                            onPressed: () => _returnToSupplier(order, d),
+                            icon: const Icon(Icons.undo),
+                            label: Text(l.supplierReturnNew),
+                          ),
                         ),
                       if (d.note.isNotEmpty)
                         Text(

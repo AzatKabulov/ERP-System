@@ -29,6 +29,53 @@ class PurchasingRepository {
     ],
   };
 
+  // ---- returns to a supplier and what to reorder ----------------------------
+
+  String get supplierReturnPath => '$_base/supplier-returns/';
+
+  /// Goods go back against one delivery; [condition] says where they are taken from.
+  Map<String, dynamic> supplierReturnBody({
+    required String deliveryId,
+    required String reason,
+    required List<
+      ({String deliveryLineId, int quantityMilli, String condition})
+    >
+    lines,
+  }) => {
+    'delivery': deliveryId,
+    'reason': reason,
+    'lines': [
+      for (final l in lines)
+        {
+          'delivery_line': l.deliveryLineId,
+          'quantity': toServerDecimal(l.quantityMilli, 3),
+          'condition': l.condition,
+        },
+    ],
+  };
+
+  Future<SupplierReturnPage> supplierReturns({
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final map = (await api.get(
+      '$_base/supplier-returns/',
+      query: {'limit': '$limit', 'offset': '$offset'},
+    )).map;
+    return SupplierReturnPage([
+      for (final r in map['results'] as List)
+        SupplierReturnRecord.fromJson((r as Map).cast<String, dynamic>()),
+    ], map['count'] as int);
+  }
+
+  Future<List<ReorderRow>> reorderSuggestions() async {
+    final map = (await api.get('$_base/reorder-suggestions/')).map;
+    return [
+      for (final r in map['results'] as List)
+        ReorderRow.fromJson((r as Map).cast<String, dynamic>()),
+    ];
+  }
+
   // ---- suppliers -----------------------------------------------------------
 
   Future<SupplierPage> suppliers({

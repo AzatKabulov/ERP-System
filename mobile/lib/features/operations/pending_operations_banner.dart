@@ -19,6 +19,9 @@ String operationActionLabel(AppLocalizations l, String action) =>
       'transfer_receive' => l.actionTransferReceive,
       'transfer_cancel' => l.actionTransferCancel,
       'count_approve' => l.actionCountApprove,
+      'return_complete' => l.actionReturnComplete,
+      'return_inspect' => l.actionReturnInspect,
+      'supplier_return_create' => l.actionSupplierReturn,
       _ => l.unknownActionLabel,
     };
 

@@ -21,6 +21,7 @@ Map<String, dynamic> seedProduct(
   bool active = true,
   int warrantyMonths = 0,
   String warrantyTerms = '',
+  int? returnDays,
 }) {
   final product = {
     'id': 'p-seed-${server.productsData.length + 1}',
@@ -34,6 +35,7 @@ Map<String, dynamic> seedProduct(
     'default_purchase_cost': cost,
     'warranty_months': warrantyMonths,
     'warranty_terms': warrantyTerms,
+    'return_days': returnDays,
     'barcodes': [...barcodes],
     'is_active': active,
     'created_at': '2026-10-06T10:00:00Z',

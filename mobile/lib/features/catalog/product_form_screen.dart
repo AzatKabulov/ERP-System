@@ -70,6 +70,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   late final _warrantyTerms = TextEditingController(
     text: widget.existing?.warrantyTerms ?? '',
   );
+  late final _returnDays = TextEditingController(
+    text: widget.existing?.returnDays?.toString() ?? '',
+  );
   final _barcodeEntry = TextEditingController();
 
   late String? _categoryId = widget.existing?.category?.id;
@@ -133,6 +136,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       _cost,
       _warrantyMonths,
       _warrantyTerms,
+      _returnDays,
       _barcodeEntry,
     ]) {
       c.dispose();
@@ -182,6 +186,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     if (months == null || months < 0 || months > 120) {
       errors['warranty_months'] = l.fieldOutOfRange;
     }
+    int? returnDays;
+    if (_returnDays.text.trim().isNotEmpty) {
+      returnDays = int.tryParse(_returnDays.text.trim());
+      if (returnDays == null || returnDays < 0 || returnDays > 3650) {
+        errors['return_days'] = l.fieldOutOfRange;
+      }
+    }
     setState(() {
       _local
         ..clear()
@@ -200,6 +211,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       includeCost: _canSeeCost,
       warrantyMonths: months!,
       warrantyTerms: _warrantyTerms.text.trim(),
+      returnDays: returnDays,
       barcodes: List.of(_barcodes),
     );
   }
@@ -569,6 +581,24 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 decoration: InputDecoration(
                   labelText: l.warrantyTermsLabel,
                   errorText: _fieldText('warranty_terms'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: 260,
+                child: TextField(
+                  key: const ValueKey('pf-return-days'),
+                  controller: _returnDays,
+                  enabled: !_saving,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (_) => _touch(),
+                  decoration: InputDecoration(
+                    labelText: l.productReturnDays,
+                    helperText: l.productReturnDaysHint,
+                    helperMaxLines: 3,
+                    errorText: _fieldText('return_days'),
+                  ),
                 ),
               ),
               if (general != null) ...[

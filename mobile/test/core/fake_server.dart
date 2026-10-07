@@ -85,6 +85,12 @@ class FakeServer {
     'catalog.cost.view',
     'exchange_rate.view',
     'exchange_rate.manage',
+    'return.view',
+    'return.create',
+    'return.inspect',
+    'supplier_return.view',
+    'supplier_return.create',
+    'reorder.view',
   ];
   String role = 'owner';
 

@@ -58,6 +58,7 @@ class Product {
     required this.warrantyTerms,
     required this.barcodes,
     required this.isActive,
+    this.returnDays,
     this.category,
     this.brand,
   });
@@ -81,6 +82,9 @@ class Product {
   final int? defaultCostMinor;
   final int warrantyMonths;
   final String warrantyTerms;
+
+  /// Days after a sale the customer may return it: null = no limit, 0 = not returnable.
+  final int? returnDays;
   final List<String> barcodes;
   final bool isActive;
 
@@ -109,6 +113,7 @@ class Product {
       ),
       warrantyMonths: (json['warranty_months'] as int?) ?? 0,
       warrantyTerms: (json['warranty_terms'] as String?) ?? '',
+      returnDays: json['return_days'] as int?,
       barcodes: [for (final b in json['barcodes'] as List) b as String],
       isActive: json['is_active'] as bool,
     );
@@ -127,6 +132,7 @@ class ProductDraft {
     required this.warrantyMonths,
     required this.warrantyTerms,
     required this.barcodes,
+    this.returnDays,
     this.categoryId,
     this.brandId,
     this.defaultCostMinor,
@@ -146,6 +152,9 @@ class ProductDraft {
   final bool includeCost;
   final int warrantyMonths;
   final String warrantyTerms;
+
+  /// Null clears the limit (the product can always be returned).
+  final int? returnDays;
   final List<String> barcodes;
 
   Map<String, dynamic> toJson() => {
@@ -162,6 +171,7 @@ class ProductDraft {
           : toServerDecimal(defaultCostMinor!, 2),
     'warranty_months': warrantyMonths,
     'warranty_terms': warrantyTerms,
+    'return_days': returnDays,
     'barcodes': barcodes,
   };
 }
@@ -194,4 +204,26 @@ class ProductPage {
   const ProductPage(this.items, this.count);
   final List<Product> items;
   final int count;
+}
+
+/// Minimum and target stock of a product at one location (the reorder list uses them).
+@immutable
+class ReorderLevel {
+  const ReorderLevel({
+    required this.locationId,
+    required this.locationName,
+    required this.minimumMilli,
+    required this.targetMilli,
+  });
+  final String locationId;
+  final String locationName;
+  final int minimumMilli;
+  final int targetMilli;
+
+  factory ReorderLevel.fromJson(Map<String, dynamic> json) => ReorderLevel(
+    locationId: json['location'] as String,
+    locationName: (json['location_name'] as String?) ?? '',
+    minimumMilli: parseServerDecimal(json['minimum'] as String, 3) ?? 0,
+    targetMilli: parseServerDecimal(json['target'] as String, 3) ?? 0,
+  );
 }

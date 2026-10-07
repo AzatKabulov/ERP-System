@@ -14,6 +14,8 @@ import 'order_form_screen.dart';
 import 'order_labels.dart';
 import 'purchasing_models.dart';
 import 'purchasing_repository.dart';
+import 'reorder_screen.dart';
+import 'supplier_returns_screen.dart';
 import 'suppliers_screen.dart';
 
 /// Purchase orders, newest first, with a status filter. From here: create an order,
@@ -102,6 +104,26 @@ class _PurchasingScreenState extends State<PurchasingScreen> {
     if (changed == true && mounted) _load(reset: true);
   }
 
+  Future<void> _openReorder() async {
+    final saved = await Navigator.of(context).push<PurchaseOrder>(
+      MaterialPageRoute(
+        builder: (_) => ReorderScreen(
+          session: session,
+          repository: widget.repository,
+          catalog: widget.catalog,
+          unsaved: widget.unsaved,
+        ),
+      ),
+    );
+    if (saved == null || !mounted) return;
+    await _load(reset: true);
+    if (mounted && _items.isNotEmpty) {
+      await _open(
+        _items.firstWhere((o) => o.id == saved.id, orElse: () => _items.first),
+      );
+    }
+  }
+
   Future<void> _create() async {
     final saved = await Navigator.of(context).push<PurchaseOrder>(
       MaterialPageRoute(
@@ -158,6 +180,27 @@ class _PurchasingScreenState extends State<PurchasingScreen> {
                 ),
                 icon: const Icon(Icons.local_shipping_outlined),
                 label: Text(l.suppliersTitle),
+              ),
+            if (session.can('reorder.view'))
+              OutlinedButton.icon(
+                key: const ValueKey('purchasing-reorder'),
+                onPressed: () => _openReorder(),
+                icon: const Icon(Icons.shopping_cart_outlined),
+                label: Text(l.reorderTitle),
+              ),
+            if (session.can('supplier_return.view'))
+              OutlinedButton.icon(
+                key: const ValueKey('purchasing-returns'),
+                onPressed: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) => SupplierReturnsScreen(
+                      session: session,
+                      repository: widget.repository,
+                    ),
+                  ),
+                ),
+                icon: const Icon(Icons.undo),
+                label: Text(l.supplierReturnsTitle),
               ),
           ],
         ),

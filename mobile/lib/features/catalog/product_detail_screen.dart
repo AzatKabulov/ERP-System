@@ -10,6 +10,7 @@ import '../workspace/unsaved_work.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
 import 'product_form_screen.dart';
+import 'reorder_levels_screen.dart';
 
 /// One product, read-only, with edit and archive for those who may. Closes with
 /// `true` when something was changed so the list can refresh.
@@ -237,6 +238,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    SurfaceCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SectionHeading(l.productReturnDays),
+                          const SizedBox(height: 8),
+                          Text(switch (p.returnDays) {
+                            null => l.returnNoLimit,
+                            0 => l.returnNotAccepted,
+                            final days => l.returnDaysValue(days),
+                          }, key: const ValueKey('pd-return-days')),
+                        ],
+                      ),
+                    ),
+                    if (widget.session.can('catalog.view')) ...[
+                      const SizedBox(height: 16),
+                      ReorderLevelsCard(
+                        product: _product,
+                        repository: widget.repository,
+                        session: widget.session,
+                      ),
+                    ],
                     if (_canManage) ...[
                       const SizedBox(height: 16),
                       Align(

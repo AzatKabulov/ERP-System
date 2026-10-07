@@ -885,5 +885,201 @@
   "errorCountEmpty": "Ничего не посчитано.",
   "errorCountNotSubmitted": "Эту инвентаризацию нельзя утвердить: она не ждёт утверждения.",
   "errorCountNotCancellable": "Эта инвентаризация уже закрыта.",
-  "actionCountApprove": "Инвентаризация: утверждение"
+  "actionCountApprove": "Инвентаризация: утверждение",
+  "returnsTitle": "Возвраты",
+  "returnsEmpty": "Возвратов пока нет",
+  "returnNew": "Оформить возврат",
+  "returnNumberTitle": "Возврат {number}",
+  "@returnNumberTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "returnSearchHint": "Номер возврата, например R-0001",
+  "returnFromSale": "По продаже {number}",
+  "@returnFromSale": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "returnableLine": "Можно вернуть: {qty}",
+  "@returnableLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "returnedSoFar": "Уже возвращено: {qty}",
+  "@returnedSoFar": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "returnQtyLabel": "Вернуть",
+  "returnReasonLabel": "Причина возврата (обязательно)",
+  "returnReasonShort": "Причина",
+  "returnRefundTotal": "К возврату покупателю: {amount}",
+  "@returnRefundTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "returnRefundLine": "Вернуть деньги: {amount}",
+  "@returnRefundLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "returnRefundNote": "Сумма считается по цене, по которой товар был продан.",
+  "returnConfirmTitle": "Подтвердить возврат",
+  "returnConfirmBody": "Принять обратно: {items}. Вернуть покупателю: {refund}.",
+  "@returnConfirmBody": {
+    "placeholders": {
+      "items": {
+        "type": "String"
+      },
+      "refund": {
+        "type": "String"
+      }
+    }
+  },
+  "returnDone": "Возврат оформлен.",
+  "returnNothingToReturn": "По этой продаже уже нечего возвращать.",
+  "returnUntilLine": "Вернуть можно до {date}",
+  "@returnUntilLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "returnNoLimit": "Возврат без ограничения срока",
+  "returnNotAccepted": "Этот товар не принимается обратно",
+  "returnDaysValue": "Возврат в течение {days} дн.",
+  "@returnDaysValue": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "saleReturnsTitle": "Возвраты по этой продаже",
+  "returnAwaiting": "Ждёт проверки: {qty}",
+  "@returnAwaiting": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "returnInspectSellable": "В годные",
+  "returnInspectDamaged": "В брак",
+  "returnInspectDone": "Решение записано.",
+  "errorOverReturn": "Нельзя вернуть больше, чем осталось.",
+  "errorOverReturnNamed": "{product}: можно вернуть не больше {qty}.",
+  "@errorOverReturnNamed": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      },
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "errorReturnWindowExpired": "Срок возврата этого товара истёк ({date}).",
+  "@errorReturnWindowExpired": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "errorReturnsNotAccepted": "Этот товар не принимается обратно.",
+  "errorOverInspection": "Столько товара не ждёт проверки.",
+  "errorNotAwaitingInspection": "Этот товар не ждал проверки.",
+  "errorTargetBelowMinimum": "Цель не может быть меньше минимума.",
+  "actionReturnComplete": "Возврат от покупателя",
+  "actionReturnInspect": "Возврат: решение по проверке",
+  "actionSupplierReturn": "Возврат поставщику",
+  "supplierReturnsTitle": "Возвраты поставщикам",
+  "supplierReturnsEmpty": "Возвратов поставщикам пока нет",
+  "supplierReturnNew": "Вернуть поставщику",
+  "supplierReturnSource": "{supplier} · поставка № {delivery}",
+  "@supplierReturnSource": {
+    "placeholders": {
+      "supplier": {
+        "type": "String"
+      },
+      "delivery": {
+        "type": "String"
+      }
+    }
+  },
+  "supplierReturnDone": "Возврат поставщику оформлен.",
+  "supplierReturnCredit": "Зачёт поставщика: {amount}",
+  "@supplierReturnCredit": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderTitle": "Пополнение запаса",
+  "reorderEmpty": "Всё в порядке: ничего заказывать не нужно",
+  "reorderScreenHint": "Товары ниже минимума (с учётом уже заказанного). Отметьте нужные и создайте заказ: поставщика выберете сами.",
+  "reorderRowLine": "Есть: {onHand} · в заказах: {onOrder} · минимум: {minimum}",
+  "@reorderRowLine": {
+    "placeholders": {
+      "onHand": {
+        "type": "String"
+      },
+      "onOrder": {
+        "type": "String"
+      },
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderSuggested": "Предлагается заказать: {qty}",
+  "@reorderSuggested": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderCreate": "Создать заказ",
+  "productReturnDays": "Срок возврата, дней",
+  "productReturnDaysHint": "Пусто — без ограничения, 0 — возврат не принимается. Считается со дня продажи.",
+  "reorderLevelsTitle": "Минимум и цель по точкам",
+  "reorderLevelsNone": "Не задано",
+  "reorderLevelsEdit": "Изменить",
+  "reorderLevelsSaved": "Уровни сохранены.",
+  "reorderLevelLine": "минимум {minimum}, цель {target}",
+  "@reorderLevelLine": {
+    "placeholders": {
+      "minimum": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderMinLabel": "Минимум",
+  "reorderTargetLabel": "Цель",
+  "returnButton": "Вернуть товар"
 }

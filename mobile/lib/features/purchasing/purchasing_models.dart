@@ -138,20 +138,33 @@ class OrderLine {
 @immutable
 class DeliveryLineRecord {
   const DeliveryLineRecord({
+    this.id = '',
     required this.product,
     required this.quantityMilli,
+    this.returnedMilli = 0,
+    this.returnableMilli = 0,
     this.unitCostMinor,
   });
+  final String id;
   final ProductRef product;
   final int quantityMilli;
+
+  /// How much of this delivery line went back to the supplier, and how much still can.
+  final int returnedMilli;
+  final int returnableMilli;
   final int? unitCostMinor;
 
   factory DeliveryLineRecord.fromJson(Map<String, dynamic> json) =>
       DeliveryLineRecord(
+        id: (json['id'] as String?) ?? '',
         product: ProductRef.fromJson(
           (json['product'] as Map).cast<String, dynamic>(),
         ),
         quantityMilli: parseServerDecimal(json['quantity'] as String, 3) ?? 0,
+        returnedMilli:
+            parseServerDecimal(json['returned_quantity'] as String?, 3) ?? 0,
+        returnableMilli:
+            parseServerDecimal(json['returnable_quantity'] as String?, 3) ?? 0,
         unitCostMinor: parseServerDecimal(json['unit_cost'] as String?, 2),
       );
 }
@@ -159,19 +172,25 @@ class DeliveryLineRecord {
 @immutable
 class DeliveryRecord {
   const DeliveryRecord({
+    this.id = '',
     required this.number,
     required this.receivedAt,
     required this.receivedBy,
     required this.note,
     required this.lines,
   });
+  final String id;
   final int number;
   final DateTime receivedAt;
   final String receivedBy;
   final String note;
   final List<DeliveryLineRecord> lines;
 
+  /// Whether anything of this delivery can still go back to the supplier.
+  bool get hasReturnable => lines.any((l) => l.returnableMilli > 0);
+
   factory DeliveryRecord.fromJson(Map<String, dynamic> json) => DeliveryRecord(
+    id: (json['id'] as String?) ?? '',
     number: json['number'] as int,
     receivedAt: DateTime.parse(json['received_at'] as String),
     receivedBy: ((json['received_by'] as Map?)?['name'] as String?) ?? '',
@@ -255,4 +274,126 @@ class OrderDraftLine {
   final ProductRef product;
   String quantityText;
   String costText;
+}
+
+/// "SR-0003": how a return to a supplier is named on screen.
+String supplierReturnNumber(int number) =>
+    'SR-${number.toString().padLeft(4, '0')}';
+
+@immutable
+class SupplierReturnLineRecord {
+  const SupplierReturnLineRecord({
+    required this.product,
+    required this.quantityMilli,
+    required this.condition,
+  });
+  final ProductRef product;
+  final int quantityMilli;
+  final String condition;
+
+  factory SupplierReturnLineRecord.fromJson(Map<String, dynamic> json) =>
+      SupplierReturnLineRecord(
+        product: ProductRef.fromJson(
+          (json['product'] as Map).cast<String, dynamic>(),
+        ),
+        quantityMilli: parseServerDecimal(json['quantity'] as String, 3) ?? 0,
+        condition: json['condition'] as String,
+      );
+}
+
+@immutable
+class SupplierReturnRecord {
+  const SupplierReturnRecord({
+    required this.id,
+    required this.number,
+    required this.createdAt,
+    required this.supplierName,
+    required this.locationName,
+    required this.deliveryNumber,
+    required this.orderNumber,
+    required this.reason,
+    required this.lines,
+    this.creditMinor,
+  });
+  final String id;
+  final int number;
+  final DateTime createdAt;
+  final String supplierName;
+  final String locationName;
+  final int deliveryNumber;
+  final int orderNumber;
+  final String reason;
+  final List<SupplierReturnLineRecord> lines;
+
+  /// What the supplier credits: only for roles that may see costs.
+  final int? creditMinor;
+
+  factory SupplierReturnRecord.fromJson(Map<String, dynamic> json) =>
+      SupplierReturnRecord(
+        id: json['id'] as String,
+        number: json['number'] as int,
+        createdAt: DateTime.parse(json['created_at'] as String),
+        supplierName: (json['supplier'] as Map)['name'] as String,
+        locationName: (json['location'] as Map)['name'] as String,
+        deliveryNumber: (json['delivery'] as Map)['number'] as int,
+        orderNumber: (json['delivery'] as Map)['order_number'] as int,
+        reason: (json['reason'] as String?) ?? '',
+        lines: [
+          for (final l in json['lines'] as List)
+            SupplierReturnLineRecord.fromJson(
+              (l as Map).cast<String, dynamic>(),
+            ),
+        ],
+        creditMinor: parseServerDecimal(json['credit_total'] as String?, 2),
+      );
+}
+
+class SupplierReturnPage {
+  const SupplierReturnPage(this.items, this.count);
+  final List<SupplierReturnRecord> items;
+  final int count;
+}
+
+/// One product that is below its minimum at a location (see the reorder screen).
+@immutable
+class ReorderRow {
+  const ReorderRow({
+    required this.product,
+    required this.locationId,
+    required this.locationName,
+    required this.onHandMilli,
+    required this.onOrderMilli,
+    required this.minimumMilli,
+    required this.targetMilli,
+    required this.suggestedMilli,
+    this.defaultCostMinor,
+  });
+  final ProductRef product;
+  final String locationId;
+  final String locationName;
+  final int onHandMilli;
+  final int onOrderMilli;
+  final int minimumMilli;
+  final int targetMilli;
+  final int suggestedMilli;
+  final int? defaultCostMinor;
+
+  factory ReorderRow.fromJson(Map<String, dynamic> json) {
+    final product = (json['product'] as Map).cast<String, dynamic>();
+    final location = (json['location'] as Map).cast<String, dynamic>();
+    return ReorderRow(
+      product: ProductRef.fromJson(product),
+      locationId: location['id'] as String,
+      locationName: location['name'] as String,
+      onHandMilli: parseServerDecimal(json['on_hand'] as String, 3) ?? 0,
+      onOrderMilli: parseServerDecimal(json['on_order'] as String, 3) ?? 0,
+      minimumMilli: parseServerDecimal(json['minimum'] as String, 3) ?? 0,
+      targetMilli: parseServerDecimal(json['target'] as String, 3) ?? 0,
+      suggestedMilli: parseServerDecimal(json['suggested'] as String, 3) ?? 0,
+      defaultCostMinor: parseServerDecimal(
+        product['default_purchase_cost'] as String?,
+        2,
+      ),
+    );
+  }
 }

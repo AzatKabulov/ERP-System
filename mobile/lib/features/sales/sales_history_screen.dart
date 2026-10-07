@@ -2,13 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../core/connectivity/connection_monitor.dart';
 import '../../core/format/format_stamp.dart';
 import '../../core/money/decimal_math.dart';
+import '../../core/operations/operation_runner.dart';
 import '../../core/session/session_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
+import '../returns/return_form_screen.dart';
+import '../returns/returns_models.dart';
+import '../returns/returns_repository.dart';
 import '../shared/async_section.dart';
+import '../workspace/unsaved_work.dart';
 import 'document_buttons.dart';
 import 'sales_models.dart';
 import 'sales_repository.dart';
@@ -23,10 +29,16 @@ class SalesHistoryScreen extends StatefulWidget {
     super.key,
     required this.session,
     required this.repository,
+    required this.runner,
+    required this.monitor,
+    required this.unsaved,
   });
 
   final SessionController session;
   final SalesRepository repository;
+  final OperationRunner runner;
+  final ConnectionMonitor monitor;
+  final UnsavedWork unsaved;
 
   @override
   State<SalesHistoryScreen> createState() => _SalesHistoryScreenState();
@@ -139,6 +151,9 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                               saleId: sale.id,
                               session: widget.session,
                               repository: widget.repository,
+                              runner: widget.runner,
+                              monitor: widget.monitor,
+                              unsaved: widget.unsaved,
                             ),
                           ),
                         ),
@@ -232,18 +247,66 @@ class _SaleTile extends StatelessWidget {
   }
 }
 
-/// One past sale in full, with its documents.
-class SaleDetailScreen extends StatelessWidget {
+/// One past sale in full, with its documents and, while something can still come back, the
+/// button that starts a return.
+class SaleDetailScreen extends StatefulWidget {
   const SaleDetailScreen({
     super.key,
     required this.saleId,
     required this.session,
     required this.repository,
+    required this.runner,
+    required this.monitor,
+    required this.unsaved,
   });
 
   final String saleId;
   final SessionController session;
   final SalesRepository repository;
+  final OperationRunner runner;
+  final ConnectionMonitor monitor;
+  final UnsavedWork unsaved;
+
+  @override
+  State<SaleDetailScreen> createState() => _SaleDetailScreenState();
+}
+
+class _SaleDetailScreenState extends State<SaleDetailScreen> {
+  final _section = GlobalKey<AsyncSectionState<SaleDetail>>();
+
+  SessionController get session => widget.session;
+
+  bool _mayUse(String locationId) {
+    final m = session.membership;
+    return m != null && m.locations.any((x) => x.id == locationId);
+  }
+
+  Future<void> _startReturn(SaleDetail sale) async {
+    final result = await Navigator.of(context).push<ReturnResult>(
+      MaterialPageRoute(
+        builder: (_) => ReturnFormScreen(
+          sale: sale,
+          session: session,
+          repository: ReturnsRepository(
+            widget.repository.api,
+            widget.repository.businessId,
+          ),
+          runner: widget.runner,
+          monitor: widget.monitor,
+          unsaved: widget.unsaved,
+        ),
+      ),
+    );
+    if (result == null || !mounted) return;
+    final l = strings(context);
+    if (result == ReturnResult.done) {
+      showFeedback(context, l.returnDone);
+      _section.currentState?.reload();
+    } else {
+      showFeedback(context, l.outcomeUnknownNotice);
+      Navigator.of(context).popUntil((r) => r.isFirst); // where the banner is
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -257,13 +320,28 @@ class SaleDetailScreen extends StatelessWidget {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: AsyncSection<SaleDetail>(
-                load: () => repository.sale(saleId),
+                key: _section,
+                load: () => widget.repository.sale(widget.saleId),
                 builder: (context, sale) => _body(context, sale),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _returnInfo(AppLocalizations l, SaleLineRecord line) {
+    if (line.returnDays == 0) {
+      return Text(
+        l.returnNotAccepted,
+        style: const TextStyle(color: AppColors.danger, fontSize: 13),
+      );
+    }
+    final until = line.returnUntil;
+    return Text(
+      until == null ? l.returnNoLimit : l.returnUntilLine(until),
+      style: const TextStyle(color: AppColors.muted, fontSize: 13),
     );
   }
 
@@ -301,41 +379,51 @@ class SaleDetailScreen extends StatelessWidget {
               for (final line in sale.lines)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              line.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              l.saleUnitsLine(
-                                '${formatQuantity(line.quantityMilli, line.unitDecimals)} ${line.unitSymbol}',
-                                formatMoney(line.unitPriceMinor, 'TMT'),
-                              ),
-                              style: const TextStyle(
-                                color: AppColors.muted,
-                                fontSize: 13,
-                              ),
-                            ),
-                            if (line.warrantyMonths > 0)
-                              Text(
-                                l.warrantyMonthsValue(line.warrantyMonths),
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                          ],
-                        ),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 2,
+                        alignment: WrapAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            line.name,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            formatMoney(line.lineTotalMinor, 'TMT'),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
                       Text(
-                        formatMoney(line.lineTotalMinor, 'TMT'),
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        l.saleUnitsLine(
+                          '${formatQuantity(line.quantityMilli, line.unitDecimals)} ${line.unitSymbol}',
+                          formatMoney(line.unitPriceMinor, 'TMT'),
+                        ),
+                        style: const TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 13,
+                        ),
                       ),
+                      if (line.warrantyMonths > 0)
+                        Text(
+                          l.warrantyMonthsValue(line.warrantyMonths),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      if (line.returnedMilli > 0)
+                        Text(
+                          l.returnedSoFar(
+                            '${formatQuantity(line.returnedMilli, line.unitDecimals)} ${line.unitSymbol}',
+                          ),
+                          key: ValueKey('sd-returned-${line.id}'),
+                          style: const TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 13,
+                          ),
+                        ),
+                      if (line.returnableMilli > 0) _returnInfo(l, line),
                     ],
                   ),
                 ),
@@ -375,10 +463,46 @@ class SaleDetailScreen extends StatelessWidget {
             ],
           ),
         ),
+        if (sale.returns.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.saleReturnsTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                for (final r in sale.returns)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      '${returnNumber(r.number)} · ${formatStamp(r.createdAt)} · ${formatMoney(r.refundMinor, 'TMT')}',
+                      key: ValueKey('sd-return-${returnNumber(r.number)}'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+        if (session.can('return.create') &&
+            sale.hasReturnable &&
+            _mayUse(sale.locationId)) ...[
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: GradientButton(
+              key: const ValueKey('sd-return'),
+              label: l.returnButton,
+              icon: Icons.assignment_return_outlined,
+              onPressed: () => _startReturn(sale),
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         SurfaceCard(
           child: DocumentButtons(
-            repository: repository,
+            repository: widget.repository,
             saleId: sale.id,
             saleNumber: sale.number,
           ),
