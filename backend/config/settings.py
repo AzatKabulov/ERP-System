@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.inventory",
     "apps.purchasing",
     "apps.sales",
+    "apps.stockops",
 ]
 
 CORS_ALLOWED_ORIGINS = env.get_list("DJANGO_CORS_ALLOWED_ORIGINS")  # empty = CORS disabled

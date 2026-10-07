@@ -32,7 +32,12 @@ class MovementType(models.TextChoices):
     ADJUSTMENT_IN = "adjustment_in", "Adjustment (increase)"
     ADJUSTMENT_OUT = "adjustment_out", "Adjustment (decrease)"
     SALE = "sale", "Sale"
-    # Later phases add: transfer_out, transfer_in, return_in, supplier_return, count.
+    # A transfer's legs: goods leave a place (sellable at the source, or in transit when a
+    # transfer is received or cancelled), arrive somewhere, or are lost on the way.
+    TRANSFER_OUT = "transfer_out", "Transfer (out)"
+    TRANSFER_IN = "transfer_in", "Transfer (in)"
+    TRANSFER_LOSS = "transfer_loss", "Transfer (missing on arrival)"
+    # Later phases add: return_in, supplier_return.
 
 
 class StockBalance(UUIDModel):

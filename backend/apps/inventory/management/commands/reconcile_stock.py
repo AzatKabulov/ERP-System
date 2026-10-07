@@ -7,8 +7,8 @@ from apps.inventory import services
 class Command(BaseCommand):
     help = (
         "Check that stock balances, movements and FIFO cost layers agree (and, where present, "
-        "that purchase-order receipts and sales match their stock movements). Exits non-zero if "
-        "any difference is found."
+        "that purchase-order receipts, sales and transfers match their stock movements). "
+        "Exits non-zero if any difference is found."
     )
 
     def add_arguments(self, parser):
@@ -22,7 +22,7 @@ class Command(BaseCommand):
             except (Business.DoesNotExist, ValueError) as exc:
                 raise CommandError("Unknown business") from exc
         differences = services.reconcile(business)
-        for name in ("purchasing", "sales"):
+        for name in ("purchasing", "sales", "stockops"):
             try:
                 module = __import__(f"apps.{name}.services", fromlist=["reconcile"])
             except ImportError:  # app not installed
