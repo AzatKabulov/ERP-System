@@ -1,0 +1,6 @@
+from django.apps import AppConfig
+
+
+class WarrantiesConfig(AppConfig):
+    name = "apps.warranties"
+    label = "warranties"

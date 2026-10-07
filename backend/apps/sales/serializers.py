@@ -6,6 +6,7 @@ from rest_framework import serializers
 from apps.businesses.models import Location
 from apps.catalog.models import Product
 from apps.common.fields import BusinessScopedField
+from apps.warranties.entitlement import warranty_until
 
 from . import returns
 from .models import (
@@ -163,6 +164,8 @@ class SaleSerializer(serializers.ModelSerializer):
         for line_data, line in zip(data["lines"], instance.lines.all(), strict=True):
             until = returns.return_until(instance.business, instance, line)
             line_data["return_until"] = until.isoformat() if until else None
+            covered = warranty_until(instance.business, instance, line)
+            line_data["warranty_until"] = covered.isoformat() if covered else None
         if self.context.get("can_view_cost"):
             cost = sum((line.cost_total for line in instance.lines.all()), Decimal(0))
             data["cost_total"] = str(cost.quantize(CENT))

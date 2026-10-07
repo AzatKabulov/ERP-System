@@ -12,6 +12,7 @@ from apps.inventory.models import Condition, MovementType
 from apps.purchasing import services as purchasing_services
 from apps.sales import services as sales_services
 from apps.stockops import services as stockops_services
+from apps.warranties import services as warranties_services
 
 D = Decimal
 
@@ -110,4 +111,5 @@ def ledger_differences() -> list[str]:
         + purchasing_services.reconcile()
         + sales_services.reconcile()
         + stockops_services.reconcile()
+        + warranties_services.reconcile()
     )
