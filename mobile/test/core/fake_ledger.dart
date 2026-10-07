@@ -58,6 +58,17 @@ class FakeLedger {
   /// Sales the server actually recorded (to prove nothing is sold twice).
   int salesRecorded = 0;
 
+  // ---- transfers and counts ---------------------------------------------------
+  final List<Map<String, dynamic>> transfers = []; // newest first
+  final List<Map<String, dynamic>> counts = []; // newest first
+  int _transferNumber = 0;
+  int _countNumber = 0;
+
+  /// Commands the server actually carried out (to prove nothing happens twice).
+  int transfersDispatched = 0;
+  int transfersReceived = 0;
+  int countsApproved = 0;
+
   String _id(String prefix) => '$prefix-${++_ids}';
 
   bool _can(String code) => server.permissions.contains(code);
@@ -722,6 +733,9 @@ class FakeLedger {
       return server.jsonResponse(201, created);
     }
 
+    final ops = _stockOps(request, rest, body, page);
+    if (ops != null) return ops;
+
     // ---- sales ----
     if (rest == 'sales/' && m == 'GET') {
       final text = (q['q'] ?? '').trim().toLowerCase();
@@ -898,5 +912,470 @@ class FakeLedger {
     salesRecorded++;
     sales.insert(0, sale);
     return (status: 201, body: _presentSale(sale));
+  }
+
+  // ---- transfers and counts ---------------------------------------------------
+
+  Map<String, dynamic> _person() => {'id': 'u-1', 'name': 'Aman Ataýew'};
+
+  Map<String, dynamic> _where(String id) => {
+    'id': id,
+    'name': (server.locationsData.firstWhere((l) => l['id'] == id))['name'],
+  };
+
+  Map<String, dynamic> _presentTransfer(
+    Map<String, dynamic> t, {
+    bool summary = false,
+  }) {
+    final lines = (t['lines'] as List).cast<Map<String, dynamic>>();
+    final base = {
+      'id': t['id'],
+      'number': t['number'],
+      'status': t['status'],
+      'from_location': _where(t['from'] as String),
+      'to_location': _where(t['to'] as String),
+      'created_at': '2026-10-07T09:00:00Z',
+    };
+    if (summary) return {...base, 'line_count': lines.length};
+    return {
+      ...base,
+      'note': t['note'],
+      'created_by': _person(),
+      'received_by':
+          t['status'] == 'received' || t['status'] == 'partially_received'
+          ? _person()
+          : null,
+      'discrepancy_reason': t['discrepancy_reason'],
+      'cancel_reason': t['cancel_reason'],
+      'lines': [
+        for (final l in lines)
+          {
+            'id': l['id'],
+            'product': _productRef(l['product'] as String),
+            'quantity': _dec(l['quantity'] as int, 3),
+            'received_quantity': l['received'] == null
+                ? null
+                : _dec(l['received'] as int, 3),
+          },
+      ],
+    };
+  }
+
+  int _sellable(String productId, String locationId) =>
+      _buckets['$productId|$locationId|sellable']?.quantity ?? 0;
+
+  Map<String, dynamic> _presentCount(
+    Map<String, dynamic> c, {
+    bool summary = false,
+  }) {
+    final lines = (c['lines'] as List).cast<Map<String, dynamic>>();
+    final counted = lines.where((l) => l['counted'] != null).toList();
+    final differences = counted.where((l) => l['counted'] != l['baseline']);
+    final base = {
+      'id': c['id'],
+      'number': c['number'],
+      'status': c['status'],
+      'scope': c['scope'],
+      'location': _where(c['location'] as String),
+      'created_at': '2026-10-07T09:00:00Z',
+    };
+    if (summary) {
+      return {
+        ...base,
+        'line_count': lines.length,
+        'counted_count': counted.length,
+        'difference_count': differences.length,
+      };
+    }
+    final open = c['status'] == 'open' || c['status'] == 'submitted';
+    return {
+      ...base,
+      'note': '',
+      'created_by': _person(),
+      'decision_reason': c['decision_reason'],
+      'lines': [
+        for (final l in lines)
+          {
+            'id': l['id'],
+            'product': _productRef(l['product'] as String),
+            'baseline_quantity': _dec(l['baseline'] as int, 3),
+            'counted_quantity': l['counted'] == null
+                ? null
+                : _dec(l['counted'] as int, 3),
+            'note': '',
+            'variance': l['counted'] == null
+                ? null
+                : _dec((l['counted'] as int) - (l['baseline'] as int), 3),
+            // sellable stock moved since the start (only checked while it is still open)
+            'moved_since_start':
+                open &&
+                _sellable(l['product'] as String, c['location'] as String) !=
+                    (l['baseline'] as int),
+          },
+      ],
+    };
+  }
+
+  http.Response? _stockOps(
+    http.Request request,
+    String rest,
+    Map<String, dynamic> body,
+    http.Response Function(List<Map<String, dynamic>>) page,
+  ) {
+    final m = request.method;
+    final q = request.url.queryParameters;
+
+    // ---- transfers ----
+    if (rest == 'transfers/' && m == 'GET') {
+      return page([
+        for (final t in transfers)
+          if (q['status'] == null || q['status'] == t['status'])
+            _presentTransfer(t, summary: true),
+      ]);
+    }
+    if (rest == 'transfers/' && m == 'POST') {
+      return server.runCommand(request, body, () {
+        final from = body['from_location'] as String;
+        final to = body['to_location'] as String;
+        final lines = (body['lines'] as List).cast<Map<String, dynamic>>();
+        final id = _id('tr');
+        final error = _postAll([
+          for (final l in lines)
+            () => _post(
+              productId: l['product'] as String,
+              locationId: from,
+              condition: 'sellable',
+              milli: -_milli(l['quantity']),
+              type: 'transfer_out',
+              reason: '',
+              documentType: 'transfer',
+              documentId: id,
+            ),
+          for (final l in lines)
+            () => _post(
+              productId: l['product'] as String,
+              locationId: to,
+              condition: 'in_transit',
+              milli: _milli(l['quantity']),
+              costMinor: 0,
+              type: 'transfer_in',
+              reason: '',
+              documentType: 'transfer',
+              documentId: id,
+            ),
+        ]);
+        if (error != null) return error;
+        transfersDispatched++;
+        final transfer = {
+          'id': id,
+          'number': ++_transferNumber,
+          'status': 'dispatched',
+          'from': from,
+          'to': to,
+          'note': body['note'] ?? '',
+          'discrepancy_reason': '',
+          'cancel_reason': '',
+          'lines': [
+            for (final l in lines)
+              {
+                'id': _id('tl'),
+                'product': l['product'],
+                'quantity': _milli(l['quantity']),
+                'received': null,
+              },
+          ],
+        };
+        transfers.insert(0, transfer);
+        return (status: 201, body: _presentTransfer(transfer));
+      });
+    }
+    final oneTransfer = RegExp(
+      r'^transfers/([^/]+)/(receive/|cancel/)?$',
+    ).firstMatch(rest);
+    if (oneTransfer != null) {
+      final transfer = transfers
+          .where((t) => t['id'] == oneTransfer.group(1))
+          .firstOrNull;
+      if (transfer == null) return server.errorResponse(404, 'not_found');
+      final action = oneTransfer.group(2);
+      if (action == null && m == 'GET') {
+        return server.jsonResponse(200, _presentTransfer(transfer));
+      }
+      if (action == 'receive/' && m == 'POST') {
+        return server.runCommand(request, body, () {
+          if (transfer['status'] != 'dispatched') {
+            return server.errorResponse(409, 'transfer_not_receivable');
+          }
+          final tLines = (transfer['lines'] as List)
+              .cast<Map<String, dynamic>>();
+          final arrived = <Object?, int>{
+            for (final l in tLines) l['id']: l['quantity'] as int,
+          };
+          for (final r in (body['lines'] as List? ?? const [])) {
+            arrived[r['line']] = _milli(r['quantity']);
+          }
+          final short = tLines.any((l) => arrived[l['id']]! < l['quantity']);
+          final reason = '${body['reason'] ?? ''}'.trim();
+          if (short && reason.isEmpty) {
+            return server.errorResponse(
+              400,
+              'validation_error',
+              fields: {
+                'reason': [
+                  {'code': 'required', 'message': 'Required'},
+                ],
+              },
+            );
+          }
+          final id = transfer['id'] as String;
+          final to = transfer['to'] as String;
+          final error = _postAll([
+            for (final l in tLines) ...[
+              if (arrived[l['id']]! > 0)
+                () => _post(
+                  productId: l['product'] as String,
+                  locationId: to,
+                  condition: 'in_transit',
+                  milli: -arrived[l['id']]!,
+                  type: 'transfer_out',
+                  reason: '',
+                  documentType: 'transfer',
+                  documentId: id,
+                ),
+              if (arrived[l['id']]! < (l['quantity'] as int))
+                () => _post(
+                  productId: l['product'] as String,
+                  locationId: to,
+                  condition: 'in_transit',
+                  milli: -((l['quantity'] as int) - arrived[l['id']]!),
+                  type: 'transfer_loss',
+                  reason: reason,
+                  documentType: 'transfer',
+                  documentId: id,
+                ),
+              if (arrived[l['id']]! > 0)
+                () => _post(
+                  productId: l['product'] as String,
+                  locationId: to,
+                  condition: 'sellable',
+                  milli: arrived[l['id']]!,
+                  costMinor: 0,
+                  type: 'transfer_in',
+                  reason: '',
+                  documentType: 'transfer',
+                  documentId: id,
+                ),
+            ],
+          ]);
+          if (error != null) return error;
+          for (final l in tLines) {
+            l['received'] = arrived[l['id']];
+          }
+          transfer['status'] = short ? 'partially_received' : 'received';
+          transfer['discrepancy_reason'] = short ? reason : '';
+          transfersReceived++;
+          return (status: 200, body: _presentTransfer(transfer));
+        });
+      }
+      if (action == 'cancel/' && m == 'POST') {
+        return server.runCommand(request, body, () {
+          final reason = '${body['reason'] ?? ''}'.trim();
+          if (reason.isEmpty) {
+            return server.errorResponse(
+              400,
+              'validation_error',
+              fields: {
+                'reason': [
+                  {'code': 'required', 'message': 'Required'},
+                ],
+              },
+            );
+          }
+          if (transfer['status'] != 'dispatched') {
+            return server.errorResponse(409, 'transfer_not_cancellable');
+          }
+          final id = transfer['id'] as String;
+          final tLines = (transfer['lines'] as List)
+              .cast<Map<String, dynamic>>();
+          final error = _postAll([
+            for (final l in tLines) ...[
+              () => _post(
+                productId: l['product'] as String,
+                locationId: transfer['to'] as String,
+                condition: 'in_transit',
+                milli: -(l['quantity'] as int),
+                type: 'transfer_out',
+                reason: reason,
+                documentType: 'transfer',
+                documentId: id,
+              ),
+              () => _post(
+                productId: l['product'] as String,
+                locationId: transfer['from'] as String,
+                condition: 'sellable',
+                milli: l['quantity'] as int,
+                costMinor: 0,
+                type: 'transfer_in',
+                reason: reason,
+                documentType: 'transfer',
+                documentId: id,
+              ),
+            ],
+          ]);
+          if (error != null) return error;
+          transfer['status'] = 'cancelled';
+          transfer['cancel_reason'] = reason;
+          return (status: 200, body: _presentTransfer(transfer));
+        });
+      }
+    }
+
+    // ---- counts ----
+    if (rest == 'counts/' && m == 'GET') {
+      return page([
+        for (final c in counts)
+          if (q['status'] == null || q['status'] == c['status'])
+            _presentCount(c, summary: true),
+      ]);
+    }
+    if (rest == 'counts/' && m == 'POST') {
+      final location = body['location'] as String;
+      final scope = '${body['scope'] ?? 'full'}';
+      final ids = scope == 'partial'
+          ? (body['products'] as List).cast<String>()
+          : [
+              for (final b in _buckets.values)
+                if (b.locationId == location &&
+                    b.condition == 'sellable' &&
+                    b.quantity > 0)
+                  b.productId,
+            ];
+      final count = {
+        'id': _id('ct'),
+        'number': ++_countNumber,
+        'status': 'open',
+        'scope': scope,
+        'location': location,
+        'decision_reason': '',
+        'lines': [
+          for (final id in ids)
+            {
+              'id': _id('cl'),
+              'product': id,
+              'baseline': _sellable(id, location),
+              'counted': null,
+            },
+        ],
+      };
+      counts.insert(0, count);
+      return server.jsonResponse(201, _presentCount(count));
+    }
+    final oneCount = RegExp(
+      r'^counts/([^/]+)/(lines/|submit/|approve/|cancel/)?$',
+    ).firstMatch(rest);
+    if (oneCount != null) {
+      final count = counts
+          .where((c) => c['id'] == oneCount.group(1))
+          .firstOrNull;
+      if (count == null) return server.errorResponse(404, 'not_found');
+      final action = oneCount.group(2);
+      final cLines = (count['lines'] as List).cast<Map<String, dynamic>>();
+      if (action == null && m == 'GET') {
+        return server.jsonResponse(200, _presentCount(count));
+      }
+      if (action == 'lines/' && m == 'PUT') {
+        if (count['status'] != 'open') {
+          return server.errorResponse(409, 'count_not_open');
+        }
+        for (final row
+            in (body['lines'] as List).cast<Map<String, dynamic>>()) {
+          final line = cLines
+              .where((l) => l['product'] == row['product'])
+              .firstOrNull;
+          if (line == null) {
+            cLines.add({
+              'id': _id('cl'),
+              'product': row['product'],
+              'baseline': _sellable(
+                row['product'] as String,
+                count['location'] as String,
+              ),
+              'counted': _milli(row['counted_quantity']),
+            });
+          } else {
+            line['counted'] = _milli(row['counted_quantity']);
+          }
+        }
+        return server.jsonResponse(200, _presentCount(count));
+      }
+      if (action == 'submit/' && m == 'POST') {
+        if (count['status'] != 'open') {
+          return server.errorResponse(409, 'count_not_open');
+        }
+        if (!cLines.any((l) => l['counted'] != null)) {
+          return server.errorResponse(409, 'count_empty');
+        }
+        count['status'] = 'submitted';
+        return server.jsonResponse(200, _presentCount(count));
+      }
+      if (action == 'cancel/' && m == 'POST') {
+        if (count['status'] != 'open' && count['status'] != 'submitted') {
+          return server.errorResponse(409, 'count_not_cancellable');
+        }
+        count['status'] = 'cancelled';
+        count['decision_reason'] = '${body['reason'] ?? ''}';
+        return server.jsonResponse(200, _presentCount(count));
+      }
+      if (action == 'approve/' && m == 'POST') {
+        if (!_can('count.approve')) {
+          return server.errorResponse(403, 'permission_denied');
+        }
+        return server.runCommand(request, body, () {
+          if (count['status'] != 'submitted') {
+            return server.errorResponse(409, 'count_not_submitted');
+          }
+          final deltas = [
+            for (final l in cLines)
+              if (l['counted'] != null && l['counted'] != l['baseline']) l,
+          ];
+          final reason = '${body['reason'] ?? ''}'.trim();
+          if (deltas.isNotEmpty && reason.isEmpty) {
+            return server.errorResponse(
+              400,
+              'validation_error',
+              fields: {
+                'reason': [
+                  {'code': 'required', 'message': 'Required'},
+                ],
+              },
+            );
+          }
+          final id = count['id'] as String;
+          final error = _postAll([
+            for (final l in deltas)
+              () {
+                final delta = (l['counted'] as int) - (l['baseline'] as int);
+                return _post(
+                  productId: l['product'] as String,
+                  locationId: count['location'] as String,
+                  condition: 'sellable',
+                  milli: delta,
+                  costMinor: delta > 0 ? 0 : null,
+                  type: delta > 0 ? 'adjustment_in' : 'adjustment_out',
+                  reason: 'Stock count: $reason',
+                  documentType: 'count',
+                  documentId: id,
+                );
+              },
+          ]);
+          if (error != null) return error;
+          count['status'] = 'approved';
+          count['decision_reason'] = reason;
+          countsApproved++;
+          return (status: 200, body: _presentCount(count));
+        });
+      }
+    }
+    return null;
   }
 }

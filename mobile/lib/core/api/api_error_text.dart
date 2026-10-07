@@ -48,6 +48,18 @@ String apiErrorText(AppLocalizations l, ApiException e) {
       return l.errorOrderNotCancellable;
     case 'order_has_no_lines':
       return l.errorOrderNoLines;
+    case 'transfer_not_receivable':
+      return l.errorTransferNotReceivable;
+    case 'transfer_not_cancellable':
+      return l.errorTransferNotCancellable;
+    case 'count_not_open':
+      return l.errorCountNotOpen;
+    case 'count_empty':
+      return l.errorCountEmpty;
+    case 'count_not_submitted':
+      return l.errorCountNotSubmitted;
+    case 'count_not_cancellable':
+      return l.errorCountNotCancellable;
     case 'validation_error':
       return l.errorValidation;
     case 'network':

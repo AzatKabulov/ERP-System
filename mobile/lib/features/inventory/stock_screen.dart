@@ -8,9 +8,14 @@ import '../../core/operations/operation_runner.dart';
 import '../../core/session/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
+import '../admin/admin_repository.dart';
 import '../catalog/catalog_repository.dart';
+import '../counts/counts_repository.dart';
+import '../counts/counts_screen.dart';
 import '../scanning/barcode_input.dart';
 import '../shared/async_section.dart';
+import '../transfers/transfers_repository.dart';
+import '../transfers/transfers_screen.dart';
 import '../workspace/unsaved_work.dart';
 import 'inventory_models.dart';
 import 'inventory_repository.dart';
@@ -131,6 +136,42 @@ class _StockScreenState extends State<StockScreen> {
     if (result == EntryResult.posted) _load(reset: true);
   }
 
+  void _transfers() => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => TransfersScreen(
+        session: session,
+        repository: TransfersRepository(
+          widget.repository.api,
+          widget.repository.businessId,
+        ),
+        admin: AdminRepository(
+          widget.repository.api,
+          widget.repository.businessId,
+        ),
+        catalog: widget.catalog,
+        runner: widget.runner,
+        monitor: widget.monitor,
+        unsaved: widget.unsaved,
+      ),
+    ),
+  );
+
+  void _counts() => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => CountsScreen(
+        session: session,
+        repository: CountsRepository(
+          widget.repository.api,
+          widget.repository.businessId,
+        ),
+        catalog: widget.catalog,
+        runner: widget.runner,
+        monitor: widget.monitor,
+        unsaved: widget.unsaved,
+      ),
+    ),
+  );
+
   void _history({ProductRef? product}) => Navigator.of(context).push<void>(
     MaterialPageRoute(
       builder: (_) => MovementsScreen(
@@ -199,6 +240,26 @@ class _StockScreenState extends State<StockScreen> {
                   onPressed: () => _enter(StockEntryMode.adjustment),
                   icon: const Icon(Icons.tune),
                   label: Text(l.adjustStock),
+                ),
+              ),
+            if (session.can('transfer.view'))
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('stock-transfers'),
+                  onPressed: _transfers,
+                  icon: const Icon(Icons.swap_horiz),
+                  label: Text(l.transfersTitle),
+                ),
+              ),
+            if (session.can('count.view'))
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('stock-counts'),
+                  onPressed: _counts,
+                  icon: const Icon(Icons.fact_check_outlined),
+                  label: Text(l.countsTitle),
                 ),
               ),
           ],
