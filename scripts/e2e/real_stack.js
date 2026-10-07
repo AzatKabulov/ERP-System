@@ -282,7 +282,9 @@ let PAGE = null;
   await pickFromDropdown(page, '^Откуда', 'Warehouse');
   await pickFromDropdown(page, '^Куда', 'Main store');
   await clickLabel(page, 'Добавить товар', { role: 'button', wait: 1500 });
-  await clickLabel(page, 'Тормозные колодки', { exact: false, role: 'button', wait: 1000 }); // the list's group node holds both products
+  await clickLabel(page, 'Тормозные колодки', { exact: false, role: 'button', wait: 1000 });
+  await page.mouse.move(700, 850); // an idle page draws no frame: until the pointer moves, the accessibility tree still shows the form without the new line
+  await page.waitForTimeout(500);
   await fill(page, '^Количество', '2');
   await page.screenshot({ path: path.join(OUT, 'e2e-13-transfer-form.png') });
   await clickLabel(page, 'Отправить', { role: 'button', wait: 2500 });
@@ -337,6 +339,7 @@ let PAGE = null;
   check('the warehouse now holds what was counted and the ledger agrees', stockAt(facts, 'Warehouse') === '2.000' && facts.counts.length === 1 && facts.counts[0].status === 'approved' && facts.reconcile === 'consistent', JSON.stringify(facts.balances) + JSON.stringify(facts.counts));
   await clickLabel(page, 'Назад', { role: 'button', wait: 1200 });
   await clickLabel(page, 'Назад', { role: 'button', wait: 1200 });
+  await nav(page, 'Продажи'); // the Turkmen check below looks at the sales page
 
   // ---- Turkmen, and it survives a reload ----------------------------------------------
   await clickLabel(page, 'Язык интерфейса', { exact: false, wait: 800 });
