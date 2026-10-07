@@ -16,6 +16,8 @@ api = [
     path("", include("apps.purchasing.urls")),
     path("", include("apps.sales.urls")),
     path("", include("apps.stockops.urls")),
+    path("", include("apps.attachments.urls")),
+    path("", include("apps.expenses.urls")),
     path("", include("apps.audit.urls")),
 ]
 

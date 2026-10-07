@@ -5,6 +5,7 @@ from apps.accounts.models import User
 from apps.audit import services as audit
 from apps.catalog import services as catalog_services
 from apps.common.errors import ApiError
+from apps.expenses import services as expense_services
 
 from .models import Business, Location, Membership, Role
 
@@ -28,6 +29,7 @@ def create_business(*, name: str, owner: User, location_name: str = "") -> Busin
     if location_name:
         Location.objects.create(business=business, name=location_name)
     catalog_services.create_default_units(business)
+    expense_services.create_default_categories(business)
     audit.record("business.created", actor=owner, business=business, obj=business)
     return business
 
