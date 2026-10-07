@@ -70,6 +70,12 @@ class FakeServer {
     'purchasing.manage',
     'purchasing.receive',
     'purchasing.cost.view',
+    'sales.view',
+    'sales.create',
+    'sales.discount',
+    'sales.cost.view',
+    'customer.view',
+    'customer.manage',
     'catalog.manage',
     'catalog.cost.view',
     'exchange_rate.view',
@@ -84,6 +90,9 @@ class FakeServer {
     'default_language': 'ru',
     'document_language': 'ru',
     'timezone': 'Asia/Ashgabat',
+    'address': '',
+    'phone': '',
+    'tax_number': '',
     'is_active': true,
   };
   final List<Map<String, dynamic>> locationsData = [
@@ -204,6 +213,10 @@ class FakeServer {
   });
 
   http.Response jsonResponse(int status, Object? body) => _json(status, body);
+
+  /// A product as the catalog API presents it (price_tmt at the current rate, and so on).
+  Map<String, dynamic> presentProduct(Map<String, dynamic> raw) =>
+      _present(raw);
 
   http.Response errorResponse(
     int status,

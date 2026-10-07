@@ -239,7 +239,7 @@ void main() {
         ]) {
           expect(key('nav-$page'), findsOneWidget, reason: page);
         }
-        await tapKey(tester, 'nav-sales');
+        await tapKey(tester, 'nav-expenses');
         await settle(tester, ms: 300);
         expect(find.text('Раздел появится позже'), findsOneWidget);
         expect(find.text('Масляный фильтр'), findsNothing);
@@ -551,6 +551,31 @@ void main() {
       await settle(tester);
       expect(key('business-saved'), findsOneWidget);
       expect(rig.server.businessData['name'], 'Ýüpek Ätiýaçlyk Bölekler');
+    });
+
+    testWidgets('the details printed on receipts are saved and shown again', (
+      tester,
+    ) async {
+      final rig = RealRig();
+      await openAdmin(tester, rig);
+      await tester.enterText(
+        key('business-address'),
+        'Aşgabat, Garaşsyzlyk 12',
+      );
+      await tester.enterText(key('business-phone'), '+993 12 34 56 78');
+      await tester.enterText(key('business-tax-number'), 'TIN-4455');
+      await tapKey(tester, 'business-save');
+      await settle(tester);
+      expect(key('business-saved'), findsOneWidget);
+      expect(rig.server.businessData['address'], 'Aşgabat, Garaşsyzlyk 12');
+      expect(rig.server.businessData['phone'], '+993 12 34 56 78');
+      expect(rig.server.businessData['tax_number'], 'TIN-4455');
+      // a fresh load of the page shows what the server keeps
+      await tapKey(tester, 'nav-inventory');
+      await settle(tester);
+      await tapKey(tester, 'nav-administration');
+      await settle(tester);
+      expect(find.text('Aşgabat, Garaşsyzlyk 12'), findsOneWidget);
     });
   });
 

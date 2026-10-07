@@ -2,6 +2,7 @@ import 'package:erp_system/core/config/app_config.dart';
 import 'package:erp_system/core/operations/pending_operation.dart';
 import 'package:erp_system/core/operations/pending_operation_store.dart';
 import 'package:erp_system/core/session/token_stores.dart';
+import 'package:erp_system/features/sales/document_actions.dart';
 import 'package:erp_system/features/scanning/barcode_scanner.dart';
 import 'package:erp_system/main.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/fake_server.dart';
+import 'fake_documents.dart';
 
 const demoBanner =
     'Демонстрационные данные · изменения действуют только в этой сессии';
@@ -20,9 +22,17 @@ Future<void> settle(WidgetTester tester, {int ms = 800}) async {
 }
 
 class RealRig {
-  RealRig({String? storedToken, List<PendingOperation>? pending, this.scanner})
-    : tokens = MemoryTokenStore(storedToken),
-      store = MemoryPendingOperationStore(pending);
+  RealRig({
+    String? storedToken,
+    List<PendingOperation>? pending,
+    this.scanner,
+    FakeDocuments? documents,
+  }) : documents = documents ?? FakeDocuments(),
+       tokens = MemoryTokenStore(storedToken),
+       store = MemoryPendingOperationStore(pending);
+
+  /// Records what would be printed or shared.
+  final FakeDocuments documents;
 
   /// Replaces the camera (null keeps the real camera scanner).
   final BarcodeScanner? scanner;
@@ -49,6 +59,7 @@ class RealRig {
         tokenStore: tokens,
         pendingStore: store,
         scanner: scanner ?? const CameraBarcodeScanner(),
+        documents: documents as DocumentActions,
       ),
     );
     await settle(tester);

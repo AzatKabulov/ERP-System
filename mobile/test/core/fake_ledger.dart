@@ -49,6 +49,15 @@ class FakeLedger {
   int deliveriesRecorded = 0;
   int stockWrites = 0;
 
+  // ---- sales -----------------------------------------------------------------
+  final List<Map<String, dynamic>> sales = []; // newest first
+  final List<Map<String, dynamic>> customers = [];
+  final List<Map<String, String>> documentRequests = [];
+  int _saleNumber = 0;
+
+  /// Sales the server actually recorded (to prove nothing is sold twice).
+  int salesRecorded = 0;
+
   String _id(String prefix) => '$prefix-${++_ids}';
 
   bool _can(String code) => server.permissions.contains(code);
@@ -223,6 +232,8 @@ class FakeLedger {
         409,
         'insufficient_stock',
         params: {
+          'product': productId,
+          'location': locationId,
           'available': _dec(bucket.quantity, 3),
           'requested': _dec(need, 3),
         },
@@ -686,6 +697,255 @@ class FakeLedger {
         });
       }
     }
+
+    // ---- customers ----
+    if (rest == 'customers/' && m == 'GET') {
+      final text = (q['q'] ?? '').toLowerCase();
+      return page([
+        for (final c in customers)
+          if (c['is_active'] == true &&
+              (text.isEmpty ||
+                  '${c['name']} ${c['phone']}'.toLowerCase().contains(text)))
+            c,
+      ]);
+    }
+    if (rest == 'customers/' && m == 'POST') {
+      final created = {
+        'id': _id('cu'),
+        'name': '${body['name']}'.trim(),
+        'phone': '${body['phone'] ?? ''}',
+        'notes': '',
+        'is_active': true,
+        'created_at': '2026-10-06T10:00:00Z',
+      };
+      customers.add(created);
+      return server.jsonResponse(201, created);
+    }
+
+    // ---- sales ----
+    if (rest == 'sales/' && m == 'GET') {
+      final text = (q['q'] ?? '').trim().toLowerCase();
+      return page([
+        for (final sale in sales)
+          if (text.isEmpty ||
+              _saleNumberText(sale).toLowerCase().contains(text) ||
+              '${sale['customer_name']}'.toLowerCase().contains(text))
+            _presentSale(sale, summary: true),
+      ]);
+    }
+    if (rest == 'sales/' && m == 'POST') {
+      return server.runCommand(request, body, () => _completeSale(body));
+    }
+    final oneSale = RegExp(r'^sales/([^/]+)/(document/)?$').firstMatch(rest);
+    if (oneSale != null) {
+      final sale = sales.where((s) => s['id'] == oneSale.group(1)).firstOrNull;
+      if (sale == null) return server.errorResponse(404, 'not_found');
+      if (oneSale.group(2) != null) {
+        documentRequests.add({
+          'id': '${sale['id']}',
+          'kind': q['kind'] ?? 'receipt',
+          'lang': q['lang'] ?? '',
+        });
+        return http.Response.bytes(
+          '%PDF-1.4 fake ${q['kind']} ${_saleNumberText(sale)}'.codeUnits,
+          200,
+          headers: {'content-type': 'application/pdf'},
+        );
+      }
+      return server.jsonResponse(200, _presentSale(sale));
+    }
     return null;
+  }
+
+  String _saleNumberText(Map<String, dynamic> sale) =>
+      'S-${(sale['number'] as int).toString().padLeft(6, '0')}';
+
+  Map<String, dynamic> _presentSale(
+    Map<String, dynamic> sale, {
+    bool summary = false,
+  }) {
+    final lines = (sale['lines'] as List).cast<Map<String, dynamic>>();
+    final payments = (sale['payments'] as List).cast<Map<String, dynamic>>();
+    final discount = lines.fold<int>(0, (a, l) => a + (l['discount'] as int));
+    final paid = payments.fold<int>(0, (a, p) => a + (p['amount'] as int));
+    final location = _location(sale['location'] as String);
+    final base = {
+      'id': sale['id'],
+      'number': sale['number'],
+      'created_at': sale['created_at'],
+      'location': {'id': location['id'], 'name': location['name']},
+      'cashier': {'id': 'u-1', 'name': 'Aman Ataýew'},
+      'customer_name': sale['customer_name'],
+      'total': _dec(sale['total'] as int, 2),
+      'discount_total': _dec(discount, 2),
+    };
+    if (summary) {
+      return {
+        ...base,
+        'line_count': lines.length,
+        'methods': ({for (final p in payments) p['method'] as String}.toList()
+          ..sort()),
+      };
+    }
+    final showCost = _can('sales.cost.view');
+    final cost = lines.fold<int>(0, (a, l) => a + (l['cost'] as int));
+    return {
+      ...base,
+      'customer': sale['customer_id'] == null
+          ? null
+          : {'id': sale['customer_id'], 'name': sale['customer_name']},
+      'customer_phone': sale['customer_phone'],
+      'paid': _dec(paid, 2),
+      'change_given': _dec(sale['change'] as int, 2),
+      'usd_rate': sale['usd_rate'],
+      'note': sale['note'],
+      'lines': [
+        for (final l in lines)
+          {
+            'id': l['id'],
+            'product': l['product'],
+            'sku': l['sku'],
+            'name': l['name'],
+            'unit_symbol': l['unit_symbol'],
+            'unit_decimals': l['unit_decimals'],
+            'quantity': _dec(l['quantity'] as int, 3),
+            'unit_price': _dec(l['unit_price'] as int, 2),
+            'gross': _dec(l['gross'] as int, 2),
+            'discount': _dec(l['discount'] as int, 2),
+            'line_total': _dec(l['line_total'] as int, 2),
+            'warranty_months': l['warranty_months'],
+            'warranty_terms': l['warranty_terms'],
+            if (showCost) 'cost_total': _dec(l['cost'] as int, 2),
+          },
+      ],
+      'payments': [
+        for (final p in payments)
+          {'method': p['method'], 'amount': _dec(p['amount'] as int, 2)},
+      ],
+      if (showCost) ...{
+        'cost_total': _dec(cost, 2),
+        'profit': _dec((sale['total'] as int) - cost, 2),
+      },
+    };
+  }
+
+  /// The sale command with the real server's rules: priced on the server, discounts within
+  /// the line, the cart's total checked, paid in full with change only from cash, stock
+  /// taken FIFO (nothing changes when any line is short), numbered last.
+  Object _completeSale(Map<String, dynamic> body) {
+    final lines = (body['lines'] as List).cast<Map<String, dynamic>>();
+    final priced = <Map<String, dynamic>>[];
+    for (final l in lines) {
+      final raw = server.productsData.firstWhere(
+        (p) => p['id'] == l['product'],
+      );
+      final shown = server.presentProduct(raw);
+      if (shown['price_tmt'] == null) {
+        return server.errorResponse(409, 'rate_missing');
+      }
+      final unit = _minor(shown['price_tmt']);
+      final quantity = _milli(l['quantity']);
+      final gross = (quantity * unit / 1000 + 0.0000001).round();
+      final discount = _minor(l['discount'] ?? '0');
+      if (discount > gross) {
+        return server.errorResponse(
+          400,
+          'validation_error',
+          fields: {
+            'lines.${priced.length}.discount': [
+              {'code': 'discount_too_large', 'message': 'too large'},
+            ],
+          },
+        );
+      }
+      final unitRef = server.unitsData.firstWhere(
+        (u) => u['id'] == raw['unit'],
+      );
+      priced.add({
+        'id': _id('sl'),
+        'product': raw['id'],
+        'sku': raw['sku'],
+        'name': raw['name'],
+        'unit_symbol': unitRef['symbol'],
+        'unit_decimals': unitRef['decimal_places'],
+        'quantity': quantity,
+        'unit_price': unit,
+        'gross': gross,
+        'discount': discount,
+        'line_total': gross - discount,
+        'cost': 0,
+        'warranty_months': raw['warranty_months'] ?? 0,
+        'warranty_terms': raw['warranty_terms'] ?? '',
+      });
+    }
+    final total = priced.fold<int>(0, (a, l) => a + (l['line_total'] as int));
+    if (body['expected_total'] != null &&
+        _minor(body['expected_total']) != total) {
+      return server.errorResponse(409, 'price_changed');
+    }
+    final payments = (body['payments'] as List? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map((p) => {'method': p['method'], 'amount': _minor(p['amount'])})
+        .toList();
+    final paid = payments.fold<int>(0, (a, p) => a + (p['amount'] as int));
+    final cash = payments
+        .where((p) => p['method'] == 'cash')
+        .fold<int>(0, (a, p) => a + (p['amount'] as int));
+    if (paid < total || paid - total > cash || (total == 0 && paid != 0)) {
+      return server.errorResponse(400, 'payment_mismatch');
+    }
+    final saleId = _id('sale');
+    final error = _postAll([
+      for (final l in priced)
+        () => _post(
+          productId: l['product'] as String,
+          locationId: body['location'] as String,
+          condition: 'sellable',
+          milli: -(l['quantity'] as int),
+          type: 'sale',
+          reason: '',
+          documentType: 'sale',
+          documentId: saleId,
+        ),
+    ]);
+    if (error != null) return error;
+    // exact FIFO cost per line, read back from the movements just written
+    for (final l in priced) {
+      l['cost'] = movements
+          .where(
+            (mv) =>
+                mv['document_id'] == saleId &&
+                (mv['product'] as Map)['id'] == l['product'],
+          )
+          .fold<int>(
+            0,
+            (a, mv) =>
+                a +
+                (_milli(mv['quantity']).abs() * _minor(mv['unit_cost']) / 1000)
+                    .round(),
+          );
+    }
+    final customerId = body['customer'] as String?;
+    final customer = customerId == null
+        ? null
+        : customers.firstWhere((c) => c['id'] == customerId);
+    final sale = {
+      'id': saleId,
+      'number': ++_saleNumber,
+      'created_at': '2026-10-06T14:00:00Z',
+      'location': body['location'],
+      'customer_id': customerId,
+      'customer_name': customer?['name'] ?? '',
+      'customer_phone': customer?['phone'] ?? '',
+      'total': total,
+      'change': paid - total,
+      'usd_rate': null,
+      'note': body['note'] ?? '',
+      'lines': priced,
+      'payments': payments,
+    };
+    salesRecorded++;
+    sales.insert(0, sale);
+    return (status: 201, body: _presentSale(sale));
   }
 }

@@ -11,6 +11,9 @@ class BusinessInfo {
     required this.defaultLanguage,
     required this.documentLanguage,
     required this.timezone,
+    this.address = '',
+    this.phone = '',
+    this.taxNumber = '',
   });
 
   final String id;
@@ -20,6 +23,11 @@ class BusinessInfo {
   final String documentLanguage;
   final String timezone;
 
+  /// Printed on receipts and invoices.
+  final String address;
+  final String phone;
+  final String taxNumber;
+
   factory BusinessInfo.fromJson(Map<String, dynamic> json) => BusinessInfo(
     id: json['id'] as String,
     name: json['name'] as String,
@@ -27,6 +35,9 @@ class BusinessInfo {
     defaultLanguage: json['default_language'] as String,
     documentLanguage: json['document_language'] as String,
     timezone: json['timezone'] as String,
+    address: json['address'] as String? ?? '',
+    phone: json['phone'] as String? ?? '',
+    taxNumber: json['tax_number'] as String? ?? '',
   );
 }
 
@@ -115,6 +126,9 @@ class AdminRepository {
     String? name,
     String? defaultLanguage,
     String? documentLanguage,
+    String? address,
+    String? phone,
+    String? taxNumber,
   }) async => BusinessInfo.fromJson(
     (await api.patch(
       '$_base/',
@@ -122,6 +136,9 @@ class AdminRepository {
         'name': ?name,
         'default_language': ?defaultLanguage,
         'document_language': ?documentLanguage,
+        'address': ?address,
+        'phone': ?phone,
+        'tax_number': ?taxNumber,
       },
     )).map,
   );
