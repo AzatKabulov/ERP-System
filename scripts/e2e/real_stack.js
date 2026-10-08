@@ -29,7 +29,7 @@ from apps.catalog.models import Product
 from apps.businesses.models import Business
 d = services.reconcile() + ps.reconcile() + ss.reconcile() + xs.reconcile() + ws.reconcile()
 sales = [{'id': str(x.pk), 'number': x.number, 'total': str(x.total), 'method': x.payment_method, 'prices': [str(l.unit_price) for l in x.lines.all()], 'cost': str(sum(l.cost_total for l in x.lines.all()))} for x in Sale.objects.order_by('created_at')]
-returns = [{'n': r.number, 'sale': r.sale.number, 'refund': str(r.refund_total), 'method': r.payment_method, 'claim': r.warranty_claim_id is not None, 'lines': [{'q': str(l.quantity), 'c': l.condition, 'refund': str(l.refund_amount)} for l in r.lines.all()]} for r in SaleReturn.objects.order_by('number')]
+returns = [{'n': r.number, 'sale': r.sale.number, 'refund': str(r.refund_total), 'method': r.payment_method, 'claim': r.warranty_claim_id is not None, 'cost': str(sum(l.cost_total for l in r.lines.all())), 'lines': [{'q': str(l.quantity), 'c': l.condition, 'refund': str(l.refund_amount)} for l in r.lines.all()]} for r in SaleReturn.objects.order_by('number')]
 supplier_returns = [{'n': r.number, 'credit': str(r.credit_total), 'lines': [{'q': str(l.quantity), 'c': l.condition} for l in r.lines.all()]} for r in SupplierReturn.objects.order_by('number')]
 orders = [{'n': o.number, 'status': o.status, 'lines': [str(l.quantity) for l in o.lines.all()]} for o in PurchaseOrder.objects.order_by('number')]
 expenses = [{'amount': str(e.amount), 'category': e.category.name, 'voided': e.voided_at is not None, 'file': e.attachment_id is not None, 'file_id': str(e.attachment_id), 'place': e.location.name} for e in Expense.objects.order_by('created_at')]
@@ -364,7 +364,9 @@ let PAGE = null;
     await browser.close();
     process.exit(0);
   }
-  await require('./phase78.js')(page, { L, dbFacts, stockAt, nav, pickFromDropdown, OUT, PASS, API, BACKEND });
+  const shared = { L, dbFacts, stockAt, nav, pickFromDropdown, OUT, PASS, API, BACKEND };
+  await require('./phase78.js')(page, shared);
+  await require('./phase9.js')(page, shared); // Phase 9: the dashboard, the reports and the activity history
   await nav(page, 'Продажи'); // the Turkmen check below looks at the sales page
 
   // ---- Turkmen, and it survives a reload ----------------------------------------------
@@ -403,7 +405,30 @@ let PAGE = null;
   check('warehouse sees no stock value', !/Стоимость/.test(stockText) && !/TMT/.test(stockText));
   check('the warehouse role has no Sales page and no Customers', !/Продажи/.test(await text(w.page)));
   await w.page.screenshot({ path: path.join(OUT, 'e2e-8-warehouse.png') });
+  await nav(w.page, 'Обзор');
+  await expectText(w.page, 'the warehouse dashboard shows what is below the minimum and the open orders', /Ниже минимума[\s\S]*Открытые заказы/);
+  const keeperDash = await text(w.page);
+  check('the warehouse dashboard has no money, no sales and no Reports page', !/TMT/.test(keeperDash) && !/Продажи сегодня/.test(keeperDash) && !/Отчёты/.test(keeperDash), keeperDash.slice(0, 200));
   problems.push(...w.problems);
+  await w.page.close();
+
+  // a manager sees the same reports as the owner; a seller sees sales only (no costs, no reports)
+  const mg = await L.newPage(browser);
+  await boot(mg.page);
+  await signIn(mg.page, 'manager');
+  await expectText(mg.page, 'the manager dashboard shows the gross profit', /Валовая прибыль за месяц[\s\S]*70,00\s?TMT/);
+  await nav(mg.page, 'Отчёты');
+  await expectText(mg.page, 'the manager sees the report summary with the result', /Результат[\s\S]*30,00\s?TMT/);
+  check('the manager also has the activity history tab', /История действий/.test(await text(mg.page)));
+  problems.push(...mg.problems);
+  await mg.page.close();
+  const sl = await L.newPage(browser);
+  await boot(sl.page);
+  await signIn(sl.page, 'sales');
+  await expectText(sl.page, 'the seller dashboard shows sales', /Продажи сегодня/);
+  const sellerDash = await text(sl.page);
+  check('the seller dashboard has no profit, no stock value, no expenses and no Reports page', !/Валовая прибыль/.test(sellerDash) && !/Стоимость склада/.test(sellerDash) && !/Расходы за месяц/.test(sellerDash) && !/Отчёты/.test(sellerDash), sellerDash.slice(0, 240));
+  problems.push(...sl.problems);
 
   console.log('--- run finished; browser problems seen:', problems.length);
   const expectedAbort = /ERR_FAILED/; // the deliberately dropped answers in the lost-response steps
