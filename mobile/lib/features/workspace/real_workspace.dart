@@ -16,6 +16,9 @@ import '../inventory/stock_screen.dart';
 import '../operations/pending_operations_banner.dart';
 import '../purchasing/purchasing_repository.dart';
 import '../purchasing/purchasing_screen.dart';
+import '../reports/dashboard_screen.dart';
+import '../reports/reports_repository.dart';
+import '../reports/reports_screen.dart';
 import '../sales/cart_controller.dart';
 import '../expenses/expenses_repository.dart';
 import '../expenses/expenses_screen.dart';
@@ -78,6 +81,7 @@ class _RealWorkspaceState extends State<RealWorkspace> {
     AppPage.sales => session.can('sales.create') || session.can('sales.view'),
     AppPage.expenses => session.can('expense.view'),
     AppPage.warranties => session.can('warranty.view'),
+    AppPage.reports => session.can('report.view'),
     _ => true,
   };
 
@@ -98,7 +102,12 @@ class _RealWorkspaceState extends State<RealWorkspace> {
     final membership = session.membership!;
     final page = _allowed(_page) ? _page : AppPage.dashboard;
     return switch (page) {
-      AppPage.dashboard => WelcomeScreen(session: session),
+      AppPage.dashboard => DashboardScreen(
+        key: ValueKey('dashboard-${membership.id}-$_reloadCounter'),
+        session: session,
+        repository: ReportsRepository(widget.api, membership.businessId),
+        onOpenReports: () => setState(() => _page = AppPage.reports),
+      ),
       AppPage.products => CatalogScreen(
         key: ValueKey('catalog-${membership.id}'),
         session: session,
@@ -150,6 +159,11 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         monitor: widget.monitor,
         unsaved: widget.unsaved,
       ),
+      AppPage.reports => ReportsScreen(
+        key: ValueKey('reports-${membership.id}-$_reloadCounter'),
+        session: session,
+        repository: ReportsRepository(widget.api, membership.businessId),
+      ),
       AppPage.administration => RealAdministrationScreen(
         key: ValueKey('admin-${membership.id}-$_reloadCounter'),
         session: session,
@@ -158,7 +172,6 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         languageCode: widget.languageCode,
         onLanguageChanged: widget.onLanguageChanged,
       ),
-      _ => const UnavailableScreen(),
     };
   }
 

@@ -221,31 +221,31 @@ void main() {
   });
 
   group('navigation and honesty about unfinished pages', () {
-    testWidgets(
-      'an owner sees every page; unfinished ones say so and show no demo data',
-      (tester) async {
-        final rig = RealRig();
-        await rig.launchSignedIn(tester);
-        for (final page in [
-          'dashboard',
-          'products',
-          'inventory',
-          'purchasing',
-          'sales',
-          'expenses',
-          'warranties',
-          'reports',
-          'administration',
-        ]) {
-          expect(key('nav-$page'), findsOneWidget, reason: page);
-        }
-        await tapKey(tester, 'nav-reports');
-        await settle(tester, ms: 300);
-        expect(find.text('Раздел появится позже'), findsOneWidget);
-        expect(find.text('Масляный фильтр'), findsNothing);
-        expect(find.text('Завершить демо-продажу'), findsNothing);
-      },
-    );
+    testWidgets('an owner sees every page, and none shows demonstration data', (
+      tester,
+    ) async {
+      final rig = RealRig();
+      await rig.launchSignedIn(tester);
+      for (final page in [
+        'dashboard',
+        'products',
+        'inventory',
+        'purchasing',
+        'sales',
+        'expenses',
+        'warranties',
+        'reports',
+        'administration',
+      ]) {
+        expect(key('nav-$page'), findsOneWidget, reason: page);
+      }
+      await tapKey(tester, 'nav-reports');
+      await settle(tester, ms: 300);
+      expect(key('reports-tab-summary'), findsOneWidget);
+      expect(find.text('Раздел появится позже'), findsNothing);
+      expect(find.text('Масляный фильтр'), findsNothing);
+      expect(find.text('Завершить демо-продажу'), findsNothing);
+    });
 
     testWidgets('pages the role may not use are not offered', (tester) async {
       final rig = RealRig();

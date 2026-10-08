@@ -1307,5 +1307,377 @@
   "importErrTooLong": "Слишком длинное значение.",
   "errorOverClaim": "Нельзя принять больше, чем продано и ещё не возвращено.",
   "errorInvalidFile": "Файл не читается. Сохраните его как CSV в кодировке UTF-8.",
-  "errorFileMissing": "Файл сейчас недоступен на сервере."
+  "errorFileMissing": "Файл сейчас недоступен на сервере.",
+  "reportsTitle": "Отчёты",
+  "reportPeriodToday": "Сегодня",
+  "reportPeriodWeek": "7 дней",
+  "reportPeriodMonth": "Этот месяц",
+  "reportPeriodLast": "Прошлый месяц",
+  "reportAllLocations": "Все точки",
+  "reportTabSummary": "Итоги",
+  "reportTabSales": "Продажи",
+  "reportTabStock": "Склад",
+  "reportTabPurchasing": "Закупки",
+  "reportTabReturns": "Возвраты",
+  "reportTabExpenses": "Расходы",
+  "reportTabActivity": "История действий",
+  "reportEmpty": "За этот период данных нет",
+  "reportExport": "Экспорт CSV",
+  "reportExported": "Файл отчёта готов.",
+  "reportRevenue": "Выручка",
+  "reportRefunds": "Возвраты денег",
+  "reportNetSales": "Чистые продажи",
+  "reportCostOfGoods": "Себестоимость проданного",
+  "reportGrossProfit": "Валовая прибыль",
+  "reportExpenses": "Расходы",
+  "reportResult": "Результат",
+  "reportResultNote": "Результат = валовая прибыль минус расходы. Это не бухгалтерская прибыль.",
+  "reportInventoryValue": "Стоимость склада",
+  "reportInventoryNote": "По себестоимости партий (FIFO)",
+  "reportLowStock": "Ниже минимума",
+  "reportOpenOrders": "Открытые заказы",
+  "reportSalesCount": "Продаж: {count}",
+  "@reportSalesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportReturnsCount": "Возвратов: {count}",
+  "@reportReturnsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportByPayment": "По способу оплаты",
+  "reportByDay": "По дням",
+  "reportTopProducts": "Лучшие товары",
+  "reportPaymentLine": "{method}: {count} · {total}",
+  "@reportPaymentLine": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "reportDayLine": "{date}: {count} · выручка {revenue} · возвраты {refunds}",
+  "@reportDayLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "revenue": {
+        "type": "String"
+      },
+      "refunds": {
+        "type": "String"
+      }
+    }
+  },
+  "reportProductLine": "{qty} · {revenue}",
+  "@reportProductLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "revenue": {
+        "type": "String"
+      }
+    }
+  },
+  "reportLowStockTitle": "Товары ниже минимума",
+  "reportLowStockEmpty": "Всё выше минимума",
+  "reportLowStockRow": "{location}: есть {onHand}, минимум {minimum}",
+  "@reportLowStockRow": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      },
+      "onHand": {
+        "type": "String"
+      },
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "reportValueTitle": "Стоимость склада по точкам",
+  "reportValueLine": "{location}: {total}",
+  "@reportValueLine": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "reportMovementsTitle": "Движения товара за период",
+  "reportMovementLine": "{type}: {count} · приход {incoming} · расход {outgoing}",
+  "@reportMovementLine": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "incoming": {
+        "type": "String"
+      },
+      "outgoing": {
+        "type": "String"
+      }
+    }
+  },
+  "reportOrdersCount": "Заказов создано: {count}",
+  "@reportOrdersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportDeliveriesCount": "Поставок принято: {count}",
+  "@reportDeliveriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportOrderedTotal": "Сумма заказов: {amount}",
+  "@reportOrderedTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReceivedValue": "Принято на сумму: {amount}",
+  "@reportReceivedValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportBySupplier": "По поставщикам",
+  "reportByStatus": "По состоянию заказов",
+  "reportSupplierLine": "{name}: заказов {orders}",
+  "@reportSupplierLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orders": {
+        "type": "int"
+      }
+    }
+  },
+  "reportSupplierLineValue": "{name}: заказов {orders}, принято на {amount}",
+  "@reportSupplierLineValue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orders": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportSupplierReturns": "Возвраты поставщикам: {count}",
+  "@reportSupplierReturns": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportSupplierReturnsCredit": "Возвраты поставщикам: {count}, зачёт {credit}",
+  "@reportSupplierReturnsCredit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "credit": {
+        "type": "String"
+      }
+    }
+  },
+  "reportRefundTotal": "Возвращено покупателям: {amount}",
+  "@reportRefundTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportByCondition": "По состоянию товара",
+  "reportByReason": "Причины возвратов",
+  "reportConditionLine": "{condition}: {qty} · {amount}",
+  "@reportConditionLine": {
+    "placeholders": {
+      "condition": {
+        "type": "String"
+      },
+      "qty": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReasonLine": "{reason}: {count} · {amount}",
+  "@reportReasonLine": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportByCategory": "По категориям",
+  "reportByLocation": "По точкам",
+  "reportTotalLine": "Всего: {amount}",
+  "@reportTotalLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportRowLine": "{name}: {amount} ({count})",
+  "@reportRowLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorRangeTooLong": "Период слишком длинный: выберите не больше года.",
+  "dashSalesToday": "Продажи сегодня ({count})",
+  "@dashSalesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashSalesMonth": "Продажи за месяц ({count})",
+  "@dashSalesMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashProfitMonth": "Валовая прибыль за месяц",
+  "dashExpensesMonth": "Расходы за месяц",
+  "dashInventoryValue": "Стоимость склада",
+  "dashLowStock": "Ниже минимума",
+  "dashReorder": "К заказу поставщику",
+  "dashOpenOrders": "Открытые заказы",
+  "dashOpenClaims": "Открытые гарантии",
+  "dashRecent": "Недавние действия",
+  "dashOpenReports": "Открыть отчёты",
+  "dashNothing": "Для вашей роли здесь пока нечего показать.",
+  "activitySearchHint": "Действие или объект",
+  "activityAllActions": "Все действия",
+  "activityEmpty": "Записей нет",
+  "activityLine": "{actor} · {time}",
+  "@activityLine": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activitySystem": "Система",
+  "activityLoadMore": "Показать ещё",
+  "movementSale": "Продажа",
+  "movementTransferOut": "Перемещение (отправлено)",
+  "movementTransferIn": "Перемещение (получено)",
+  "movementTransferLoss": "Перемещение (не дошло)",
+  "movementReturnIn": "Возврат от покупателя",
+  "movementInspectionOut": "Проверка возврата (списано)",
+  "movementInspectionIn": "Проверка возврата (оприходовано)",
+  "movementSupplierReturn": "Возврат поставщику",
+  "movementWarrantyOut": "Гарантийная замена (выдано)",
+  "movementWarrantyIn": "Гарантия: неисправный товар (принят)",
+  "auditAttachmentUploaded": "Загружен файл",
+  "auditAuthLogin": "Вход в систему",
+  "auditAuthPasswordChanged": "Смена пароля",
+  "auditAuthPasswordResetCompleted": "Пароль восстановлен",
+  "auditAuthPasswordResetRequested": "Запрошено восстановление пароля",
+  "auditBusinessCreated": "Создан бизнес",
+  "auditBusinessUpdated": "Изменены данные бизнеса",
+  "auditCatalogExported": "Экспорт каталога",
+  "auditCatalogImported": "Импорт товаров",
+  "auditCountApproved": "Инвентаризация утверждена",
+  "auditCountCancelled": "Инвентаризация отменена",
+  "auditCountStarted": "Начата инвентаризация",
+  "auditCountSubmitted": "Инвентаризация отправлена на утверждение",
+  "auditExchangeRateCreated": "Установлен курс",
+  "auditExpenseCreated": "Добавлен расход",
+  "auditExpenseUpdated": "Изменён расход",
+  "auditExpenseVoided": "Аннулирован расход",
+  "auditLocationCreated": "Добавлена точка",
+  "auditLocationUpdated": "Изменена точка",
+  "auditProductCreated": "Добавлен товар",
+  "auditPurchaseOrderCancelled": "Заказ поставщику отменён",
+  "auditPurchaseOrderCreated": "Создан заказ поставщику",
+  "auditPurchaseOrderReceived": "Принят товар по заказу",
+  "auditPurchaseOrderSubmitted": "Заказ поставщику оформлен",
+  "auditPurchaseOrderUpdated": "Изменён заказ поставщику",
+  "auditReorderUpdated": "Изменены минимум и цель",
+  "auditReportExported": "Экспорт отчёта",
+  "auditReturnInspected": "Решение по проверке возврата",
+  "auditSaleCompleted": "Оформлена продажа",
+  "auditSaleReturned": "Возврат от покупателя",
+  "auditStaffCodeSent": "Отправлен код сотруднику",
+  "auditStaffCreated": "Добавлен сотрудник",
+  "auditStaffUpdated": "Изменён сотрудник",
+  "auditStockAdjustmentPosted": "Корректировка склада",
+  "auditStockOpeningPosted": "Начальный остаток",
+  "auditSupplierCreated": "Добавлен поставщик",
+  "auditSupplierUpdated": "Изменён поставщик",
+  "auditSupplierReturnCreated": "Возврат поставщику",
+  "auditTransferCancelled": "Перемещение отменено",
+  "auditTransferDispatched": "Отправлено перемещение",
+  "auditTransferReceived": "Принято перемещение",
+  "auditWarrantyClosed": "Обращение по гарантии закрыто",
+  "auditWarrantyNoted": "Заметка по гарантии",
+  "auditWarrantyOpened": "Открыто обращение по гарантии"
 }

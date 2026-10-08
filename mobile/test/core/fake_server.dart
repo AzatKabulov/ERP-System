@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 
 import 'fake_ledger.dart';
 import 'fake_office.dart';
+import 'fake_reports.dart';
 
 /// A tiny in-memory stand-in for the real API, with the same idempotency rules:
 /// the same key replays the stored outcome, a different body with the same key is
@@ -22,6 +23,9 @@ class FakeServer {
 
   /// Expenses, receipt files, warranty claims and the CSV import (see fake_office.dart).
   late final FakeOffice office = FakeOffice(this);
+
+  /// Reports, the dashboard and the activity history (see fake_reports.dart).
+  late final FakeReports reports = FakeReports(this);
 
   // --- configuration -------------------------------------------------------
   String accessToken = 'access-1';
@@ -105,6 +109,9 @@ class FakeServer {
     'warranty.resolve',
     'catalog.import',
     'catalog.export',
+    'report.view',
+    'dashboard.view',
+    'audit.view',
   ];
   String role = 'owner';
 
@@ -394,6 +401,8 @@ class FakeServer {
       if (inventory != null) return inventory;
       final office = this.office.handle(request, base.group(1)!, body);
       if (office != null) return office;
+      final reports = this.reports.handle(request, base.group(1)!);
+      if (reports != null) return reports;
     }
 
     final status = RegExp(

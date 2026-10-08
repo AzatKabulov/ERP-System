@@ -753,5 +753,377 @@
   "importErrTooLong": "Gaty uzyn baha.",
   "errorOverClaim": "Satylandan we heniz yzyna gaýtarylmadyk mukdardan köp kabul edip bolmaýar.",
   "errorInvalidFile": "Faýl okalmady. Ony UTF-8 kodlamada CSV hökmünde ýazdyryň.",
-  "errorFileMissing": "Faýl häzir serverde elýeterli däl."
+  "errorFileMissing": "Faýl häzir serverde elýeterli däl.",
+  "reportsTitle": "Hasabatlar",
+  "reportPeriodToday": "Şu gün",
+  "reportPeriodWeek": "7 gün",
+  "reportPeriodMonth": "Şu aý",
+  "reportPeriodLast": "Geçen aý",
+  "reportAllLocations": "Ähli nokatlar",
+  "reportTabSummary": "Jemler",
+  "reportTabSales": "Satuwlar",
+  "reportTabStock": "Ammar",
+  "reportTabPurchasing": "Satyn alyşlar",
+  "reportTabReturns": "Gaýtarmalar",
+  "reportTabExpenses": "Çykdajylar",
+  "reportTabActivity": "Hereketler taryhy",
+  "reportEmpty": "Bu döwür üçin maglumat ýok",
+  "reportExport": "CSV eksport",
+  "reportExported": "Hasabat faýly taýýar.",
+  "reportRevenue": "Gelir",
+  "reportRefunds": "Gaýtarylan pul",
+  "reportNetSales": "Arassa satuw",
+  "reportCostOfGoods": "Satylanyň özüne düşýän bahasy",
+  "reportGrossProfit": "Umumy peýda",
+  "reportExpenses": "Çykdajylar",
+  "reportResult": "Netije",
+  "reportResultNote": "Netije = umumy peýda minus çykdajylar. Bu buhgalteriýa peýdasy däl.",
+  "reportInventoryValue": "Ammaryň bahasy",
+  "reportInventoryNote": "Partiýalaryň öz bahasy boýunça (FIFO)",
+  "reportLowStock": "Minimumdan aşakda",
+  "reportOpenOrders": "Açyk sargytlar",
+  "reportSalesCount": "Satuwlar: {count}",
+  "@reportSalesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportReturnsCount": "Gaýtarmalar: {count}",
+  "@reportReturnsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportByPayment": "Töleg usuly boýunça",
+  "reportByDay": "Günler boýunça",
+  "reportTopProducts": "Iň köp satylan harytlar",
+  "reportPaymentLine": "{method}: {count} · {total}",
+  "@reportPaymentLine": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "reportDayLine": "{date}: {count} · gelir {revenue} · gaýtarmalar {refunds}",
+  "@reportDayLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "revenue": {
+        "type": "String"
+      },
+      "refunds": {
+        "type": "String"
+      }
+    }
+  },
+  "reportProductLine": "{qty} · {revenue}",
+  "@reportProductLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "revenue": {
+        "type": "String"
+      }
+    }
+  },
+  "reportLowStockTitle": "Minimumdan aşak harytlar",
+  "reportLowStockEmpty": "Hemmesi minimumdan ýokary",
+  "reportLowStockRow": "{location}: bar {onHand}, minimum {minimum}",
+  "@reportLowStockRow": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      },
+      "onHand": {
+        "type": "String"
+      },
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "reportValueTitle": "Ammaryň nokatlar boýunça bahasy",
+  "reportValueLine": "{location}: {total}",
+  "@reportValueLine": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "reportMovementsTitle": "Döwür boýunça haryt hereketleri",
+  "reportMovementLine": "{type}: {count} · giriş {incoming} · çykyş {outgoing}",
+  "@reportMovementLine": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "incoming": {
+        "type": "String"
+      },
+      "outgoing": {
+        "type": "String"
+      }
+    }
+  },
+  "reportOrdersCount": "Döredilen sargytlar: {count}",
+  "@reportOrdersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportDeliveriesCount": "Kabul edilen eltip bermeler: {count}",
+  "@reportDeliveriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportOrderedTotal": "Sargytlaryň jemi: {amount}",
+  "@reportOrderedTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReceivedValue": "Kabul edilen jemi: {amount}",
+  "@reportReceivedValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportBySupplier": "Üpjünçiler boýunça",
+  "reportByStatus": "Sargytlaryň ýagdaýy boýunça",
+  "reportSupplierLine": "{name}: sargytlar {orders}",
+  "@reportSupplierLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orders": {
+        "type": "int"
+      }
+    }
+  },
+  "reportSupplierLineValue": "{name}: sargytlar {orders}, kabul edilen {amount}",
+  "@reportSupplierLineValue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orders": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportSupplierReturns": "Üpjünçilere gaýtarmalar: {count}",
+  "@reportSupplierReturns": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportSupplierReturnsCredit": "Üpjünçilere gaýtarmalar: {count}, hasaba alnan {credit}",
+  "@reportSupplierReturnsCredit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "credit": {
+        "type": "String"
+      }
+    }
+  },
+  "reportRefundTotal": "Alyjylara gaýtarylan: {amount}",
+  "@reportRefundTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportByCondition": "Harydyň ýagdaýy boýunça",
+  "reportByReason": "Gaýtarma sebäpleri",
+  "reportConditionLine": "{condition}: {qty} · {amount}",
+  "@reportConditionLine": {
+    "placeholders": {
+      "condition": {
+        "type": "String"
+      },
+      "qty": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReasonLine": "{reason}: {count} · {amount}",
+  "@reportReasonLine": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportByCategory": "Kategoriýalar boýunça",
+  "reportByLocation": "Nokatlar boýunça",
+  "reportTotalLine": "Jemi: {amount}",
+  "@reportTotalLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportRowLine": "{name}: {amount} ({count})",
+  "@reportRowLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorRangeTooLong": "Döwür gaty uzyn: bir ýyldan köp saýlamaň.",
+  "dashSalesToday": "Şu günki satuwlar ({count})",
+  "@dashSalesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashSalesMonth": "Aýlyk satuwlar ({count})",
+  "@dashSalesMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashProfitMonth": "Aýlyk umumy peýda",
+  "dashExpensesMonth": "Aýlyk çykdajylar",
+  "dashInventoryValue": "Ammaryň bahasy",
+  "dashLowStock": "Minimumdan aşakda",
+  "dashReorder": "Üpjünçä sargyt etmeli",
+  "dashOpenOrders": "Açyk sargytlar",
+  "dashOpenClaims": "Açyk kepillikler",
+  "dashRecent": "Soňky hereketler",
+  "dashOpenReports": "Hasabatlary açmak",
+  "dashNothing": "Roluňyz üçin bu ýerde heniz görkezer ýaly zat ýok.",
+  "activitySearchHint": "Hereket ýa-da obýekt",
+  "activityAllActions": "Ähli hereketler",
+  "activityEmpty": "Ýazgy ýok",
+  "activityLine": "{actor} · {time}",
+  "@activityLine": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activitySystem": "Ulgam",
+  "activityLoadMore": "Ýene görkez",
+  "movementSale": "Satuw",
+  "movementTransferOut": "Ýerini üýtgetme (iberildi)",
+  "movementTransferIn": "Ýerini üýtgetme (alyndy)",
+  "movementTransferLoss": "Ýerini üýtgetme (gelip ýetmedi)",
+  "movementReturnIn": "Alyjydan gaýtarma",
+  "movementInspectionOut": "Gaýtarma barlagy (hasapdan çykaryldy)",
+  "movementInspectionIn": "Gaýtarma barlagy (hasaba alyndy)",
+  "movementSupplierReturn": "Üpjünçä gaýtarma",
+  "movementWarrantyOut": "Kepillik çalşygy (berildi)",
+  "movementWarrantyIn": "Kepillik: näsaz haryt (kabul edildi)",
+  "auditAttachmentUploaded": "Faýl ýüklendi",
+  "auditAuthLogin": "Ulgama girdi",
+  "auditAuthPasswordChanged": "Parol çalşyldy",
+  "auditAuthPasswordResetCompleted": "Parol dikeldildi",
+  "auditAuthPasswordResetRequested": "Parolyň dikeldilmegi soraldy",
+  "auditBusinessCreated": "Iş döredildi",
+  "auditBusinessUpdated": "Işiň maglumatlary üýtgedildi",
+  "auditCatalogExported": "Katalog eksport edildi",
+  "auditCatalogImported": "Harytlar import edildi",
+  "auditCountApproved": "Inwentarizasiýa tassyklandy",
+  "auditCountCancelled": "Inwentarizasiýa ýatyryldy",
+  "auditCountStarted": "Inwentarizasiýa başlandy",
+  "auditCountSubmitted": "Inwentarizasiýa tassyklamaga iberildi",
+  "auditExchangeRateCreated": "Kurs bellenildi",
+  "auditExpenseCreated": "Çykdajy goşuldy",
+  "auditExpenseUpdated": "Çykdajy üýtgedildi",
+  "auditExpenseVoided": "Çykdajy ýatyryldy",
+  "auditLocationCreated": "Nokat goşuldy",
+  "auditLocationUpdated": "Nokat üýtgedildi",
+  "auditProductCreated": "Haryt goşuldy",
+  "auditPurchaseOrderCancelled": "Üpjünçä sargyt ýatyryldy",
+  "auditPurchaseOrderCreated": "Üpjünçä sargyt döredildi",
+  "auditPurchaseOrderReceived": "Sargyt boýunça haryt kabul edildi",
+  "auditPurchaseOrderSubmitted": "Üpjünçä sargyt resmileşdirildi",
+  "auditPurchaseOrderUpdated": "Üpjünçä sargyt üýtgedildi",
+  "auditReorderUpdated": "Minimum we maksat üýtgedildi",
+  "auditReportExported": "Hasabat eksport edildi",
+  "auditReturnInspected": "Gaýtarma barlagy boýunça karar",
+  "auditSaleCompleted": "Satuw resmileşdirildi",
+  "auditSaleReturned": "Alyjydan gaýtarma",
+  "auditStaffCodeSent": "Işgäre kod iberildi",
+  "auditStaffCreated": "Işgär goşuldy",
+  "auditStaffUpdated": "Işgär üýtgedildi",
+  "auditStockAdjustmentPosted": "Ammar düzedişi",
+  "auditStockOpeningPosted": "Başlangyç galyndy",
+  "auditSupplierCreated": "Üpjünçi goşuldy",
+  "auditSupplierUpdated": "Üpjünçi üýtgedildi",
+  "auditSupplierReturnCreated": "Üpjünçä gaýtarma",
+  "auditTransferCancelled": "Ýerini üýtgetme ýatyryldy",
+  "auditTransferDispatched": "Ýerini üýtgetme iberildi",
+  "auditTransferReceived": "Ýerini üýtgetme kabul edildi",
+  "auditWarrantyClosed": "Kepillik ýüz tutmasy ýapyldy",
+  "auditWarrantyNoted": "Kepillik barada bellik",
+  "auditWarrantyOpened": "Kepillik ýüz tutmasy açyldy"
 }
