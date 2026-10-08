@@ -94,6 +94,8 @@ String apiErrorText(AppLocalizations l, ApiException e) {
       return l.errorImportHeader;
     case 'import_invalid':
       return l.errorImportInvalid;
+    case 'range_too_long':
+      return l.errorRangeTooLong;
     case 'over_claim':
       return l.errorOverClaim;
     case 'invalid_file':
