@@ -28,4 +28,5 @@ urlpatterns = [
         views.ExpensesExportView.as_view(),
         name="report-expenses-export",
     ),
+    path(f"{B}dashboard/", views.DashboardView.as_view(), name="dashboard"),
 ]

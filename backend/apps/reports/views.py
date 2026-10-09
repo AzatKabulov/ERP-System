@@ -1,4 +1,4 @@
-"""Reports and CSV exports. Everything here only reads (GET); cost, profit and
+"""Reports, CSV exports and the dashboard. Everything here only reads (GET); cost, profit and
 inventory-value keys are left out of the answer for roles without the matching `*.cost.view`
 right, and every figure is limited to the caller's locations."""
 
@@ -121,3 +121,15 @@ class ReturnsExportView(ExportMixin, ReturnsReportView):
 
 class ExpensesExportView(ExportMixin, ExpensesReportView):
     slug, table = "expenses", staticmethod(exports.expenses_table)
+
+
+# ---- dashboard -----------------------------------------------------------------------------
+
+
+class DashboardView(BusinessAPIView):
+    """Only the sections the caller's role may see, for the caller's own locations."""
+
+    required_permission = "dashboard.view"
+
+    def get(self, request, business_id):
+        return Response(summary.dashboard(request))
