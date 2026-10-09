@@ -68,7 +68,7 @@ class ApiClient {
        _http = httpClient ?? http.Client(),
        _uuid = uuid;
 
-  final Uri _base;
+  Uri _base;
   final http.Client _http;
   final Uuid _uuid;
   final TokenStore tokens;
@@ -141,6 +141,20 @@ class ApiClient {
       if (e.kind == ApiErrorKind.unauthorized || e.isDefinitive) return false;
       rethrow;
     }
+  }
+
+  /// The server this client talks to, without a trailing slash.
+  String get baseUrl => _base.toString();
+
+  /// Points the client at another server. Tokens belong to the server that issued them, so they
+  /// are forgotten here (without telling either server).
+  Future<void> switchServer(String baseUrl) async {
+    final trimmed = baseUrl.endsWith('/')
+        ? baseUrl.substring(0, baseUrl.length - 1)
+        : baseUrl;
+    _base = Uri.parse(trimmed);
+    _access = null;
+    await tokens.clear();
   }
 
   /// Revokes the refresh token on the server (best effort) and forgets all tokens.

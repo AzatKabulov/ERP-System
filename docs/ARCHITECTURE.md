@@ -393,7 +393,15 @@ Keep development, staging, and production separate, with different secrets and d
 
 Deploy pinned dependencies through CI: run relevant tests, build the API image, review/apply database migrations, deploy, and check API/database readiness. Use backward-compatible API/schema changes while older mobile releases remain installed. Application rollback must account for migrations and must not rely on restoring over active production data.
 
-Android pilot builds need a stable application identifier and protected release signing keys; the current example identifier and debug signature are development defaults. Choose the pilot distribution channel before commercial release. Generate the iOS host, configure signing, and validate iPad/iPhone behavior during the Apple stage using macOS/Xcode or a suitable build service.
+### Test server and direct install (decided 2026-10-09)
+
+For the owner's own testing and the first pilot users there is a **one-machine stack** (`infra/`): PostgreSQL, the API, and **Caddy**, which gets a free HTTPS certificate for the domain, proxies `/api/`, serves the web build at `/`, the install page at `/install/` and the Android file at `/downloads/`. `scripts/deploy/bootstrap_vm.sh` sets it up on a fresh Ubuntu machine (a free Oracle Cloud VM, a cheap VPS, or a computer with a Cloudflare quick tunnel), `update.sh`, `backup.sh` and `restore.sh` run it, and `docs/DEPLOY_TESTING.md` is the guide. **Each paying client later gets the same stack on their own hosting**: isolation by separate server and database, and a data move is a backup and a restore.
+
+The app does not know its server at build time. **The address is a setting of the device** (sign-in screen: Server > Change; checked against the health page, https only in release builds, kept in preferences, tokens forgotten when it changes), so one APK serves every client; a build may carry a default (`API_BASE_URL`), and the web build always uses the address it was served from.
+
+**Android direct install** (D12): a release APK signed with a key the owner creates and keeps (`docs/ANDROID_RELEASE.md`), built by the `Release APK` workflow (tests first, signature checked, files kept 90 days, a draft release on a tag). The main manifest carries the `INTERNET` permission (it was only in the debug manifest before, which would have left a release build offline). The application id `app.erpsystem.mobile` is a placeholder to be decided before real clients; Google Play comes later with the same id and key (Play App Signing, upload the existing key).
+
+The remaining production work (separate secrets and database, backups with a restore drill, monitoring) is in PLAN.md phase 10. Choose the pilot distribution channel before commercial release. Generate the iOS host, configure signing, and validate iPad/iPhone behavior during the Apple stage using macOS/Xcode or a suitable build service.
 
 ### Backup and Recovery
 

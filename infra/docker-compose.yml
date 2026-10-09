@@ -1,6 +1,5 @@
-# Development / staging stack: PostgreSQL + one-shot migration + the API.
-# Put TLS in front of it (reverse proxy); the API port is bound to localhost only.
-# Usage and runbook: infra/README.md
+# Test / staging stack: PostgreSQL + one-shot migration + the API + Caddy (HTTPS, the web app and
+# the install page). Usage and runbook: infra/README.md and docs/DEPLOY_TESTING.md
 services:
   db:
     image: postgres:16
@@ -44,6 +43,28 @@ services:
       migrate:
         condition: service_completed_successfully
 
+  # HTTPS (a free certificate for the domain in SITE_ADDRESS), the web app, the install page and
+  # the Android app file. See infra/Caddyfile.
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv/site:ro
+      - ./public:/srv/public:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
 volumes:
   pgdata:
   privatefiles:
+  caddy_data:
+  caddy_config:

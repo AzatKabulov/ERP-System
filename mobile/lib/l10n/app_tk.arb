@@ -254,7 +254,7 @@
   "backToSignIn": "Girişe gaýtmak",
   "sessionExpiredNotice": "Sessiýa tamamlandy. Ýene giriň.",
   "serverUnreachableNotice": "Serwere ýetmek bolanok. Interneti barlaň we täzeden synanyşyň.",
-  "serverNotConfigured": "Bu programma wersiýasynda serweriň salgysy sazlanmady.",
+  "serverNotConfigured": "Serweriň salgysy görkezilmedi. Aşakdaky «Serweri görkezmek» düwmesine basyň.",
   "retry": "Täzeden synanyşmak",
   "checkingSession": "Sessiýa barlanýar…",
   "errorInvalidCredentials": "Login ýa-da parol nädogry.",
@@ -1138,5 +1138,27 @@
   "auditExpenseCategoryUpdated": "Çykdajy kategoriýasy üýtgedildi",
   "auditProductUpdated": "Haryt üýtgedildi",
   "auditProductArchived": "Haryt arhiwe goýuldy",
-  "auditProductRestored": "Haryt arhiwden yzyna alyndy"
+  "auditProductRestored": "Haryt arhiwden yzyna alyndy",
+  "serverLine": "Serwer: {url}",
+  "@serverLine": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "serverNone": "Serwer saýlanmady",
+  "serverChange": "Üýtgetmek",
+  "serverSet": "Serweri görkezmek",
+  "serverDialogTitle": "Serweriň salgysy",
+  "serverUrlLabel": "Serweriň salgysy",
+  "serverChangeNote": "Salgyny ulgamy düzen adam size habar berer. Salgy üýtgänden soň täzeden girmeli.",
+  "serverSave": "Barlamak we saklamak",
+  "serverChecking": "Barlanýar…",
+  "serverSaved": "Serweriň salgysy saklandy.",
+  "serverErrInvalid": "https://shop.example.com görnüşinde salgy ýazyň",
+  "serverErrInsecure": "https:// bilen başlaýan goralan salgy gerek",
+  "serverErrUnreachable": "Serwer jogap bermeýär. Salgyny we interneti barlaň.",
+  "serverErrNotErp": "Bu salgyda bu ulgamyň serweri ýok.",
+  "serverErrDatabase": "Serwer jogap berýär, ýöne maglumat bazasy häzir elýeterli däl."
 }

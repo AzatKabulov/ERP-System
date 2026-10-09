@@ -1,0 +1,11 @@
+# Secret scan: `gitleaks detect --source . --log-opts="--all" --redact` (the whole history).
+# One known false positive is listed so that a clean run means clean.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Not secrets"
+paths = [
+  # holds the name of a local preferences entry ("pending_operations"), not a credential
+  '''mobile/lib/core/operations/pending_operation_store\.dart''',
+]

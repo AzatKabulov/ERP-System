@@ -1,0 +1,16 @@
+# For testing from a computer with no public address and no domain: a Cloudflare "quick tunnel"
+# gives the stack a temporary https address (https://something.trycloudflare.com) and needs no
+# account. Use it together with the main file:
+#   docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d
+# and read the address with:   docker compose logs cloudflared | grep trycloudflare
+# The address changes every time the tunnel restarts: people enter the new one in the app
+# (sign-in screen > Server). Fine for trying things out, not for a shop's daily use.
+# In infra/.env use SITE_ADDRESS=:80, HTTP_PORT=8080, HTTPS_PORT=8443 and
+# DJANGO_ALLOWED_HOSTS=.trycloudflare.com,localhost so no port clashes with other programs.
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://caddy:80
+    depends_on:
+      - caddy

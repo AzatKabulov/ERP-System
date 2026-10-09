@@ -1,0 +1,56 @@
+# Caddy: HTTPS in front of the API, the web app and the install page, in one small container.
+#
+# SITE_ADDRESS (infra/.env) decides how it is reached:
+#   a domain name       -> Caddy gets and renews a free Let's Encrypt certificate by itself
+#                          (the domain must point at this machine; ports 80 and 443 must be open)
+#   :80 (the default)   -> plain http, for use behind a tunnel or on a local network
+#
+# What is where:
+#   /api/*       the Django API (the only thing that reaches the database)
+#   /install/    the page you send to testers (how to install the Android app)
+#   /downloads/  the Android app file (erp.apk) you put in infra/public/downloads/
+#   /            the web app (the web build, unzipped into infra/public/)
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+
+	# The largest thing the app sends is a receipt photo (5 MB, checked by the API with a clear
+	# message) in a multipart form; this only stops anything much bigger before it is read.
+	request_body {
+		max_size 12MB
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000 {
+			transport http {
+				response_header_timeout 90s
+			}
+		}
+	}
+
+	handle /install* {
+		root * /srv/site
+		file_server
+	}
+
+	handle /downloads/* {
+		root * /srv/public
+		header Cache-Control "no-cache"
+		@apk path *.apk
+		header @apk Content-Type application/vnd.android.package-archive
+		file_server
+	}
+
+	handle {
+		root * /srv/public
+		# the web app's own entry files must never be served stale after an update
+		@shell path / /index.html /flutter_bootstrap.js /flutter_service_worker.js /version.json /main.dart.js
+		header @shell Cache-Control "no-cache"
+		file_server
+	}
+}
