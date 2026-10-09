@@ -426,6 +426,24 @@ void main() {
       expect(key('dash-activity-a-100'), findsNothing);
     });
 
+    testWidgets(
+      'the action filter reads as itself, not together with the rows',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        final rig = RealRig();
+        await openReports(tester, rig, tab: 'activity');
+        expect(
+          tester.getSemantics(key('activity-action')).label,
+          'Все действия',
+        );
+        expect(
+          tester.getSemantics(key('activity-row-a-100')).label,
+          contains('Оформлена продажа'),
+        );
+        handle.dispose();
+      },
+    );
+
     testWidgets('the search field has its own name for a screen reader', (
       tester,
     ) async {

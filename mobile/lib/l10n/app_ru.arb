@@ -1679,5 +1679,18 @@
   "auditTransferReceived": "Принято перемещение",
   "auditWarrantyClosed": "Обращение по гарантии закрыто",
   "auditWarrantyNoted": "Заметка по гарантии",
-  "auditWarrantyOpened": "Открыто обращение по гарантии"
+  "auditWarrantyOpened": "Открыто обращение по гарантии",
+  "auditCategoryCreated": "Добавлена категория",
+  "auditCategoryUpdated": "Изменена категория",
+  "auditBrandCreated": "Добавлен бренд",
+  "auditBrandUpdated": "Изменён бренд",
+  "auditUnitCreated": "Добавлена единица измерения",
+  "auditUnitUpdated": "Изменена единица измерения",
+  "auditCustomerCreated": "Добавлен покупатель",
+  "auditCustomerUpdated": "Изменён покупатель",
+  "auditExpenseCategoryCreated": "Добавлена категория расходов",
+  "auditExpenseCategoryUpdated": "Изменена категория расходов",
+  "auditProductUpdated": "Изменён товар",
+  "auditProductArchived": "Товар убран в архив",
+  "auditProductRestored": "Товар возвращён из архива"
 }

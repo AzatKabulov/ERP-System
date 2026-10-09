@@ -17,15 +17,18 @@ const shown = (n) => new RegExp(money(n).replace(',', ',') + '\\s?TMT');
 module.exports = async function phase9(page, ctx) {
   const { L, dbFacts, nav, OUT } = ctx;
   const { check, expectText, expectNoText, clickLabel, fill, text } = L;
-  const pick = async (current, option) => { // a dropdown shows its current value as its label
-    await clickLabel(page, current, { exact: false, wait: 700 });
-    await clickLabel(page, option, { exact: false, wait: 900 });
+  // A dropdown shows its current value as its label (the exact words; the header's place selector
+  // reads "Местоположение Main store", so it is not confused with it). The options of its menu come
+  // last in the page, so the LAST exact match is the one meant.
+  const pick = async (current, option, opts = { exact: true, which: 'last' }) => {
+    await clickLabel(page, current, { ...opts, wait: 700 });
+    await clickLabel(page, option, { ...opts, wait: 900 });
   };
 
   // a plain expense (no photo), so the expenses figures are not zero: the first one was voided
   await nav(page, 'Расходы');
   await clickLabel(page, 'Добавить расход', { role: 'button', wait: 1800 });
-  await pick('^Категория', 'Транспорт');
+  await pick('^Категория', 'Транспорт', { exact: false, which: 'first' });
   await fill(page, 'Сумма, TMT', '40');
   await fill(page, 'Описание', 'Такси до склада');
   await clickLabel(page, 'Сохранить', { role: 'button', wait: 2500 });
@@ -52,7 +55,7 @@ module.exports = async function phase9(page, ctx) {
   await nav(page, 'Обзор');
   await expectText(page, 'the dashboard shows today\'s sales with their count', new RegExp('Продажи сегодня \\(2\\)[\\s\\S]*' + money(revenue) + '\\s?TMT'));
   await expectText(page, 'and the month, the gross profit net of returns, the expenses', new RegExp('Продажи за месяц \\(2\\)[\\s\\S]*Валовая прибыль за месяц[\\s\\S]*' + money(profit) + '\\s?TMT[\\s\\S]*Расходы за месяц[\\s\\S]*' + money(expenses) + '\\s?TMT'));
-  await expectText(page, 'the stock value at cost and what is below the minimum', new RegExp('Стоимость склада[\\s\\S]*' + money(stockValue) + '\\s?TMT[\\s\\S]*Ниже минимума[\\s\\S]*\\| 1'));
+  await expectText(page, 'the stock value at cost and what is below the minimum', new RegExp('Стоимость склада[\\s\\S]*' + money(stockValue) + '\\s?TMT[\\s\\S]*Ниже минимума\\s*1'));
   await expectText(page, 'recent activity is listed', /Недавние действия/);
   await page.screenshot({ path: path.join(OUT, 'e2e-22-dashboard.png') });
 
@@ -117,15 +120,29 @@ module.exports = async function phase9(page, ctx) {
   await expectText(page, 'expenses: the voided one is not counted, only the 40', /Всего: 40,00\s?TMT/);
   await expectText(page, 'expenses: by category', /Транспорт: 40,00\s?TMT \(1\)/);
 
-  // ---- activity history ------------------------------------------------------------------------------------
+  // ---- activity history ------------------------------------------------------------------------------
   await clickLabel(page, 'История действий', { role: 'checkbox', wait: 2500 }).catch(() => clickLabel(page, 'История действий', { exact: true, which: 'last', wait: 2500 }));
-  await expectText(page, 'activity: sales and returns are recorded with the person', /Оформлена продажа[\s\S]*Sample Owner/);
-  await expectText(page, 'activity: the other actions are named in Russian, not by their codes', /Возврат от покупателя/);
-  check('no raw action code is shown', !/\b(sale|expense|product|count|transfer)\.[a-z_]+\b/.test(await text(page)));
-  await pick('Все действия', 'Оформлена продажа');
-  await page.waitForTimeout(1500);
-  const filtered = await text(page);
-  check('narrowed to one action: sales are listed, returns are not', /Оформлена продажа/.test(filtered) && !/Возврат от покупателя/.test(filtered));
+  await expectText(page, 'activity: the newest actions come first, named in Russian (the report export, the expense)', /Экспорт отчёта[\s\S]*Sample Owner/);
+  await expectText(page, 'activity: the earlier actions are named in Russian too, not by their codes (the second page is loaded on request)', /Добавлен расход/);
+  check('no raw action code is shown', !/\b(sale|expense|product|count|transfer|report)\.[a-z_]+\b/.test(await text(page)));
+
+  // narrowed by a word typed in the search box (the action code is searchable)
+  await fill(page, 'Действие или объект', 'sale.returned');
+  await clickLabel(page, 'Действие или объект', { role: 'button', exact: true, which: 'last', wait: 2000 });
+  const returned = await text(page);
+  check('searched for returns: the returns are listed and no sale', /Возврат от покупателя/.test(returned) && !/Оформлена продажа/.test(returned), returned.slice(0, 300));
+  await fill(page, 'Действие или объект', 'x'); // the field is cleared by typing one letter and deleting it
+  await page.keyboard.press('Backspace');
+  await clickLabel(page, 'Действие или объект', { role: 'button', exact: true, which: 'last', wait: 2000 });
+
+  // narrowed to one action with the menu (a long list: scroll it like a person would)
+  await clickLabel(page, 'Все действия', { exact: true, which: 'last', wait: 900 });
+  await page.mouse.move(400, 450);
+  await page.mouse.wheel(0, 700);
+  await page.waitForTimeout(700);
+  await clickLabel(page, 'Оформлена продажа', { exact: true, which: 'last', wait: 1800 });
+  const sales = await text(page);
+  check('narrowed to sales with the menu: the sales are listed with the person and no return', /Оформлена продажа[\s\S]*Sample Owner/.test(sales) && !/Возврат от покупателя Sample|Возврат от покупателя\nSample/.test(sales), sales.slice(0, 300));
   await page.screenshot({ path: path.join(OUT, 'e2e-25-activity.png') });
 
   const after = dbFacts();
