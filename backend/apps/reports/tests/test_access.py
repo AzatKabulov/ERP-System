@@ -22,13 +22,13 @@ REPORTS = [
     "reports/expenses/",
 ]
 EXPORTS = [path + "export/" for path in REPORTS if "summary" not in path]
-READ_ONLY_ROUTES = [*REPORTS, *EXPORTS]
-# Only these two roles may read reports.
-OWNER_AND_MANAGER = [*REPORTS, *EXPORTS]
+READ_ONLY_ROUTES = [*REPORTS, *EXPORTS, "dashboard/", "audit/", "audit/actions/"]
+# The two roles that may read reports; sales and warehouse only get the dashboard.
+OWNER_AND_MANAGER = [*REPORTS, *EXPORTS, "audit/", "audit/actions/"]
 
 
 class RoleTests(ReportsCase):
-    def test_owner_and_manager_read_everything_sales_and_warehouse_nothing(self):
+    def test_owner_and_manager_read_everything_sales_and_warehouse_nothing_but_the_dashboard(self):
         expected = {
             Role.OWNER: 200,
             Role.MANAGER: 200,
@@ -42,9 +42,12 @@ class RoleTests(ReportsCase):
                     self.assertEqual(response.status_code, status, response.content)
                     if status == 403:
                         self.assertEqual(response.json()["error"]["code"], "permission_denied")
+        for role in expected:
+            with self.subTest(path="dashboard/", role=role):
+                self.assertEqual(self.get(self.w.api[role], "dashboard/").status_code, 200)
 
     def test_a_manager_sees_exactly_what_the_owner_sees(self):
-        for path in REPORTS:
+        for path in [*REPORTS, "dashboard/"]:
             with self.subTest(path=path):
                 with at("2026-10-03", "20:00"):
                     owner = self.get(self.owner, path, **WHOLE).json()
@@ -262,6 +265,9 @@ class QueryCountTests(ReportsCase):
         "reports/purchasing/": 7,
         "reports/returns/": 5,
         "reports/expenses/": 3,
+        "dashboard/": 15,
+        "audit/": 3,
+        "audit/actions/": 2,
     }
 
     def count(self, client, path):
