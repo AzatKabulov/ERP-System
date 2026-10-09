@@ -102,7 +102,16 @@ class CostLayer(UUIDModel):
                 condition=models.Q(unit_cost__gte=0), name="inventory_layer_cost_nonneg"
             ),
         ]
-        indexes = [models.Index(fields=["balance", "layer_no"])]
+        indexes = [
+            models.Index(fields=["balance", "layer_no"]),
+            # The inventory value only reads layers with something left; consumed layers pile
+            # up over the years, so the report reads a small index instead of the whole table.
+            models.Index(
+                fields=["business", "balance"],
+                condition=models.Q(quantity_remaining__gt=0),
+                name="inventory_layer_live",
+            ),
+        ]
 
 
 class StockMovement(UUIDModel, AppendOnlyModel):
@@ -132,5 +141,6 @@ class StockMovement(UUIDModel, AppendOnlyModel):
         indexes = [
             models.Index(fields=["business", "product", "-created_at"]),
             models.Index(fields=["business", "location", "-created_at"]),
+            models.Index(fields=["business", "-created_at"]),  # the stock report's period
             models.Index(fields=["document_type", "document_id"]),
         ]

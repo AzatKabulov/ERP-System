@@ -23,7 +23,11 @@ class AuditEvent(UUIDModel, AppendOnlyModel):
 
     class Meta:
         ordering = ["-created_at"]
-        indexes = [models.Index(fields=["business", "-created_at"])]
+        indexes = [
+            models.Index(fields=["business", "-created_at"]),
+            # the history filtered by action, and the list of action names
+            models.Index(fields=["business", "action", "-created_at"]),
+        ]
 
 
 class IdempotencyRecord(UUIDModel):
