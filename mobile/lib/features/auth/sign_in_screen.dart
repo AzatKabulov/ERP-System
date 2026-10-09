@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
+import '../../core/config/server_settings.dart';
 import '../../core/session/session_controller.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import 'password_reset_screen.dart';
@@ -15,21 +17,29 @@ class SignInScreen extends StatefulWidget {
     required this.session,
     required this.languageCode,
     required this.onLanguageChanged,
-    required this.configured,
+    required this.server,
   });
 
   final SessionController session;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
 
-  /// False when this build has no server address.
-  final bool configured;
+  /// Where this device signs in: the address is chosen here and kept on the device.
+  final ServerSettings server;
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  void _serverChanged() => setState(() => _error = null);
+
+  @override
+  void initState() {
+    super.initState();
+    widget.server.addListener(_serverChanged);
+  }
+
   final _username = TextEditingController();
   final _password = TextEditingController();
   bool _busy = false;
@@ -37,6 +47,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   void dispose() {
+    widget.server.removeListener(_serverChanged);
     _username.dispose();
     _password.dispose();
     super.dispose();
@@ -158,7 +169,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 child: Text(l.retry),
                               ),
                             ),
-                          if (!widget.configured)
+                          if (!widget.server.configured)
                             _Notice(
                               text: l.serverNotConfigured,
                               key: const ValueKey('notice-unconfigured'),
@@ -205,14 +216,14 @@ class _SignInScreenState extends State<SignInScreen> {
                             key: const ValueKey('sign-in-submit'),
                             label: _busy ? l.signingIn : l.signInAction,
                             icon: Icons.login,
-                            onPressed: _busy || !widget.configured
+                            onPressed: _busy || !widget.server.configured
                                 ? null
                                 : _submit,
                           ),
                           const SizedBox(height: 8),
                           TextButton(
                             key: const ValueKey('forgot-password'),
-                            onPressed: _busy || !widget.configured
+                            onPressed: _busy || !widget.server.configured
                                 ? null
                                 : () => Navigator.of(context).push(
                                     MaterialPageRoute<void>(
@@ -225,6 +236,10 @@ class _SignInScreenState extends State<SignInScreen> {
                                   ),
                             child: Text(l.forgotPassword),
                           ),
+                          if (!widget.server.fixed) ...[
+                            const Divider(height: 24),
+                            _ServerLine(server: widget.server, enabled: !_busy),
+                          ],
                         ],
                       ),
                     ),
@@ -260,4 +275,155 @@ class _Notice extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// "Server: https://..." with a way to change it. Shown on every sign-in: an installation is
+/// not tied to one shop's server.
+class _ServerLine extends StatelessWidget {
+  const _ServerLine({required this.server, required this.enabled});
+
+  final ServerSettings server;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          server.configured ? l.serverLine(server.url) : l.serverNone,
+          key: const ValueKey('server-line'),
+          style: const TextStyle(color: AppColors.muted, fontSize: 13),
+        ),
+        TextButton(
+          key: const ValueKey('server-change'),
+          onPressed: enabled
+              ? () => showDialog<void>(
+                  context: context,
+                  builder: (_) => ServerDialog(server: server),
+                )
+              : null,
+          child: Text(server.configured ? l.serverChange : l.serverSet),
+        ),
+      ],
+    );
+  }
+}
+
+/// Type the address of the server, check it, keep it.
+class ServerDialog extends StatefulWidget {
+  const ServerDialog({super.key, required this.server});
+  final ServerSettings server;
+
+  @override
+  State<ServerDialog> createState() => _ServerDialogState();
+}
+
+class _ServerDialogState extends State<ServerDialog> {
+  late final _url = TextEditingController(text: widget.server.url);
+  bool _busy = false;
+  ServerCheck? _problem;
+
+  @override
+  void dispose() {
+    _url.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _problem = null;
+    });
+    final result = await widget.server.save(_url.text);
+    if (!mounted) return;
+    if (result == ServerCheck.ok) {
+      Navigator.of(context).pop();
+      showFeedback(context, strings(context).serverSaved);
+    } else {
+      setState(() {
+        _busy = false;
+        _problem = result;
+      });
+    }
+  }
+
+  String _problemText(AppLocalizations l, ServerCheck problem) =>
+      switch (problem) {
+        ServerCheck.invalid => l.serverErrInvalid,
+        ServerCheck.insecure => l.serverErrInsecure,
+        ServerCheck.unreachable => l.serverErrUnreachable,
+        ServerCheck.notErp => l.serverErrNotErp,
+        ServerCheck.databaseDown => l.serverErrDatabase,
+        ServerCheck.ok => '',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    return AlertDialog(
+      title: Text(l.serverDialogTitle),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Semantics(
+                container: true,
+                explicitChildNodes: true,
+                child: TextField(
+                  key: const ValueKey('server-url'),
+                  controller: _url,
+                  enabled: !_busy,
+                  autofocus: true,
+                  keyboardType: TextInputType.url,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  onSubmitted: (_) => _save(),
+                  decoration: InputDecoration(
+                    labelText: l.serverUrlLabel,
+                    hintText: 'https://shop.example.com',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l.serverChangeNote,
+                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              ),
+              if (_problem != null) ...[
+                const SizedBox(height: 12),
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    _problemText(l, _problem!),
+                    key: const ValueKey('server-error'),
+                    style: const TextStyle(color: AppColors.danger),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          key: const ValueKey('server-cancel'),
+          onPressed: _busy ? null : () => Navigator.of(context).pop(),
+          child: Text(l.cancel),
+        ),
+        FilledButton(
+          key: const ValueKey('server-save'),
+          onPressed: _busy ? null : _save,
+          child: Text(_busy ? l.serverChecking : l.serverSave),
+        ),
+      ],
+    );
+  }
 }

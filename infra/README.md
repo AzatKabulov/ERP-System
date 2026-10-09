@@ -1,6 +1,14 @@
 # Deployment files (staging runbook)
 
-These files describe how to run the API; they do **not** deploy anything by themselves. Choosing the host (PLAN.md D2) and operating it are owner steps.
+These files describe how to run the whole system on one machine (database, API, HTTPS proxy, web app, install page); they do **not** deploy anything by themselves. Choosing the host (PLAN.md D2) and operating it are owner steps.
+
+**For a free test server that testers can use today, follow [docs/DEPLOY_TESTING.md](../docs/DEPLOY_TESTING.md)**: `scripts/deploy/bootstrap_vm.sh` does the steps below for you on a fresh Ubuntu machine (and `update.sh`, `backup.sh`, `restore.sh` look after it afterwards). What is here:
+
+- `docker-compose.yml`: PostgreSQL, the one-time migration, the API and **Caddy** (`Caddyfile`: automatic HTTPS for the domain in `SITE_ADDRESS`, the API under `/api/`, the install page under `/install/` from `site/`, the Android file under `/downloads/` and the web app at `/` from `public/`).
+- `docker-compose.tunnel.yml`: a free temporary https address (Cloudflare quick tunnel) for a computer with no domain.
+- `public/` (git-ignored): the web build and `downloads/erp.apk`, put there by `scripts/deploy/install_release.sh`.
+
+Manual way:
 
 ## Run the stack
 
@@ -12,7 +20,7 @@ docker compose up -d        # starts the database, applies migrations once, then
 curl http://127.0.0.1:8000/api/v1/health/     # {"status":"ok"}
 ```
 
-Put a reverse proxy with HTTPS in front of port 8000 and set `DJANGO_NUM_PROXIES=1` and `DJANGO_ALLOWED_HOSTS` to the real host name. Raise `DJANGO_HSTS_SECONDS` only after HTTPS works everywhere.
+Caddy is the HTTPS proxy: set `SITE_ADDRESS` and `DJANGO_ALLOWED_HOSTS` to the real host name in `.env` (and point the name at the machine; ports 80 and 443 must be open). `DJANGO_NUM_PROXIES=1` is already set. Raise `DJANGO_HSTS_SECONDS` only after HTTPS works everywhere.
 
 ## Uploaded files and backups
 

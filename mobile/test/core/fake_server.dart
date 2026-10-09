@@ -55,6 +55,15 @@ class FakeServer {
   >
   records = {};
   final List<String> log = [];
+
+  /// Every address (scheme, host, port) a request went to, in order.
+  final List<String> hosts = [];
+
+  /// Addresses that do not answer at all, that answer with something else, and that are this
+  /// system with its database down (to see how the app reports a wrong server address).
+  final Set<String> deadHosts = {};
+  final Set<String> strangerHosts = {};
+  final Set<String> databaseDownHosts = {};
   int refreshCalls = 0;
   final List<Map<String, String>> requestHeaders = [];
 
@@ -313,7 +322,21 @@ class FakeServer {
 
   Future<http.Response> _handle(http.Request request) async {
     if (!reachable) throw http.ClientException('offline');
+    final host = request.url.origin;
+    hosts.add(host);
+    if (deadHosts.contains(host)) {
+      throw http.ClientException('no route to host');
+    }
     final path = request.url.path;
+    if (path == '/api/v1/health/') {
+      if (strangerHosts.contains(host)) {
+        return http.Response('<html>Welcome to nginx</html>', 200);
+      }
+      if (databaseDownHosts.contains(host)) {
+        return _json(503, {'status': 'unavailable'});
+      }
+      return _json(200, {'status': 'ok'});
+    }
     requestHeaders.add(Map.of(request.headers));
     log.add('${request.method} $path');
     final multipart = (request.headers['content-type'] ?? '').startsWith(

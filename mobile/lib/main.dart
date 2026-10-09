@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api/api_client.dart';
 import 'core/config/app_config.dart';
+import 'core/config/server_settings.dart';
 import 'core/files/file_services.dart';
 import 'core/connectivity/connection_monitor.dart';
 import 'core/operations/pending_operation_store.dart';
@@ -82,14 +83,34 @@ class _ErpAppState extends State<ErpApp> {
   late final bool _demo = widget.store != null || widget.config.demoMode;
   late final DemoStore? _store = _demo ? (widget.store ?? DemoStore()) : null;
   late final ConnectionMonitor _monitor = ConnectionMonitor();
+  late final http.Client _httpClient = widget.httpClient ?? http.Client();
+
+  /// The server this build is made for. A web page can only ever talk to the server that
+  /// served it, so there that address is used and cannot be changed.
+  late final String _defaultServer = widget.config.apiBaseUrl.isNotEmpty
+      ? widget.config.apiBaseUrl
+      : (kIsWeb ? Uri.base.origin : '');
+
+  /// A phone or tablet remembers the address its user chose on the sign-in screen.
+  late final String _startServer = kIsWeb
+      ? _defaultServer
+      : ((widget.preferences.getString('server_url') ?? '').isNotEmpty
+            ? widget.preferences.getString('server_url')!
+            : _defaultServer);
+
   late final ApiClient _api = ApiClient(
-    baseUrl: widget.config.apiBaseUrl.isEmpty
-        ? 'http://invalid.local'
-        : widget.config.apiBaseUrl,
+    baseUrl: _startServer.isEmpty ? 'http://invalid.local' : _startServer,
     tokens: widget.tokenStore ?? SecureTokenStore(),
-    httpClient: widget.httpClient,
+    httpClient: _httpClient,
     monitor: _monitor,
     onSessionExpired: () => _session.handleSessionExpired(),
+  );
+  late final ServerSettings _server = ServerSettings(
+    preferences: widget.preferences,
+    api: _api,
+    httpClient: _httpClient,
+    defaultUrl: _defaultServer,
+    fixed: kIsWeb,
   );
   late final SessionController _session = SessionController(
     api: _api,
@@ -120,6 +141,7 @@ class _ErpAppState extends State<ErpApp> {
       if (widget.store == null) _store!.dispose();
     } else {
       _session.dispose();
+      _server.dispose();
       _api.close();
       _monitor.dispose();
     }
@@ -165,7 +187,7 @@ class _ErpAppState extends State<ErpApp> {
               languageCode: _locale.languageCode,
               onLanguageChanged: _changeLanguage,
               onServerLanguage: _applyLanguage,
-              configured: widget.config.hasApi,
+              server: _server,
               pendingStore: widget.pendingStore,
             ),
     );

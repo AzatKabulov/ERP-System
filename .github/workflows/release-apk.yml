@@ -1,0 +1,126 @@
+name: Release APK
+
+# Builds the Android app for direct install (a signed release APK) and the web app, from the
+# branch you pick. Run it by hand (Actions > Release APK > Run workflow) or push a tag like v0.1.0.
+# Needs four repository secrets, see docs/ANDROID_RELEASE.md:
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_url:
+        description: "Server address built into the app as its default (optional: the app can always be pointed at another server on its sign-in screen)"
+        required: false
+        default: ""
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # only to attach the files to a release when a tag was pushed
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    name: Signed release APK and web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The signing secrets must exist
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          for name in KEYSTORE STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::The repository secret for $name is missing. Follow docs/ANDROID_RELEASE.md (create the key, add the four secrets)."
+              exit 1
+            fi
+          done
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.jks"
+          {
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks"
+            echo "ANDROID_KEYSTORE_PASSWORD=$STORE_PASSWORD"
+            echo "ANDROID_KEY_ALIAS=$KEY_ALIAS"
+            echo "ANDROID_KEY_PASSWORD=$KEY_PASSWORD"
+            echo "ANDROID_REQUIRE_RELEASE_SIGNING=true"
+          } >> "$GITHUB_ENV"
+
+      - name: Read pinned Flutter version
+        id: flutter_version
+        run: echo "version=$(tr -d '\r\n' < .flutter-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ steps.flutter_version.outputs.version }}
+          cache: true
+
+      - name: Dependencies (frozen lockfile) and localizations
+        working-directory: mobile
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter gen-l10n
+
+      # The tests are the gate: a release is never built from a broken tree.
+      - name: Analyze and test
+        working-directory: mobile
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Build the signed release APK
+        working-directory: mobile
+        run: |
+          flutter build apk --release \
+            --build-number="${{ github.run_number }}" \
+            --dart-define=API_BASE_URL="${{ inputs.server_url }}"
+
+      - name: Check the signature (print the certificate fingerprint to keep a note of)
+        working-directory: mobile
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs build/app/outputs/flutter-apk/app-release.apk | tee "$RUNNER_TEMP/certs.txt"
+          grep -q "CN=Android Debug" "$RUNNER_TEMP/certs.txt" && { echo "::error::The APK is signed with the DEBUG key."; exit 1; } || true
+
+      - name: Build the web app (it talks to the server it is served from)
+        working-directory: mobile
+        run: flutter build web --release --no-web-resources-cdn
+
+      - name: Name the files
+        id: files
+        working-directory: mobile
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//')
+          NAME="erp-system-${VERSION}-build${{ github.run_number }}"
+          mkdir -p "$RUNNER_TEMP/out"
+          cp build/app/outputs/flutter-apk/app-release.apk "$RUNNER_TEMP/out/${NAME}.apk"
+          (cd build/web && zip -qr "$RUNNER_TEMP/out/${NAME}-web.zip" .)
+          (cd "$RUNNER_TEMP/out" && sha256sum * > "${NAME}.sha256")
+          echo "dir=$RUNNER_TEMP/out" >> "$GITHUB_OUTPUT"
+          ls -la "$RUNNER_TEMP/out"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: erp-system-release
+          path: ${{ steps.files.outputs.dir }}
+          retention-days: 90
+
+      - name: Attach the files to a release (when a tag was pushed)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" ${{ steps.files.outputs.dir }}/* \
+            --title "${{ github.ref_name }}" --notes "Signed APK for direct install and the web build. Install steps: docs/ANDROID_RELEASE.md" --draft

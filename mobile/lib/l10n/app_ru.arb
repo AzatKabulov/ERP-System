@@ -254,7 +254,7 @@
   "backToSignIn": "Назад ко входу",
   "sessionExpiredNotice": "Сеанс завершён. Войдите снова.",
   "serverUnreachableNotice": "Не удаётся связаться с сервером. Проверьте интернет и попробуйте снова.",
-  "serverNotConfigured": "Адрес сервера не настроен в этой сборке приложения.",
+  "serverNotConfigured": "Адрес сервера не указан. Нажмите «Указать сервер» ниже.",
   "retry": "Повторить",
   "checkingSession": "Проверяем сеанс…",
   "errorInvalidCredentials": "Неверный логин или пароль.",
@@ -1692,5 +1692,27 @@
   "auditExpenseCategoryUpdated": "Изменена категория расходов",
   "auditProductUpdated": "Изменён товар",
   "auditProductArchived": "Товар убран в архив",
-  "auditProductRestored": "Товар возвращён из архива"
+  "auditProductRestored": "Товар возвращён из архива",
+  "serverLine": "Сервер: {url}",
+  "@serverLine": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "serverNone": "Сервер не выбран",
+  "serverChange": "Изменить",
+  "serverSet": "Указать сервер",
+  "serverDialogTitle": "Адрес сервера",
+  "serverUrlLabel": "Адрес сервера",
+  "serverChangeNote": "Адрес вам сообщит тот, кто настраивал систему. После смены адреса нужно войти заново.",
+  "serverSave": "Проверить и сохранить",
+  "serverChecking": "Проверяем…",
+  "serverSaved": "Адрес сервера сохранён.",
+  "serverErrInvalid": "Введите адрес вида https://shop.example.com",
+  "serverErrInsecure": "Нужен защищённый адрес, начинающийся с https://",
+  "serverErrUnreachable": "Сервер не отвечает. Проверьте адрес и интернет.",
+  "serverErrNotErp": "По этому адресу нет сервера этой системы.",
+  "serverErrDatabase": "Сервер отвечает, но его база данных сейчас недоступна."
 }

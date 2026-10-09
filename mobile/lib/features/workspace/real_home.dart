@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/config/server_settings.dart';
 import '../../core/connectivity/connection_monitor.dart';
 import '../../core/operations/operation_runner.dart';
 import '../../core/operations/pending_operation_store.dart';
@@ -27,7 +28,7 @@ class RealHome extends StatefulWidget {
     required this.languageCode,
     required this.onLanguageChanged,
     required this.onServerLanguage,
-    required this.configured,
+    required this.server,
     this.pendingStore,
   });
 
@@ -40,7 +41,7 @@ class RealHome extends StatefulWidget {
 
   /// The server's saved language for the user who just signed in.
   final ValueChanged<String> onServerLanguage;
-  final bool configured;
+  final ServerSettings server;
 
   /// Injectable for tests; defaults to a `SharedPreferences`-backed store.
   final PendingOperationStore? pendingStore;
@@ -129,7 +130,7 @@ class _RealHomeState extends State<RealHome> with WidgetsBindingObserver {
           session: session,
           languageCode: widget.languageCode,
           onLanguageChanged: widget.onLanguageChanged,
-          configured: widget.configured,
+          server: widget.server,
         );
       case SessionStatus.signedIn:
         final runner = _runner;

@@ -11,6 +11,10 @@ Inventory ERP for shops in Turkmenistan, with Russian and Turkmen interfaces. An
 
 The visible demonstration banner is intentional. In the demonstration build operations change sample data in memory and reset when the application restarts; warranty cards are examples, and transfers complete immediately (the production transfer workflow will track dispatch, transit and receipt). A dedicated receipt printer and backups are not connected. Photos and files go to a private folder on the server (`PRIVATE_FILES_ROOT`) that must be backed up with the database. Payments are only recorded as cash or card (no gateway, no change, no tax, no invoices). This is an ERP, not a cash register. TMT is the business currency (decided); selling prices may be stated in TMT or USD. Turkmen terminology needs fluent-speaker review.
 
+## Running a test server and installing the app
+
+A free one-machine test server (HTTPS, web app, install page for testers, nightly backups) and a signed Android app for direct install: see [docs/DEPLOY_TESTING.md](docs/DEPLOY_TESTING.md) and [docs/ANDROID_RELEASE.md](docs/ANDROID_RELEASE.md). The app is told its server on the sign-in screen, so one installation file serves every client's own server. Short guides for testers: [Russian](docs/USER_GUIDE_ru.md), [Turkmen (draft)](docs/USER_GUIDE_tk.md).
+
 ## Interface preview
 
 ![Russian dashboard](docs/images/dashboard-ru.png)

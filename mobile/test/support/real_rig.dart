@@ -30,6 +30,7 @@ class RealRig {
     FakeDocuments? documents,
     FakeFilePicking? picking,
     FakeFileSharing? sharing,
+    this.config = const AppConfig(apiBaseUrl: 'https://api.example.test'),
   }) : documents = documents ?? FakeDocuments(),
        picking = picking ?? FakeFilePicking(),
        sharing = sharing ?? FakeFileSharing(),
@@ -42,6 +43,9 @@ class RealRig {
   /// The camera, gallery and file dialog, and where files are shared to.
   final FakeFilePicking picking;
   final FakeFileSharing sharing;
+
+  /// What this build was made for (the server address it starts with).
+  final AppConfig config;
 
   /// Replaces the camera (null keeps the real camera scanner).
   final BarcodeScanner? scanner;
@@ -63,7 +67,7 @@ class RealRig {
     await tester.pumpWidget(
       ErpApp(
         preferences: prefs,
-        config: const AppConfig(apiBaseUrl: 'https://api.example.test'),
+        config: config,
         httpClient: server.client,
         tokenStore: tokens,
         pendingStore: store,
