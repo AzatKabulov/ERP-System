@@ -72,7 +72,10 @@ class PurchaseOrder(UUIDModel, TimestampedModel):
         constraints = [
             models.UniqueConstraint(fields=["business", "number"], name="purchasing_po_number"),
         ]
-        indexes = [models.Index(fields=["business", "status"])]
+        indexes = [
+            models.Index(fields=["business", "status"]),
+            models.Index(fields=["business", "-created_at"]),  # orders made in a period
+        ]
 
     def __str__(self) -> str:
         return f"PO-{self.number:04d}"
@@ -125,6 +128,7 @@ class Delivery(UUIDModel, AppendOnlyModel):
         constraints = [
             models.UniqueConstraint(fields=["order", "number"], name="purchasing_delivery_number")
         ]
+        indexes = [models.Index(fields=["business", "-received_at"])]  # deliveries in a period
 
 
 class DeliveryLine(UUIDModel, AppendOnlyModel):
