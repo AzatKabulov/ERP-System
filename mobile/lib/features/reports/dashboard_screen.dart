@@ -81,7 +81,10 @@ class _Figures extends StatelessWidget {
   Widget _card(String key, String label, String value, IconData icon) =>
       KeyedSubtree(
         key: ValueKey(key),
-        child: MetricCard(label: label, value: value, icon: icon),
+        child: Semantics(
+          container: true,
+          child: MetricCard(label: label, value: value, icon: icon),
+        ),
       );
 
   @override
@@ -186,26 +189,29 @@ class _Figures extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 for (final e in recent)
-                  Padding(
-                    key: ValueKey('dash-activity-${e.id}'),
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(auditActionLabel(l, e.action)),
-                        Text(
-                          l.activityLine(
-                            e.actorName.isEmpty
-                                ? l.activitySystem
-                                : e.actorName,
-                            formatStamp(e.createdAt),
+                  Semantics(
+                    container: true,
+                    child: Padding(
+                      key: ValueKey('dash-activity-${e.id}'),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(auditActionLabel(l, e.action)),
+                          Text(
+                            l.activityLine(
+                              e.actorName.isEmpty
+                                  ? l.activitySystem
+                                  : e.actorName,
+                              formatStamp(e.createdAt),
+                            ),
+                            style: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 13,
+                            ),
                           ),
-                          style: const TextStyle(
-                            color: AppColors.muted,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
               ],

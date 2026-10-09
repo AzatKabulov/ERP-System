@@ -281,14 +281,18 @@ class _Block extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
-    child: SurfaceCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          ...children,
-        ],
+    // One node per card: a screen reader reads a card at a time, not the whole page at once.
+    child: Semantics(
+      container: true,
+      child: SurfaceCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            ...children,
+          ],
+        ),
       ),
     ),
   );
@@ -297,7 +301,10 @@ class _Block extends StatelessWidget {
 Widget _metric(String key, String label, String value, IconData icon) =>
     KeyedSubtree(
       key: ValueKey(key),
-      child: MetricCard(label: label, value: value, icon: icon),
+      child: Semantics(
+        container: true,
+        child: MetricCard(label: label, value: value, icon: icon),
+      ),
     );
 
 class _SummaryView extends StatelessWidget {

@@ -101,7 +101,7 @@ Record who performed important actions, when they occurred, and the affected rec
 
 Provide sales, stock movement, low-stock, inventory value, purchasing, returns, and expense reports. Allow date and location filtering where applicable.
 
-Define inventory valuation and product costing consistently before reporting gross margins. Label estimated values clearly. Sales revenue, gross profit, expenses, and net profit must not be presented as interchangeable measures.
+Define inventory valuation and product costing consistently before reporting gross margins. Label estimated values clearly. Sales revenue, gross profit, expenses, and net profit must not be presented as interchangeable measures. Reports use the FIFO cost decided on 2026-10-06 (exact, so nothing is an estimate), count refunds by the day of the return, and show the result as gross profit minus expenses, an operating result and not an accounting profit. Owners and managers see the reports and the activity history; other roles see only the dashboard figures their role allows (a seller: sales without costs; a keeper: stock and orders without money).
 
 ### Backup and Recovery
 

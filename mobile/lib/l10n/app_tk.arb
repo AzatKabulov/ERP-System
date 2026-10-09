@@ -1125,5 +1125,18 @@
   "auditTransferReceived": "Ýerini üýtgetme kabul edildi",
   "auditWarrantyClosed": "Kepillik ýüz tutmasy ýapyldy",
   "auditWarrantyNoted": "Kepillik barada bellik",
-  "auditWarrantyOpened": "Kepillik ýüz tutmasy açyldy"
+  "auditWarrantyOpened": "Kepillik ýüz tutmasy açyldy",
+  "auditCategoryCreated": "Kategoriýa goşuldy",
+  "auditCategoryUpdated": "Kategoriýa üýtgedildi",
+  "auditBrandCreated": "Brend goşuldy",
+  "auditBrandUpdated": "Brend üýtgedildi",
+  "auditUnitCreated": "Ölçeg birligi goşuldy",
+  "auditUnitUpdated": "Ölçeg birligi üýtgedildi",
+  "auditCustomerCreated": "Alyjy goşuldy",
+  "auditCustomerUpdated": "Alyjy üýtgedildi",
+  "auditExpenseCategoryCreated": "Çykdajy kategoriýasy goşuldy",
+  "auditExpenseCategoryUpdated": "Çykdajy kategoriýasy üýtgedildi",
+  "auditProductUpdated": "Haryt üýtgedildi",
+  "auditProductArchived": "Haryt arhiwe goýuldy",
+  "auditProductRestored": "Haryt arhiwden yzyna alyndy"
 }

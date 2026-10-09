@@ -103,28 +103,32 @@ class _ActivityViewState extends State<ActivityView> {
           children: [
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 300),
-              child: DropdownButton<String?>(
-                key: const ValueKey('activity-action'),
-                isExpanded: true,
-                value: _actions.contains(_action) ? _action : null,
-                items: [
-                  DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text(l.activityAllActions),
-                  ),
-                  for (final a in _actions)
+              child: Semantics(
+                container: true,
+                explicitChildNodes: true,
+                child: DropdownButton<String?>(
+                  key: const ValueKey('activity-action'),
+                  isExpanded: true,
+                  value: _actions.contains(_action) ? _action : null,
+                  items: [
                     DropdownMenuItem<String?>(
-                      value: a,
-                      child: Text(
-                        auditActionLabel(l, a),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      value: null,
+                      child: Text(l.activityAllActions),
                     ),
-                ],
-                onChanged: (v) {
-                  _action = v;
-                  _load(reset: true);
-                },
+                    for (final a in _actions)
+                      DropdownMenuItem<String?>(
+                        value: a,
+                        child: Text(
+                          auditActionLabel(l, a),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: (v) {
+                    _action = v;
+                    _load(reset: true);
+                  },
+                ),
               ),
             ),
             ConstrainedBox(
@@ -161,27 +165,30 @@ class _ActivityViewState extends State<ActivityView> {
         for (final e in _items)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: SurfaceCard(
-              padding: 12,
-              child: Column(
-                key: ValueKey('activity-row-${e.id}'),
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    auditActionLabel(l, e.action),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    l.activityLine(
-                      e.actorName.isEmpty ? l.activitySystem : e.actorName,
-                      formatStamp(e.createdAt),
+            child: Semantics(
+              container: true,
+              child: SurfaceCard(
+                padding: 12,
+                child: Column(
+                  key: ValueKey('activity-row-${e.id}'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      auditActionLabel(l, e.action),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 13,
+                    Text(
+                      l.activityLine(
+                        e.actorName.isEmpty ? l.activitySystem : e.actorName,
+                        formatStamp(e.createdAt),
+                      ),
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

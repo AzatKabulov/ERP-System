@@ -91,10 +91,10 @@ let PAGE = null;
   await expectText(page, 'owner is signed in (welcome page)', /Здравствуйте, Sample/);
   await page.screenshot({ path: path.join(OUT, 'e2e-1-welcome.png') });
 
-  // Development aid: E2E_RESUME=phase78 skips Phases 1-6 and continues from a database snapshot taken with
-  // E2E_STOP_AFTER=phase6 (see README.md); the owner still signs in above.
+  // Development aid: E2E_RESUME=phase78 (or phase9) skips the earlier phases and continues from a database snapshot taken with
+  // E2E_STOP_AFTER=phase6 (or phase78) (see README.md); the owner still signs in above.
   let facts;
-  if (process.env.E2E_RESUME !== 'phase78') {
+  if (!process.env.E2E_RESUME) {
   // ---- exchange rate ---------------------------------------------------------------
   await nav(page, 'Настройки');
   await expectText(page, 'administration shows the exchange-rate section', /Курс ещё не задан/);
@@ -365,7 +365,12 @@ let PAGE = null;
     process.exit(0);
   }
   const shared = { L, dbFacts, stockAt, nav, pickFromDropdown, OUT, PASS, API, BACKEND };
-  await require('./phase78.js')(page, shared);
+  if (process.env.E2E_RESUME !== 'phase9') await require('./phase78.js')(page, shared);
+  if (process.env.E2E_STOP_AFTER === 'phase78') { // development aid: stop here to take a database snapshot
+    console.log('stopping after Phases 7-8 (E2E_STOP_AFTER)');
+    await browser.close();
+    process.exit(0);
+  }
   await require('./phase9.js')(page, shared); // Phase 9: the dashboard, the reports and the activity history
   await nav(page, 'Продажи'); // the Turkmen check below looks at the sales page
 
