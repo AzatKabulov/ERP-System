@@ -67,6 +67,11 @@ MATRIX: dict[str, frozenset[str]] = {
     "warranty.open": frozenset({Role.OWNER, Role.MANAGER, Role.SALES}),
     "warranty.override": frozenset({Role.OWNER, Role.MANAGER}),
     "warranty.resolve": frozenset({Role.OWNER, Role.MANAGER}),
+    # reports, the dashboard and the activity history (Phase 9). Cost, profit and inventory
+    # value inside them stay behind sales.cost.view, stock.cost.view and purchasing.cost.view.
+    "report.view": frozenset({Role.OWNER, Role.MANAGER}),
+    "dashboard.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
+    "audit.view": frozenset({Role.OWNER, Role.MANAGER}),
     # every member may look up the outcome of their own operations
     "operations.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
 }

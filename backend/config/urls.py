@@ -20,6 +20,7 @@ api = [
     path("", include("apps.expenses.urls")),
     path("", include("apps.warranties.urls")),
     path("", include("apps.audit.urls")),
+    path("", include("apps.reports.urls")),
 ]
 
 urlpatterns = [

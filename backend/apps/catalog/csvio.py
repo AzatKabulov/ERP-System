@@ -58,12 +58,24 @@ def protect(value: str) -> str:
     return "'" + value if value.startswith(_FORMULA_STARTS) else value
 
 
-def export_csv(products, *, include_cost: bool) -> bytes:
-    columns = [c for c in EXPORT_COLUMNS if include_cost or c != "default_cost"]
+def table_csv(columns: list[str], rows, *, text_columns=()) -> bytes:
+    """Any table in the same file format as the product export: UTF-8 with a byte-order mark,
+    `;` between cells, CRLF between rows. Cells of `text_columns` (names, reasons, anything a
+    person typed) are protected against formula injection; numbers and dates are written as
+    they are."""
     buffer = io.StringIO()
-    buffer.write("﻿")
+    buffer.write("\ufeff")
     writer = csv.writer(buffer, delimiter=";", lineterminator="\r\n")
     writer.writerow(columns)
+    text = {i for i, name in enumerate(columns) if name in text_columns}
+    for row in rows:
+        writer.writerow([protect(str(c)) if i in text else c for i, c in enumerate(row)])
+    return buffer.getvalue().encode("utf-8")
+
+
+def export_csv(products, *, include_cost: bool) -> bytes:
+    columns = [c for c in EXPORT_COLUMNS if include_cost or c != "default_cost"]
+    rows = []
     for product in products:
         cost = product.default_purchase_cost
         values = {
@@ -80,8 +92,8 @@ def export_csv(products, *, include_cost: bool) -> bytes:
             "return_days": "" if product.return_days is None else str(product.return_days),
             "barcodes": BARCODE_SEPARATOR.join(b.code for b in product.barcodes.all()),
         }
-        writer.writerow([protect(values[c]) if c in TEXT_COLUMNS else values[c] for c in columns])
-    return buffer.getvalue().encode("utf-8")
+        rows.append([values[c] for c in columns])
+    return table_csv(columns, rows, text_columns=TEXT_COLUMNS)
 
 
 # ---- import: reading the file ---------------------------------------------------------------
