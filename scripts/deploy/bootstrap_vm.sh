@@ -13,6 +13,9 @@
 #   DOMAIN=shop.example.com  BUSINESS_NAME="Test shop"  OWNER_USERNAME=owner  OWNER_EMAIL=me@example.com
 # A computer with no domain and no open ports can use a free temporary address instead:
 #   MODE=tunnel bash scripts/deploy/bootstrap_vm.sh
+# Or run everything on your own computer, for you and anyone on the same Wi-Fi (plain http on
+# port 8080; needs Docker already installed, e.g. Docker Desktop; nothing is opened or scheduled):
+#   MODE=local bash scripts/deploy/bootstrap_vm.sh
 set -euo pipefail
 # shellcheck source=common.sh
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
@@ -22,6 +25,7 @@ MODE="${MODE:-domain}"
 
 say "1/7  Docker"
 if ! command -v docker >/dev/null 2>&1; then
+  [ "$MODE" != "local" ] || fail "Docker is not installed. Install Docker Desktop (docker.com), start it, and run this again."
   note "Installing Docker (the official script from get.docker.com)..."
   curl -fsSL https://get.docker.com | sudo sh
   sudo usermod -aG docker "$USER" || true
@@ -33,12 +37,15 @@ say "2/7  Questions"
 if [ "$MODE" = "tunnel" ]; then
   DOMAIN=""
   note "Tunnel mode: a temporary https address will be created for you (no domain needed)."
+elif [ "$MODE" = "local" ]; then
+  DOMAIN=""
+  note "Local mode: the server runs on this computer only (plain http on port 8080, reachable from the same Wi-Fi)."
 else
   if [ -z "${DOMAIN:-}" ]; then
     read -r -p "   Domain name that points at this server (e.g. myshop.duckdns.org; empty = plain http by IP): " DOMAIN
   fi
 fi
-if [ "$MODE" != "tunnel" ] && [ -z "$DOMAIN" ] && [ "${ALLOW_PLAIN_HTTP:-}" != "yes" ]; then
+if [ "$MODE" = "domain" ] && [ -z "$DOMAIN" ] && [ "${ALLOW_PLAIN_HTTP:-}" != "yes" ]; then
   printf '\n   Without a domain name the server speaks plain http: passwords and sales travel unencrypted.\n'
   printf '   Fine on a private network; not for anything real. Better: get a free name at duckdns.org, or use MODE=tunnel.\n'
   read -r -p "   Type 'yes' to go on with plain http anyway: " answer
@@ -53,7 +60,9 @@ if [ -z "$OWNER_EMAIL" ]; then read -r -p "   Owner's email: " OWNER_EMAIL; fi
 LOCATION_NAME="${LOCATION_NAME:-Main store}"
 
 say "3/7  Firewall (ports 80 and 443)"
-if command -v ufw >/dev/null 2>&1 && sudo ufw status | grep -q "Status: active"; then
+if [ "$MODE" = "local" ]; then
+  note "Local mode: nothing is opened. If a firewall asks about Docker or port 8080, allow it for private networks only."
+elif command -v ufw >/dev/null 2>&1 && sudo ufw status | grep -q "Status: active"; then
   sudo ufw allow 80/tcp >/dev/null && sudo ufw allow 443/tcp >/dev/null && sudo ufw allow 443/udp >/dev/null
   note "ufw: ports opened."
 elif command -v iptables >/dev/null 2>&1 && sudo iptables -S INPUT 2>/dev/null | grep -q "REJECT"; then
@@ -75,6 +84,8 @@ else
   if [ "$MODE" = "tunnel" ]; then
     SITE=":80"; HOSTS=".trycloudflare.com,localhost"; HTTP_PORT=8080; HTTPS_PORT=8443
     COMPOSE_LINE="COMPOSE_FILE=docker-compose.yml:docker-compose.tunnel.yml"
+  elif [ "$MODE" = "local" ]; then
+    SITE=":80"; HOSTS="*"; HTTP_PORT=8080; HTTPS_PORT=8443; COMPOSE_LINE=""
   elif [ -n "$DOMAIN" ]; then
     SITE="$DOMAIN"; HOSTS="$DOMAIN"; HTTP_PORT=80; HTTPS_PORT=443; COMPOSE_LINE=""
   else
@@ -122,7 +133,9 @@ fi
 
 say "7/7  Nightly backup"
 CRON_LINE="30 3 * * * $ROOT/scripts/deploy/backup.sh >> $INFRA/backups/backup.log 2>&1"
-if crontab -l 2>/dev/null | grep -qF "scripts/deploy/backup.sh"; then
+if [ "$MODE" = "local" ]; then
+  note "Local mode: no scheduled backup. Run  bash scripts/deploy/backup.sh  when you want one."
+elif crontab -l 2>/dev/null | grep -qF "scripts/deploy/backup.sh"; then
   note "A backup job is already in your crontab."
 else
   (crontab -l 2>/dev/null || true; echo "$CRON_LINE") | crontab -
@@ -139,6 +152,12 @@ case "$SITE_ADDRESS" in
         [ -z "$ADDRESS" ] || break
         sleep 2
       done
+    fi
+    if [ "$MODE" = "local" ]; then
+      LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
+      [ -n "$LAN_IP" ] || LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || true)"
+      ADDRESS="http://localhost:$(env_value HTTP_PORT)"
+      [ -z "$LAN_IP" ] || note "From a tablet or phone on the same Wi-Fi:  http://$LAN_IP:$(env_value HTTP_PORT)   (the debug app only; see docs/DEPLOY_TESTING.md)"
     fi
     [ -n "$ADDRESS" ] || ADDRESS="http://<this machine's address>:$(env_value HTTP_PORT)"
     ;;

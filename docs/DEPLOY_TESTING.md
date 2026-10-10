@@ -20,11 +20,33 @@ Each **client later gets their own copy of the same thing** on their own hosting
 
 | Option | Cost | Good for | Catch |
 | --- | --- | --- | --- |
+| **0. Your own computer, nothing to sign up for** | 0 | Trying it yourself, a demo, finding mistakes before testers do; a tablet on the same Wi-Fi | Only you and people on the same Wi-Fi can reach it, and only while the computer is on. Needs Docker. |
 | **A. A free Oracle Cloud virtual machine** (Always Free) | 0 | Testers for weeks: always on, keeps its data | Signing up asks for a bank card to verify who you are (you are not charged while you stay inside the free resources). Oracle reduced the free ARM allowance in 2026 to about 2 CPUs and 12 GB, which is still plenty. Not tried from Turkmenistan: test it first. |
 | **B. Your own computer, always on, with a free tunnel** | 0 | A first look today, no card, no domain | The computer must stay on and online, and the temporary address changes whenever the tunnel restarts (testers type the new address). |
 | **C. Any cheap VPS** (a few dollars a month) | small | The same script works unchanged | This is also how a client's own server will be set up later. |
 
 Not recommended for this system: the free plans of Render, Koyeb, Fly.io or Railway. They put the service to sleep when idle, delete the free database after weeks, or have no persistent disk for the receipt photos (checked 2026-10-09; the sources disagree and change often, so look at their pricing pages yourself before relying on them).
+
+## Option 0: everything on your own computer
+
+You need Docker (Docker Desktop on Mac or Windows; on Windows also WSL with Ubuntu, and run the commands inside it). No account, no card, no domain.
+
+1. Start Docker Desktop. Then get the code and run the installer in its local mode:
+
+   ```bash
+   git clone https://github.com/AzatKabulov/ERP-System.git && cd ERP-System
+   MODE=local bash scripts/deploy/bootstrap_vm.sh
+   ```
+
+   It asks for a business name, an owner login and an email, builds and starts everything (about 5 minutes the first time), creates the owner and prints `http://localhost:8080` and **the owner password once**. Nothing is opened to the internet and no backup job is scheduled.
+2. Put the apps in. On GitHub open Actions > the latest green **CI** run of the branch > **Artifacts** > `erp-system-test-build` (kept 14 days; no signing key needed). Unzip it, then:
+
+   ```bash
+   bash scripts/deploy/install_release.sh erp-system-test-web.zip erp-system-test-debug.apk
+   ```
+3. Open `http://localhost:8080/` in the computer's browser: that is the whole system. Sign in as the owner.
+4. A tablet or phone on **the same Wi-Fi**: the script prints the computer's address (for example `http://192.168.1.20:8080`). On the tablet open `<that address>/install/`, install the app, then on the sign-in screen tap Server > Change and type that address. This test app (the "debug" build) accepts a plain `http` address; the signed release app refuses `http` on purpose, so use Option B (a tunnel gives an `https` address) if you want to test the release app.
+5. Good to know: the computer must stay on and awake; a firewall may ask whether Docker may accept connections (allow it for private networks only); browsers allow the camera only on `https` or on `localhost`, so barcode scanning in the web app works on the computer itself but a tablet should use the installed app; each CI run signs its test app with a new throwaway key, so installing a newer test build means removing the older one first (the data lives on the server, not on the tablet). Stop with `cd infra && docker compose stop`, start again with `docker compose up -d`, and erase everything to start over with `docker compose down -v`.
 
 ## Option A, step by step (Oracle Cloud Always Free)
 
@@ -60,7 +82,7 @@ At the end it prints a temporary `https://....trycloudflare.com` address. The tu
 
 ## The Android app (direct install) and the web app
 
-The files are built by GitHub for you, signed with **your own key** (one-time setup: `docs/ANDROID_RELEASE.md`). Then:
+Two kinds of files come from GitHub. For **your own trying** (Option 0, or a quick look at any server) every green CI run offers an unsigned test build (`erp-system-test-build`, see Option 0). For **testers** use the signed release below, made with **your own key** (one-time setup: `docs/ANDROID_RELEASE.md`). Then:
 
 1. GitHub > Actions > **Release APK** > Run workflow. Wait about 15 minutes. Download the `erp-system-release` files from the finished run (a `.apk`, a `-web.zip` and a checksum list).
 2. Copy the two files to the server and install them:
