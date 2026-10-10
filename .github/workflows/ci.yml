@@ -80,6 +80,25 @@ jobs:
         working-directory: mobile
         run: flutter build apk --release
 
+      # A test build anyone with access to the repository can download, with no signing key needed:
+      # the web app (it talks to the server it is served from) and a DEBUG Android app (it may
+      # talk to a plain-http server on the local network; each CI run signs it with a new
+      # throwaway key, so a newer one is installed after removing the older one). For real
+      # testers use the Release APK workflow instead (docs/ANDROID_RELEASE.md).
+      - name: Package the test build
+        working-directory: mobile
+        run: |
+          mkdir -p "$RUNNER_TEMP/test-build"
+          cp build/app/outputs/flutter-apk/app-debug.apk "$RUNNER_TEMP/test-build/erp-system-test-debug.apk"
+          (cd build/web && zip -qr "$RUNNER_TEMP/test-build/erp-system-test-web.zip" .)
+          ls -la "$RUNNER_TEMP/test-build"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: erp-system-test-build
+          path: ${{ runner.temp }}/test-build
+          retention-days: 14
+
   backend:
     name: Backend (lint, checks, tests on PostgreSQL)
     runs-on: ubuntu-latest
