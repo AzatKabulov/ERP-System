@@ -29,26 +29,25 @@ Not recommended for this system: the free plans of Render, Koyeb, Fly.io or Rail
 
 ## Option 0: everything on your own computer
 
-You need Docker (Docker Desktop on Mac or Windows; on Windows also WSL with Ubuntu, and run the commands inside it). No account, no card, no domain.
+You need Docker (Docker Desktop on Mac or Windows; on Windows also WSL with Ubuntu: install Ubuntu from the Microsoft Store and switch it on in Docker Desktop > Settings > Resources > WSL integration, then run the commands in the Ubuntu app). No account, no card, no domain.
 
-1. Start Docker Desktop. Then get the code and run the installer in its local mode:
+**The short way (three steps):**
 
-   ```bash
-   git clone https://github.com/AzatKabulov/ERP-System.git && cd ERP-System
-   MODE=local bash scripts/deploy/bootstrap_vm.sh
-   ```
-
-   (A private repository asks for a GitHub username and a token instead of a password. Without git: on GitHub open the branch, Code > Download ZIP, unzip it, and run the second command from that folder. On Windows keep the folder inside WSL, for example `cp -r /mnt/c/Users/<you>/Downloads/ERP-System-... ~/ERP-System`, not on the C: drive, which Docker reads slowly.)
-
-   It asks for a business name, an owner login and an email, builds and starts everything (about 5 minutes the first time), creates the owner and prints `http://localhost:8080` and **the owner password once**. Nothing is opened to the internet and no backup job is scheduled.
-2. Put the apps in. On GitHub open Actions > the latest green **CI** run of the branch > **Artifacts** > `erp-system-test-build` (kept 14 days; no signing key needed). Unzip it (two files inside), then (needs `unzip`: `sudo apt-get install -y unzip` on Ubuntu/WSL):
+1. Start Docker Desktop. Get the code of the branch (`git clone -b claude/laughing-faraday-3dkwcb https://github.com/AzatKabulov/ERP-System.git`, or on GitHub open the branch > Code > Download ZIP and unzip it; on Windows keep the folder inside Ubuntu's home, for example `cp -r /mnt/c/Users/<you>/Downloads/ERP-System-* ~/ERP-System`).
+2. On GitHub open Actions > the latest green **CI** run of the branch > **Artifacts** > `erp-system-test-build` and save it in your **Downloads** folder (no signing key needed; kept 14 days). Do not unzip it.
+3. In the code folder run one command:
 
    ```bash
-   bash scripts/deploy/install_release.sh erp-system-test-web.zip erp-system-test-debug.apk
+   bash scripts/deploy/try_it.sh
    ```
-3. Open `http://localhost:8080/` in the computer's browser: that is the whole system. Sign in as the owner.
-4. A tablet or phone on **the same Wi-Fi**: the script prints the computer's address (for example `http://192.168.1.20:8080`; on Windows with WSL it cannot know it: run `ipconfig` in a Windows command prompt and use the IPv4 address of the Wi-Fi adapter). On the tablet open `<that address>/install/`, install the app, then on the sign-in screen tap Server > Change and type that address. This test app (the "debug" build) accepts a plain `http` address; the signed release app refuses `http` on purpose, so use Option B (a tunnel gives an `https` address) if you want to test the release app.
-5. Good to know: the computer must stay on and awake; a firewall may ask whether Docker may accept connections (allow it for private networks only); browsers allow the camera only on `https` or on `localhost`, so barcode scanning in the web app works on the computer itself but a tablet should use the installed app; each CI run signs its test app with a new throwaway key, so installing a newer test build means removing the older one first (the data lives on the server, not on the tablet). Stop with `cd infra && docker compose stop`, start again with `docker compose up -d`, and erase everything to start over with `docker compose down -v`.
+
+   It starts everything (5 to 10 minutes the first time; no questions: the owner is `owner`), finds the download, puts the web app and the Android app on the server, and prints the address for this computer (`http://localhost:8080/`), the address to open on a tablet on the same Wi-Fi (`.../install/`), and **the owner password once**. Write it down. If it says the files were not found, save the artifact into Downloads and run the same command again.
+
+On the tablet: open the printed `.../install/` address in its browser, install the app (allow "install from this source"; "Install anyway" if Play Protect warns), open it and on the sign-in screen tap Server > Change and type the address (for example `http://192.168.1.20:8080`). This test app (the "debug" build) accepts a plain `http` address; the signed release app refuses `http` on purpose, so use Option B (a tunnel gives an `https` address) to test the release app.
+
+**By hand** (what `try_it.sh` does, one piece at a time): `MODE=local bash scripts/deploy/bootstrap_vm.sh` (asks for a business name, an owner login and an email, starts the system and prints the owner password once), then `bash scripts/deploy/install_release.sh erp-system-test-web.zip erp-system-test-debug.apk` with the two files from the unzipped artifact (needs `unzip`: `sudo apt-get install -y unzip` on Ubuntu or WSL). A private repository asks for a GitHub username and a token instead of a password when cloning.
+
+Good to know: the computer must stay on and awake; Windows may ask whether Docker may accept connections (allow it for private networks only; a Wi-Fi that keeps devices from seeing each other, such as a guest network, also blocks the tablet); browsers allow the camera only on `https` or on `localhost`, and the browser build has no camera button, so the camera is tested on the tablet with the installed app, while a USB hand scanner works in the browser on the computer; each CI run signs its test app with a new throwaway key, so installing a newer test build means removing the older one first (the data lives on the server, not on the tablet). Stop with `cd infra && docker compose stop`, start again with `docker compose up -d`, and erase everything to start over with `docker compose down -v`. If port 8080 is busy, change `HTTP_PORT` in `infra/.env` and run `docker compose up -d` again.
 
 ## Option A, step by step (Oracle Cloud Always Free)
 
