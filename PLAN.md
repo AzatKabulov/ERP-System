@@ -75,7 +75,7 @@ Goal: every change is checked automatically, Android builds work, and the first 
 
 Before you start: none. (Step 0.2 needs one environment setting from you.)
 
-- [ ] 0.1 Merge the onboarding branch (`claude/laughing-faraday-3dkwcb`) into `main` through a pull request. *Open (owner): this session works on the single assigned branch and opens no pull request unless asked.*
+- [x] 0.1 Merge the onboarding branch (`claude/laughing-faraday-3dkwcb`) into `main` through a pull request. *Done 2026-10-10 at the owner's request: [PR #1](https://github.com/AzatKabulov/ERP-System/pull/1), all six CI checks green on the merged commit. New work continues on the same branch name, restarted from `main`.*
 - [ ] 0.2 You: allow `dl.google.com` in the Claude Code cloud environment's network settings. Agent: extend `scripts/setup_claude_cloud.sh` with the Android steps from `scripts/setup_cloud.sh` and verify `flutter build apk --debug`. *Open (owner): the cloud environment still blocks `dl.google.com`. Android is built and verified in GitHub Actions instead.*
 - [x] 0.3 GitHub Actions CI for `mobile/`: format check, analyze, tests, web build and debug APK, on every pull request and on `main`. You: in GitHub settings, require CI to pass before merging into `main`. **Done and green on every push; still owner:** require the CI checks in GitHub branch protection for `main`.
 - [ ] 0.4 Decision kickoff: you answer D3, D5, D9 and D10 at least provisionally, and name candidate hosts for D2. The agent records the answers in the PRD/ARCHITECTURE and in the table above. *Recorded so far: D3, D6, D8a, D9, D16 decided; D5 and D10 provisional. D2 (host candidates) still open.*
