@@ -21,7 +21,7 @@ from apps.purchasing import services as ps
 from apps.sales import services as ss
 from apps.sales.models import Sale, SaleReturn
 from apps.stockops import services as xs
-from apps.stockops.models import StockCount, Transfer
+from apps.stockops.models import StockCount, StockIntake, Transfer
 from apps.warranties import services as ws
 from apps.warranties.models import WarrantyClaim
 from apps.expenses.models import Expense
@@ -34,7 +34,8 @@ supplier_returns = [{'n': r.number, 'credit': str(r.credit_total), 'lines': [{'q
 orders = [{'n': o.number, 'status': o.status, 'lines': [str(l.quantity) for l in o.lines.all()]} for o in PurchaseOrder.objects.order_by('number')]
 expenses = [{'amount': str(e.amount), 'category': e.category.name, 'voided': e.voided_at is not None, 'file': e.attachment_id is not None, 'file_id': str(e.attachment_id), 'place': e.location.name} for e in Expense.objects.order_by('created_at')]
 claims = [{'n': c.number, 'status': c.status, 'outcome': c.outcome, 'out': c.out_of_warranty, 'q': str(c.quantity), 'events': c.events.count()} for c in WarrantyClaim.objects.order_by('number')]
-print('FACTS' + json.dumps({'business': str(Business.objects.first().pk), 'deliveries': Delivery.objects.count(), 'sales': sales, 'balances': [{'q': str(b.quantity), 'c': b.condition, 'at': b.location.name, 'sku': b.product.sku} for b in StockBalance.objects.select_related('location', 'product').all()], 'transfers': [{'n': t.number, 'status': t.status} for t in Transfer.objects.order_by('number')], 'counts': [{'n': c.number, 'status': c.status} for c in StockCount.objects.order_by('number')], 'returns': returns, 'supplier_returns': supplier_returns, 'orders': orders, 'expenses': expenses, 'claims': claims, 'products': [p.sku for p in Product.objects.order_by('sku')], 'product_names': {p.sku: p.name for p in Product.objects.all()}, 'reconcile': 'consistent' if not d else d}))
+intakes = [{'n': i.number, 'place': i.location.name, 'note': i.note, 'lines': [{'sku': l.product.sku, 'q': str(l.quantity), 'cost': str(l.unit_cost), 'known': l.cost_known} for l in i.lines.all()]} for i in StockIntake.objects.order_by('number')]
+print('FACTS' + json.dumps({'intakes': intakes, 'barcodes': {p.sku: [b.code for b in p.barcodes.all()] for p in Product.objects.all()}, 'prices': {p.sku: str(p.price_amount) for p in Product.objects.all()}, 'business': str(Business.objects.first().pk), 'deliveries': Delivery.objects.count(), 'sales': sales, 'balances': [{'q': str(b.quantity), 'c': b.condition, 'at': b.location.name, 'sku': b.product.sku} for b in StockBalance.objects.select_related('location', 'product').all()], 'transfers': [{'n': t.number, 'status': t.status} for t in Transfer.objects.order_by('number')], 'counts': [{'n': c.number, 'status': c.status} for c in StockCount.objects.order_by('number')], 'returns': returns, 'supplier_returns': supplier_returns, 'orders': orders, 'expenses': expenses, 'claims': claims, 'products': [p.sku for p in Product.objects.order_by('sku')], 'product_names': {p.sku: p.name for p in Product.objects.all()}, 'reconcile': 'consistent' if not d else d}))
 `;
   const out = execSync('cd ' + BACKEND + ' && export PATH="$HOME/.local/bin:$PATH" && uv run python manage.py shell', { input: py, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
   return JSON.parse(out.split('FACTS')[1]);
@@ -91,7 +92,7 @@ let PAGE = null;
   await expectText(page, 'owner is signed in (welcome page)', /Здравствуйте, Sample/);
   await page.screenshot({ path: path.join(OUT, 'e2e-1-welcome.png') });
 
-  // Development aid: E2E_RESUME=phase78 (or phase9) skips the earlier phases and continues from a database snapshot taken with
+  // Development aid: E2E_RESUME=phase78 (or phase9, intake) skips the earlier phases and continues from a database snapshot taken with
   // E2E_STOP_AFTER=phase6 (or phase78) (see README.md); the owner still signs in above.
   let facts;
   if (!process.env.E2E_RESUME) {
@@ -365,13 +366,19 @@ let PAGE = null;
     process.exit(0);
   }
   const shared = { L, dbFacts, stockAt, nav, pickFromDropdown, OUT, PASS, API, BACKEND };
-  if (process.env.E2E_RESUME !== 'phase9') await require('./phase78.js')(page, shared);
+  if (!['phase9', 'intake'].includes(process.env.E2E_RESUME)) await require('./phase78.js')(page, shared);
   if (process.env.E2E_STOP_AFTER === 'phase78') { // development aid: stop here to take a database snapshot
     console.log('stopping after Phases 7-8 (E2E_STOP_AFTER)');
     await browser.close();
     process.exit(0);
   }
-  await require('./phase9.js')(page, shared); // Phase 9: the dashboard, the reports and the activity history
+  if (process.env.E2E_RESUME !== 'intake') await require('./phase9.js')(page, shared); // Phase 9: the dashboard, the reports and the activity history
+  if (process.env.E2E_STOP_AFTER === 'phase9') { // development aid: stop here to take a database snapshot
+    console.log('stopping after Phase 9 (E2E_STOP_AFTER)');
+    await browser.close();
+    process.exit(0);
+  }
+  await require('./phase_intake.js')(page, shared); // receiving goods by scanning
   await nav(page, 'Продажи'); // the Turkmen check below looks at the sales page
 
   // ---- Turkmen, and it survives a reload ----------------------------------------------
@@ -414,6 +421,19 @@ let PAGE = null;
   await expectText(w.page, 'the warehouse dashboard shows what is below the minimum and the open orders', /Ниже минимума[\s\S]*Открытые заказы/);
   const keeperDash = await text(w.page);
   check('the warehouse dashboard has no money, no sales and no Reports page', !/TMT/.test(keeperDash) && !/Продажи сегодня/.test(keeperDash) && !/Отчёты/.test(keeperDash), keeperDash.slice(0, 200));
+  // the keeper receives goods by scanning too (a hand scanner types the code and presses Enter), with no money anywhere
+  await nav(w.page, 'Склад');
+  await clickLabel(w.page, 'Приёмка сканированием', { role: 'button', wait: 2000 });
+  await fill(w.page, '^Код товара', 'BP-100');
+  await w.page.keyboard.press('Enter');
+  await w.page.waitForTimeout(1500);
+  await expectText(w.page, 'the keeper scans a known article number and sees the product with one piece', /Тормозные колодки[\s\S]*1 шт/);
+  const keeperIntake = await text(w.page);
+  check('the keeper sees no cost note, no cost field and no money on the intake screen', !/Себестоимость/.test(keeperIntake) && !/TMT/.test(keeperIntake), (keeperIntake.match(/.{20}(Себестоимость|TMT).{10}/) || [''])[0]);
+  await clickLabel(w.page, 'Принять на склад', { role: 'button', wait: 1500 });
+  await clickLabel(w.page, 'Подтвердить', { role: 'button', wait: 3000 });
+  const intakeFacts = dbFacts();
+  check('the keeper\'s intake IN-0002 put one more BP-100 on the Warehouse shelf with no cost typed, ledger consistent', intakeFacts.intakes.length === 2 && intakeFacts.intakes[1].place === 'Warehouse' && intakeFacts.intakes[1].lines.length === 1 && intakeFacts.intakes[1].lines[0].known === false && stockAt(intakeFacts, 'Warehouse') === '4.000' && intakeFacts.reconcile === 'consistent', JSON.stringify(intakeFacts.intakes[1]) + intakeFacts.reconcile);
   problems.push(...w.problems);
   await w.page.close();
 
@@ -436,7 +456,7 @@ let PAGE = null;
   problems.push(...sl.problems);
 
   console.log('--- run finished; browser problems seen:', problems.length);
-  const expectedAbort = /ERR_FAILED/; // the deliberately dropped answers in the lost-response steps
+  const expectedAbort = /ERR_FAILED|status of 404/; // the deliberately dropped answers in the lost-response steps; and the 404 the lookup answers for a code the catalog has never seen (scanned on purpose)
   const unexpected = problems.filter((p) => !expectedAbort.test(p));
   check('no unexpected browser errors', unexpected.length === 0, unexpected.join(' | '));
   console.log(problems.join('\n'));

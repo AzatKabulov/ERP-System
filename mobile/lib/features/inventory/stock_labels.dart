@@ -24,5 +24,6 @@ String movementTypeLabel(AppLocalizations l, String type) => switch (type) {
   'supplier_return' => l.movementSupplierReturn,
   'warranty_out' => l.movementWarrantyOut,
   'warranty_in' => l.movementWarrantyIn,
+  'intake' => l.movementIntake,
   _ => l.movementOther,
 };

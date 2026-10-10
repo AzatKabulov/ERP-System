@@ -11,6 +11,10 @@ class FakeScanner implements BarcodeScanner {
   final List<String?> _results;
   int opened = 0;
 
+  /// Codes the continuous camera "sees", one per item shown to it, handed over in order each
+  /// time it is opened.
+  final List<String> continuous = [];
+
   void queue(String? code) => _results.add(code);
 
   @override
@@ -20,5 +24,19 @@ class FakeScanner implements BarcodeScanner {
   Future<String?> scan(BuildContext context) async {
     opened++;
     return _results.isEmpty ? null : _results.removeAt(0);
+  }
+
+  @override
+  Future<void> scanContinuously(
+    BuildContext context, {
+    required ValueChanged<String> onCode,
+    Listenable? changes,
+    WidgetBuilder? status,
+  }) async {
+    opened++;
+    for (final code in continuous) {
+      onCode(code);
+    }
+    continuous.clear();
   }
 }

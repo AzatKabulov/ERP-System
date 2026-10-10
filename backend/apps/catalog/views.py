@@ -106,25 +106,34 @@ class ProductDetailView(BusinessAPIView):
 
 
 class BarcodeLookupView(BusinessAPIView):
-    """Read-only: finds the active product with this barcode. A scan never changes anything;
-    the screen that asked decides what to do with the product."""
+    """Read-only: finds the active product with this code. A scan never changes anything; the
+    screen that asked decides what to do with the product. The code is looked up as a barcode
+    first and then as an article number (SKU), because many parts carry their own part number
+    as the barcode text."""
 
     required_permission = "catalog.view"
 
     def get(self, request, business_id):
         code = services.normalize_code(request.query_params.get("code", ""))
-        barcode = (
-            Barcode.objects.filter(business=request.business, code=code, product__is_active=True)
-            .select_related("product")
-            .first()
-            if code
-            else None
-        )
-        if barcode is None:
+        product = None
+        if code:
+            barcode = (
+                Barcode.objects.filter(
+                    business=request.business, code=code, product__is_active=True
+                )
+                .select_related("product")
+                .first()
+            )
+            if barcode is not None:
+                product = _products(request.business).get(pk=barcode.product_id)
+            else:
+                product = (
+                    _products(request.business).filter(sku__iexact=code, is_active=True).first()
+                )
+        if product is None:
             raise ApiError(
                 "barcode_not_found", "No active product has this barcode", status_code=404
             )
-        product = _products(request.business).get(pk=barcode.product_id)
         return Response(ProductSerializer(product, context=_product_context(request)).data)
 
 

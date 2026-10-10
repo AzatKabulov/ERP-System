@@ -251,6 +251,34 @@ void main() {
     });
 
     testWidgets(
+      'a hand scanner that types the code and presses Enter fills the cart',
+      (tester) async {
+        final t = deskRig();
+        await openSales(tester, t.rig);
+        Future<void> scan(String code) async {
+          await tester.enterText(key('sales-search'), code);
+          await tester.testTextInput.receiveAction(TextInputAction.done);
+          await settle(tester, ms: 500);
+        }
+
+        await scan('4006381333931'); // the barcode
+        expect(typed(tester, 'cart-qty-0'), '1');
+        await scan('bp-1'); // the article number, any letter case
+        expect(typed(tester, 'cart-qty-0'), '2');
+        expect(find.text('Итого: ${tmt(20000)}'), findsOneWidget);
+        expect(typed(tester, 'sales-search'), ''); // ready for the next item
+        await scan('колодки'); // a name is an ordinary search, nothing is added
+        expect(typed(tester, 'cart-qty-0'), '2');
+        expect(key('sell-BP-1'), findsOneWidget);
+        await scan(
+          '0000000000000',
+        ); // a code nobody has: a search, no complaint, nothing added
+        expect(key('cart-qty-1'), findsNothing);
+        expect(t.rig.server.ledger.salesRecorded, 0);
+      },
+    );
+
+    testWidgets(
       'a USD-priced product with no rate is sold at the price the seller types',
       (tester) async {
         final rig = RealRig();

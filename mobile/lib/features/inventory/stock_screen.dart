@@ -12,6 +12,8 @@ import '../admin/admin_repository.dart';
 import '../catalog/catalog_repository.dart';
 import '../counts/counts_repository.dart';
 import '../counts/counts_screen.dart';
+import '../intake/intake_draft_store.dart';
+import '../intake/intake_screen.dart';
 import '../scanning/barcode_input.dart';
 import '../shared/async_section.dart';
 import '../transfers/transfers_repository.dart';
@@ -136,6 +138,35 @@ class _StockScreenState extends State<StockScreen> {
     if (result == EntryResult.posted) _load(reset: true);
   }
 
+  Future<void> _intake() async {
+    final result = await Navigator.of(context).push<EntryResult>(
+      MaterialPageRoute(
+        builder: (_) => IntakeScreen(
+          session: session,
+          catalog: widget.catalog,
+          runner: widget.runner,
+          monitor: widget.monitor,
+          store: IntakeDraftStore(
+            session.preferences,
+            businessId: widget.repository.businessId,
+            userId: session.user?.id ?? '',
+          ),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    // whatever happened, the list may have changed (goods received, or answer still pending)
+    if (result != null) {
+      showFeedback(
+        context,
+        result == EntryResult.posted
+            ? strings(context).entryPosted
+            : strings(context).outcomeUnknownNotice,
+      );
+    }
+    _load(reset: true);
+  }
+
   void _transfers() => Navigator.of(context).push<void>(
     MaterialPageRoute(
       builder: (_) => TransfersScreen(
@@ -220,6 +251,16 @@ class _StockScreenState extends State<StockScreen> {
                   onPressed: () => _history(),
                   icon: const Icon(Icons.history),
                   label: Text(l.movementHistory),
+                ),
+              ),
+            if (session.can('intake.create'))
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: FilledButton.icon(
+                  key: const ValueKey('stock-intake'),
+                  onPressed: _intake,
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: Text(l.intakeTitle),
                 ),
               ),
             if (session.can('stock.opening.post'))

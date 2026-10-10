@@ -96,6 +96,8 @@ class FakeServer {
     'count.view',
     'count.perform',
     'count.approve',
+    'intake.view',
+    'intake.create',
     'customer.view',
     'customer.manage',
     'catalog.manage',
@@ -719,14 +721,16 @@ class FakeServer {
     }
 
     if (rest == 'barcodes/lookup/' && method == 'GET') {
-      final code = request.url.queryParameters['code'] ?? '';
-      final found = productsData
-          .where(
-            (p) =>
-                p['is_active'] == true &&
-                (p['barcodes'] as List).contains(code),
-          )
-          .firstOrNull;
+      final code = (request.url.queryParameters['code'] ?? '').trim();
+      // like the server: a barcode first, then the article number (any letter case)
+      final active = productsData.where((p) => p['is_active'] == true);
+      final found =
+          active
+              .where((p) => (p['barcodes'] as List).contains(code))
+              .firstOrNull ??
+          active
+              .where((p) => '${p['sku']}'.toLowerCase() == code.toLowerCase())
+              .firstOrNull;
       if (found == null) return _error(404, 'barcode_not_found');
       return _json(200, _present(found));
     }

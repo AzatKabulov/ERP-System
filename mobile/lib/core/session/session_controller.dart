@@ -31,6 +31,9 @@ class SessionController extends ChangeNotifier {
   bool _unreachable = false;
 
   SessionStatus get status => _status;
+
+  /// The device's preferences, for small per-person drafts kept between visits.
+  SharedPreferences get preferences => _prefs;
   UserProfile? get user => _user;
   List<MembershipInfo> get memberships => _memberships;
   MembershipInfo? get membership => _membership;

@@ -35,4 +35,6 @@ urlpatterns = [
     path(
         f"{B}counts/<uuid:count_id>/cancel/", views.CountCancelView.as_view(), name="count-cancel"
     ),
+    path(f"{B}intakes/", views.IntakeListCreateView.as_view(), name="intake-list"),
+    path(f"{B}intakes/<uuid:intake_id>/", views.IntakeDetailView.as_view(), name="intake-detail"),
 ]

@@ -10,7 +10,7 @@ these rows are the documents they belong to."""
 from django.db import models
 from django.db.models import F, Q
 
-from apps.common.models import TimestampedModel, UUIDModel
+from apps.common.models import AppendOnlyModel, TimestampedModel, UUIDModel
 
 
 class Transfer(UUIDModel, TimestampedModel):
@@ -130,5 +130,49 @@ class StockCountLine(UUIDModel):
             models.CheckConstraint(
                 condition=Q(counted_quantity__isnull=True) | Q(counted_quantity__gte=0),
                 name="stockops_cline_counted_nonneg",
+            ),
+        ]
+
+
+class StockIntake(UUIDModel, AppendOnlyModel):
+    """Goods received by scanning, without a purchase order: a person opens a box, scans every
+    item and sends the counted list. Written once; a mistake is corrected with an adjustment.
+    The stock movements are the history; this row is the document they belong to."""
+
+    business = models.ForeignKey("businesses.Business", on_delete=models.PROTECT, related_name="+")
+    number = models.PositiveIntegerField()  # IN-0001, per business
+    location = models.ForeignKey("businesses.Location", on_delete=models.PROTECT, related_name="+")
+    note = models.CharField(max_length=500, blank=True)
+    created_by = models.ForeignKey("accounts.User", on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-number"]
+        constraints = [
+            models.UniqueConstraint(fields=["business", "number"], name="stockops_intake_number")
+        ]
+        indexes = [models.Index(fields=["business", "-created_at"])]
+
+    def __str__(self) -> str:
+        return f"IN-{self.number:04d}"
+
+
+class StockIntakeLine(UUIDModel, AppendOnlyModel):
+    intake = models.ForeignKey(StockIntake, on_delete=models.PROTECT, related_name="lines")
+    position = models.PositiveSmallIntegerField()  # the order in which the items were scanned
+    product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="+")
+    quantity = models.DecimalField(max_digits=14, decimal_places=3)
+    # What the goods cost per unit (TMT). Optional for the person receiving: when it was not
+    # entered, the product's default purchase cost (or zero) is used and `cost_known` is False,
+    # so a later correction or report can tell a real cost from a placeholder.
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=2)
+    cost_known = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["position"]
+        constraints = [
+            models.UniqueConstraint(fields=["intake", "product"], name="stockops_iline_product"),
+            models.CheckConstraint(
+                condition=Q(quantity__gt=0), name="stockops_iline_quantity_positive"
             ),
         ]
