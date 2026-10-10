@@ -53,12 +53,26 @@ if [ -z "$WEB" ] || [ -z "$APK" ]; then
     APK="$(find "$WORK" -type f -name 'erp-system-test-debug*.apk' | head -1)"
   fi
 fi
+if { [ -z "$WEB" ] || [ -z "$APK" ]; } && command -v gh >/dev/null 2>&1; then
+  # The GitHub command line tool (always there inside a Codespace) can fetch the newest green
+  # build of this branch itself, if it is signed in with the right to read it.
+  BRANCH="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+  if [ -n "$BRANCH" ]; then
+    RUN="$( (cd "$ROOT" && gh run list --branch "$BRANCH" --workflow CI --status success --limit 1 --json databaseId --jq '.[0].databaseId') 2>/dev/null || true)"
+    if [ -n "$RUN" ] && (cd "$ROOT" && gh run download "$RUN" -n erp-system-test-build -D "$WORK" >/dev/null 2>&1); then
+      note "Downloaded the newest green test build of $BRANCH from GitHub."
+      WEB="$(find "$WORK" -type f -name 'erp-system-test-web*.zip' | head -1)"
+      APK="$(find "$WORK" -type f -name 'erp-system-test-debug*.apk' | head -1)"
+    fi
+  fi
+fi
 if [ -n "$WEB" ] && [ -n "$APK" ]; then
   bash "$ROOT/scripts/deploy/install_release.sh" "$WEB" "$APK"
 else
   note "The app files were not found in your Downloads folder."
   note "Download  erp-system-test-build  from GitHub (Actions > the latest green run > Artifacts),"
-  note "leave the zip in Downloads, and run this command again. The system itself is already running."
+  note "leave the zip in Downloads (in a Codespace: drag it into the file list on the left), and run"
+  note "this command again. The system itself is already running."
 fi
 
 # The address of this computer on the Wi-Fi, as best it can be told.
@@ -78,10 +92,21 @@ lan_ip() {
 say "3/3  Ready"
 PORT="$(env_value HTTP_PORT)"
 IP="$(lan_ip)"
-note "On this computer:  http://localhost:$PORT/"
-if [ -n "$IP" ]; then
+if [ -n "${CODESPACE_NAME:-}" ]; then
+  # inside a GitHub Codespace the computer is a cloud machine: the address comes from GitHub
+  PUBLIC="https://${CODESPACE_NAME}-${PORT}.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}"
+  if gh codespace ports visibility "${PORT}:public" -c "$CODESPACE_NAME" >/dev/null 2>&1; then
+    note "Port $PORT is now public (anyone who has the address can reach the sign-in page: stop the Codespace when you are done)."
+  else
+    note "Open the PORTS tab at the bottom, right-click port $PORT > Port Visibility > Public."
+  fi
+  note "Open this in a browser, on the computer or on the tablet:  $PUBLIC/"
+  note "On the tablet install the app from  $PUBLIC/install/  and in the app: Server > Change > $PUBLIC"
+elif [ -n "$IP" ]; then
+  note "On this computer:  http://localhost:$PORT/"
   note "On a tablet or phone on the same Wi-Fi:  http://$IP:$PORT/install/   (install the app, then in the app: Server > Change > http://$IP:$PORT)"
 else
+  note "On this computer:  http://localhost:$PORT/"
   note "For a tablet: find this computer's Wi-Fi address (Windows: ipconfig; Mac: System Settings > Wi-Fi > Details) and open http://<address>:$PORT/install/"
 fi
 PASSWORD_LINE="$(grep 'Owner password' "$LOG" | sed 's/^ *//' | head -1 || true)"
@@ -91,4 +116,4 @@ if [ -n "$PASSWORD_LINE" ]; then
   note "$PASSWORD_LINE"
 fi
 echo
-note "If Windows asks whether Docker may accept connections, allow it on private networks."
+[ -n "${CODESPACE_NAME:-}" ] || note "If Windows asks whether Docker may accept connections, allow it on private networks."
