@@ -38,14 +38,16 @@ You need Docker (Docker Desktop on Mac or Windows; on Windows also WSL with Ubun
    MODE=local bash scripts/deploy/bootstrap_vm.sh
    ```
 
+   (A private repository asks for a GitHub username and a token instead of a password. Without git: on GitHub open the branch, Code > Download ZIP, unzip it, and run the second command from that folder. On Windows keep the folder inside WSL, for example `cp -r /mnt/c/Users/<you>/Downloads/ERP-System-... ~/ERP-System`, not on the C: drive, which Docker reads slowly.)
+
    It asks for a business name, an owner login and an email, builds and starts everything (about 5 minutes the first time), creates the owner and prints `http://localhost:8080` and **the owner password once**. Nothing is opened to the internet and no backup job is scheduled.
-2. Put the apps in. On GitHub open Actions > the latest green **CI** run of the branch > **Artifacts** > `erp-system-test-build` (kept 14 days; no signing key needed). Unzip it, then:
+2. Put the apps in. On GitHub open Actions > the latest green **CI** run of the branch > **Artifacts** > `erp-system-test-build` (kept 14 days; no signing key needed). Unzip it (two files inside), then (needs `unzip`: `sudo apt-get install -y unzip` on Ubuntu/WSL):
 
    ```bash
    bash scripts/deploy/install_release.sh erp-system-test-web.zip erp-system-test-debug.apk
    ```
 3. Open `http://localhost:8080/` in the computer's browser: that is the whole system. Sign in as the owner.
-4. A tablet or phone on **the same Wi-Fi**: the script prints the computer's address (for example `http://192.168.1.20:8080`). On the tablet open `<that address>/install/`, install the app, then on the sign-in screen tap Server > Change and type that address. This test app (the "debug" build) accepts a plain `http` address; the signed release app refuses `http` on purpose, so use Option B (a tunnel gives an `https` address) if you want to test the release app.
+4. A tablet or phone on **the same Wi-Fi**: the script prints the computer's address (for example `http://192.168.1.20:8080`; on Windows with WSL it cannot know it: run `ipconfig` in a Windows command prompt and use the IPv4 address of the Wi-Fi adapter). On the tablet open `<that address>/install/`, install the app, then on the sign-in screen tap Server > Change and type that address. This test app (the "debug" build) accepts a plain `http` address; the signed release app refuses `http` on purpose, so use Option B (a tunnel gives an `https` address) if you want to test the release app.
 5. Good to know: the computer must stay on and awake; a firewall may ask whether Docker may accept connections (allow it for private networks only); browsers allow the camera only on `https` or on `localhost`, so barcode scanning in the web app works on the computer itself but a tablet should use the installed app; each CI run signs its test app with a new throwaway key, so installing a newer test build means removing the older one first (the data lives on the server, not on the tablet). Stop with `cd infra && docker compose stop`, start again with `docker compose up -d`, and erase everything to start over with `docker compose down -v`.
 
 ## Option A, step by step (Oracle Cloud Always Free)

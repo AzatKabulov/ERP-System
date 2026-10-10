@@ -154,10 +154,15 @@ case "$SITE_ADDRESS" in
       done
     fi
     if [ "$MODE" = "local" ]; then
-      LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
-      [ -n "$LAN_IP" ] || LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || true)"
       ADDRESS="http://localhost:$(env_value HTTP_PORT)"
-      [ -z "$LAN_IP" ] || note "From a tablet or phone on the same Wi-Fi:  http://$LAN_IP:$(env_value HTTP_PORT)   (the debug app only; see docs/DEPLOY_TESTING.md)"
+      if grep -qi microsoft /proc/version 2>/dev/null; then
+        # inside WSL the machine's own address is internal to Windows: a tablet needs the Windows one
+        note "From a tablet or phone on the same Wi-Fi: open a Windows command prompt, run  ipconfig , and use the IPv4 address of your Wi-Fi adapter:  http://<that address>:$(env_value HTTP_PORT)"
+      else
+        LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
+        [ -n "$LAN_IP" ] || LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || true)"
+        [ -z "$LAN_IP" ] || note "From a tablet or phone on the same Wi-Fi:  http://$LAN_IP:$(env_value HTTP_PORT)   (the debug app only; see docs/DEPLOY_TESTING.md)"
+      fi
     fi
     [ -n "$ADDRESS" ] || ADDRESS="http://<this machine's address>:$(env_value HTTP_PORT)"
     ;;
