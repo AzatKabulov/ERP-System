@@ -5,3 +5,10 @@
 .venv/
 __pycache__/
 *.pyc
+backend/staticfiles/
+.ruff_cache/
+
+# What the test server serves: the web build, the Android file (put there by hand, never committed)
+infra/public/*
+!infra/public/.gitkeep
+infra/backups/

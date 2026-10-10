@@ -6,16 +6,16 @@ This project is an inventory-focused ERP for shops and wholesalers, with car par
 
 - Confirmed client: Flutter and Dart, with Android tablets first, followed by iPad and iPhone.
 - Confirmed launch market and languages: Turkmenistan; complete Russian (`ru`) and Turkmen (`tk`, modern Latin script) interfaces are required from the first Android release.
-- Proposed backend: Python, Django, and Django REST Framework.
-- Proposed database: PostgreSQL.
+- Confirmed backend (2026-10-06): Python, Django, and Django REST Framework; not yet implemented.
+- Confirmed database (2026-10-06): PostgreSQL; not yet implemented.
 - Initial operating model: internet access is required for stock-changing actions; business records are isolated by business and location permissions.
 
-The repository contains a Flutter interface prototype under `mobile/`, using in-memory demonstration operations and persistent language selection. Android and web hosts are present. Flutter 3.47.6 is pinned in `.flutter-version`; cloud activation and setup helpers are under `scripts/`. Analysis, 12 tests, web and debug APK builds, and interactive browser checks passed. Physical Android hardware and iOS remain untested. The backend is not implemented. Do not describe demonstration operations as production functionality.
+The repository contains a Flutter interface prototype under `mobile/`, using in-memory demonstration operations and persistent language selection. Android and web hosts are present. Flutter 3.47.6 is pinned in `.flutter-version`; cloud activation and setup helpers are under `scripts/`. Analysis, 12 tests, web and debug APK builds, and interactive browser checks passed. Physical Android hardware and iOS remain untested. The backend under `backend/` is being built phase by phase (see `PLAN.md` and `HANDOFF.md` for what exists); the Flutter app still shows demonstration data unless a phase says it is connected. Do not describe demonstration operations as production functionality.
 
 ## Before You Start
 
-1. Read this file and `docs/PRD.md`.
-2. Read `docs/DESIGN_SYSTEM.md` before UI changes and `docs/ARCHITECTURE.md` before technical changes. The architecture distinguishes the current demonstration implementation from the proposed backend.
+1. Read this file, `docs/PRD.md`, `HANDOFF.md` (current state), and `PLAN.md` (phased delivery order).
+2. Read `docs/DESIGN_SYSTEM.md` before UI changes and `docs/ARCHITECTURE.md` before technical changes. The architecture distinguishes the current demonstration implementation from the planned production backend.
 3. Inspect the working tree, relevant source files, existing widgets and services, dependency manifests, version pins, and any more specific `AGENTS.md` instructions before editing.
 4. Follow the user's latest decisions. If documentation is stale, update the affected document as part of the authorized task rather than continuing with the old decision.
 5. Resolve routine implementation details using existing conventions. Ask only when a missing decision materially affects scope, architecture, or business behavior and cannot be inferred. Continue independent work while clarification is pending.
@@ -45,7 +45,7 @@ The repository contains a Flutter interface prototype under `mobile/`, using in-
 
 ### Backend and Database
 
-- If the proposed backend is adopted, use Python conventions, focused Django applications, clear API serializers, and type annotations where useful.
+- In the backend, use Python conventions, focused Django applications, clear API serializers, and type annotations where useful.
 - Keep business rules out of UI code and avoid duplicating them across API endpoints.
 - Use decimal arithmetic for money and documented rounding rules. Do not calculate financial totals using binary floating-point values.
 - Use database transactions and appropriate concurrency controls for operations affecting stock or finalized financial records.
@@ -111,25 +111,35 @@ Working directory: `/workspace/ERP-System/mobile`. Dependency resolution, locali
 | Build a debug Android APK | `flutter build apk --debug` |
 | Build the same interface with local rendering resources | `flutter build web --no-web-resources-cdn` |
 
-Use Flutter 3.47.6 and retain `mobile/pubspec.lock`; use frozen resolution during setup. The prototype uses `ChangeNotifier`/`AnimatedBuilder`, generated ARB localizations, and `SharedPreferences` only for the selected language. iOS builds require a suitable macOS/Xcode environment or configured cloud build service; do not claim they were verified on a Linux environment.
+Use Flutter 3.47.6 and retain `mobile/pubspec.lock`; use frozen resolution during setup. Platform plugins sit behind small interfaces so widget tests use fakes: `mobile_scanner` (`BarcodeScanner`), `printing` (`DocumentActions`), and, since Phase 8, `image_picker`, `file_picker` and `share_plus` (`FilePicking`, `FileSharing`, `FilesScope` in `lib/core/files/`). A new plugin must be checked in the Android debug APK build in CI, not only in `flutter test`. The prototype uses `ChangeNotifier`/`AnimatedBuilder`, generated ARB localizations, and `SharedPreferences` only for the selected language. iOS builds require a suitable macOS/Xcode environment or configured cloud build service; do not claim they were verified on a Linux environment.
 
 For internal web smoke testing, serve a successfully built `mobile/build/web` directory using `python -m http.server 8080 --bind 127.0.0.1`. Do not expose localhost preview links in cloud onboarding. Use local requests and browser checks instead.
 
 The debug APK build and APK signature have been verified. This does not establish real-device scanner or printer compatibility, release signing, or store readiness.
 
-### Planned Backend Commands
+### Backend Commands
 
-Working directory: the future backend directory, tentatively `backend/`. These commands assume Django has been installed from the chosen dependency manifest into an active project virtual environment and `manage.py` exists.
+Working directory: `backend/`. Python 3.13 and `uv` manage the pinned dependencies (`pyproject.toml`, `uv.lock`). The backend needs PostgreSQL; tests require it (SQLite is not supported). Settings come from the environment; `backend/.env` is git-ignored and `backend/.env.example` lists every variable.
+
+On the Claude Code cloud VM, run `bash scripts/claude_cloud_postgres.sh` once per fresh VM. It starts PostgreSQL 16, creates a local-only role and database, and writes `backend/.env` with random values. Elsewhere, create the database and `backend/.env` yourself. Then load the variables (`set -a; . ./.env; set +a`) before the commands below, and run `uv run` from `backend/` (set `UV_PYTHON_DOWNLOADS=never` where only the system Python is available).
 
 | Purpose | Command |
 | --- | --- |
-| Check Django configuration | `python manage.py check` |
-| Check for missing migrations | `python manage.py makemigrations --check --dry-run` |
-| Apply migrations to the configured local development database | `python manage.py migrate` |
-| Run backend tests | `python manage.py test` |
-| Run the local development server | `python manage.py runserver 127.0.0.1:8000` |
+| Install pinned dependencies | `uv sync --frozen` |
+| Check Django configuration | `uv run python manage.py check` |
+| Check for missing migrations | `uv run python manage.py makemigrations --check --dry-run` |
+| Apply migrations to the local development database | `uv run python manage.py migrate` (then once: `createcachetable`) |
+| Run backend tests (uses `config.settings_test`: fast password hasher) | `uv run python manage.py test` |
+| Lint and format check | `uv run ruff check .` and `uv run ruff format --check .` |
+| Apply formatting | `uv run ruff format .` |
+| Run the local development server | `uv run python manage.py runserver 127.0.0.1:8000` |
+| Check that stock balances, movements, FIFO layers, purchase-order receipts, sales, returns, transfers, counts and warranty claims agree (non-zero exit on any difference) | `uv run python manage.py reconcile_stock` |
+| Create sample data for development and staging tests only (refuses in production; password from `ERP_SAMPLE_PASSWORD`) | `uv run python manage.py create_sample_business` |
+| Create a business with its first owner (operator tool; password from `ERP_OWNER_PASSWORD` or a prompt) | `uv run python manage.py create_business --name ... --owner-username ... --owner-email ... --location ...` |
 
-The dependency installation command, required environment variables, PostgreSQL startup, formatting and linting tools, and health checks must be added after the actual scaffold is chosen and validated. Use the project's selected test runner if it differs from Django's runner. Do not invent a dependency filename or configuration module.
+The receipt is generated with ReportLab (runtime dependency) and the DejaVu Sans fonts vendored in `backend/assets/fonts/` (do not replace them with fonts that lack Cyrillic or the Turkmen letters); the tests read the PDFs back with `pypdf` (dev dependency). The real-browser run in `scripts/e2e/` (README there) drives the web build against the real API and PostgreSQL; run it after changing a workflow that stock or money depends on.
+
+Test-server tooling lives in `scripts/deploy/` (`bootstrap_vm.sh`, `update.sh`, `backup.sh`, `restore.sh`, `install_release.sh`; keep them shellcheck-clean: `shellcheck -x -P SCRIPTDIR scripts/deploy/*.sh`) and `infra/` (compose files, `Caddyfile`, the install page). The app's server address is a setting of the device (sign-in screen, `ServerSettings`), not a build constant; the web build uses the address it was served from. Android release builds are signed with a key held by the owner (`docs/ANDROID_RELEASE.md`); never commit a keystore. Uploaded files (receipt photos) are stored under `PRIVATE_FILES_ROOT` (default `backend/private_files`, git-ignored; tests use a throw-away folder). Never serve that folder as static or media files; downloads go through the permission-checked API. Health check: `GET /api/v1/health/`. Concurrency tests use real threads against PostgreSQL and run as part of `manage.py test`. Add a dependency only through `pyproject.toml` and commit the updated `uv.lock`.
 
 ## Validation and Reporting
 
@@ -142,6 +152,8 @@ The dependency installation command, required environment variables, PostgreSQL 
 - Report what changed, what was verified, and any remaining limitations. A successful build does not prove a scanner, printer, stock workflow, or backup restore works.
 
 ## Boundaries
+
+- Product principle (owner, 2026-10-07): this is an ERP, not a cash register. Keep entry forms short and the system simple (little internet, an old-fashioned market). Do not add features, fields or options the owner did not ask for; prices are not fixed (the seller sets them); there is no tax, discount, change calculation or invoice.
 
 - Do not change the agreed framework, product scope, offline operating model, or major architecture without authorization. A user request explicitly directing that change is sufficient; do not request duplicate approval.
 - Do not invent tax rules, inventory costing policies, warranty terms, refund eligibility, or approval limits. Use documented decisions or clarify the decision before finalizing the affected behavior.

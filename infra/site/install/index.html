@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ERP — установка приложения / Programmany guramak</title>
+<style>
+  :root { --ink:#0d1311; --muted:#6b726e; --canvas:#f5f2ec; --line:#e4dfd5; --cobalt:#1740ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--canvas); color:var(--ink); font:16px/1.55 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 20px 64px; }
+  header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 28px; }
+  .mark { font-weight:700; letter-spacing:.02em; }
+  .lang button { border:1px solid var(--line); background:#fff; color:var(--ink); padding:6px 12px; border-radius:999px; font:inherit; font-size:14px; cursor:pointer; }
+  .lang button[aria-pressed="true"] { background:var(--ink); color:#fff; border-color:var(--ink); }
+  h1 { font: 600 30px/1.2 "Noto Serif", Georgia, serif; margin: 0 0 8px; }
+  p.lead { color:var(--muted); margin:0 0 28px; }
+  ol { list-style:none; counter-reset:step; margin:0; padding:0; }
+  li { counter-increment:step; background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px 18px 18px 58px; margin-bottom:12px; position:relative; box-shadow:0 1px 2px rgba(13,19,17,.04); }
+  li::before { content:counter(step); position:absolute; left:18px; top:18px; width:28px; height:28px; border-radius:50%; background:var(--ink); color:#fff; display:grid; place-items:center; font-size:14px; font-weight:600; }
+  li b { display:block; margin-bottom:2px; }
+  li div span { color:var(--muted); font-size:14px; }
+  .button { display:inline-block; margin-top:10px; background:var(--cobalt); color:#fff; text-decoration:none; padding:12px 20px; border-radius:12px; font-weight:600; }
+  .addr { display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+  code { background:var(--canvas); border:1px solid var(--line); padding:8px 12px; border-radius:10px; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size:14px; word-break:break-all; }
+  .copy { border:1px solid var(--line); background:#fff; padding:8px 14px; border-radius:10px; font:inherit; font-size:14px; cursor:pointer; }
+  .alt { margin-top:24px; font-size:14px; color:var(--muted); }
+  .alt a { color:var(--cobalt); }
+  [lang-only] { display:none; }
+  html[lang="ru"] [lang-only="ru"], html[lang="tk"] [lang-only="tk"] { display:block; }
+  html[lang="ru"] span[lang-only="ru"], html[lang="tk"] span[lang-only="tk"] { display:inline; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="mark">ERP</div>
+    <div class="lang"><button id="ru" aria-pressed="true">Русский</button> <button id="tk" aria-pressed="false">Türkmençe</button></div>
+  </header>
+
+  <section lang-only="ru">
+    <h1>Установка приложения на Android</h1>
+    <p class="lead">Три шага, около двух минут. Подойдёт любой планшет или телефон на Android.</p>
+  </section>
+  <section lang-only="tk">
+    <h1>Android-e programmany guramak</h1>
+    <p class="lead">Üç ädim, takmynan iki minut. Islendik Android planşet ýa-da telefon gelýär.</p>
+  </section>
+
+  <ol>
+    <li>
+      <div lang-only="ru"><b>Скачайте приложение</b><span>Файл откроется после загрузки.</span></div>
+      <div lang-only="tk"><b>Programmany ýükläň</b><span>Faýl ýüklenenden soň açylar.</span></div>
+      <a class="button" href="/downloads/erp.apk" download>
+        <span lang-only="ru">Скачать (APK)</span><span lang-only="tk">Ýükle (APK)</span>
+      </a>
+    </li>
+    <li>
+      <div lang-only="ru"><b>Разрешите установку</b><span>Android спросит, можно ли устанавливать приложения из этого источника — разрешите. Если Google Play Protect предупредит об «неизвестном разработчике» — это нормально для приложений вне магазина: выберите «Всё равно установить».</span></div>
+      <div lang-only="tk"><b>Gurnamaga rugsat beriň</b><span>Android bu çeşmeden programma guramaga rugsat soraýar — rugsat beriň. Google Play Protect «näbelli işläp düzüji» barada duýdansa, bu dükandan daşardaky programmalar üçin kadaly: «Ýöne-de gurmak» saýlaň.</span></div>
+    </li>
+    <li>
+      <div lang-only="ru"><b>Укажите сервер и войдите</b><span>На экране входа нажмите «Указать сервер» (или «Изменить») и введите этот адрес. Логин и пароль вам выдаст владелец.</span></div>
+      <div lang-only="tk"><b>Serweri görkeziň we giriň</b><span>Giriş ekranynda «Serweri görkezmek» (ýa-da «Üýtgetmek») basyň we şu salgyny ýazyň. Ulanyjy adyny we paroly eýesi berer.</span></div>
+      <div class="addr"><code id="origin"></code><button class="copy" id="copy">Копировать / Göçür</button></div>
+    </li>
+  </ol>
+
+  <p class="alt" lang-only="ru">Без установки: откройте систему <a href="/">в браузере</a> (Chrome, на планшете или компьютере).</p>
+  <p class="alt" lang-only="tk">Gurnamazdan: ulgamy <a href="/">brauzerde</a> açyp bilersiňiz (Chrome, planşetde ýa-da kompýuterde).</p>
+</main>
+<script>
+  var origin = location.origin;
+  document.getElementById('origin').textContent = origin;
+  document.getElementById('copy').onclick = function () {
+    if (navigator.clipboard) navigator.clipboard.writeText(origin);
+    this.textContent = '✓';
+  };
+  function setLang(l) {
+    document.documentElement.lang = l;
+    document.getElementById('ru').setAttribute('aria-pressed', l === 'ru');
+    document.getElementById('tk').setAttribute('aria-pressed', l === 'tk');
+    try { localStorage.setItem('lang', l); } catch (e) {}
+  }
+  document.getElementById('ru').onclick = function () { setLang('ru'); };
+  document.getElementById('tk').onclick = function () { setLang('tk'); };
+  var saved = null; try { saved = localStorage.getItem('lang'); } catch (e) {}
+  setLang(saved === 'tk' ? 'tk' : 'ru');
+</script>
+</body>
+</html>

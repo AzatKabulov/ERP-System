@@ -232,5 +232,933 @@
   },
   "languageRussian": "Русский",
   "languageTurkmen": "Türkmençe",
-  "reportScope": "Ätiýaçlyk saýlanan ammar boýunça; satuwlar, gaýtaryşlar we çykdajylar ähli görkezme sessiýasy boýunça."
+  "reportScope": "Ätiýaçlyk saýlanan ammar boýunça; satuwlar, gaýtaryşlar we çykdajylar ähli görkezme sessiýasy boýunça.",
+  "signInTitle": "Girmek",
+  "signInSubtitle": "Işiňiziň iş meýdançasyna giriň.",
+  "username": "Login",
+  "password": "Parol",
+  "signInAction": "Girmek",
+  "signingIn": "Girilýär…",
+  "signOut": "Çykmak",
+  "forgotPassword": "Paroly ýatdan çykardyňyzmy?",
+  "resetTitle": "Paroly dikeltmek",
+  "resetIntro": "Login ýa-da e-poçta salgysyny giriziň. Biz bir gezeklik kod ibereris.",
+  "identifierLabel": "Login ýa-da e-poçta",
+  "sendCode": "Kody ibermek",
+  "resetSent": "Eger şeýle hasap bar bolsa, kod onuň e-poçtasyna iberildi.",
+  "haveCode": "Meniň kodum bar",
+  "codeLabel": "Bir gezeklik kod",
+  "newPassword": "Täze parol",
+  "savePassword": "Paroly saklamak",
+  "passwordChanged": "Parol saklandy. Indi giriň.",
+  "backToSignIn": "Girişe gaýtmak",
+  "sessionExpiredNotice": "Sessiýa tamamlandy. Ýene giriň.",
+  "serverUnreachableNotice": "Serwere ýetmek bolanok. Interneti barlaň we täzeden synanyşyň.",
+  "serverNotConfigured": "Serweriň salgysy görkezilmedi. Aşakdaky «Serweri görkezmek» düwmesine basyň.",
+  "retry": "Täzeden synanyşmak",
+  "checkingSession": "Sessiýa barlanýar…",
+  "errorInvalidCredentials": "Login ýa-da parol nädogry.",
+  "errorRateLimited": "Synanyşyk gaty köp. Birneme garaşyp, täzeden synanyşyň.",
+  "errorNetwork": "Serwer bilen aragatnaşyk ýok.",
+  "errorTimeout": "Serwer wagtynda jogap bermedi.",
+  "errorServer": "Serwerde ýalňyşlyk. Soňrak synanyşyň.",
+  "errorPermission": "Bu amal üçin hukugyňyz ýok.",
+  "errorNotFound": "Ýazgy tapylmady.",
+  "errorValidation": "Girizilen maglumatlary barlaň.",
+  "errorUnknown": "Bir zat ýalňyş boldy.",
+  "errorLastOwner": "Işde iň bolmanda bir eýe galmalydyr.",
+  "errorLocationNotPermitted": "Bu ýer size elýeterli däl.",
+  "errorInvalidResetCode": "Kod nädogry ýa-da möhleti geçdi.",
+  "errorInvalidOldPassword": "Häzirki parol nädogry.",
+  "fieldRequired": "Hökmany meýdança.",
+  "fieldInvalid": "Nädogry baha.",
+  "fieldUsernameTaken": "Bu login eýýäm ulanylýar.",
+  "fieldEmailTaken": "Bu e-poçta eýýäm ulanylýar.",
+  "fieldInvalidUsername": "Login: 3–64 simwol — kiçi latyn harplary, sanlar, nokat, defis, aşaky çyzyk.",
+  "fieldNameTaken": "Bu at eýýäm bar.",
+  "fieldLocationsRequired": "Iň az bir ýer saýlaň.",
+  "fieldInvalidLocation": "Näbelli ýer.",
+  "passwordTooShort": "Parol gaty gysga (iň az 10 simwol).",
+  "passwordTooCommon": "Parol gaty ýönekeý.",
+  "passwordNumeric": "Parol diňe sanlardan ybarat bolup bilmez.",
+  "passwordSimilar": "Parol hasap maglumatlaryna gaty meňzeş.",
+  "offlineBanner": "Serwer bilen aragatnaşyk ýok. Ammar amallary elýeterli däl, görkezilen maglumatlar köne bolup biler.",
+  "pendingBanner": "Tassyklanmagy garaşýar: {count}",
+  "pendingTitle": "Tassyklanmadyk amallar",
+  "pendingExplain": "Aragatnaşyk kesildi, amalyň serwerde ýerine ýetendigi belli däl. Ýagdaýy barlaň: gaýtadan ibermek şol bir açary ulanýar we gaýtalanma döretmeýär.",
+  "pendingCheck": "Ýagdaýy barlamak",
+  "pendingRetry": "Gaýtadan ibermek (şol bir açar)",
+  "pendingDiscard": "Ýazgyny pozmak",
+  "pendingDiscardConfirm": "Bu amalyň ýazgysy pozulsynmy? Eger serwer ony eýýäm ýerine ýetiren bolsa, ol ýerine ýetirilen bolup galar.",
+  "pendingStateUnknown": "Ýagdaý näbelli",
+  "pendingStateNotFound": "Serwer bu amaly almady",
+  "pendingStateSending": "Iberilýär",
+  "pendingResolved": "Amal serwer tarapyndan tassyklandy.",
+  "pendingSignInAgain": "Bu amaly ibermek üçin ýene giriň.",
+  "unavailableTitle": "Bu bölüm soňrak peýda bolar",
+  "unavailableBody": "Bu bölüm entek serwere birikdirilmedi. Iş wersiýasynda demo maglumatlar görkezilmeýär.",
+  "roleOwner": "Eýesi",
+  "roleManager": "Menejer",
+  "roleSales": "Satyjy",
+  "roleWarehouse": "Ammarçy",
+  "kindStore": "Dükan",
+  "kindWarehouse": "Ammar",
+  "business": "Iş",
+  "noLocationsAvailable": "Size hiç hili ýer bellenilmedi.",
+  "loading": "Ýüklenýär…",
+  "loadFailed": "Maglumatlary ýüklemek başartmady.",
+  "adminBusinessProfile": "Işiň profili",
+  "businessName": "Ady",
+  "currencyLabel": "Walýuta",
+  "currencyFixedNote": "Işiň walýutasy — TMT. Harydyň bahasy TMT ýa-da USD görnüşinde görkezilip bilner.",
+  "defaultLanguageLabel": "Esasy dil",
+  "timezoneLabel": "Wagt guşagy",
+  "saved": "Saklandy.",
+  "addLocation": "Ýer goşmak",
+  "editLocation": "Ýeri üýtgetmek",
+  "locationName": "Ady",
+  "locationKind": "Görnüşi",
+  "inactiveLabel": "Ulanylmaýar",
+  "deactivate": "Ýapmak",
+  "activate": "Açmak",
+  "staffTitle": "Işgärler",
+  "addStaff": "Işgär goşmak",
+  "editStaff": "Işgäri üýtgetmek",
+  "emailLabel": "E-poçta",
+  "fullNameLabel": "Ady",
+  "roleLabel": "Wezipe",
+  "allLocationsLabel": "Ähli ýerler",
+  "initialPasswordLabel": "Başlangyç parol (hökman däl)",
+  "initialPasswordHint": "Görkezilmese, işgär e-poçta arkaly bir gezeklik kod alar.",
+  "staffCreated": "Işgär goşuldy.",
+  "sendResetCode": "Parol üçin kod ibermek",
+  "resetCodeRequested": "Kod işgäriň e-poçtasyna iberildi.",
+  "staffYou": "bu siz",
+  "membershipInactive": "Girmek öçürilen",
+  "pickLocations": "Ýerler",
+  "noBusiness": "Siziň hiç bir işe girmäge hukugyňyz ýok. Eýesine ýüz tutuň.",
+  "welcomeUser": "Salam, {name}!",
+  "signedInAs": "Siz {name} hökmünde girdiňiz",
+  "unknownActionLabel": "Ammar amaly",
+  "unsavedChangeConflict": "Üýtgetmek saklanmadyk maglumatlary ýitirer. Dowam etmelimi?",
+  "addProduct": "Haryt goşmak",
+  "editProduct": "Harydy üýtgetmek",
+  "productSku": "Artikul (SKU)",
+  "productName": "Harydyň ady",
+  "categoryLabel": "Kategoriýa",
+  "brandLabel": "Brend",
+  "unitLabel": "Ölçeg birligi",
+  "noneOption": "Saýlanmady",
+  "addNewOption": "Täze goşmak…",
+  "addCategory": "Täze kategoriýa",
+  "addBrand": "Täze brend",
+  "addUnit": "Täze ölçeg birligi",
+  "unitSymbol": "Gysgaltma",
+  "unitDecimals": "Otur yzyndan soň san (0–3)",
+  "priceLabel": "Satyş bahasy",
+  "priceCurrencyLabel": "Bahanyň walýutasy",
+  "priceInTmt": "≈ {amount} TMT",
+  "rateMissingNote": "USD kursy bellenmedi: TMT bahasy näbelli.",
+  "defaultCostLabel": "Adaty satyn alyş bahasy (TMT)",
+  "warrantyMonthsLabel": "Kepillik, aý (0 — ýok)",
+  "warrantyTermsLabel": "Kepillik şertleri",
+  "warrantyMonthsValue": "Kepillik: {months} aý",
+  "barcodesLabel": "Ştrih-kodlar",
+  "addBarcode": "Ştrih-kod goşmak",
+  "barcodeFieldLabel": "Ştrih-kod",
+  "scanWithCamera": "Kamera bilen skanirlemek",
+  "archiveProduct": "Arhiwlemek",
+  "restoreProduct": "Arhiwden dikeltmek",
+  "archiveConfirm": "Arhiwlenen haryt sanawdan we satuwdan aýrylar, taryhy saklanar. Dowam etmelimi?",
+  "archivedLabel": "Arhiwde",
+  "showArchived": "Arhiwdäkileri görkez",
+  "noProducts": "Entek haryt ýok",
+  "noProductsHint": "Işe başlamak üçin ilkinji harydy goşuň.",
+  "loadMore": "Ýene görkez",
+  "productSaved": "Haryt saklandy.",
+  "productCardTitle": "Harydyň kartoçkasy",
+  "scanTitle": "Kamerany ştrih-koda gönükdiriň",
+  "scanTorch": "Fonar",
+  "cameraDenied": "Kamera elýeterli däl. Sazlamalarda rugsat beriň ýa-da ştrih-kody el bilen giriziň.",
+  "cameraUnavailable": "Bu enjamda kamera ýok.",
+  "enterManually": "El bilen girizmek",
+  "scannedCode": "Okalan kod: {code}",
+  "errorBarcodeNotFound": "Bu ştrih-kodly haryt tapylmady.",
+  "errorUnitInUse": "Ölçeg birligi harytlarda ulanylýan wagty takyklygy üýtgedip bolmaýar.",
+  "fieldSkuTaken": "Bu artikul eýýäm ulanylýar.",
+  "fieldBarcodeTaken": "Bu ştrih-kod başga haryt tarapyndan ulanylýar.",
+  "fieldTooManyDecimals": "Otur yzyndan soň gaty köp san.",
+  "fieldOutOfRange": "Baha rugsat berilýän aralykdan daşarda.",
+  "fieldQuantityPrecision": "Bu ölçeg birligi üçin otur yzyndan soň az san rugsat berilýär.",
+  "exchangeRateTitle": "Dollar kursy (USD → TMT)",
+  "currentRate": "Häzirki kurs: 1 USD = {rate} TMT",
+  "noRateYet": "Kurs entek bellenmedi. USD bahalary TMT-e öwrülip bilinmeýär.",
+  "newRateLabel": "Täze kurs (1 USD üçin TMT)",
+  "setRate": "Kursy bellemek",
+  "rateHistory": "Kursyň taryhy",
+  "rateHistoryEntry": "{rate} — {user}, {when}",
+  "stockEmpty": "Entek galyndy ýok",
+  "stockEmptyHint": "Başlangyç galyndylary giriziň ýa-da ilkinji getirilen harydy kabul ediň.",
+  "movementHistory": "Hereketleriň taryhy",
+  "historyEmpty": "Entek hereket ýok",
+  "openingStock": "Başlangyç galyndylar",
+  "adjustStock": "Galyndylary düzetmek",
+  "stockValueLabel": "Bahasy: {amount}",
+  "conditionLabel": "Ýagdaýy",
+  "conditionSellable": "Satmaga ýaramly",
+  "conditionDamaged": "Zaýalanan",
+  "conditionInspection": "Barlaga garaşýar",
+  "conditionInTransit": "Ýolda",
+  "unitCostLabel": "Birligiň öz bahasy, TMT",
+  "addLineProduct": "Haryt goşmak",
+  "removeLine": "Setiri aýyrmak",
+  "directionIn": "Giriş",
+  "directionOut": "Çykdaýjy",
+  "reasonLabel": "Sebäbi (hökmany)",
+  "noteLabel": "Bellik",
+  "postOpening": "Başlangyç galyndylary geçirmek",
+  "postAdjustment": "Düzedişi geçirmek",
+  "entryNeedsLines": "Azyndan bir haryt goşuň.",
+  "entryPosted": "Geçirildi.",
+  "locationFieldLabel": "Nokat",
+  "movementOpening": "Başlangyç galyndy",
+  "movementReceipt": "Sargyt boýunça kabul",
+  "movementAdjustmentIn": "Düzediş (giriş)",
+  "movementAdjustmentOut": "Düzediş (çykdaýjy)",
+  "movementOther": "Hereket",
+  "pickProductTitle": "Haryt saýlamak",
+  "outcomeUnknownNotice": "Serwerden jogap gelmedi. Amal ýatda saklandy we barlanar: ýokardaky duýduryşa serediň. Ony özbaşdak gaýtalamaň.",
+  "errorInsufficientStock": "Ammarda haryt ýeterlik däl.",
+  "errorOpeningExists": "Bu nokatda bu haryt boýunça eýýäm hereketler bar. Düzedişi ulanyň.",
+  "errorProductArchived": "Haryt arhiwde.",
+  "errorLocationInactive": "Nokat işjeň däl.",
+  "errorOverReceipt": "Sargyt boýunça galandan köp kabul edip bolmaýar.",
+  "errorOrderNotDraft": "Diňe garalama redaktirlenip we resmileşdirilip bilner.",
+  "errorOrderNotReceivable": "Bu sargyt häzir kabul edilmeýär: ol resmileşdirilmedik, eýýäm kabul edilen ýa-da ýatyrylan.",
+  "errorOrderNotCancellable": "Bu sargydy indi ýatyryp bolmaýar.",
+  "errorOrderNoLines": "Sargyda azyndan bir setir goşuň.",
+  "fieldDuplicateProduct": "Bu haryt eýýäm sanawda bar.",
+  "suppliersTitle": "Üpjün edijiler",
+  "addSupplier": "Üpjün ediji goşmak",
+  "editSupplier": "Üpjün edijini üýtgetmek",
+  "supplierName": "Üpjün edijiniň ady",
+  "contactName": "Habarlaşmaly adam",
+  "phoneLabel": "Telefon",
+  "addressLabel": "Salgy",
+  "notesLabel": "Bellikler",
+  "noSuppliers": "Entek üpjün edijiler ýok",
+  "noSuppliersHint": "Sargyt döretmek üçin üpjün ediji goşuň.",
+  "supplierSaved": "Üpjün ediji ýatda saklandy.",
+  "newOrder": "Üpjün edijä täze sargyt",
+  "editOrder": "Sargydy üýtgetmek",
+  "orderSaved": "Sargyt ýatda saklandy.",
+  "statusAll": "Hemmesi",
+  "statusDraft": "Garalama",
+  "statusOrdered": "Resmileşdirilen",
+  "statusPartial": "Bölekleýin kabul edilen",
+  "statusReceived": "Doly kabul edilen",
+  "statusCancelled": "Ýatyrylan",
+  "supplierFieldLabel": "Üpjün ediji",
+  "deliverToLabel": "Nokada kabul etmek",
+  "expectedDateLabel": "Garaşylýan getirme senesi",
+  "pickDate": "Sene saýlamak",
+  "orderLinesTitle": "Sargydyň setirleri",
+  "orderTotal": "Jemi: {amount}",
+  "orderProgress": "Sargyt edildi {ordered}, kabul edildi {received}",
+  "submitOrder": "Sargydy resmileşdirmek",
+  "submitOrderConfirm": "Resmileşdirilenden soň sargydy redaktirläp bolmaýar. Resmileşdirmelimi?",
+  "orderSubmitted": "Sargyt resmileşdirildi.",
+  "cancelOrder": "Sargydy ýatyrmak",
+  "cancelOrderConfirm": "Sargydyň ýerine ýetirilmedik galan bölegi ýatyrylar, eýýäm kabul edilen harytlar ammarda galar. Dowam etmelimi?",
+  "cancelReasonLabel": "Ýatyrmagyň sebäbi (hökman däl)",
+  "orderCancelled": "Sargyt ýatyryldy.",
+  "receiveTitle": "{number} sargyt boýunça kabul",
+  "receiveQuantityLabel": "Häzir kabul etmek",
+  "outstandingLabel": "Kabul etmeli galan: {quantity}",
+  "receiveAll": "Galanlaryň hemmesini kabul etmek",
+  "receiveNothing": "Azyndan bir setir üçin mukdary görkeziň.",
+  "deliveryPosted": "Getirilen haryt kabul edildi, galyndylar täzelendi.",
+  "deliveriesTitle": "Kabul edilen getirmeler",
+  "deliveryEntry": "Getirme №{number} · {when} · {who}",
+  "noDeliveries": "Entek getirme bolmady.",
+  "noOrders": "Entek sargyt ýok",
+  "noOrdersHint": "Harytlary bölekleýin kabul etmek üçin üpjün edijä sargyt dörediň.",
+  "expectedOn": "Garaşylýar {date}",
+  "cancelledBecause": "Ýatyrmagyň sebäbi: {reason}",
+  "viewHistoryFor": "Haryt boýunça hereketleriň taryhy",
+  "costVisibleNote": "Öz bahasyny diňe eýesi we menejer görýär.",
+  "actionReceive": "Haryt kabul etmek",
+  "actionOpening": "Başlangyç galyndylar",
+  "actionAdjust": "Galyndylary düzetmek",
+  "salesStartHint": "Harydy ady ýa-da artikuly boýunça tapyň ýa-da ştrih-kody skanerläp sebede goşuň.",
+  "salesNoMatch": "Hiç zat tapylmady. Ýazylyşyny ýa-da kody barlaň.",
+  "cartTitle": "Sebet",
+  "cartEmpty": "Sebet boş",
+  "cartScannedNotFound": "{code} kodly haryt tapylmady.",
+  "cartAdded": "Goşuldy: {name}",
+  "availableHere": "Bu ýerde bar: {qty}",
+  "exceedsAvailable": "Bardan köp ({qty}).",
+  "saleTotal": "Jemi: {amount}",
+  "customerNone": "Alyjysyz",
+  "customerChoose": "Alyjyny saýlamak",
+  "customerNew": "Täze alyjy",
+  "customerNameLabel": "Alyjynyň ady",
+  "customersEmpty": "Alyjylar tapylmady",
+  "toPayment": "Töleg etmäge",
+  "paymentTitle": "Töleg",
+  "payCash": "Nagt",
+  "payCard": "Kart",
+  "completeSale": "Satuwy tamamlamak",
+  "saleDoneTitle": "{number} satuw resmileşdirildi",
+  "newSaleAction": "Täze satuw",
+  "receiptAction": "Çek",
+  "printAction": "Çap etmek",
+  "shareAction": "Paýlaşmak",
+  "documentFailed": "Resminama alyp bolmady. Gaýtadan synanyşyň.",
+  "saleHistoryTitle": "Satuwlaryň taryhy",
+  "salesHistoryEmpty": "Entek satuw ýok",
+  "saleSearchHint": "Belgi (S-000012) ýa-da alyjynyň ady",
+  "saleDetailTitle": "Satuw {number}",
+  "cashierLine": "Kassir: {name}",
+  "saleCostLine": "Öz bahasy: {amount}",
+  "saleProfitLine": "Girdeji: {amount}",
+  "saleUnitsLine": "{qty} × {price}",
+  "errorInsufficientNamed": "«{name}» harydy ýeterlik däl: bar {available}.",
+  "actionSale": "Satuw",
+  "salesNoPermission": "Siziň satuw resmileşdirmäge hukugyňyz ýok. Diňe taryhy görmek bolýar.",
+  "businessAddress": "Salgy",
+  "businessPhone": "Telefon",
+  "businessDocumentNote": "Bu maglumatlar çekde çap edilýär.",
+  "priceFieldLabel": "Bir birligiň bahasy, TMT",
+  "catalogPriceLine": "Katalogda: {price}",
+  "paidBy": "Töleg",
+  "transfersTitle": "Geçirişler",
+  "transfersEmpty": "Entek geçiriş ýok",
+  "transferNew": "Täze geçiriş",
+  "transferNumberTitle": "Geçiriş {number}",
+  "transferFromLabel": "Nireden",
+  "transferToLabel": "Nirä",
+  "transferRoute": "{from} → {to}",
+  "transferStatusInTransit": "Ýolda",
+  "transferStatusReceived": "Kabul edildi",
+  "transferStatusPartial": "Doly kabul edilmedi",
+  "transferStatusCancelled": "Ýatyryldy",
+  "transferSend": "Ibermek",
+  "transferReceive": "Kabul etmek",
+  "transferCancel": "Geçirişi ýatyrmak",
+  "transferSentLine": "Iberildi: {qty}",
+  "transferReceivedLine": "Kabul edildi: {qty}",
+  "transferArrivedLabel": "Gelen",
+  "transferShortReasonLabel": "Ýetmezçiligiň sebäbi",
+  "transferShortHint": "Iberilenden az geldi: ýetmeýän haryt hasapdan çykarylar. Sebäbini ýazyň.",
+  "transferInTransitNote": "Haryt ýolda we entek satyşa elýeterli däl.",
+  "transferSentDone": "Geçiriş iberildi.",
+  "transferReceivedDone": "Geçiriş kabul edildi.",
+  "transferCancelledDone": "Geçiriş ýatyryldy, haryt yzyna gaýtdy.",
+  "transferSamePlace": "Başga nokady saýlaň.",
+  "errorTransferNotReceivable": "Bu geçiriş eýýäm kabul edildi ýa-da ýatyryldy.",
+  "errorTransferNotCancellable": "Bu geçirişi indi ýatyryp bolmaýar.",
+  "actionTransferSend": "Geçiriş: iberme",
+  "actionTransferReceive": "Geçiriş: kabul etme",
+  "actionTransferCancel": "Geçiriş: ýatyrma",
+  "countsTitle": "Inwentarizasiýa",
+  "countsEmpty": "Entek inwentarizasiýa ýok",
+  "countStart": "Inwentarizasiýany başlamak",
+  "countNumberTitle": "Inwentarizasiýa {number}",
+  "countScopeFull": "Nokatdaky ähli zat",
+  "countScopePartial": "Saýlanan harytlar",
+  "countStatusOpen": "Sanalýar",
+  "countStatusSubmitted": "Tassyklama garaşýar",
+  "countStatusApproved": "Tassyklandy",
+  "countStatusCancelled": "Ýatyryldy",
+  "countSystemLine": "Ulgamda: {qty}",
+  "countCountedLabel": "Sanaldy",
+  "countVarianceLine": "Tapawut: {qty}",
+  "countMovedNote": "Sanaw başlanandan soň satyş ýa-da kabul etme boldy: barlaň.",
+  "countSaveEntries": "Sanawy saklamak",
+  "countSubmit": "Tassyklamaga ibermek",
+  "countApprove": "Tassyklamak",
+  "countCancel": "Inwentarizasiýany ýatyrmak",
+  "countExplainLabel": "Tapawutlaryň düşündirişi",
+  "countNoDifferences": "Tapawut ýok.",
+  "countDifferences": "Tapawut: {n}",
+  "countProgress": "{total} harytdan {done} sanaldy",
+  "countEntriesSaved": "Sanaw saklandy.",
+  "countSubmittedDone": "Tassyklamaga iberildi.",
+  "countApprovedDone": "Inwentarizasiýa tassyklandy, galyndylar düzedildi.",
+  "countCancelledDone": "Inwentarizasiýa ýatyryldy.",
+  "countNeedsEntries": "Ilki bilen azyndan bir harydy sanaň.",
+  "errorCountNotOpen": "Sanaw eýýäm ýapyldy.",
+  "errorCountEmpty": "Hiç zat sanalmady.",
+  "errorCountNotSubmitted": "Bu inwentarizasiýany tassyklap bolmaýar: ol tassyklama garaşmaýar.",
+  "errorCountNotCancellable": "Bu inwentarizasiýa eýýäm ýapyldy.",
+  "actionCountApprove": "Inwentarizasiýa: tassyklama",
+  "returnsTitle": "Yzyna gaýtarmalar",
+  "returnsEmpty": "Entek yzyna gaýtarma ýok",
+  "returnNew": "Yzyna gaýtarmagy resmileşdirmek",
+  "returnNumberTitle": "Yzyna gaýtarma {number}",
+  "returnSearchHint": "Yzyna gaýtarma belgisi, mysal üçin R-0001",
+  "returnFromSale": "{number} satuwy boýunça",
+  "returnableLine": "Gaýtarmak bolýar: {qty}",
+  "returnedSoFar": "Eýýäm gaýtarylan: {qty}",
+  "returnQtyLabel": "Gaýtar",
+  "returnReasonLabel": "Gaýtarma sebäbi (hökman)",
+  "returnReasonShort": "Sebäbi",
+  "returnRefundTotal": "Alyja gaýtarylýar: {amount}",
+  "returnRefundLine": "Pul gaýtarylýar: {amount}",
+  "returnRefundNote": "Mukdar harydyň satylan bahasy boýunça hasaplanýar.",
+  "returnConfirmTitle": "Gaýtarmany tassyklamak",
+  "returnConfirmBody": "Yzyna kabul etmek: {items}. Alyja gaýtarmak: {refund}.",
+  "returnDone": "Yzyna gaýtarma resmileşdirildi.",
+  "returnNothingToReturn": "Bu satuw boýunça gaýtarmaly zat galmady.",
+  "returnUntilLine": "{date} çenli gaýtarmak bolýar",
+  "returnNoLimit": "Gaýtarmak möhleti çäklendirilmedik",
+  "returnNotAccepted": "Bu haryt yzyna kabul edilmeýär",
+  "returnDaysValue": "{days} gün içinde gaýtarmak bolýar",
+  "saleReturnsTitle": "Bu satuw boýunça gaýtarmalar",
+  "returnAwaiting": "Barlagy garaşýar: {qty}",
+  "returnInspectSellable": "Ýaramlylara",
+  "returnInspectDamaged": "Zaýalananlara",
+  "returnInspectDone": "Karar ýazyldy.",
+  "errorOverReturn": "Galanyndan köp gaýtarmak bolmaýar.",
+  "errorOverReturnNamed": "{product}: iň köp {qty} gaýtarmak bolýar.",
+  "errorReturnWindowExpired": "Bu harydyň gaýtarma möhleti gutardy ({date}).",
+  "errorReturnsNotAccepted": "Bu haryt yzyna kabul edilmeýär.",
+  "errorOverInspection": "Barlagy garaşýan haryt şuncha däl.",
+  "errorNotAwaitingInspection": "Bu haryt barlagy garaşmaýardy.",
+  "errorTargetBelowMinimum": "Maksat iň az derejeden pes bolup bilmez.",
+  "actionReturnComplete": "Alyjydan yzyna gaýtarma",
+  "actionReturnInspect": "Gaýtarma: barlag karary",
+  "actionSupplierReturn": "Üpjün edijä gaýtarma",
+  "supplierReturnsTitle": "Üpjün edijilere gaýtarmalar",
+  "supplierReturnsEmpty": "Üpjün edijilere entek gaýtarma ýok",
+  "supplierReturnNew": "Üpjün edijä gaýtarmak",
+  "supplierReturnSource": "{supplier} · {delivery}-nji iberiş",
+  "supplierReturnDone": "Üpjün edijä gaýtarma resmileşdirildi.",
+  "supplierReturnCredit": "Üpjün edijiniň hasaba alşy: {amount}",
+  "reorderTitle": "Zapasy dolduryş",
+  "reorderEmpty": "Hemmesi ýerinde: sargyt etmek hökman däl",
+  "reorderScreenHint": "Iň az derejeden pes harytlar (eýýäm sargyt edilenler hasaba alnyp). Gerekleri belläň we sargyt dörediň: üpjün edijini özüňiz saýlarsyňyz.",
+  "reorderRowLine": "Bar: {onHand} · sargytlarda: {onOrder} · iň az: {minimum}",
+  "reorderSuggested": "Sargyt etmek maslahat berilýär: {qty}",
+  "reorderCreate": "Sargyt döretmek",
+  "productReturnDays": "Gaýtarmak möhleti, gün",
+  "productReturnDaysHint": "Boş — çäklendirme ýok, 0 — yzyna kabul edilmeýär. Satuw güninden hasaplanýar.",
+  "reorderLevelsTitle": "Nokatlar boýunça iň az we maksat",
+  "reorderLevelsNone": "Bellenmedi",
+  "reorderLevelsEdit": "Üýtgetmek",
+  "reorderLevelsSaved": "Derejeler ýazyldy.",
+  "reorderLevelLine": "iň az {minimum}, maksat {target}",
+  "reorderMinLabel": "Iň az",
+  "reorderTargetLabel": "Maksat",
+  "returnButton": "Harydy gaýtar",
+  "expenseAddButton": "Çykdajy goşmak",
+  "expenseDetailTitle": "Çykdajy",
+  "expensesEmpty": "Bu döwür üçin çykdajy ýok",
+  "expensePeriodMonth": "Şu aý",
+  "expensePeriodLast": "Geçen aý",
+  "expensePeriodAll": "Hemme wagt",
+  "expenseAllCategories": "Ähli kategoriýalar",
+  "expenseTotalLine": "Döwür boýunça jemi: {amount}",
+  "expenseCategoryLabel": "Kategoriýa",
+  "expenseNewCategory": "Täze kategoriýa…",
+  "expenseNewCategoryTitle": "Çykdajylaryň täze kategoriýasy",
+  "expenseCategoryName": "Kategoriýanyň ady",
+  "expenseAmountLabel": "Mukdary, TMT",
+  "expenseDateLabel": "Senesi: {date}",
+  "expenseLocationLabel": "Nokat",
+  "expenseDescriptionLabel": "Düşündiriş",
+  "expenseReceipt": "Çek (hökman däl)",
+  "expenseTakePhoto": "Surata düşürmek",
+  "expenseChoosePhoto": "Surat ýa-da faýl saýlamak",
+  "expenseReceiptAttached": "Çek goşuldy: {name}",
+  "expenseRemoveReceipt": "Çegi aýyrmak",
+  "expenseReceiptNone": "Çek goşulmadyk",
+  "expenseOpenReceipt": "Çegi açmak ýa-da ibermek",
+  "expenseReceiptLoadFailed": "Çegi ýüklemek başartmady.",
+  "expenseSaved": "Çykdajy ýazyldy.",
+  "expenseEdit": "Üýtgetmek",
+  "expenseVoid": "Ýatyrmak",
+  "expenseVoidTitle": "Çykdajyny ýatyrmak",
+  "expenseVoidReason": "Ýatyrmagyň sebäbi",
+  "expenseVoided": "Çykdajy ýatyryldy.",
+  "expenseVoidedBadge": "Ýatyrylan",
+  "errorFileTooLarge": "Faýl gaty uly (5 MB-dan köp däl).",
+  "errorFileType": "JPEG, PNG, WebP suratlary we PDF faýllary gelýär.",
+  "errorFileRequired": "Faýl saýlanmady.",
+  "errorFutureDate": "Sene geljekde bolup bilmez.",
+  "errorExpenseVoid": "Ýatyrylan çykdajyny üýtgedip bolmaýar.",
+  "errorAlreadyVoid": "Çykdajy eýýäm ýatyryldy.",
+  "warrantiesTitle": "Kepillik ýüz tutmalary",
+  "warrantiesEmpty": "Entek kepillik ýüz tutmasy ýok",
+  "warrantyNew": "Täze ýüz tutma",
+  "warrantyStatusOpen": "Açyk",
+  "warrantyStatusClosed": "Ýapyk",
+  "warrantyNumberTitle": "Ýüz tutma {number}",
+  "warrantyPickSale": "Alyjynyň ýüz tutýan satuwyny tapyň",
+  "warrantyPickLine": "Haryt saýlaň",
+  "warrantyUntilLine": "Kepillik {date} çenli",
+  "warrantyExpiredLine": "Kepillik {date} gutardy",
+  "warrantyNone": "Kepillik ýok",
+  "warrantyProblemLabel": "Näme boldy (hökman)",
+  "warrantyOverrideHint": "Kepillik ýok ýa-da gutardy. Sebäbini görkezip, ýüz tutmany aýratyn ýagdaý hökmünde kabul edip bilersiňiz.",
+  "warrantyOverrideNote": "Näme üçin kepillikden daşary kabul edýäris (hökman)",
+  "warrantyBlocked": "Kepillik ýok ýa-da gutardy. Beýle ýüz tutmany diňe eýesi ýa-da menejer kabul edip biler.",
+  "warrantyOpenButton": "Ýüz tutmany açmak",
+  "warrantyOpened": "{number} ýüz tutma açyldy.",
+  "warrantyOutOfWarranty": "Kepillikden daşary kabul edildi",
+  "warrantyEvents": "Taryh",
+  "warrantyEventOpened": "Açyldy",
+  "warrantyEventNote": "Bellik",
+  "warrantyEventClosed": "Ýapyldy: {outcome}",
+  "warrantyNoteLabel": "Bellik",
+  "warrantyAddNote": "Bellik goşmak",
+  "warrantyOutcomeLabel": "Ýüz tutma boýunça karar",
+  "warrantyOutcomeRepair": "Abatlamak",
+  "warrantyOutcomeReplacement": "Çalyşmak",
+  "warrantyOutcomeRefund": "Pul gaýtarmak",
+  "warrantyOutcomeRejected": "Ret etmek",
+  "warrantyCloseNote": "Bellik (ret edilende hökman)",
+  "warrantyClose": "Ýüz tutmany ýapmak",
+  "warrantyCloseConfirm": "{number} ýüz tutmany ýapmak: {outcome}? Çalyşmak we pul gaýtarmak ammary we pulu üýtgedýär.",
+  "warrantyClosedDone": "Ýüz tutma ýapyldy.",
+  "warrantyReturnLine": "Pul gaýtaryldy: {number} gaýtarma",
+  "warrantyFromSale": "Kepillik ýüz tutmasy",
+  "actionWarrantyResolve": "Kepillik: ýüz tutmany ýapmak",
+  "errorNoWarranty": "Bu haryda kepillik ýok.",
+  "errorWarrantyExpired": "Kepillik gutardy ({date}).",
+  "errorClaimClosed": "Ýüz tutma eýýäm ýapyldy.",
+  "catalogImport": "CSV import",
+  "catalogExport": "CSV eksport",
+  "catalogExported": "Katalog faýly taýýar.",
+  "importTitle": "Harytlary CSV-den import etmek",
+  "importHelp": "UTF-8 kodurovkadaky CSV faýly, bölüji «;». Import diňe täze harytlary goşýar, galyndylary üýtgetmeýär. Faýl doly barlanýar: bir ýalňyşlyk bar bolsa, hiç zat goşulmaýar. Sütünler:",
+  "importChoose": "Faýl saýlamak",
+  "importChosen": "Faýl: {name}",
+  "importSummary": "Setir: {rows}, ýalňyşsyz: {valid}",
+  "importNoErrors": "Ýalňyşlyk ýok. Harytlary goşup bolýar.",
+  "importErrorsTitle": "Ýalňyşlyk: {count}",
+  "importErrorRow": "Setir {row}, {field}: {message}",
+  "importErrorsMore": "Ýalňyşlyklaryň hemmesi görkezilmedi. Bulary düzedip, faýly ýene barlaň.",
+  "importApply": "Harytlary goşmak",
+  "importDone": "Goşulan harytlar: {count}.",
+  "errorImportTooLarge": "Faýl gaty uly: ony böleklere bölüň (her birinde 2000 setire çenli).",
+  "errorImportHeader": "Faýlda sütünleriň atlary nädogry.",
+  "errorImportInvalid": "Faýlda ýalňyşlyklar bar: hiç zat goşulmady.",
+  "importErrUnknownUnit": "Nämälim ölçeg birligi.",
+  "importErrSkuExists": "Şeýle artikul katalogda eýýäm bar.",
+  "importErrSkuDuplicate": "Artikul faýlda gaýtalanýar.",
+  "importErrBarcodeDuplicate": "Ştrihkod faýlda gaýtalanýar.",
+  "importErrCurrency": "Walýuta: TMT ýa-da USD.",
+  "importErrTooLong": "Gaty uzyn baha.",
+  "errorOverClaim": "Satylandan we heniz yzyna gaýtarylmadyk mukdardan köp kabul edip bolmaýar.",
+  "errorInvalidFile": "Faýl okalmady. Ony UTF-8 kodlamada CSV hökmünde ýazdyryň.",
+  "errorFileMissing": "Faýl häzir serverde elýeterli däl.",
+  "reportsTitle": "Hasabatlar",
+  "reportPeriodToday": "Şu gün",
+  "reportPeriodWeek": "7 gün",
+  "reportPeriodMonth": "Şu aý",
+  "reportPeriodLast": "Geçen aý",
+  "reportAllLocations": "Ähli nokatlar",
+  "reportTabSummary": "Jemler",
+  "reportTabSales": "Satuwlar",
+  "reportTabStock": "Ammar",
+  "reportTabPurchasing": "Satyn alyşlar",
+  "reportTabReturns": "Gaýtarmalar",
+  "reportTabExpenses": "Çykdajylar",
+  "reportTabActivity": "Hereketler taryhy",
+  "reportEmpty": "Bu döwür üçin maglumat ýok",
+  "reportExport": "CSV eksport",
+  "reportExported": "Hasabat faýly taýýar.",
+  "reportRevenue": "Gelir",
+  "reportRefunds": "Gaýtarylan pul",
+  "reportNetSales": "Arassa satuw",
+  "reportCostOfGoods": "Satylanyň özüne düşýän bahasy",
+  "reportGrossProfit": "Umumy peýda",
+  "reportExpenses": "Çykdajylar",
+  "reportResult": "Netije",
+  "reportResultNote": "Netije = umumy peýda minus çykdajylar. Bu buhgalteriýa peýdasy däl.",
+  "reportInventoryValue": "Ammaryň bahasy",
+  "reportInventoryNote": "Partiýalaryň öz bahasy boýunça (FIFO)",
+  "reportLowStock": "Minimumdan aşakda",
+  "reportOpenOrders": "Açyk sargytlar",
+  "reportSalesCount": "Satuwlar: {count}",
+  "@reportSalesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportReturnsCount": "Gaýtarmalar: {count}",
+  "@reportReturnsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportByPayment": "Töleg usuly boýunça",
+  "reportByDay": "Günler boýunça",
+  "reportTopProducts": "Iň köp satylan harytlar",
+  "reportPaymentLine": "{method}: {count} · {total}",
+  "@reportPaymentLine": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "reportDayLine": "{date}: {count} · gelir {revenue} · gaýtarmalar {refunds}",
+  "@reportDayLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "revenue": {
+        "type": "String"
+      },
+      "refunds": {
+        "type": "String"
+      }
+    }
+  },
+  "reportProductLine": "{qty} · {revenue}",
+  "@reportProductLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "revenue": {
+        "type": "String"
+      }
+    }
+  },
+  "reportLowStockTitle": "Minimumdan aşak harytlar",
+  "reportLowStockEmpty": "Hemmesi minimumdan ýokary",
+  "reportLowStockRow": "{location}: bar {onHand}, minimum {minimum}",
+  "@reportLowStockRow": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      },
+      "onHand": {
+        "type": "String"
+      },
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "reportValueTitle": "Ammaryň nokatlar boýunça bahasy",
+  "reportValueLine": "{location}: {total}",
+  "@reportValueLine": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "reportMovementsTitle": "Döwür boýunça haryt hereketleri",
+  "reportMovementLine": "{type}: {count} · giriş {incoming} · çykyş {outgoing}",
+  "@reportMovementLine": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "incoming": {
+        "type": "String"
+      },
+      "outgoing": {
+        "type": "String"
+      }
+    }
+  },
+  "reportOrdersCount": "Döredilen sargytlar: {count}",
+  "@reportOrdersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportDeliveriesCount": "Kabul edilen eltip bermeler: {count}",
+  "@reportDeliveriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportOrderedTotal": "Sargytlaryň jemi: {amount}",
+  "@reportOrderedTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReceivedValue": "Kabul edilen jemi: {amount}",
+  "@reportReceivedValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportBySupplier": "Üpjünçiler boýunça",
+  "reportByStatus": "Sargytlaryň ýagdaýy boýunça",
+  "reportSupplierLine": "{name}: sargytlar {orders}",
+  "@reportSupplierLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orders": {
+        "type": "int"
+      }
+    }
+  },
+  "reportSupplierLineValue": "{name}: sargytlar {orders}, kabul edilen {amount}",
+  "@reportSupplierLineValue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orders": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportSupplierReturns": "Üpjünçilere gaýtarmalar: {count}",
+  "@reportSupplierReturns": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportSupplierReturnsCredit": "Üpjünçilere gaýtarmalar: {count}, hasaba alnan {credit}",
+  "@reportSupplierReturnsCredit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "credit": {
+        "type": "String"
+      }
+    }
+  },
+  "reportRefundTotal": "Alyjylara gaýtarylan: {amount}",
+  "@reportRefundTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportByCondition": "Harydyň ýagdaýy boýunça",
+  "reportByReason": "Gaýtarma sebäpleri",
+  "reportConditionLine": "{condition}: {qty} · {amount}",
+  "@reportConditionLine": {
+    "placeholders": {
+      "condition": {
+        "type": "String"
+      },
+      "qty": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReasonLine": "{reason}: {count} · {amount}",
+  "@reportReasonLine": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportByCategory": "Kategoriýalar boýunça",
+  "reportByLocation": "Nokatlar boýunça",
+  "reportTotalLine": "Jemi: {amount}",
+  "@reportTotalLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportRowLine": "{name}: {amount} ({count})",
+  "@reportRowLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorRangeTooLong": "Döwür gaty uzyn: bir ýyldan köp saýlamaň.",
+  "dashSalesToday": "Şu günki satuwlar ({count})",
+  "@dashSalesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashSalesMonth": "Aýlyk satuwlar ({count})",
+  "@dashSalesMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashProfitMonth": "Aýlyk umumy peýda",
+  "dashExpensesMonth": "Aýlyk çykdajylar",
+  "dashInventoryValue": "Ammaryň bahasy",
+  "dashLowStock": "Minimumdan aşakda",
+  "dashReorder": "Üpjünçä sargyt etmeli",
+  "dashOpenOrders": "Açyk sargytlar",
+  "dashOpenClaims": "Açyk kepillikler",
+  "dashRecent": "Soňky hereketler",
+  "dashOpenReports": "Hasabatlary açmak",
+  "dashNothing": "Roluňyz üçin bu ýerde heniz görkezer ýaly zat ýok.",
+  "activitySearchHint": "Hereket ýa-da obýekt",
+  "activityAllActions": "Ähli hereketler",
+  "activityEmpty": "Ýazgy ýok",
+  "activityLine": "{actor} · {time}",
+  "@activityLine": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activitySystem": "Ulgam",
+  "activityLoadMore": "Ýene görkez",
+  "movementSale": "Satuw",
+  "movementTransferOut": "Ýerini üýtgetme (iberildi)",
+  "movementTransferIn": "Ýerini üýtgetme (alyndy)",
+  "movementTransferLoss": "Ýerini üýtgetme (gelip ýetmedi)",
+  "movementReturnIn": "Alyjydan gaýtarma",
+  "movementInspectionOut": "Gaýtarma barlagy (hasapdan çykaryldy)",
+  "movementInspectionIn": "Gaýtarma barlagy (hasaba alyndy)",
+  "movementSupplierReturn": "Üpjünçä gaýtarma",
+  "movementWarrantyOut": "Kepillik çalşygy (berildi)",
+  "movementWarrantyIn": "Kepillik: näsaz haryt (kabul edildi)",
+  "auditAttachmentUploaded": "Faýl ýüklendi",
+  "auditAuthLogin": "Ulgama girdi",
+  "auditAuthPasswordChanged": "Parol çalşyldy",
+  "auditAuthPasswordResetCompleted": "Parol dikeldildi",
+  "auditAuthPasswordResetRequested": "Parolyň dikeldilmegi soraldy",
+  "auditBusinessCreated": "Iş döredildi",
+  "auditBusinessUpdated": "Işiň maglumatlary üýtgedildi",
+  "auditCatalogExported": "Katalog eksport edildi",
+  "auditCatalogImported": "Harytlar import edildi",
+  "auditCountApproved": "Inwentarizasiýa tassyklandy",
+  "auditCountCancelled": "Inwentarizasiýa ýatyryldy",
+  "auditCountStarted": "Inwentarizasiýa başlandy",
+  "auditCountSubmitted": "Inwentarizasiýa tassyklamaga iberildi",
+  "auditExchangeRateCreated": "Kurs bellenildi",
+  "auditExpenseCreated": "Çykdajy goşuldy",
+  "auditExpenseUpdated": "Çykdajy üýtgedildi",
+  "auditExpenseVoided": "Çykdajy ýatyryldy",
+  "auditLocationCreated": "Nokat goşuldy",
+  "auditLocationUpdated": "Nokat üýtgedildi",
+  "auditProductCreated": "Haryt goşuldy",
+  "auditPurchaseOrderCancelled": "Üpjünçä sargyt ýatyryldy",
+  "auditPurchaseOrderCreated": "Üpjünçä sargyt döredildi",
+  "auditPurchaseOrderReceived": "Sargyt boýunça haryt kabul edildi",
+  "auditPurchaseOrderSubmitted": "Üpjünçä sargyt resmileşdirildi",
+  "auditPurchaseOrderUpdated": "Üpjünçä sargyt üýtgedildi",
+  "auditReorderUpdated": "Minimum we maksat üýtgedildi",
+  "auditReportExported": "Hasabat eksport edildi",
+  "auditReturnInspected": "Gaýtarma barlagy boýunça karar",
+  "auditSaleCompleted": "Satuw resmileşdirildi",
+  "auditSaleReturned": "Alyjydan gaýtarma",
+  "auditStaffCodeSent": "Işgäre kod iberildi",
+  "auditStaffCreated": "Işgär goşuldy",
+  "auditStaffUpdated": "Işgär üýtgedildi",
+  "auditStockAdjustmentPosted": "Ammar düzedişi",
+  "auditStockOpeningPosted": "Başlangyç galyndy",
+  "auditSupplierCreated": "Üpjünçi goşuldy",
+  "auditSupplierUpdated": "Üpjünçi üýtgedildi",
+  "auditSupplierReturnCreated": "Üpjünçä gaýtarma",
+  "auditTransferCancelled": "Ýerini üýtgetme ýatyryldy",
+  "auditTransferDispatched": "Ýerini üýtgetme iberildi",
+  "auditTransferReceived": "Ýerini üýtgetme kabul edildi",
+  "auditWarrantyClosed": "Kepillik ýüz tutmasy ýapyldy",
+  "auditWarrantyNoted": "Kepillik barada bellik",
+  "auditWarrantyOpened": "Kepillik ýüz tutmasy açyldy",
+  "auditCategoryCreated": "Kategoriýa goşuldy",
+  "auditCategoryUpdated": "Kategoriýa üýtgedildi",
+  "auditBrandCreated": "Brend goşuldy",
+  "auditBrandUpdated": "Brend üýtgedildi",
+  "auditUnitCreated": "Ölçeg birligi goşuldy",
+  "auditUnitUpdated": "Ölçeg birligi üýtgedildi",
+  "auditCustomerCreated": "Alyjy goşuldy",
+  "auditCustomerUpdated": "Alyjy üýtgedildi",
+  "auditExpenseCategoryCreated": "Çykdajy kategoriýasy goşuldy",
+  "auditExpenseCategoryUpdated": "Çykdajy kategoriýasy üýtgedildi",
+  "auditProductUpdated": "Haryt üýtgedildi",
+  "auditProductArchived": "Haryt arhiwe goýuldy",
+  "auditProductRestored": "Haryt arhiwden yzyna alyndy",
+  "serverLine": "Serwer: {url}",
+  "@serverLine": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "serverNone": "Serwer saýlanmady",
+  "serverChange": "Üýtgetmek",
+  "serverSet": "Serweri görkezmek",
+  "serverDialogTitle": "Serweriň salgysy",
+  "serverUrlLabel": "Serweriň salgysy",
+  "serverChangeNote": "Salgyny ulgamy düzen adam size habar berer. Salgy üýtgänden soň täzeden girmeli.",
+  "serverSave": "Barlamak we saklamak",
+  "serverChecking": "Barlanýar…",
+  "serverSaved": "Serweriň salgysy saklandy.",
+  "serverErrInvalid": "https://shop.example.com görnüşinde salgy ýazyň",
+  "serverErrInsecure": "https:// bilen başlaýan goralan salgy gerek",
+  "serverErrUnreachable": "Serwer jogap bermeýär. Salgyny we interneti barlaň.",
+  "serverErrNotErp": "Bu salgyda bu ulgamyň serweri ýok.",
+  "serverErrDatabase": "Serwer jogap berýär, ýöne maglumat bazasy häzir elýeterli däl."
 }

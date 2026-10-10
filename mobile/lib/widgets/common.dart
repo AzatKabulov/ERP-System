@@ -267,8 +267,12 @@ class SectionHeading extends StatelessWidget {
   );
 }
 
+/// Shows a short message. A newer message replaces the one still on screen instead of
+/// waiting behind it, so what the user reads is always the latest outcome.
 void showFeedback(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message)));
 }
 
 Future<bool> confirmAction(

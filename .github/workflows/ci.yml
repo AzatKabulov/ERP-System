@@ -1,0 +1,185 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile:
+    name: Mobile (format, analyze, test, web, Android debug APK)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      # .flutter-version is the single source of truth for the SDK version.
+      - name: Read pinned Flutter version
+        id: flutter_version
+        run: echo "version=$(tr -d '\r\n' < .flutter-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ steps.flutter_version.outputs.version }}
+          cache: true
+
+      - name: Verify the SDK is the pinned commit
+        run: |
+          flutter --version --machine | tee /tmp/flutter-version.json
+          python3 - <<'PY'
+          import json
+          rev = json.load(open('/tmp/flutter-version.json'))['frameworkRevision']
+          expected = '5fc346839b5d0eef006ed8404392afb4dfae428d'
+          assert rev == expected, f'Flutter revision {rev} != pinned {expected}'
+          PY
+
+      - name: Dependencies (frozen lockfile)
+        working-directory: mobile
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        working-directory: mobile
+        run: flutter gen-l10n
+
+      - name: Format check
+        working-directory: mobile
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        working-directory: mobile
+        run: flutter analyze
+
+      - name: Test
+        working-directory: mobile
+        run: flutter test
+
+      - name: Build web
+        working-directory: mobile
+        run: flutter build web --no-web-resources-cdn
+
+      - name: Build Android debug APK
+        working-directory: mobile
+        run: flutter build apk --debug
+
+      # The release configuration (permissions, shrinking off, signing) must keep building. Without a
+      # release key this APK is signed with the debug key: a build check only, never handed to anyone.
+      - name: Build Android release APK (build check, not for distribution)
+        working-directory: mobile
+        run: flutter build apk --release
+
+      # A test build anyone with access to the repository can download, with no signing key needed:
+      # the web app (it talks to the server it is served from) and a DEBUG Android app (it may
+      # talk to a plain-http server on the local network; each CI run signs it with a new
+      # throwaway key, so a newer one is installed after removing the older one). For real
+      # testers use the Release APK workflow instead (docs/ANDROID_RELEASE.md).
+      - name: Package the test build
+        working-directory: mobile
+        run: |
+          mkdir -p "$RUNNER_TEMP/test-build"
+          cp build/app/outputs/flutter-apk/app-debug.apk "$RUNNER_TEMP/test-build/erp-system-test-debug.apk"
+          (cd build/web && zip -qr "$RUNNER_TEMP/test-build/erp-system-test-web.zip" .)
+          ls -la "$RUNNER_TEMP/test-build"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: erp-system-test-build
+          path: ${{ runner.temp }}/test-build
+          retention-days: 14
+
+  backend:
+    name: Backend (lint, checks, tests on PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: erp
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: erp
+          LANG: C.UTF-8
+          POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U erp -d erp"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DJANGO_ENV: development
+      DJANGO_DEBUG: 'false'
+      DJANGO_SECRET_KEY: ci-only-secret-key-not-used-anywhere-else-0123456789
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PASSWORD: ci-only-password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: backend/.python-version
+      - name: Install pinned dependencies
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format check
+        run: uv run ruff format --check .
+      - name: Django system check
+        run: uv run python manage.py check
+      - name: Missing migrations
+        run: uv run python manage.py makemigrations --check --dry-run
+      - name: Tests
+        run: uv run python manage.py test --verbosity 1
+
+  docker:
+    name: Backend container image builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate compose file
+        run: |
+          cp infra/.env.example infra/.env
+          sed -i 's/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=ci-only/; s/^DJANGO_SECRET_KEY=$/DJANGO_SECRET_KEY=ci-only-secret/' infra/.env
+          docker compose -f infra/docker-compose.yml config --quiet
+          docker compose -f infra/docker-compose.yml -f infra/docker-compose.tunnel.yml config --quiet
+      - name: The proxy configuration is valid
+        run: |
+          docker run --rm -e SITE_ADDRESS=:80 -v "$PWD/infra/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2 \
+            caddy validate --config /etc/caddy/Caddyfile
+      - name: Deployment scripts (shellcheck)
+        run: shellcheck -x -P SCRIPTDIR scripts/deploy/*.sh
+      - name: Build image
+        run: docker build --tag erp-backend:ci backend
+      - name: Image starts and answers (database-less health must report unavailable, not crash)
+        run: |
+          docker run -d --name api -p 8000:8000 \
+            -e DJANGO_SECRET_KEY=ci-only-secret -e DJANGO_ALLOWED_HOSTS=127.0.0.1 \
+            -e POSTGRES_HOST=127.0.0.1 erp-backend:ci
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/v1/health/ || true)
+            [ "$code" = "503" ] && echo "health answered 503 as expected without a database" && exit 0
+            sleep 2
+          done
+          docker logs api
+          exit 1
+
