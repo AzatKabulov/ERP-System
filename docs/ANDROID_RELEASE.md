@@ -31,6 +31,8 @@ The key stays outside the repository and outside this cloud session: **you** cre
 
 ## Making a release
 
+**Before the first run: the workflow must be on `main`.** GitHub only shows the "Run workflow" button for workflows that exist on the repository's default branch (`main`), and `release-apk.yml` lives on the working branch until it is merged (PLAN step 0.1: pull request from `claude/laughing-faraday-3dkwcb` into `main`). Either merge first, or skip the button and push a tag from the branch instead (`git tag v0.1.0 <commit> && git push origin v0.1.0`): a tag runs the workflow from the tagged commit.
+
 GitHub > Actions > **Release APK** > Run workflow (leave the server field empty unless you want an address built in as the default: the app can always be pointed at another server on its sign-in screen). It runs the tests, builds the signed app and the web app, checks the signature, and offers the files for download from the finished run (kept 90 days). Pushing a tag such as `v0.1.0` does the same and attaches the files to a draft release.
 
 The version number the app shows comes from `mobile/pubspec.yaml` (`version: 0.1.0+1`); the build number is the run number, so every build is newer than the last one and Android accepts it as an update.
