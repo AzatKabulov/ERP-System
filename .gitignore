@@ -12,3 +12,6 @@ backend/staticfiles/
 infra/public/*
 !infra/public/.gitkeep
 infra/backups/
+
+# The local test run (scripts/local/run_local.py): its database, files and secret key
+local-data/
