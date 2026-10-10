@@ -28,6 +28,16 @@ Status (2026-10-10): checked on Linux (all 682 backend tests on this database, a
 
 To stop: press Ctrl+C in the window (or close it). To start again: the same command; everything you entered is kept in the folder `local-data` next to the code. To start from nothing: stop it and delete `local-data`. If you lost the password: start with `--reset-password` added to the command.
 
+## If you have Flutter: run the web app yourself (no download of the test build)
+
+The web app is the same app, built for browsers. With Flutter installed you can start it the usual way and skip the GitHub download of the app:
+
+1. Start the server and database as in step 3 (the web page it prints may say "No web app found": that is fine, the server is running on port 8000).
+2. In a second terminal: `cd mobile && flutter run -d chrome --web-port 8080 --dart-define=API_BASE_URL=http://localhost:8000`
+3. Chrome opens the app on `http://localhost:8080`; sign in as `owner` with the printed password. Edits to the code reload as usual.
+
+Or build it once and let the server show it on port 8000: `cd mobile && flutter build web --no-web-resources-cdn`, then start the server with `--web mobile/build/web`.
+
 ## Good to know
 
 - The browser version has no camera button (browsers only allow the camera on `https`); a USB hand scanner works in it. The camera is tested on the tablet with the installed app.

@@ -168,6 +168,10 @@ def main() -> None:
         DJANGO_DEBUG="false",
         DJANGO_SECRET_KEY=key_file.read_text().strip(),
         DJANGO_ALLOWED_HOSTS="*",
+        # so the app started by `flutter run -d chrome --web-port 8080` may call this server
+        DJANGO_CORS_ALLOWED_ORIGINS=os.environ.get(
+            "DJANGO_CORS_ALLOWED_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080"
+        ),
         DJANGO_EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend",
         POSTGRES_HOST=db["host"],
         POSTGRES_PORT=db["port"],
