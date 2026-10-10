@@ -45,6 +45,8 @@ class MovementType(models.TextChoices):
     SUPPLIER_RETURN = "supplier_return", "Return to supplier"
     WARRANTY_OUT = "warranty_out", "Warranty replacement (out)"
     WARRANTY_IN = "warranty_in", "Warranty defective unit (in)"
+    # Goods counted in by scanning, without a purchase order.
+    INTAKE = "intake", "Received by scanning"
 
 
 class StockBalance(UUIDModel):

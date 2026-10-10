@@ -57,6 +57,8 @@ Track stock separately for each location, with optional shelf or bin information
 
 Transfers distinguish goods dispatched, in transit, and received. Goods must not appear available at both locations during a transfer.
 
+Receiving by scanning: when a box arrives, staff scan every item with a hand scanner or the camera; each scan adds one to that product's line, identical items add up, and one tap puts the counted list on the shelf. A code the catalog does not know is added with just a name. The list survives a crash. The cost is optional, so the main purpose, knowing what is on the shelf, never waits for prices.
+
 ### Purchasing and Reordering
 
 Manage suppliers and purchase orders. Record partial deliveries and outstanding quantities. Stock increases when goods are received, not when an order is created.
@@ -118,6 +120,7 @@ Restoration is a controlled administrator operation. CSV exports alone do not sa
 5. Stock count: staff record physical quantities, review discrepancies, and an authorized user approves explained adjustments.
 6. Return: staff find an original sale, record eligible returned items and their condition, and record the refund and appropriate stock changes.
 7. Warranty: staff find the original sale, check entitlement, open a claim, and record the resolution.
+9. Receiving by scanning: staff open a box, scan each item (hand scanner or camera), add any unknown product with a name, and put the counted list on the shelf; the same code scanned at the sale takes one piece off.
 8. Owner review: an owner filters reports to understand sales, expenses, stock value, and replenishment needs.
 
 ## Functional and Quality Requirements

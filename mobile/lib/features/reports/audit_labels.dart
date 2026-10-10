@@ -37,6 +37,7 @@ String auditActionLabel(AppLocalizations l, String action) => switch (action) {
   'staff.created' => l.auditStaffCreated,
   'staff.updated' => l.auditStaffUpdated,
   'stock.adjustment_posted' => l.auditStockAdjustmentPosted,
+  'stock.intake_posted' => l.auditStockIntakePosted,
   'stock.opening_posted' => l.auditStockOpeningPosted,
   'supplier.created' => l.auditSupplierCreated,
   'supplier.updated' => l.auditSupplierUpdated,

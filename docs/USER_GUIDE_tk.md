@@ -33,16 +33,25 @@ Käbir bölümi görmeseňiz, bu kadaly: ol roluňyz üçin niýetlenmedik.
 - **«Satuwlar» → «Satuwlar taryhy»** → satuwy açyň → **«Harydy gaýtarmak»**. Näçesi gaýdýandygyny, harydyň ýagdaýyny (ýaramly, zaýalanan, barlaga) we sebäbini görkeziň. Pul satylan bahasy boýunça gaýtarylýar.
 - Gaýtarma möhleti her harytda aýratyn (ony müdir haryt kartoçkasynda goýýar).
 
-**3. Ammar** (ammarçy, müdir, eýesi)
+**3. Gutyny skanirläp kabul etmek** (ammarçy, müdir, eýesi)
+- **«Ammar» → «Skanirläp kabul etmek»**. Nirä kabul edýändigiňizi saýlaň (nokat birnäçe bolsa).
+- Her harydy skanirläň: **el skaneri bilen** («Harydyň kody» meýdanyna bir gezek basyň, soň skaner kody özi ýazýar we Enter basýar) ýa-da **kamera bilen** (sagdaky düwme: kamera açyk galýar, harytlary birin-birin tutuň, her biri bir gezek sanalýar, ses eşidilýär). Kody ellemegem bolýar.
+- Her skanirleme **1 sany** goşýar. Birmeňzeş harytlar bir setire birleşýär: 15 gezek skanirlesediňiz, 15 sany bolýar. Sanyny **«−» «+»** düwmeleri bilen ýa-da sana basyp düzedip bolýar.
+- Programma harydy katalogdan ştrih-kod we artikul boýunça gözleýär (gutudaky ştrih-kod köplenç artikulyň özi bolýar). **Haryt ýok bolsa, «Haryt goşmak» düwmesine basyp diňe adyny ýazyň**, haryt katalogda peýda bolýar (bahasyny we galan zatlary soň doldurup bolýar). Programma internetde hiç zat gözlemeýär.
+- Öz bahasy **hökman däl** (ony diňe eýesi we müdir görýär we ýazýar: setiriň sanyna basyň). Ol bolmasa hasabatlarda bu harytlaryň öz bahasy nol hasaplanýar, olardan alnan peýda ýokary görünýär.
+- Hemmesi skanirlenenden soň **«Ammara kabul etmek»** düwmesine basyp tassyklaň. Sanaw enjamda saklanýar: programma ýapylsa ýa-da batareýa gutarsa, kabul etmegi täzeden açyň, şol ýerden dowam edersiňiz. Ugradylanda aragatnaşyk kesilse, **ýene bir gezek ibermäň**: «Tassyklamaga garaşylýar» setirine serediň.
+- Soň satuwda şol bir ştrih-kod harydy tapýar we galyndydan bir sany çykýar.
+
+**4. Ammar** (ammarçy, müdir, eýesi)
 - **«Satyn alyşlar»**: üpjünçä sargyt dörediň, resmileşdiriň, soň **«Harydy kabul etmek»** (böleklere bölüp bolýar).
 - **«Ammar»**: nokatlar boýunça galyndylar, hereketler taryhy, nokatlaryň arasynda ýerini üýtgetmek («ýolda» haryt satylmaýar), inwentarizasiýa (tekjäni täzeden sanamak; tassyklaýjy eýesi ýa-da müdir).
 - Galyndy iň az mukdardan aşakda bolsa (iň az mukdary haryt kartoçkasynda goýulýar), haryt satyn alyş sahypasyndaky **«Doldurmak»** bölümine düşýär: ol ýerden sargydyň garalamasyny döredip bolýar.
 
-**4. Çykdajylar we kepillik** (müdir, eýesi)
+**5. Çykdajylar we kepillik** (müdir, eýesi)
 - **«Çykdajylar»**: kategoriýa we çek suraty (kamera, galereýa ýa-da faýl) bilen çykdajy goşuň. Çykdajyny düzedip ýa-da ýatyryp bolýar, pozup bolmaýar.
 - **«Kepillikler»** ýa-da satuwdaky **«Kepillik ýüz tutmasy»** düwmesi: ýüz tutmany açyň, karar bilen ýapyň (abatlamak, çalyşmak, pul gaýtarmak, ret etmek). Kepillik gutaran bolsa, ýüz tutmany diňe eýesi ýa-da müdir sebäbi bilen kabul edip biler.
 
-**5. Hasabatlar** (müdir, eýesi)
+**6. Hasabatlar** (müdir, eýesi)
 - **«Hasabatlar»**: gelir, gaýtarylan pul, arassa satuw, öz bahasy, umumy peýda, çykdajylar we netije (bu buhgalteriýa peýdasy däl), ammar, satyn alyşlar, gaýtarmalar, **hereketler taryhy**. Her hasabatda **«CSV eksport»** bar.
 
 ## Internet kesilse

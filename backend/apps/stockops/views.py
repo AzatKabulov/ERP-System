@@ -10,14 +10,18 @@ from apps.businesses.access import (
     require_location,
     restrict_to_locations,
 )
+from apps.businesses.permissions import has_permission
 
 from . import services
-from .models import StockCount, Transfer
+from .models import StockCount, StockIntake, Transfer
 from .serializers import (
     CountEntrySerializer,
     CountSerializer,
     CountStartSerializer,
     CountSummarySerializer,
+    IntakeInputSerializer,
+    IntakeSerializer,
+    IntakeSummarySerializer,
     ReasonInputSerializer,
     ReceiveInputSerializer,
     TransferInputSerializer,
@@ -234,3 +238,62 @@ class CountCancelView(BusinessAPIView):
             serializer.validated_data["reason"],
         )
         return Response(CountSerializer(get_object_or_404(_counts(request), pk=count_id)).data)
+
+
+# ---- receiving by scanning ------------------------------------------------------------------
+
+
+def _intakes(request):
+    return restrict_to_locations(
+        StockIntake.objects.filter(business=request.business)
+        .select_related("location", "created_by")
+        .prefetch_related("lines__product__unit"),
+        request.membership,
+        "location_id",
+    )
+
+
+def _intake_context(request) -> dict:
+    return {"can_view_cost": has_permission(request.membership.role, "stock.cost.view")}
+
+
+class IntakeListCreateView(BusinessScopedMixin, generics.GenericAPIView):
+    permission_by_method = {"GET": "intake.view", "POST": "intake.create"}
+
+    def get(self, request, business_id):
+        qs = _intakes(request)
+        params = request.query_params
+        if params.get("location"):
+            qs = qs.filter(location_id=params["location"])
+        if params.get("q", "").strip():
+            number = _number(params["q"], "IN")
+            qs = qs.filter(number=number) if number is not None else qs.none()
+        page = self.paginate_queryset(qs)
+        return self.get_paginated_response(IntakeSummarySerializer(page, many=True).data)
+
+    def post(self, request, business_id):
+        serializer = IntakeInputSerializer(
+            data=request.data, context={"business": request.business}
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        require_location(request.membership, data["location"].pk)
+
+        def handler():
+            intake = services.receive_intake(
+                request.business, request.user, request.membership, data
+            )
+            fresh = get_object_or_404(_intakes(request), pk=intake.pk)
+            return 201, IntakeSerializer(fresh, context=_intake_context(request)).data
+
+        return run_idempotent(
+            request, business=request.business, action="stock_intake", handler=handler
+        )
+
+
+class IntakeDetailView(BusinessAPIView):
+    required_permission = "intake.view"
+
+    def get(self, request, business_id, intake_id):
+        intake = get_object_or_404(_intakes(request), pk=intake_id)
+        return Response(IntakeSerializer(intake, context=_intake_context(request)).data)

@@ -1714,5 +1714,84 @@
   "serverErrInsecure": "Нужен защищённый адрес, начинающийся с https://",
   "serverErrUnreachable": "Сервер не отвечает. Проверьте адрес и интернет.",
   "serverErrNotErp": "По этому адресу нет сервера этой системы.",
-  "serverErrDatabase": "Сервер отвечает, но его база данных сейчас недоступна."
+  "serverErrDatabase": "Сервер отвечает, но его база данных сейчас недоступна.",
+  "intakeTitle": "Приёмка сканированием",
+  "intakeScanLabel": "Код товара",
+  "intakeScanHelp": "Нажмите сюда и сканируйте ручным сканером, либо введите код и нажмите Enter. Или откройте камеру справа.",
+  "intakeCameraTooltip": "Сканировать камерой (по очереди)",
+  "intakeCameraTitle": "Сканируйте товары по очереди",
+  "intakeCameraHint": "Поднесите первый товар к камере. Каждый товар считается один раз.",
+  "intakeCameraDone": "Готово",
+  "intakeLocationLabel": "Куда принимаем",
+  "intakeEmpty": "Откройте коробку и отсканируйте каждый товар. Каждое сканирование добавляет 1 штуку, одинаковые товары складываются в одну строку.",
+  "intakeLookingUp": "Ищу товар в каталоге…",
+  "intakeUnknown": "Этого товара нет в каталоге: добавьте его",
+  "intakeLookupFailed": "Нет связи с сервером: товар будет найден позже",
+  "intakeAddProduct": "Добавить товар",
+  "intakeLess": "Меньше",
+  "intakeMore": "Больше",
+  "intakeCostShown": "Себестоимость: {amount}",
+  "@intakeCostShown": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "intakeSummary": "Позиций: {lines}, всего: {units}",
+  "@intakeSummary": {
+    "placeholders": {
+      "lines": {
+        "type": "int"
+      },
+      "units": {
+        "type": "String"
+      }
+    }
+  },
+  "intakeCostMissingNote": "У некоторых строк не указана себестоимость. Пока её нет, в отчётах эти товары считаются с нулевой себестоимостью, а прибыль по ним завышена. Чтобы указать, нажмите на количество строки.",
+  "intakeCostLabel": "Себестоимость за единицу, TMT (необязательно)",
+  "intakeCostHelp": "Можно не заполнять: цену закупки добавите позже.",
+  "intakeUnresolvedBlock": "Есть строки без товара из каталога. Добавьте товар, дождитесь поиска или удалите строку.",
+  "intakeConfirmTitle": "Принять товар на склад?",
+  "intakeConfirmBody": "{location}: {lines} поз., всего {units}. Товар сразу появится в остатках.",
+  "@intakeConfirmBody": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      },
+      "lines": {
+        "type": "int"
+      },
+      "units": {
+        "type": "String"
+      }
+    }
+  },
+  "intakeDraftResumed": "Продолжаем незавершённую приёмку: {n} поз.",
+  "@intakeDraftResumed": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "intakeStartOver": "Начать заново",
+  "intakeStartOverBody": "Всё отсканированное в этом списке будет удалено. Принятый ранее товар не изменится.",
+  "intakeProductAdded": "Товар добавлен в каталог.",
+  "intakeNewProductTitle": "Новый товар",
+  "intakeCodeLine": "Код: {code}",
+  "@intakeCodeLine": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "intakeCodeTooLong": "Код слишком длинный или это ссылка: впишите артикул с этикетки.",
+  "intakeSaveProduct": "Добавить и учесть",
+  "intakeSubmit": "Принять на склад",
+  "actionIntake": "Приёмка товара",
+  "movementIntake": "Приёмка (сканирование)",
+  "auditStockIntakePosted": "Товар принят сканированием"
 }

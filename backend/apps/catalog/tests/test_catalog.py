@@ -189,6 +189,35 @@ class ProductBasicsTests(CatalogCase):
         self.assertIn("product.archived", actions)
         self.assertIn("product.restored", actions)
 
+    def test_a_code_that_is_an_article_number_finds_the_product(self):
+        # Many parts print their own part number as the barcode text: the scan must find them
+        # by article number (any letter case) when no barcode matches.
+        data = self.product(sku="MH044089", name="Gearbox bearing")
+        for code in ("MH044089", "mh044089", " MH044089 "):
+            with self.subTest(code=code):
+                found = self.owner.get(f"{self.base}/barcodes/lookup/", {"code": code})
+                self.assertEqual(found.status_code, 200, found.content)
+                self.assertEqual(found.json()["id"], data["id"])
+
+    def test_a_barcode_wins_over_an_article_number_and_archived_products_are_not_found(self):
+        wanted = self.product(sku="OTHER-1", name="Has the barcode", barcodes=["555"])
+        self.product(sku="555", name="Has the number")
+        found = self.owner.get(f"{self.base}/barcodes/lookup/?code=555").json()
+        self.assertEqual(found["id"], wanted["id"])
+        archived = self.product(sku="OLD-1", name="Old")
+        self.owner.patch(
+            f"{self.base}/products/{archived['id']}/", {"is_active": False}, format="json"
+        )
+        self.assertEqual(
+            self.owner.get(f"{self.base}/barcodes/lookup/?code=OLD-1").status_code, 404
+        )
+
+    def test_an_article_number_of_another_business_is_not_found(self):
+        self.product(sku="SECRET-1")
+        other = client_for(self.b_owner)
+        found = other.get(f"/api/v1/businesses/{self.b.pk}/barcodes/lookup/?code=SECRET-1")
+        self.assertEqual(found.status_code, 404)
+
     def test_every_change_is_audited(self):
         data = self.product()
         self.owner.patch(f"{self.base}/products/{data['id']}/", {"name": "Renamed"}, format="json")

@@ -17,6 +17,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
 from apps.common.testing import APITestCase, client_for
+from apps.inventory.models import MovementType
 from apps.reports.scope import money, round_money
 from apps.reports.tests.support import at
 from apps.reports.tests.volume import FIRST_DAY, LAST_DAY, build_shop
@@ -140,7 +141,7 @@ class VolumeTests(APITestCase):
         self.assertEqual(len(returns["by_reason"]), 10)
         self.assertEqual(returns["supplier_returns"]["count"], b.supplier_returns)
         stock = self.report("stock")
-        self.assertEqual(len(stock["movements"]), 14)  # every type is there
+        self.assertEqual(len(stock["movements"]), len(MovementType.values))  # every type is there
         self.assertEqual(sum(m["count"] for m in stock["movements"]), 6000)
         self.assertGreater(stock["low_stock_count"], 0)
         self.assertLessEqual(len(stock["low_stock"]), 200)

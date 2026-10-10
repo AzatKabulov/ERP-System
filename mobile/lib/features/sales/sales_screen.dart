@@ -59,6 +59,7 @@ class SalesScreen extends StatefulWidget {
 
 class _SalesScreenState extends State<SalesScreen> {
   final _search = TextEditingController();
+  final _searchFocus = FocusNode();
   Timer? _debounce;
   List<Product> _results = const [];
   bool _searching = false;
@@ -92,6 +93,7 @@ class _SalesScreenState extends State<SalesScreen> {
     widget.unsaved.mark(this, dirty: false);
     _debounce?.cancel();
     _search.dispose();
+    _searchFocus.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -194,6 +196,32 @@ class _SalesScreenState extends State<SalesScreen> {
     } catch (_) {
       if (mounted) showFeedback(context, l.loadFailed);
     }
+  }
+
+  /// Enter in the search field. A hand scanner types the code of the item and presses Enter: when
+  /// the text is exactly a barcode or article number of a product, that product goes into the
+  /// cart (like a camera scan) and the field stays ready for the next item. Anything else is an
+  /// ordinary search, and a code nobody has also just searches (it says nothing, unlike a camera
+  /// scan, because the person may have been typing a name).
+  Future<void> _submitted(String text) async {
+    _debounce?.cancel();
+    final code = text.trim();
+    if (code.isNotEmpty && !code.contains(RegExp(r'\s'))) {
+      try {
+        final product = await widget.catalog.lookup(code);
+        if (!mounted) return;
+        if (product != null) {
+          _search.clear();
+          setState(() => _results = const []);
+          await _add(product);
+          if (mounted && !_searchFocus.hasFocus) _searchFocus.requestFocus();
+          return;
+        }
+      } catch (_) {
+        // no answer: fall through to the ordinary search, which reports the problem
+      }
+    }
+    if (mounted) _runSearch();
   }
 
   Future<void> _chooseCustomer() async {
@@ -340,10 +368,9 @@ class _SalesScreenState extends State<SalesScreen> {
           controller: _search,
           label: l.searchProducts,
           onChanged: _typed,
-          onSubmitted: (_) {
-            _debounce?.cancel();
-            _runSearch();
-          },
+          focusNode: _searchFocus,
+          keepFocusOnSubmit: true,
+          onSubmitted: _submitted,
           onScanned: _scanned,
         ),
         const SizedBox(height: 12),
