@@ -155,7 +155,9 @@ case "$SITE_ADDRESS" in
     fi
     if [ "$MODE" = "local" ]; then
       ADDRESS="http://localhost:$(env_value HTTP_PORT)"
-      if grep -qi microsoft /proc/version 2>/dev/null; then
+      if [ -n "${CODESPACE_NAME:-}" ]; then
+        : # inside a GitHub Codespace the address comes from GitHub (scripts/deploy/try_it.sh prints it)
+      elif grep -qi microsoft /proc/version 2>/dev/null; then
         # inside WSL the machine's own address is internal to Windows: a tablet needs the Windows one
         note "From a tablet or phone on the same Wi-Fi: open a Windows command prompt, run  ipconfig , and use the IPv4 address of your Wi-Fi adapter:  http://<that address>:$(env_value HTTP_PORT)"
       else
