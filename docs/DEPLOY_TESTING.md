@@ -29,6 +29,8 @@ Not recommended for this system: the free plans of Render, Koyeb, Fly.io or Rail
 
 ## Option 0: everything on your own computer
 
+**Easiest, no Docker: `docs/LOCAL_TEST.md`** (one program with an embedded database, started by double-clicking a file on Windows or one command on a Mac). The Docker version below is closer to a real server.
+
 You need Docker (Docker Desktop on Mac or Windows; on Windows also WSL with Ubuntu: install Ubuntu from the Microsoft Store and switch it on in Docker Desktop > Settings > Resources > WSL integration, then run the commands in the Ubuntu app). No account, no card, no domain.
 
 **The short way (three steps):**
