@@ -232,5 +232,1487 @@
   },
   "languageRussian": "Русский",
   "languageTurkmen": "Türkmençe",
-  "reportScope": "Запасы — по выбранному складу; продажи, возвраты и расходы — по всей демо-сессии."
+  "reportScope": "Запасы — по выбранному складу; продажи, возвраты и расходы — по всей демо-сессии.",
+  "signInTitle": "Вход",
+  "signInSubtitle": "Войдите в рабочее пространство вашего бизнеса.",
+  "username": "Логин",
+  "password": "Пароль",
+  "signInAction": "Войти",
+  "signingIn": "Выполняется вход…",
+  "signOut": "Выйти",
+  "forgotPassword": "Забыли пароль?",
+  "resetTitle": "Восстановление пароля",
+  "resetIntro": "Введите логин или адрес электронной почты. Мы отправим одноразовый код.",
+  "identifierLabel": "Логин или эл. почта",
+  "sendCode": "Отправить код",
+  "resetSent": "Если такой аккаунт существует, код отправлен на его почту.",
+  "haveCode": "У меня есть код",
+  "codeLabel": "Одноразовый код",
+  "newPassword": "Новый пароль",
+  "savePassword": "Сохранить пароль",
+  "passwordChanged": "Пароль сохранён. Теперь войдите.",
+  "backToSignIn": "Назад ко входу",
+  "sessionExpiredNotice": "Сеанс завершён. Войдите снова.",
+  "serverUnreachableNotice": "Не удаётся связаться с сервером. Проверьте интернет и попробуйте снова.",
+  "serverNotConfigured": "Адрес сервера не указан. Нажмите «Указать сервер» ниже.",
+  "retry": "Повторить",
+  "checkingSession": "Проверяем сеанс…",
+  "errorInvalidCredentials": "Неверный логин или пароль.",
+  "errorRateLimited": "Слишком много попыток. Подождите немного и повторите.",
+  "errorNetwork": "Нет связи с сервером.",
+  "errorTimeout": "Сервер не ответил вовремя.",
+  "errorServer": "Ошибка на сервере. Попробуйте позже.",
+  "errorPermission": "У вас нет прав на это действие.",
+  "errorNotFound": "Запись не найдена.",
+  "errorValidation": "Проверьте введённые данные.",
+  "errorUnknown": "Что-то пошло не так.",
+  "errorLastOwner": "В бизнесе должен остаться хотя бы один владелец.",
+  "errorLocationNotPermitted": "Это местоположение вам недоступно.",
+  "errorInvalidResetCode": "Код неверный или истёк.",
+  "errorInvalidOldPassword": "Текущий пароль неверный.",
+  "fieldRequired": "Обязательное поле.",
+  "fieldInvalid": "Некорректное значение.",
+  "fieldUsernameTaken": "Этот логин уже занят.",
+  "fieldEmailTaken": "Эта почта уже используется.",
+  "fieldInvalidUsername": "Логин: 3–64 символа — строчные латинские буквы, цифры, точка, дефис, подчёркивание.",
+  "fieldNameTaken": "Такое название уже есть.",
+  "fieldLocationsRequired": "Выберите хотя бы одно местоположение.",
+  "fieldInvalidLocation": "Неизвестное местоположение.",
+  "passwordTooShort": "Пароль слишком короткий (минимум 10 символов).",
+  "passwordTooCommon": "Слишком простой пароль.",
+  "passwordNumeric": "Пароль не может состоять только из цифр.",
+  "passwordSimilar": "Пароль слишком похож на данные аккаунта.",
+  "offlineBanner": "Нет связи с сервером. Действия со складом недоступны, показанные данные могут быть устаревшими.",
+  "pendingBanner": "Ожидают подтверждения: {count}",
+  "@pendingBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingTitle": "Неподтверждённые действия",
+  "pendingExplain": "Связь прервалась, и неизвестно, выполнено ли действие на сервере. Проверьте статус: повторная отправка использует тот же ключ и не создаст дубликат.",
+  "pendingCheck": "Проверить статус",
+  "pendingRetry": "Отправить снова (тот же ключ)",
+  "pendingDiscard": "Удалить запись",
+  "pendingDiscardConfirm": "Удалить запись об этом действии? Если сервер его уже выполнил, оно останется выполненным.",
+  "pendingStateUnknown": "Статус неизвестен",
+  "pendingStateNotFound": "Сервер не получил это действие",
+  "pendingStateSending": "Отправляется",
+  "pendingResolved": "Действие подтверждено сервером.",
+  "pendingSignInAgain": "Войдите снова, чтобы отправить это действие.",
+  "unavailableTitle": "Раздел появится позже",
+  "unavailableBody": "Этот раздел ещё не подключён к серверу. Демонстрационные данные в рабочей версии не показываются.",
+  "roleOwner": "Владелец",
+  "roleManager": "Менеджер",
+  "roleSales": "Продавец",
+  "roleWarehouse": "Кладовщик",
+  "kindStore": "Магазин",
+  "kindWarehouse": "Склад",
+  "business": "Бизнес",
+  "noLocationsAvailable": "Вам не назначено ни одного местоположения.",
+  "loading": "Загрузка…",
+  "loadFailed": "Не удалось загрузить данные.",
+  "adminBusinessProfile": "Профиль бизнеса",
+  "businessName": "Название",
+  "currencyLabel": "Валюта",
+  "currencyFixedNote": "Валюта бизнеса — TMT. Цена товара может быть указана в TMT или USD.",
+  "defaultLanguageLabel": "Язык по умолчанию",
+  "timezoneLabel": "Часовой пояс",
+  "saved": "Сохранено.",
+  "addLocation": "Добавить местоположение",
+  "editLocation": "Изменить местоположение",
+  "locationName": "Название",
+  "locationKind": "Тип",
+  "inactiveLabel": "Не используется",
+  "deactivate": "Отключить",
+  "activate": "Включить",
+  "staffTitle": "Сотрудники",
+  "addStaff": "Добавить сотрудника",
+  "editStaff": "Изменить сотрудника",
+  "emailLabel": "Электронная почта",
+  "fullNameLabel": "Имя",
+  "roleLabel": "Роль",
+  "allLocationsLabel": "Все местоположения",
+  "initialPasswordLabel": "Начальный пароль (необязательно)",
+  "initialPasswordHint": "Если не указан, сотрудник получит одноразовый код на почту.",
+  "staffCreated": "Сотрудник добавлен.",
+  "sendResetCode": "Отправить код для пароля",
+  "resetCodeRequested": "Код отправлен на почту сотрудника.",
+  "staffYou": "это вы",
+  "membershipInactive": "Доступ отключён",
+  "pickLocations": "Местоположения",
+  "noBusiness": "У вас нет доступа ни к одному бизнесу. Обратитесь к владельцу.",
+  "welcomeUser": "Здравствуйте, {name}!",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "signedInAs": "Вы вошли как {name}",
+  "@signedInAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownActionLabel": "Действие со складом",
+  "unsavedChangeConflict": "Несохранённые данные будут потеряны при смене. Продолжить?",
+  "addProduct": "Добавить товар",
+  "editProduct": "Изменить товар",
+  "productSku": "Артикул (SKU)",
+  "productName": "Название товара",
+  "categoryLabel": "Категория",
+  "brandLabel": "Бренд",
+  "unitLabel": "Единица измерения",
+  "noneOption": "Не выбрано",
+  "addNewOption": "Добавить новую…",
+  "addCategory": "Новая категория",
+  "addBrand": "Новый бренд",
+  "addUnit": "Новая единица измерения",
+  "unitSymbol": "Обозначение",
+  "unitDecimals": "Знаков после запятой (0–3)",
+  "priceLabel": "Цена продажи",
+  "priceCurrencyLabel": "Валюта цены",
+  "priceInTmt": "≈ {amount} в TMT",
+  "@priceInTmt": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rateMissingNote": "Курс USD не задан: цена в TMT неизвестна.",
+  "defaultCostLabel": "Закупочная цена по умолчанию (TMT)",
+  "warrantyMonthsLabel": "Гарантия, месяцев (0 — нет)",
+  "warrantyTermsLabel": "Условия гарантии",
+  "warrantyMonthsValue": "Гарантия: {months} мес.",
+  "@warrantyMonthsValue": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "barcodesLabel": "Штрихкоды",
+  "addBarcode": "Добавить штрихкод",
+  "barcodeFieldLabel": "Штрихкод",
+  "scanWithCamera": "Сканировать камерой",
+  "archiveProduct": "Архивировать",
+  "restoreProduct": "Вернуть из архива",
+  "archiveConfirm": "Архивный товар исчезнет из списка и продаж, история сохранится. Продолжить?",
+  "archivedLabel": "В архиве",
+  "showArchived": "Показать архивные",
+  "noProducts": "Товаров пока нет",
+  "noProductsHint": "Добавьте первый товар, чтобы начать работу.",
+  "loadMore": "Показать ещё",
+  "productSaved": "Товар сохранён.",
+  "productCardTitle": "Карточка товара",
+  "scanTitle": "Наведите камеру на штрихкод",
+  "scanTorch": "Фонарик",
+  "cameraDenied": "Нет доступа к камере. Разрешите доступ в настройках или введите штрихкод вручную.",
+  "cameraUnavailable": "Камера недоступна на этом устройстве.",
+  "enterManually": "Ввести вручную",
+  "scannedCode": "Считан код: {code}",
+  "@scannedCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "errorBarcodeNotFound": "Товар с таким штрихкодом не найден.",
+  "errorUnitInUse": "Нельзя менять точность, пока единица используется в товарах.",
+  "fieldSkuTaken": "Этот артикул уже используется.",
+  "fieldBarcodeTaken": "Этот штрихкод уже используется другим товаром.",
+  "fieldTooManyDecimals": "Слишком много знаков после запятой.",
+  "fieldOutOfRange": "Значение вне допустимого диапазона.",
+  "fieldQuantityPrecision": "Для этой единицы допускается меньше знаков после запятой.",
+  "exchangeRateTitle": "Курс доллара (USD → TMT)",
+  "currentRate": "Текущий курс: 1 USD = {rate} TMT",
+  "@currentRate": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "noRateYet": "Курс ещё не задан. Цены в USD нельзя пересчитать в TMT.",
+  "newRateLabel": "Новый курс (TMT за 1 USD)",
+  "setRate": "Установить курс",
+  "rateHistory": "История курса",
+  "rateHistoryEntry": "{rate} — {user}, {when}",
+  "@rateHistoryEntry": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      },
+      "user": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "stockEmpty": "Остатков пока нет",
+  "stockEmptyHint": "Введите начальные остатки или примите первую поставку.",
+  "movementHistory": "История движений",
+  "historyEmpty": "Движений пока нет",
+  "openingStock": "Начальные остатки",
+  "adjustStock": "Корректировка остатков",
+  "stockValueLabel": "Стоимость: {amount}",
+  "@stockValueLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "conditionLabel": "Состояние",
+  "conditionSellable": "Годный к продаже",
+  "conditionDamaged": "Повреждённый",
+  "conditionInspection": "Ожидает проверки",
+  "conditionInTransit": "В пути",
+  "unitCostLabel": "Себестоимость за единицу, TMT",
+  "addLineProduct": "Добавить товар",
+  "removeLine": "Убрать строку",
+  "directionIn": "Приход",
+  "directionOut": "Расход",
+  "reasonLabel": "Причина (обязательно)",
+  "noteLabel": "Примечание",
+  "postOpening": "Провести начальные остатки",
+  "postAdjustment": "Провести корректировку",
+  "entryNeedsLines": "Добавьте хотя бы один товар.",
+  "entryPosted": "Проведено.",
+  "locationFieldLabel": "Точка",
+  "movementOpening": "Начальный остаток",
+  "movementReceipt": "Поступление по заказу",
+  "movementAdjustmentIn": "Корректировка (приход)",
+  "movementAdjustmentOut": "Корректировка (расход)",
+  "movementOther": "Движение",
+  "pickProductTitle": "Выбор товара",
+  "outcomeUnknownNotice": "Ответ сервера не получен. Действие сохранено и будет проверено: смотрите уведомление вверху. Не повторяйте его вручную.",
+  "errorInsufficientStock": "Недостаточно товара на складе.",
+  "errorOpeningExists": "По этому товару в этой точке уже есть движения. Используйте корректировку.",
+  "errorProductArchived": "Товар в архиве.",
+  "errorLocationInactive": "Точка не активна.",
+  "errorOverReceipt": "Нельзя принять больше, чем осталось по заказу.",
+  "errorOrderNotDraft": "Редактировать и оформлять можно только черновик.",
+  "errorOrderNotReceivable": "Этот заказ сейчас не принимается: он не оформлен, уже принят или отменён.",
+  "errorOrderNotCancellable": "Этот заказ уже нельзя отменить.",
+  "errorOrderNoLines": "Добавьте в заказ хотя бы одну строку.",
+  "fieldDuplicateProduct": "Этот товар уже есть в списке.",
+  "suppliersTitle": "Поставщики",
+  "addSupplier": "Добавить поставщика",
+  "editSupplier": "Изменить поставщика",
+  "supplierName": "Название поставщика",
+  "contactName": "Контактное лицо",
+  "phoneLabel": "Телефон",
+  "addressLabel": "Адрес",
+  "notesLabel": "Заметки",
+  "noSuppliers": "Поставщиков пока нет",
+  "noSuppliersHint": "Добавьте поставщика, чтобы создавать заказы.",
+  "supplierSaved": "Поставщик сохранён.",
+  "newOrder": "Новый заказ поставщику",
+  "editOrder": "Изменить заказ",
+  "orderSaved": "Заказ сохранён.",
+  "statusAll": "Все",
+  "statusDraft": "Черновик",
+  "statusOrdered": "Оформлен",
+  "statusPartial": "Принят частично",
+  "statusReceived": "Принят полностью",
+  "statusCancelled": "Отменён",
+  "supplierFieldLabel": "Поставщик",
+  "deliverToLabel": "Принять в точку",
+  "expectedDateLabel": "Ожидаемая дата поставки",
+  "pickDate": "Выбрать дату",
+  "orderLinesTitle": "Строки заказа",
+  "orderTotal": "Итого: {amount}",
+  "@orderTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "orderProgress": "Заказано {ordered}, принято {received}",
+  "@orderProgress": {
+    "placeholders": {
+      "ordered": {
+        "type": "String"
+      },
+      "received": {
+        "type": "String"
+      }
+    }
+  },
+  "submitOrder": "Оформить заказ",
+  "submitOrderConfirm": "После оформления заказ нельзя редактировать. Оформить?",
+  "orderSubmitted": "Заказ оформлен.",
+  "cancelOrder": "Отменить заказ",
+  "cancelOrderConfirm": "Невыполненный остаток заказа будет отменён, уже принятые товары останутся на складе. Продолжить?",
+  "cancelReasonLabel": "Причина отмены (необязательно)",
+  "orderCancelled": "Заказ отменён.",
+  "receiveTitle": "Приём по заказу {number}",
+  "@receiveTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "receiveQuantityLabel": "Принять сейчас",
+  "outstandingLabel": "Осталось принять: {quantity}",
+  "@outstandingLabel": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "receiveAll": "Принять всё оставшееся",
+  "receiveNothing": "Укажите количество хотя бы по одной строке.",
+  "deliveryPosted": "Поставка принята, остатки обновлены.",
+  "deliveriesTitle": "Принятые поставки",
+  "deliveryEntry": "Поставка №{number} · {when} · {who}",
+  "@deliveryEntry": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "when": {
+        "type": "String"
+      },
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "noDeliveries": "Поставок ещё не было.",
+  "noOrders": "Заказов пока нет",
+  "noOrdersHint": "Создайте заказ поставщику, чтобы принимать товары партиями.",
+  "expectedOn": "Ожидается {date}",
+  "@expectedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelledBecause": "Причина отмены: {reason}",
+  "@cancelledBecause": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "viewHistoryFor": "История движений по товару",
+  "costVisibleNote": "Себестоимость видна только владельцу и менеджеру.",
+  "actionReceive": "Приём товара",
+  "actionOpening": "Начальные остатки",
+  "actionAdjust": "Корректировка остатков",
+  "salesStartHint": "Найдите товар по названию или артикулу либо отсканируйте штрихкод, чтобы добавить его в корзину.",
+  "salesNoMatch": "Ничего не найдено. Проверьте написание или код.",
+  "cartTitle": "Корзина",
+  "cartEmpty": "Корзина пуста",
+  "cartScannedNotFound": "Товар с кодом {code} не найден.",
+  "@cartScannedNotFound": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "cartAdded": "Добавлено: {name}",
+  "@cartAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "availableHere": "В наличии здесь: {qty}",
+  "@availableHere": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "exceedsAvailable": "Больше, чем в наличии ({qty}).",
+  "@exceedsAvailable": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "saleTotal": "Итого: {amount}",
+  "@saleTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "customerNone": "Без покупателя",
+  "customerChoose": "Выбрать покупателя",
+  "customerNew": "Новый покупатель",
+  "customerNameLabel": "Имя покупателя",
+  "customersEmpty": "Покупатели не найдены",
+  "toPayment": "К оплате",
+  "paymentTitle": "Оплата",
+  "payCash": "Наличные",
+  "payCard": "Карта",
+  "completeSale": "Завершить продажу",
+  "saleDoneTitle": "Продажа {number} оформлена",
+  "@saleDoneTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "newSaleAction": "Новая продажа",
+  "receiptAction": "Чек",
+  "printAction": "Печать",
+  "shareAction": "Поделиться",
+  "documentFailed": "Не удалось получить документ. Попробуйте ещё раз.",
+  "saleHistoryTitle": "История продаж",
+  "salesHistoryEmpty": "Продаж пока нет",
+  "saleSearchHint": "Номер (S-000012) или имя покупателя",
+  "saleDetailTitle": "Продажа {number}",
+  "@saleDetailTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierLine": "Кассир: {name}",
+  "@cashierLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saleCostLine": "Себестоимость: {amount}",
+  "@saleCostLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "saleProfitLine": "Прибыль: {amount}",
+  "@saleProfitLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "saleUnitsLine": "{qty} × {price}",
+  "@saleUnitsLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "errorInsufficientNamed": "Недостаточно товара «{name}»: в наличии {available}.",
+  "@errorInsufficientNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "available": {
+        "type": "String"
+      }
+    }
+  },
+  "actionSale": "Продажа",
+  "salesNoPermission": "У вас нет прав оформлять продажи. Доступна только история.",
+  "businessAddress": "Адрес",
+  "businessPhone": "Телефон",
+  "businessDocumentNote": "Эти данные печатаются на чеке.",
+  "priceFieldLabel": "Цена за единицу, TMT",
+  "catalogPriceLine": "В каталоге: {price}",
+  "@catalogPriceLine": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paidBy": "Оплата",
+  "transfersTitle": "Перемещения",
+  "transfersEmpty": "Перемещений пока нет",
+  "transferNew": "Новое перемещение",
+  "transferNumberTitle": "Перемещение {number}",
+  "@transferNumberTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "transferFromLabel": "Откуда",
+  "transferToLabel": "Куда",
+  "transferRoute": "{from} → {to}",
+  "@transferRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "transferStatusInTransit": "В пути",
+  "transferStatusReceived": "Принято",
+  "transferStatusPartial": "Принято не полностью",
+  "transferStatusCancelled": "Отменено",
+  "transferSend": "Отправить",
+  "transferReceive": "Принять",
+  "transferCancel": "Отменить перемещение",
+  "transferSentLine": "Отправлено: {qty}",
+  "@transferSentLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "transferReceivedLine": "Принято: {qty}",
+  "@transferReceivedLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "transferArrivedLabel": "Пришло",
+  "transferShortReasonLabel": "Причина недостачи",
+  "transferShortHint": "Пришло меньше, чем отправлено: недостающее будет списано. Укажите причину.",
+  "transferInTransitNote": "Товар в пути и пока не доступен для продажи.",
+  "transferSentDone": "Перемещение отправлено.",
+  "transferReceivedDone": "Перемещение принято.",
+  "transferCancelledDone": "Перемещение отменено, товар вернулся.",
+  "transferSamePlace": "Выберите другую точку.",
+  "errorTransferNotReceivable": "Это перемещение уже принято или отменено.",
+  "errorTransferNotCancellable": "Это перемещение уже нельзя отменить.",
+  "actionTransferSend": "Перемещение: отправка",
+  "actionTransferReceive": "Перемещение: приёмка",
+  "actionTransferCancel": "Перемещение: отмена",
+  "countsTitle": "Инвентаризация",
+  "countsEmpty": "Инвентаризаций пока нет",
+  "countStart": "Начать инвентаризацию",
+  "countNumberTitle": "Инвентаризация {number}",
+  "@countNumberTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "countScopeFull": "Всё в точке",
+  "countScopePartial": "Выбранные товары",
+  "countStatusOpen": "Идёт подсчёт",
+  "countStatusSubmitted": "Ждёт утверждения",
+  "countStatusApproved": "Утверждена",
+  "countStatusCancelled": "Отменена",
+  "countSystemLine": "В системе: {qty}",
+  "@countSystemLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "countCountedLabel": "Посчитано",
+  "countVarianceLine": "Разница: {qty}",
+  "@countVarianceLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "countMovedNote": "Были продажи или поступления после начала подсчёта: проверьте.",
+  "countSaveEntries": "Сохранить подсчёт",
+  "countSubmit": "Отправить на утверждение",
+  "countApprove": "Утвердить",
+  "countCancel": "Отменить инвентаризацию",
+  "countExplainLabel": "Объяснение расхождений",
+  "countNoDifferences": "Расхождений нет.",
+  "countDifferences": "Расхождений: {n}",
+  "@countDifferences": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "countProgress": "Посчитано {done} из {total}",
+  "@countProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "countEntriesSaved": "Подсчёт сохранён.",
+  "countSubmittedDone": "Отправлено на утверждение.",
+  "countApprovedDone": "Инвентаризация утверждена, остатки исправлены.",
+  "countCancelledDone": "Инвентаризация отменена.",
+  "countNeedsEntries": "Сначала посчитайте хотя бы один товар.",
+  "errorCountNotOpen": "Подсчёт уже закрыт.",
+  "errorCountEmpty": "Ничего не посчитано.",
+  "errorCountNotSubmitted": "Эту инвентаризацию нельзя утвердить: она не ждёт утверждения.",
+  "errorCountNotCancellable": "Эта инвентаризация уже закрыта.",
+  "actionCountApprove": "Инвентаризация: утверждение",
+  "returnsTitle": "Возвраты",
+  "returnsEmpty": "Возвратов пока нет",
+  "returnNew": "Оформить возврат",
+  "returnNumberTitle": "Возврат {number}",
+  "@returnNumberTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "returnSearchHint": "Номер возврата, например R-0001",
+  "returnFromSale": "По продаже {number}",
+  "@returnFromSale": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "returnableLine": "Можно вернуть: {qty}",
+  "@returnableLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "returnedSoFar": "Уже возвращено: {qty}",
+  "@returnedSoFar": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "returnQtyLabel": "Вернуть",
+  "returnReasonLabel": "Причина возврата (обязательно)",
+  "returnReasonShort": "Причина",
+  "returnRefundTotal": "К возврату покупателю: {amount}",
+  "@returnRefundTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "returnRefundLine": "Вернуть деньги: {amount}",
+  "@returnRefundLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "returnRefundNote": "Сумма считается по цене, по которой товар был продан.",
+  "returnConfirmTitle": "Подтвердить возврат",
+  "returnConfirmBody": "Принять обратно: {items}. Вернуть покупателю: {refund}.",
+  "@returnConfirmBody": {
+    "placeholders": {
+      "items": {
+        "type": "String"
+      },
+      "refund": {
+        "type": "String"
+      }
+    }
+  },
+  "returnDone": "Возврат оформлен.",
+  "returnNothingToReturn": "По этой продаже уже нечего возвращать.",
+  "returnUntilLine": "Вернуть можно до {date}",
+  "@returnUntilLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "returnNoLimit": "Возврат без ограничения срока",
+  "returnNotAccepted": "Этот товар не принимается обратно",
+  "returnDaysValue": "Возврат в течение {days} дн.",
+  "@returnDaysValue": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "saleReturnsTitle": "Возвраты по этой продаже",
+  "returnAwaiting": "Ждёт проверки: {qty}",
+  "@returnAwaiting": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "returnInspectSellable": "В годные",
+  "returnInspectDamaged": "В брак",
+  "returnInspectDone": "Решение записано.",
+  "errorOverReturn": "Нельзя вернуть больше, чем осталось.",
+  "errorOverReturnNamed": "{product}: можно вернуть не больше {qty}.",
+  "@errorOverReturnNamed": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      },
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "errorReturnWindowExpired": "Срок возврата этого товара истёк ({date}).",
+  "@errorReturnWindowExpired": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "errorReturnsNotAccepted": "Этот товар не принимается обратно.",
+  "errorOverInspection": "Столько товара не ждёт проверки.",
+  "errorNotAwaitingInspection": "Этот товар не ждал проверки.",
+  "errorTargetBelowMinimum": "Цель не может быть меньше минимума.",
+  "actionReturnComplete": "Возврат от покупателя",
+  "actionReturnInspect": "Возврат: решение по проверке",
+  "actionSupplierReturn": "Возврат поставщику",
+  "supplierReturnsTitle": "Возвраты поставщикам",
+  "supplierReturnsEmpty": "Возвратов поставщикам пока нет",
+  "supplierReturnNew": "Вернуть поставщику",
+  "supplierReturnSource": "{supplier} · поставка № {delivery}",
+  "@supplierReturnSource": {
+    "placeholders": {
+      "supplier": {
+        "type": "String"
+      },
+      "delivery": {
+        "type": "String"
+      }
+    }
+  },
+  "supplierReturnDone": "Возврат поставщику оформлен.",
+  "supplierReturnCredit": "Зачёт поставщика: {amount}",
+  "@supplierReturnCredit": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderTitle": "Пополнение запаса",
+  "reorderEmpty": "Всё в порядке: ничего заказывать не нужно",
+  "reorderScreenHint": "Товары ниже минимума (с учётом уже заказанного). Отметьте нужные и создайте заказ: поставщика выберете сами.",
+  "reorderRowLine": "Есть: {onHand} · в заказах: {onOrder} · минимум: {minimum}",
+  "@reorderRowLine": {
+    "placeholders": {
+      "onHand": {
+        "type": "String"
+      },
+      "onOrder": {
+        "type": "String"
+      },
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderSuggested": "Предлагается заказать: {qty}",
+  "@reorderSuggested": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderCreate": "Создать заказ",
+  "productReturnDays": "Срок возврата, дней",
+  "productReturnDaysHint": "Пусто — без ограничения, 0 — возврат не принимается. Считается со дня продажи.",
+  "reorderLevelsTitle": "Минимум и цель по точкам",
+  "reorderLevelsNone": "Не задано",
+  "reorderLevelsEdit": "Изменить",
+  "reorderLevelsSaved": "Уровни сохранены.",
+  "reorderLevelLine": "минимум {minimum}, цель {target}",
+  "@reorderLevelLine": {
+    "placeholders": {
+      "minimum": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderMinLabel": "Минимум",
+  "reorderTargetLabel": "Цель",
+  "returnButton": "Вернуть товар",
+  "expenseAddButton": "Добавить расход",
+  "expenseDetailTitle": "Расход",
+  "expensesEmpty": "Расходов за этот период нет",
+  "expensePeriodMonth": "Этот месяц",
+  "expensePeriodLast": "Прошлый месяц",
+  "expensePeriodAll": "Всё время",
+  "expenseAllCategories": "Все категории",
+  "expenseTotalLine": "Всего за период: {amount}",
+  "@expenseTotalLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseCategoryLabel": "Категория",
+  "expenseNewCategory": "Новая категория…",
+  "expenseNewCategoryTitle": "Новая категория расходов",
+  "expenseCategoryName": "Название категории",
+  "expenseAmountLabel": "Сумма, TMT",
+  "expenseDateLabel": "Дата: {date}",
+  "@expenseDateLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseLocationLabel": "Точка",
+  "expenseDescriptionLabel": "Описание",
+  "expenseReceipt": "Чек (необязательно)",
+  "expenseTakePhoto": "Сфотографировать",
+  "expenseChoosePhoto": "Выбрать фото или файл",
+  "expenseReceiptAttached": "Чек приложен: {name}",
+  "@expenseReceiptAttached": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseRemoveReceipt": "Убрать чек",
+  "expenseReceiptNone": "Чек не приложен",
+  "expenseOpenReceipt": "Открыть или отправить чек",
+  "expenseReceiptLoadFailed": "Не удалось загрузить чек.",
+  "expenseSaved": "Расход сохранён.",
+  "expenseEdit": "Изменить",
+  "expenseVoid": "Аннулировать",
+  "expenseVoidTitle": "Аннулировать расход",
+  "expenseVoidReason": "Причина аннулирования",
+  "expenseVoided": "Расход аннулирован.",
+  "expenseVoidedBadge": "Аннулирован",
+  "errorFileTooLarge": "Файл слишком большой (не больше 5 МБ).",
+  "errorFileType": "Подходят фото JPEG, PNG, WebP и файлы PDF.",
+  "errorFileRequired": "Файл не выбран.",
+  "errorFutureDate": "Дата не может быть в будущем.",
+  "errorExpenseVoid": "Аннулированный расход нельзя изменить.",
+  "errorAlreadyVoid": "Расход уже аннулирован.",
+  "warrantiesTitle": "Гарантийные обращения",
+  "warrantiesEmpty": "Гарантийных обращений пока нет",
+  "warrantyNew": "Новое обращение",
+  "warrantyStatusOpen": "Открыто",
+  "warrantyStatusClosed": "Закрыто",
+  "warrantyNumberTitle": "Обращение {number}",
+  "@warrantyNumberTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyPickSale": "Найдите продажу, по которой обращается покупатель",
+  "warrantyPickLine": "Выберите товар",
+  "warrantyUntilLine": "Гарантия до {date}",
+  "@warrantyUntilLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyExpiredLine": "Гарантия закончилась {date}",
+  "@warrantyExpiredLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyNone": "Без гарантии",
+  "warrantyProblemLabel": "Что случилось (обязательно)",
+  "warrantyOverrideHint": "Гарантии нет или она закончилась. Вы можете принять обращение как исключение, указав причину.",
+  "warrantyOverrideNote": "Почему принимаем вне гарантии (обязательно)",
+  "warrantyBlocked": "Гарантии нет или она закончилась. Принять такое обращение может только владелец или менеджер.",
+  "warrantyOpenButton": "Открыть обращение",
+  "warrantyOpened": "Обращение {number} открыто.",
+  "@warrantyOpened": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyOutOfWarranty": "Принято вне гарантии",
+  "warrantyEvents": "История",
+  "warrantyEventOpened": "Открыто",
+  "warrantyEventNote": "Заметка",
+  "warrantyEventClosed": "Закрыто: {outcome}",
+  "@warrantyEventClosed": {
+    "placeholders": {
+      "outcome": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyNoteLabel": "Заметка",
+  "warrantyAddNote": "Добавить заметку",
+  "warrantyOutcomeLabel": "Решение по обращению",
+  "warrantyOutcomeRepair": "Ремонт",
+  "warrantyOutcomeReplacement": "Замена",
+  "warrantyOutcomeRefund": "Возврат денег",
+  "warrantyOutcomeRejected": "Отказ",
+  "warrantyCloseNote": "Комментарий (при отказе обязателен)",
+  "warrantyClose": "Закрыть обращение",
+  "warrantyCloseConfirm": "Закрыть обращение {number}: {outcome}? Замена и возврат денег меняют склад и деньги.",
+  "@warrantyCloseConfirm": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "outcome": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyClosedDone": "Обращение закрыто.",
+  "warrantyReturnLine": "Деньги возвращены: возврат {number}",
+  "@warrantyReturnLine": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyFromSale": "Гарантийное обращение",
+  "actionWarrantyResolve": "Гарантия: закрытие обращения",
+  "errorNoWarranty": "На этот товар нет гарантии.",
+  "errorWarrantyExpired": "Гарантия закончилась ({date}).",
+  "@errorWarrantyExpired": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "errorClaimClosed": "Обращение уже закрыто.",
+  "catalogImport": "Импорт CSV",
+  "catalogExport": "Экспорт CSV",
+  "catalogExported": "Файл каталога готов.",
+  "importTitle": "Импорт товаров из CSV",
+  "importHelp": "Файл CSV в кодировке UTF-8, разделитель «;». Импорт только добавляет новые товары и не меняет остатки. Файл проверяется целиком: если есть хоть одна ошибка, не добавляется ничего. Колонки:",
+  "importChoose": "Выбрать файл",
+  "importChosen": "Файл: {name}",
+  "@importChosen": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importSummary": "Строк: {rows}, без ошибок: {valid}",
+  "@importSummary": {
+    "placeholders": {
+      "rows": {
+        "type": "int"
+      },
+      "valid": {
+        "type": "int"
+      }
+    }
+  },
+  "importNoErrors": "Ошибок нет. Можно добавлять товары.",
+  "importErrorsTitle": "Ошибок: {count}",
+  "@importErrorsTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importErrorRow": "Строка {row}, {field}: {message}",
+  "@importErrorRow": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "field": {
+        "type": "String"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "importErrorsMore": "Показаны не все ошибки. Исправьте эти и проверьте файл снова.",
+  "importApply": "Добавить товары",
+  "importDone": "Добавлено товаров: {count}.",
+  "@importDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorImportTooLarge": "Файл слишком большой: разделите его на части (до 2000 строк в каждой).",
+  "errorImportHeader": "В файле неверные названия колонок.",
+  "errorImportInvalid": "В файле есть ошибки: ничего не добавлено.",
+  "importErrUnknownUnit": "Неизвестная единица измерения.",
+  "importErrSkuExists": "Такой артикул уже есть в каталоге.",
+  "importErrSkuDuplicate": "Артикул повторяется в файле.",
+  "importErrBarcodeDuplicate": "Штрихкод повторяется в файле.",
+  "importErrCurrency": "Валюта: TMT или USD.",
+  "importErrTooLong": "Слишком длинное значение.",
+  "errorOverClaim": "Нельзя принять больше, чем продано и ещё не возвращено.",
+  "errorInvalidFile": "Файл не читается. Сохраните его как CSV в кодировке UTF-8.",
+  "errorFileMissing": "Файл сейчас недоступен на сервере.",
+  "reportsTitle": "Отчёты",
+  "reportPeriodToday": "Сегодня",
+  "reportPeriodWeek": "7 дней",
+  "reportPeriodMonth": "Этот месяц",
+  "reportPeriodLast": "Прошлый месяц",
+  "reportAllLocations": "Все точки",
+  "reportTabSummary": "Итоги",
+  "reportTabSales": "Продажи",
+  "reportTabStock": "Склад",
+  "reportTabPurchasing": "Закупки",
+  "reportTabReturns": "Возвраты",
+  "reportTabExpenses": "Расходы",
+  "reportTabActivity": "История действий",
+  "reportEmpty": "За этот период данных нет",
+  "reportExport": "Экспорт CSV",
+  "reportExported": "Файл отчёта готов.",
+  "reportRevenue": "Выручка",
+  "reportRefunds": "Возвраты денег",
+  "reportNetSales": "Чистые продажи",
+  "reportCostOfGoods": "Себестоимость проданного",
+  "reportGrossProfit": "Валовая прибыль",
+  "reportExpenses": "Расходы",
+  "reportResult": "Результат",
+  "reportResultNote": "Результат = валовая прибыль минус расходы. Это не бухгалтерская прибыль.",
+  "reportInventoryValue": "Стоимость склада",
+  "reportInventoryNote": "По себестоимости партий (FIFO)",
+  "reportLowStock": "Ниже минимума",
+  "reportOpenOrders": "Открытые заказы",
+  "reportSalesCount": "Продаж: {count}",
+  "@reportSalesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportReturnsCount": "Возвратов: {count}",
+  "@reportReturnsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportByPayment": "По способу оплаты",
+  "reportByDay": "По дням",
+  "reportTopProducts": "Лучшие товары",
+  "reportPaymentLine": "{method}: {count} · {total}",
+  "@reportPaymentLine": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "reportDayLine": "{date}: {count} · выручка {revenue} · возвраты {refunds}",
+  "@reportDayLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "revenue": {
+        "type": "String"
+      },
+      "refunds": {
+        "type": "String"
+      }
+    }
+  },
+  "reportProductLine": "{qty} · {revenue}",
+  "@reportProductLine": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "revenue": {
+        "type": "String"
+      }
+    }
+  },
+  "reportLowStockTitle": "Товары ниже минимума",
+  "reportLowStockEmpty": "Всё выше минимума",
+  "reportLowStockRow": "{location}: есть {onHand}, минимум {minimum}",
+  "@reportLowStockRow": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      },
+      "onHand": {
+        "type": "String"
+      },
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "reportValueTitle": "Стоимость склада по точкам",
+  "reportValueLine": "{location}: {total}",
+  "@reportValueLine": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "reportMovementsTitle": "Движения товара за период",
+  "reportMovementLine": "{type}: {count} · приход {incoming} · расход {outgoing}",
+  "@reportMovementLine": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "incoming": {
+        "type": "String"
+      },
+      "outgoing": {
+        "type": "String"
+      }
+    }
+  },
+  "reportOrdersCount": "Заказов создано: {count}",
+  "@reportOrdersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportDeliveriesCount": "Поставок принято: {count}",
+  "@reportDeliveriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportOrderedTotal": "Сумма заказов: {amount}",
+  "@reportOrderedTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReceivedValue": "Принято на сумму: {amount}",
+  "@reportReceivedValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportBySupplier": "По поставщикам",
+  "reportByStatus": "По состоянию заказов",
+  "reportSupplierLine": "{name}: заказов {orders}",
+  "@reportSupplierLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orders": {
+        "type": "int"
+      }
+    }
+  },
+  "reportSupplierLineValue": "{name}: заказов {orders}, принято на {amount}",
+  "@reportSupplierLineValue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orders": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportSupplierReturns": "Возвраты поставщикам: {count}",
+  "@reportSupplierReturns": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportSupplierReturnsCredit": "Возвраты поставщикам: {count}, зачёт {credit}",
+  "@reportSupplierReturnsCredit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "credit": {
+        "type": "String"
+      }
+    }
+  },
+  "reportRefundTotal": "Возвращено покупателям: {amount}",
+  "@reportRefundTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportByCondition": "По состоянию товара",
+  "reportByReason": "Причины возвратов",
+  "reportConditionLine": "{condition}: {qty} · {amount}",
+  "@reportConditionLine": {
+    "placeholders": {
+      "condition": {
+        "type": "String"
+      },
+      "qty": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReasonLine": "{reason}: {count} · {amount}",
+  "@reportReasonLine": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportByCategory": "По категориям",
+  "reportByLocation": "По точкам",
+  "reportTotalLine": "Всего: {amount}",
+  "@reportTotalLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportRowLine": "{name}: {amount} ({count})",
+  "@reportRowLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorRangeTooLong": "Период слишком длинный: выберите не больше года.",
+  "dashSalesToday": "Продажи сегодня ({count})",
+  "@dashSalesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashSalesMonth": "Продажи за месяц ({count})",
+  "@dashSalesMonth": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashProfitMonth": "Валовая прибыль за месяц",
+  "dashExpensesMonth": "Расходы за месяц",
+  "dashInventoryValue": "Стоимость склада",
+  "dashLowStock": "Ниже минимума",
+  "dashReorder": "К заказу поставщику",
+  "dashOpenOrders": "Открытые заказы",
+  "dashOpenClaims": "Открытые гарантии",
+  "dashRecent": "Недавние действия",
+  "dashOpenReports": "Открыть отчёты",
+  "dashNothing": "Для вашей роли здесь пока нечего показать.",
+  "activitySearchHint": "Действие или объект",
+  "activityAllActions": "Все действия",
+  "activityEmpty": "Записей нет",
+  "activityLine": "{actor} · {time}",
+  "@activityLine": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activitySystem": "Система",
+  "activityLoadMore": "Показать ещё",
+  "movementSale": "Продажа",
+  "movementTransferOut": "Перемещение (отправлено)",
+  "movementTransferIn": "Перемещение (получено)",
+  "movementTransferLoss": "Перемещение (не дошло)",
+  "movementReturnIn": "Возврат от покупателя",
+  "movementInspectionOut": "Проверка возврата (списано)",
+  "movementInspectionIn": "Проверка возврата (оприходовано)",
+  "movementSupplierReturn": "Возврат поставщику",
+  "movementWarrantyOut": "Гарантийная замена (выдано)",
+  "movementWarrantyIn": "Гарантия: неисправный товар (принят)",
+  "auditAttachmentUploaded": "Загружен файл",
+  "auditAuthLogin": "Вход в систему",
+  "auditAuthPasswordChanged": "Смена пароля",
+  "auditAuthPasswordResetCompleted": "Пароль восстановлен",
+  "auditAuthPasswordResetRequested": "Запрошено восстановление пароля",
+  "auditBusinessCreated": "Создан бизнес",
+  "auditBusinessUpdated": "Изменены данные бизнеса",
+  "auditCatalogExported": "Экспорт каталога",
+  "auditCatalogImported": "Импорт товаров",
+  "auditCountApproved": "Инвентаризация утверждена",
+  "auditCountCancelled": "Инвентаризация отменена",
+  "auditCountStarted": "Начата инвентаризация",
+  "auditCountSubmitted": "Инвентаризация отправлена на утверждение",
+  "auditExchangeRateCreated": "Установлен курс",
+  "auditExpenseCreated": "Добавлен расход",
+  "auditExpenseUpdated": "Изменён расход",
+  "auditExpenseVoided": "Аннулирован расход",
+  "auditLocationCreated": "Добавлена точка",
+  "auditLocationUpdated": "Изменена точка",
+  "auditProductCreated": "Добавлен товар",
+  "auditPurchaseOrderCancelled": "Заказ поставщику отменён",
+  "auditPurchaseOrderCreated": "Создан заказ поставщику",
+  "auditPurchaseOrderReceived": "Принят товар по заказу",
+  "auditPurchaseOrderSubmitted": "Заказ поставщику оформлен",
+  "auditPurchaseOrderUpdated": "Изменён заказ поставщику",
+  "auditReorderUpdated": "Изменены минимум и цель",
+  "auditReportExported": "Экспорт отчёта",
+  "auditReturnInspected": "Решение по проверке возврата",
+  "auditSaleCompleted": "Оформлена продажа",
+  "auditSaleReturned": "Возврат от покупателя",
+  "auditStaffCodeSent": "Отправлен код сотруднику",
+  "auditStaffCreated": "Добавлен сотрудник",
+  "auditStaffUpdated": "Изменён сотрудник",
+  "auditStockAdjustmentPosted": "Корректировка склада",
+  "auditStockOpeningPosted": "Начальный остаток",
+  "auditSupplierCreated": "Добавлен поставщик",
+  "auditSupplierUpdated": "Изменён поставщик",
+  "auditSupplierReturnCreated": "Возврат поставщику",
+  "auditTransferCancelled": "Перемещение отменено",
+  "auditTransferDispatched": "Отправлено перемещение",
+  "auditTransferReceived": "Принято перемещение",
+  "auditWarrantyClosed": "Обращение по гарантии закрыто",
+  "auditWarrantyNoted": "Заметка по гарантии",
+  "auditWarrantyOpened": "Открыто обращение по гарантии",
+  "auditCategoryCreated": "Добавлена категория",
+  "auditCategoryUpdated": "Изменена категория",
+  "auditBrandCreated": "Добавлен бренд",
+  "auditBrandUpdated": "Изменён бренд",
+  "auditUnitCreated": "Добавлена единица измерения",
+  "auditUnitUpdated": "Изменена единица измерения",
+  "auditCustomerCreated": "Добавлен покупатель",
+  "auditCustomerUpdated": "Изменён покупатель",
+  "auditExpenseCategoryCreated": "Добавлена категория расходов",
+  "auditExpenseCategoryUpdated": "Изменена категория расходов",
+  "auditProductUpdated": "Изменён товар",
+  "auditProductArchived": "Товар убран в архив",
+  "auditProductRestored": "Товар возвращён из архива",
+  "serverLine": "Сервер: {url}",
+  "@serverLine": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "serverNone": "Сервер не выбран",
+  "serverChange": "Изменить",
+  "serverSet": "Указать сервер",
+  "serverDialogTitle": "Адрес сервера",
+  "serverUrlLabel": "Адрес сервера",
+  "serverChangeNote": "Адрес вам сообщит тот, кто настраивал систему. После смены адреса нужно войти заново.",
+  "serverSave": "Проверить и сохранить",
+  "serverChecking": "Проверяем…",
+  "serverSaved": "Адрес сервера сохранён.",
+  "serverErrInvalid": "Введите адрес вида https://shop.example.com",
+  "serverErrInsecure": "Нужен защищённый адрес, начинающийся с https://",
+  "serverErrUnreachable": "Сервер не отвечает. Проверьте адрес и интернет.",
+  "serverErrNotErp": "По этому адресу нет сервера этой системы.",
+  "serverErrDatabase": "Сервер отвечает, но его база данных сейчас недоступна."
 }

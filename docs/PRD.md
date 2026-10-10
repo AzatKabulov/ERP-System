@@ -24,7 +24,7 @@ When several staff members or locations handle the same products, unrecorded mov
 
 - Business owners: oversee operations, expenses, inventory value, reports, and staff access.
 - Store managers: manage purchases, stock, transfers, and operational approvals.
-- Sales staff: find products, record sales, issue receipts, and handle authorized returns.
+- Sales staff: find products, record sales (at the price they agree with the customer), print or share a simple receipt, and handle authorized returns.
 - Warehouse staff: receive deliveries, locate products, transfer goods, and count stock.
 
 Each business owns its records. Access to another business's data must be denied, including through search, reports, imports, exports, and document downloads.
@@ -33,7 +33,7 @@ Each business owns its records. Access to another business's data must be denied
 
 - Provide complete Russian (`ru`) and Turkmen (`tk`, modern Latin script) interfaces, including sign-in, navigation, forms, validation, errors, notifications, reports, and accessibility labels.
 - Let each user select a language and remember the selection between sessions. Show language choices as `Русский` and `Türkmençe`. Changing language must preserve business data and work in progress.
-- Receipts, invoices, and generated report headings must support either language. Document language must be selectable independently of the staff member's interface language.
+- The receipt and generated report headings must support either language. The document language is a business setting, independent of the staff member's interface language.
 - Support Russian Cyrillic and Turkmen characters in entry, storage, search, imports, exports, and generated documents. Fonts must render these characters correctly on devices and in printed or PDF documents.
 - Localize system text without automatically translating user-entered product names, customer names, supplier details, or identifiers. A shared catalog remains the same when the interface language changes.
 - Format dates, numbers, and monetary values consistently with the selected locale and configured business currency. Interface language must not change stored amounts, currency, rounding rules, or timestamps.
@@ -49,7 +49,7 @@ Show sales totals, inventory value, low-stock alerts, reorder suggestions, and r
 
 Manage names, SKUs, barcodes, categories, brands, units, purchase costs, selling prices, and warranty terms. Support product lookup by text or barcode during sales, receiving, and stock counts.
 
-The first Android release must support at least one agreed scanning method on a real tablet. Camera scanning and external scanner support should be tested separately; support for arbitrary scanners is not assumed.
+The first Android release must support at least one agreed scanning method on a real tablet. The agreed first method is the tablet camera (decided 2026-10-06), always with manual entry as a fallback. Typed entry alone does not satisfy the scanning acceptance check. External scanner support is tested separately once a device is chosen; support for arbitrary scanners is not assumed.
 
 ### Inventory, Stores, and Warehouses
 
@@ -69,13 +69,13 @@ Allow staff to count stock by location, compare counts with system quantities, r
 
 ### Sales, Customers, and Documents
 
-Record customer details when applicable, selected products, quantities, prices, discounts, and payment method. Support walk-in sales without requiring a customer account.
+Record customer details when applicable, selected products, quantities, the price charged on every line, and the payment method (cash or card, as a label). Support walk-in sales without requiring a customer account.
 
-Complete sales against available stock at the selected location. Produce receipts and invoices with business details and configurable tax information. The initial version records payments; it does not process card payments through a gateway.
+Complete sales against available stock at the selected location. **Prices are not fixed:** the seller sets the price of every line (any amount, lower or higher than the catalog price) and the catalog price is only the starting suggestion. A sale records how the customer paid, cash or card, and nothing more about the payment (no amounts tendered, no change, no split payments, no credit); it does not process payments through a gateway. A sale produces one simple receipt (business name, address and phone, the lines with the price charged, the total, how it was paid) that can be printed or shared. **Decided 2026-10-07:** no invoices, no tax and no legal receipt format. Selling happens in the store, online. **Principle:** this is an ERP, not a cash register: entry forms stay short and nothing is added that the owner did not ask for.
 
 ### Returns and Refunds
 
-Link customer returns to original sales and enforce the remaining returnable quantities. Record return reasons and refund amounts, including partial returns.
+Link customer returns to original sales and enforce the remaining returnable quantities. Record return reasons and refund amounts, including partial returns. **The refund is what the customer was charged for the returned goods** (prices are not fixed, so there is no fixed list price to refund at). Any seller may take a return; everything is recorded with who and when. Each product has its own **return period in days**, typed by hand and counted from the day of the sale (empty = no limit, 0 = not returnable); after it a return is refused (owner decision, 2026-10-07; provisional detail: it binds owner and manager too).
 
 Classify returned goods as sellable, damaged, or awaiting inspection. Only sellable goods become available stock. Support exchanges through linked return and sale records, and record supplier returns separately.
 
@@ -85,11 +85,11 @@ Record expense category, amount, date, location, description, and optional recei
 
 ### Warranty Tracking
 
-Save the applicable warranty terms with the sale so later product changes do not alter the original entitlement. Track claims, eligibility, status, and repair or replacement outcomes. Record any resulting inventory movement.
+Save the applicable warranty terms with the sale so later product changes do not alter the original entitlement. The warranty is stated in months and counted from the day of the sale; the return period (above) is a separate field. Track claims, eligibility, status, and the outcome (repair, replacement, refund or rejection) with a history. Record any resulting inventory movement. An expired or missing warranty can be accepted only by an owner or manager, with a mandatory note (owner decision, 2026-10-07).
 
 ### Import and Export
 
-Provide CSV import and export for product catalogs, plus CSV export for relevant reports. Imports must preview validation errors and duplicate identifiers before applying changes. An invalid import must not leave unexplained partial updates. Exported data must respect permissions.
+Provide CSV import and export for product catalogs, plus CSV export for relevant reports. Imports must preview validation errors and duplicate identifiers before applying changes. An invalid import must not leave unexplained partial updates: the whole file is applied in one step or not at all. An import only adds new products and never changes stock. The receipt photo of an expense is optional (owner decision, 2026-10-07). Exported data must respect permissions.
 
 ### Permissions and Activity History
 
@@ -101,7 +101,7 @@ Record who performed important actions, when they occurred, and the affected rec
 
 Provide sales, stock movement, low-stock, inventory value, purchasing, returns, and expense reports. Allow date and location filtering where applicable.
 
-Define inventory valuation and product costing consistently before reporting gross margins. Label estimated values clearly. Sales revenue, gross profit, expenses, and net profit must not be presented as interchangeable measures.
+Define inventory valuation and product costing consistently before reporting gross margins. Label estimated values clearly. Sales revenue, gross profit, expenses, and net profit must not be presented as interchangeable measures. Reports use the FIFO cost decided on 2026-10-06 (exact, so nothing is an estimate), count refunds by the day of the return, and show the result as gross profit minus expenses, an operating result and not an accounting profit. Owners and managers see the reports and the activity history; other roles see only the dashboard figures their role allows (a seller: sales without costs; a keeper: stock and orders without money).
 
 ### Backup and Recovery
 
@@ -113,7 +113,7 @@ Restoration is a controlled administrator operation. CSV exports alone do not sa
 
 1. Business setup: an owner configures the business, locations, staff access, and initial product catalog.
 2. Purchase to receipt: staff create a purchase order, receive an actual delivery, and verify the updated stock and outstanding quantities.
-3. Sale: a cashier scans or searches for products, reviews quantities and prices, completes the sale, and issues a receipt. Stock decreases once.
+3. Sale: a seller scans or searches for products, sets the quantities and the price they agreed, completes the sale (cash or card), and can print or share a simple receipt. Stock decreases once.
 4. Transfer: staff dispatch goods from one location and confirm their arrival at another, retaining the complete transfer history.
 5. Stock count: staff record physical quantities, review discrepancies, and an authorized user approves explained adjustments.
 6. Return: staff find an original sale, record eligible returned items and their condition, and record the refund and appropriate stock changes.
@@ -127,7 +127,7 @@ Restoration is a controlled administrator operation. CSV exports alone do not sa
 - Retrying a request must not create duplicate sales, receipts, refunds, or stock movements.
 - Concurrent sales must not sell the same unavailable stock. Negative available stock is disallowed in the initial version.
 - Finalized records retain their history. Corrections use linked reversals or adjustments rather than silently rewriting past movements.
-- Monetary calculations use decimal arithmetic with defined currency and rounding rules. The first version uses one configured currency per business; currency conversion is outside scope.
+- Monetary calculations use decimal arithmetic with defined currency and rounding rules. The first version uses one configured currency per business (TMT for the pilot, 2 decimals, rounded half up). One limited exception, decided 2026-10-06: a product's selling price may be stated in USD and is converted to the business currency at an exchange rate entered by an owner or manager; the rate used is saved on each sale. Purchase costs, totals, payments, stock values and reports remain in the business currency.
 - Important forms provide validation, loading, success, empty, and error states. A failed request must never appear as a successful transaction.
 - Use authenticated, encrypted network connections. Keep server credentials out of the mobile application and protect stored sessions.
 - Tablet layouts support portrait and landscape, accessible text sizing, readable contrast, and comfortable touch targets.
@@ -155,7 +155,7 @@ All listed features remain in the agreed product scope. Stages determine deliver
 - A verified backup restores representative business records and uploaded documents successfully.
 - Barcode lookup and tablet layouts work on the selected real Android device; the equivalent iOS checks pass before the Apple release.
 - Pilot workflows can be completed in Russian and Turkmen without untranslated system messages or missing glyphs. Language selection persists, and switching language does not lose entered work or alter transaction values.
-- Imports, exports, receipts, invoices, and report documents preserve representative Russian and Turkmen text correctly.
+- Imports, exports, the receipt, and report documents preserve representative Russian and Turkmen text correctly.
 - Pilot feedback measures task completion, time spent on routine workflows, stock discrepancies, and staff satisfaction. Quantitative business targets will be set after establishing the pilot store's baseline.
 
 ## Out of Scope for the Initial Version
@@ -163,18 +163,20 @@ All listed features remain in the agreed product scope. Stages determine deliver
 - Full accounting, payroll, HR, and manufacturing.
 - Offline sales and automatic synchronization of offline stock changes.
 - Payment gateways, customer credit accounts, and installment management.
+- Invoices, tax, and any legal receipt format (owner decision, 2026-10-07).
 - Automatic supplier ordering and advanced demand forecasting.
 - Online-store integrations and a separate desktop interface.
 - Advanced vehicle compatibility catalogs and automated equivalent-part suggestions.
-- Multi-currency conversion and universal compatibility with scanners or printers.
+- Full multi-currency accounting (beyond the limited USD selling-price exception described above), and universal compatibility with scanners or printers.
 
 ## Decisions to Confirm During Implementation
 
-- Business currency, Turkmenistan-specific invoice formats, and applicable tax requirements.
+- (Business currency TMT with optional USD selling prices was decided 2026-10-06; invoices and tax were dropped 2026-10-07.)
 - Default language for first-time users, document-language defaults, and approved Russian/Turkmen business terminology.
-- Pilot tablet model, scanning method, and any required receipt or label printer.
-- Inventory valuation method and warranty policies.
-- Refund and stock-adjustment approval rules.
+- Pilot tablet model and any required receipt or label printer (receipts are PDFs printed or shared through the tablet).
+- Warranty claim policies beyond the rules above (provisional). (FIFO inventory costing and the warranty term fields were decided 2026-10-06.)
+- Email service for password-recovery codes, tested from Turkmenistan.
+- Stock-adjustment approval rules. (Refunds: any seller, decided 2026-10-07.)
 - Hosting, backup frequency, retention, and acceptable recovery time and data loss.
 
 These decisions do not prevent starting the shared product foundation, but must be resolved before their affected workflows are finalized.

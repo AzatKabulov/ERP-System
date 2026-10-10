@@ -1,0 +1,33 @@
+[project]
+name = "erp-backend"
+version = "0.1.0"
+description = "Inventory ERP API: Django REST Framework + PostgreSQL"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "Django>=5.2,<5.3",
+    "djangorestframework>=3.16",
+    "djangorestframework-simplejwt>=5.5",
+    "drf-spectacular>=0.28",
+    "psycopg[binary]>=3.2",
+    "gunicorn>=23.0",
+    "whitenoise>=6.9",
+    "django-cors-headers>=4.7",
+    "reportlab>=4.2",
+]
+
+[dependency-groups]
+dev = [
+    "pypdf>=5",
+    "ruff>=0.9",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["**/migrations/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]

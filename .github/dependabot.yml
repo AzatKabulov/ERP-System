@@ -1,0 +1,17 @@
+# Weekly checks for updates and known vulnerabilities in what the project depends on.
+version: 2
+updates:
+  - package-ecosystem: pub
+    directory: /mobile
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+  - package-ecosystem: uv
+    directory: /backend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+  - package-ecosystem: docker
+    directory: /backend
+    schedule: { interval: weekly }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }

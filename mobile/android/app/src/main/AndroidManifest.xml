@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The app talks to its server over the internet (the debug manifest adds this for
+         development only, so a release build needs it here). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Barcode scanning uses the camera. It is optional: manual entry always works. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
         android:label="ERP System"
         android:name="${applicationName}"
