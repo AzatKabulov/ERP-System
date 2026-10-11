@@ -17,6 +17,8 @@ jobs:
     name: Mobile (format, analyze, test, web, Android debug APK)
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: write # only to publish the test build as a pre-release (see the last step)
     steps:
       - uses: actions/checkout@v4
 
@@ -98,6 +100,21 @@ jobs:
           name: erp-system-test-build
           path: ${{ runner.temp }}/test-build
           retention-days: 14
+
+      # The same two files as plain downloads: the Android app can be tapped and installed straight
+      # from the release page on a phone (no zip to open). One pre-release, replaced on every push of
+      # a working branch; for testing only (unsigned debug build).
+      - name: Publish the test build as the pre-release "test-build"
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/claude/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete test-build --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
+          gh release create test-build --repo "$GITHUB_REPOSITORY" --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Latest test build ($GITHUB_REF_NAME)" \
+            --notes "Unsigned test build of $GITHUB_SHA. erp-system-test-debug.apk is the Android app (open this page on the phone and tap it; it works with any server address typed on its sign-in screen). erp-system-test-web.zip is the web app. For testing only." \
+            "$RUNNER_TEMP/test-build/erp-system-test-debug.apk" "$RUNNER_TEMP/test-build/erp-system-test-web.zip"
 
   backend:
     name: Backend (lint, checks, tests on PostgreSQL)
@@ -195,9 +212,13 @@ jobs:
       - name: Start it, wait for the health page, sign in as the owner
         run: |
           export ERP_SAMPLE_PASSWORD='Ci-Local-Passw0rd-1!'
-          uv run --project backend --with pixeltable-pgserver==0.6.0 \
+          setsid uv run --project backend --with pixeltable-pgserver==0.6.0 \
             python scripts/local/run_local.py --data "$RUNNER_TEMP/local" --port 8000 \
             > "$RUNNER_TEMP/local.log" 2>&1 &
+          server=$!
+          # stop the server and its database whatever happens: a process left running keeps the
+          # runner's clean-up step waiting
+          trap 'kill -TERM -- "-$server" 2>/dev/null || true; sleep 5' EXIT
           ok=""
           for _ in $(seq 1 120); do
             if curl -sf http://127.0.0.1:8000/api/v1/health/ | grep -q '"ok"'; then ok=1; break; fi
