@@ -4,7 +4,15 @@ For your own testing. One program starts everything: the database, the server, t
 
 Status (2026-10-10): checked on Linux (all 682 backend tests on this database, and the full browser run of 216 checks against it). **Not tried on Windows or on a Mac yet**: if something fails, send the last lines it printed.
 
-## What you need
+## The easiest way: one download
+
+1. On GitHub open **Releases** > **Latest test build** (`github.com/AzatKabulov/ERP-System/releases/tag/test-build`) and download **`ERP-Test.zip`**.
+2. Unzip it. **Windows:** double-click `START.bat`. **Mac:** double-click `START.command` (first time: right-click > Open).
+3. When the window says **Running**, open `http://localhost:8000`, sign in as `owner` with the printed password. For a phone: open the printed `.../install/` address on the same Wi-Fi, install the app, then in the app Server > Change > that address.
+
+Nothing else to install: the package carries the tool that starts it, and the first start downloads the rest once. The longer route below does the same thing from the source code.
+
+## What you need (the longer route)
 
 - Windows 10/11 or a Mac, and the internet for the first start (about 250 MB: Python, the libraries and the database program are downloaded once).
 - The small tool **uv** (below). It brings its own Python; you install nothing else.
