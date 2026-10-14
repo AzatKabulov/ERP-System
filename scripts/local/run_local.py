@@ -96,7 +96,37 @@ def extract_build(data: Path, web: Path | None, apk: Path | None) -> tuple[bool,
     return got_web, got_apk
 
 
+def find_windows_runtime() -> None:
+    """The Windows build of the embedded database does not carry `libwinpthread-1.dll`, so
+    `postgres.exe` refuses to start (error 0xC0000135). Git for Windows ships the same library:
+    put its folder on the search path. Without it, say what to install."""
+    if os.name != "nt":
+        return
+    name = "libwinpthread-1.dll"
+    here = [p for p in os.environ.get("PATH", "").split(os.pathsep) if p]
+    if any((Path(p) / name).is_file() for p in here):
+        return
+    git = shutil.which("git")
+    roots = [Path(git).resolve().parents[1]] if git else []
+    for var in ("ProgramFiles", "ProgramFiles(x86)", "LOCALAPPDATA"):
+        base = os.environ.get(var)
+        if base:
+            roots += [Path(base) / "Git", Path(base) / "Programs" / "Git"]
+    for root in roots:
+        for sub in ("mingw64/bin", "usr/bin", "mingw32/bin"):
+            folder = root / sub
+            if (folder / name).is_file():
+                os.environ["PATH"] = str(folder) + os.pathsep + os.environ.get("PATH", "")
+                return
+    fail(
+        "the database program needs a Windows library (libwinpthread-1.dll) that this computer\n"
+        "does not have. Install Git for Windows (free, https://git-scm.com/download/win), then\n"
+        "start this program again."
+    )
+
+
 def start_database(data: Path) -> dict:
+    find_windows_runtime()
     try:
         import pixeltable_pgserver as pgserver
     except ImportError:

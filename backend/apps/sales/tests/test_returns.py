@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from decimal import Decimal
 from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.db import DatabaseError, connection, connections, transaction
 from django.utils import timezone
@@ -197,7 +198,9 @@ class ReturnWindowTests(ReturnsCase):
         return product
 
     def later(self, days):
-        today = timezone.localdate()
+        # "today" as the app reads it: the day in the business's time zone, which is not the
+        # server's default zone for part of every day
+        today = timezone.now().astimezone(ZoneInfo(self.w.a.timezone)).date()
         return mock.patch("apps.sales.returns._today", return_value=today + timedelta(days=days))
 
     def test_the_window_counts_from_the_day_of_the_sale_and_includes_its_last_day(self):
