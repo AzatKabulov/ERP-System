@@ -4,7 +4,6 @@
   "dashboard": "Обзор",
   "products": "Товары",
   "inventory": "Склад",
-  "purchasing": "Закупки",
   "sales": "Продажи",
   "expenses": "Расходы",
   "warranties": "Гарантии",
@@ -40,7 +39,6 @@
   "noActivity": "Здесь появятся ваши демонстрационные операции.",
   "quickActions": "Быстрые действия",
   "newSale": "Новая продажа",
-  "receiveGoods": "Принять товар",
   "viewInventory": "Открыть склад",
   "stockHealth": "Состояние запасов",
   "stockHealthSubtitle": "Посмотрите остатки и подготовьте пополнение.",
@@ -91,7 +89,6 @@
   "operationSaved": "Демо-операция сохранена",
   "minimum": "Минимум",
   "suggestedOrder": "Рекомендуется заказать",
-  "reorderHint": "Предложения до целевого остатка. Реальные заказы поставщикам не отправляются.",
   "cart": "Корзина",
   "emptyCart": "Добавьте первый товар",
   "emptyCartHint": "Найдите товар слева или введите штрихкод.",
@@ -109,12 +106,9 @@
   "refund": "Вернуть товар",
   "sellable": "Товар пригоден для продажи",
   "refundNotice": "Возврат связан с выбранной продажей. Пригодный товар возвращается на исходный склад; реальный возврат денег не выполняется.",
-  "purchaseOrders": "Заказы поставщикам",
-  "supplier": "Поставщик",
   "order": "Заказ",
   "expected": "Ожидает приёмки",
   "received": "Принято в демо",
-  "purchasingHint": "Примите пример поставки на выбранный склад и посмотрите изменение остатков.",
   "newExpense": "Добавить расход",
   "expenseDescription": "Назначение расхода",
   "amount": "Сумма",
@@ -410,6 +404,65 @@
   "noProducts": "Товаров пока нет",
   "noProductsHint": "Добавьте первый товар, чтобы начать работу.",
   "loadMore": "Показать ещё",
+  "viewList": "Список",
+  "viewGallery": "Галерея",
+  "productPhotoTitle": "Фото",
+  "productPhotoNone": "Фото ещё нет. Добавьте его: по картинке товар легче найти.",
+  "productPhotoTake": "Сделать фото",
+  "productPhotoChoose": "Выбрать фото",
+  "productPhotoChange": "Заменить фото",
+  "productPhotoRemove": "Удалить фото",
+  "productPhotoRemoveConfirm": "Удалить фото этого товара?",
+  "productPhotoSaved": "Фото сохранено.",
+  "productPhotoRemoved": "Фото удалено.",
+  "productPhotoPickFailed": "Не удалось получить фото. Проверьте, что приложению разрешён доступ к камере или файлам.",
+  "errorInvalidImage": "Это не картинка, которую можно использовать. Выберите фото в формате JPEG, PNG или WebP.",
+  "toCompleteTitle": "Дополнить данные",
+  "toCompleteHint": "Товары можно добавлять без цены, но для верной прибыли нужна закупочная цена. Заполните её здесь: прибыль прошлых продаж пересчитается.",
+  "toCompleteNone": "Всё заполнено. Прибыль считается по всем продажам.",
+  "toCompleteNoPrice": "Нет цены продажи",
+  "toCompleteNoCost": "Нет закупочной цены",
+  "toCompleteStock": "На складе без закупочной цены: {pieces}",
+  "@toCompleteStock": {
+    "placeholders": {
+      "pieces": {
+        "type": "String"
+      }
+    }
+  },
+  "toCompleteSold": "Продано без закупочной цены: {pieces}",
+  "@toCompleteSold": {
+    "placeholders": {
+      "pieces": {
+        "type": "String"
+      }
+    }
+  },
+  "toCompletePriceLabel": "Цена продажи",
+  "toCompleteCostLabel": "Закупочная цена",
+  "toCompleteSaved": "Сохранено.",
+  "toCompleteNothingTyped": "Введите цену продажи или закупочную цену.",
+  "dashToComplete": "Дополнить данные",
+  "dashWithoutCostNote": "Прибыль месяца не включает продажи без закупочной цены: {amount}.",
+  "@dashWithoutCostNote": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportWithoutCostNote": "В прибыль не вошли продажи без закупочной цены: {amount} (позиций: {lines}). Укажите цену в разделе «Дополнить данные».",
+  "@reportWithoutCostNote": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "lines": {
+        "type": "int"
+      }
+    }
+  },
+  "saleProfitUnknown": "Прибыль неизвестна: у товара нет закупочной цены.",
   "productSaved": "Товар сохранён.",
   "productCardTitle": "Карточка товара",
   "scanTitle": "Наведите камеру на штрихкод",
@@ -507,114 +560,12 @@
   "errorOrderNotCancellable": "Этот заказ уже нельзя отменить.",
   "errorOrderNoLines": "Добавьте в заказ хотя бы одну строку.",
   "fieldDuplicateProduct": "Этот товар уже есть в списке.",
-  "suppliersTitle": "Поставщики",
-  "addSupplier": "Добавить поставщика",
-  "editSupplier": "Изменить поставщика",
-  "supplierName": "Название поставщика",
-  "contactName": "Контактное лицо",
   "phoneLabel": "Телефон",
-  "addressLabel": "Адрес",
-  "notesLabel": "Заметки",
-  "noSuppliers": "Поставщиков пока нет",
-  "noSuppliersHint": "Добавьте поставщика, чтобы создавать заказы.",
-  "supplierSaved": "Поставщик сохранён.",
-  "newOrder": "Новый заказ поставщику",
-  "editOrder": "Изменить заказ",
-  "orderSaved": "Заказ сохранён.",
   "statusAll": "Все",
-  "statusDraft": "Черновик",
-  "statusOrdered": "Оформлен",
-  "statusPartial": "Принят частично",
-  "statusReceived": "Принят полностью",
-  "statusCancelled": "Отменён",
-  "supplierFieldLabel": "Поставщик",
-  "deliverToLabel": "Принять в точку",
-  "expectedDateLabel": "Ожидаемая дата поставки",
   "pickDate": "Выбрать дату",
-  "orderLinesTitle": "Строки заказа",
-  "orderTotal": "Итого: {amount}",
-  "@orderTotal": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "orderProgress": "Заказано {ordered}, принято {received}",
-  "@orderProgress": {
-    "placeholders": {
-      "ordered": {
-        "type": "String"
-      },
-      "received": {
-        "type": "String"
-      }
-    }
-  },
-  "submitOrder": "Оформить заказ",
-  "submitOrderConfirm": "После оформления заказ нельзя редактировать. Оформить?",
-  "orderSubmitted": "Заказ оформлен.",
-  "cancelOrder": "Отменить заказ",
-  "cancelOrderConfirm": "Невыполненный остаток заказа будет отменён, уже принятые товары останутся на складе. Продолжить?",
   "cancelReasonLabel": "Причина отмены (необязательно)",
-  "orderCancelled": "Заказ отменён.",
-  "receiveTitle": "Приём по заказу {number}",
-  "@receiveTitle": {
-    "placeholders": {
-      "number": {
-        "type": "String"
-      }
-    }
-  },
-  "receiveQuantityLabel": "Принять сейчас",
-  "outstandingLabel": "Осталось принять: {quantity}",
-  "@outstandingLabel": {
-    "placeholders": {
-      "quantity": {
-        "type": "String"
-      }
-    }
-  },
-  "receiveAll": "Принять всё оставшееся",
-  "receiveNothing": "Укажите количество хотя бы по одной строке.",
-  "deliveryPosted": "Поставка принята, остатки обновлены.",
-  "deliveriesTitle": "Принятые поставки",
-  "deliveryEntry": "Поставка №{number} · {when} · {who}",
-  "@deliveryEntry": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      },
-      "when": {
-        "type": "String"
-      },
-      "who": {
-        "type": "String"
-      }
-    }
-  },
-  "noDeliveries": "Поставок ещё не было.",
-  "noOrders": "Заказов пока нет",
-  "noOrdersHint": "Создайте заказ поставщику, чтобы принимать товары партиями.",
-  "expectedOn": "Ожидается {date}",
-  "@expectedOn": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "cancelledBecause": "Причина отмены: {reason}",
-  "@cancelledBecause": {
-    "placeholders": {
-      "reason": {
-        "type": "String"
-      }
-    }
-  },
   "viewHistoryFor": "История движений по товару",
   "costVisibleNote": "Себестоимость видна только владельцу и менеджеру.",
-  "actionReceive": "Приём товара",
   "actionOpening": "Начальные остатки",
   "actionAdjust": "Корректировка остатков",
   "salesStartHint": "Найдите товар по названию или артикулу либо отсканируйте штрихкод, чтобы добавить его в корзину.",
@@ -1012,56 +963,6 @@
   "errorTargetBelowMinimum": "Цель не может быть меньше минимума.",
   "actionReturnComplete": "Возврат от покупателя",
   "actionReturnInspect": "Возврат: решение по проверке",
-  "actionSupplierReturn": "Возврат поставщику",
-  "supplierReturnsTitle": "Возвраты поставщикам",
-  "supplierReturnsEmpty": "Возвратов поставщикам пока нет",
-  "supplierReturnNew": "Вернуть поставщику",
-  "supplierReturnSource": "{supplier} · поставка № {delivery}",
-  "@supplierReturnSource": {
-    "placeholders": {
-      "supplier": {
-        "type": "String"
-      },
-      "delivery": {
-        "type": "String"
-      }
-    }
-  },
-  "supplierReturnDone": "Возврат поставщику оформлен.",
-  "supplierReturnCredit": "Зачёт поставщика: {amount}",
-  "@supplierReturnCredit": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "reorderTitle": "Пополнение запаса",
-  "reorderEmpty": "Всё в порядке: ничего заказывать не нужно",
-  "reorderScreenHint": "Товары ниже минимума (с учётом уже заказанного). Отметьте нужные и создайте заказ: поставщика выберете сами.",
-  "reorderRowLine": "Есть: {onHand} · в заказах: {onOrder} · минимум: {minimum}",
-  "@reorderRowLine": {
-    "placeholders": {
-      "onHand": {
-        "type": "String"
-      },
-      "onOrder": {
-        "type": "String"
-      },
-      "minimum": {
-        "type": "String"
-      }
-    }
-  },
-  "reorderSuggested": "Предлагается заказать: {qty}",
-  "@reorderSuggested": {
-    "placeholders": {
-      "qty": {
-        "type": "String"
-      }
-    }
-  },
-  "reorderCreate": "Создать заказ",
   "productReturnDays": "Срок возврата, дней",
   "productReturnDaysHint": "Пусто — без ограничения, 0 — возврат не принимается. Считается со дня продажи.",
   "reorderLevelsTitle": "Минимум и цель по точкам",
@@ -1317,7 +1218,6 @@
   "reportTabSummary": "Итоги",
   "reportTabSales": "Продажи",
   "reportTabStock": "Склад",
-  "reportTabPurchasing": "Закупки",
   "reportTabReturns": "Возвраты",
   "reportTabExpenses": "Расходы",
   "reportTabActivity": "История действий",
@@ -1335,7 +1235,6 @@
   "reportInventoryValue": "Стоимость склада",
   "reportInventoryNote": "По себестоимости партий (FIFO)",
   "reportLowStock": "Ниже минимума",
-  "reportOpenOrders": "Открытые заказы",
   "reportSalesCount": "Продаж: {count}",
   "@reportSalesCount": {
     "placeholders": {
@@ -1443,84 +1342,6 @@
       }
     }
   },
-  "reportOrdersCount": "Заказов создано: {count}",
-  "@reportOrdersCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "reportDeliveriesCount": "Поставок принято: {count}",
-  "@reportDeliveriesCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "reportOrderedTotal": "Сумма заказов: {amount}",
-  "@reportOrderedTotal": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "reportReceivedValue": "Принято на сумму: {amount}",
-  "@reportReceivedValue": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "reportBySupplier": "По поставщикам",
-  "reportByStatus": "По состоянию заказов",
-  "reportSupplierLine": "{name}: заказов {orders}",
-  "@reportSupplierLine": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "orders": {
-        "type": "int"
-      }
-    }
-  },
-  "reportSupplierLineValue": "{name}: заказов {orders}, принято на {amount}",
-  "@reportSupplierLineValue": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "orders": {
-        "type": "int"
-      },
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "reportSupplierReturns": "Возвраты поставщикам: {count}",
-  "@reportSupplierReturns": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "reportSupplierReturnsCredit": "Возвраты поставщикам: {count}, зачёт {credit}",
-  "@reportSupplierReturnsCredit": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "credit": {
-        "type": "String"
-      }
-    }
-  },
   "reportRefundTotal": "Возвращено покупателям: {amount}",
   "@reportRefundTotal": {
     "placeholders": {
@@ -1604,8 +1425,6 @@
   "dashExpensesMonth": "Расходы за месяц",
   "dashInventoryValue": "Стоимость склада",
   "dashLowStock": "Ниже минимума",
-  "dashReorder": "К заказу поставщику",
-  "dashOpenOrders": "Открытые заказы",
   "dashOpenClaims": "Открытые гарантии",
   "dashRecent": "Недавние действия",
   "dashOpenReports": "Открыть отчёты",
@@ -1656,12 +1475,6 @@
   "auditLocationCreated": "Добавлена точка",
   "auditLocationUpdated": "Изменена точка",
   "auditProductCreated": "Добавлен товар",
-  "auditPurchaseOrderCancelled": "Заказ поставщику отменён",
-  "auditPurchaseOrderCreated": "Создан заказ поставщику",
-  "auditPurchaseOrderReceived": "Принят товар по заказу",
-  "auditPurchaseOrderSubmitted": "Заказ поставщику оформлен",
-  "auditPurchaseOrderUpdated": "Изменён заказ поставщику",
-  "auditReorderUpdated": "Изменены минимум и цель",
   "auditReportExported": "Экспорт отчёта",
   "auditReturnInspected": "Решение по проверке возврата",
   "auditSaleCompleted": "Оформлена продажа",
@@ -1671,9 +1484,6 @@
   "auditStaffUpdated": "Изменён сотрудник",
   "auditStockAdjustmentPosted": "Корректировка склада",
   "auditStockOpeningPosted": "Начальный остаток",
-  "auditSupplierCreated": "Добавлен поставщик",
-  "auditSupplierUpdated": "Изменён поставщик",
-  "auditSupplierReturnCreated": "Возврат поставщику",
   "auditTransferCancelled": "Перемещение отменено",
   "auditTransferDispatched": "Отправлено перемещение",
   "auditTransferReceived": "Принято перемещение",
@@ -1692,6 +1502,7 @@
   "auditExpenseCategoryUpdated": "Изменена категория расходов",
   "auditProductUpdated": "Изменён товар",
   "auditProductArchived": "Товар убран в архив",
+  "auditProductCostSet": "Указана закупочная цена",
   "auditProductRestored": "Товар возвращён из архива",
   "serverLine": "Сервер: {url}",
   "@serverLine": {
@@ -1726,6 +1537,24 @@
   "intakeEmpty": "Откройте коробку и отсканируйте каждый товар. Каждое сканирование добавляет 1 штуку, одинаковые товары складываются в одну строку.",
   "intakeLookingUp": "Ищу товар в каталоге…",
   "intakeUnknown": "Этого товара нет в каталоге: добавьте его",
+  "intakeFoundOnline": "Нашли в интернете: {name}",
+  "@intakeFoundOnline": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "intakeAddFound": "Добавить",
+  "intakeEditFound": "Изменить название",
+  "productFoundOnline": "Название найдено в интернете ({source}). Проверьте его.",
+  "@productFoundOnline": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
   "intakeLookupFailed": "Нет связи с сервером: товар будет найден позже",
   "intakeAddProduct": "Добавить товар",
   "intakeLess": "Меньше",
@@ -1749,7 +1578,7 @@
       }
     }
   },
-  "intakeCostMissingNote": "У некоторых строк не указана себестоимость. Пока её нет, в отчётах эти товары считаются с нулевой себестоимостью, а прибыль по ним завышена. Чтобы указать, нажмите на количество строки.",
+  "intakeCostMissingNote": "У некоторых строк не указана закупочная цена. Это можно сделать позже в разделе «Дополнить данные»: пока цены нет, прибыль по этим товарам не считается. Чтобы указать сейчас, нажмите на количество строки.",
   "intakeCostLabel": "Себестоимость за единицу, TMT (необязательно)",
   "intakeCostHelp": "Можно не заполнять: цену закупки добавите позже.",
   "intakeUnresolvedBlock": "Есть строки без товара из каталога. Добавьте товар, дождитесь поиска или удалите строку.",

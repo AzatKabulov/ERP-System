@@ -45,6 +45,10 @@ class FakeReports {
 
   String? lastExportName;
 
+  /// Net sales the profit leaves out, and how many sale lines that is (no known cost yet).
+  String withoutCost = '0.00';
+  int withoutCostLines = 0;
+
   Map<String, dynamic> summary() => {
     'revenue': '540.00',
     'refunds': '120.00',
@@ -54,12 +58,13 @@ class FakeReports {
     if (_can('sales.cost.view')) ...{
       'cost_of_goods': '250.00',
       'gross_profit': '170.00',
+      'without_cost': withoutCost,
+      'without_cost_lines': withoutCostLines,
     },
     if (_can('expense.view')) 'expenses': '150.00',
     if (_can('sales.cost.view') && _can('expense.view')) 'result': '20.00',
     if (_can('stock.cost.view')) 'inventory_value': '1330.00',
     'low_stock_count': 2,
-    'open_orders_count': 1,
   };
 
   Map<String, dynamic> sales() => {
@@ -69,6 +74,8 @@ class FakeReports {
     'returns_count': 1,
     'net_sales': '420.00',
     if (_can('sales.cost.view')) ...{
+      'without_cost': withoutCost,
+      'without_cost_lines': withoutCostLines,
       'cost_of_goods': '250.00',
       'gross_profit': '170.00',
     },
@@ -152,28 +159,6 @@ class FakeReports {
     ],
   };
 
-  Map<String, dynamic> purchasing() => {
-    'orders_count': 2,
-    'deliveries_count': 1,
-    'by_status': [
-      {'status': 'received', 'count': 1},
-      {'status': 'draft', 'count': 1},
-    ],
-    if (_can('purchasing.cost.view')) ...{
-      'ordered_total': '1830.00',
-      'received_value': '500.00',
-    },
-    'by_supplier': [
-      {
-        'supplier': {'id': 's-1', 'name': 'Ашхабад Запчасти'},
-        'orders': 2,
-        if (_can('purchasing.cost.view')) 'received_value': '500.00',
-      },
-    ],
-    'supplier_returns_count': 1,
-    if (_can('purchasing.cost.view')) 'supplier_returns_credit': '50.00',
-  };
-
   Map<String, dynamic> returns() => {
     'returns_count': 1,
     'refund_total': '120.00',
@@ -183,10 +168,6 @@ class FakeReports {
     'by_reason': [
       {'reason': 'Не подошли по размеру', 'count': 1, 'refund': '120.00'},
     ],
-    'supplier_returns': {
-      'count': 1,
-      if (_can('purchasing.cost.view')) 'credit': '50.00',
-    },
   };
 
   Map<String, dynamic> expenses() => {
@@ -214,12 +195,15 @@ class FakeReports {
       'sales_today': {'count': 2, 'total': '300.00'},
       'sales_month': {'count': 3, 'total': '540.00'},
     },
-    if (_can('sales.cost.view')) 'gross_profit_month': '170.00',
+    if (_can('sales.cost.view')) ...{
+      'gross_profit_month': '170.00',
+      'without_cost_month': withoutCost,
+    },
+    if (_can('catalog.manage'))
+      'to_complete_count': server.toCompleteData.length,
     if (_can('expense.view')) 'expenses_month': '150.00',
     if (_can('stock.cost.view')) 'inventory_value': '1330.00',
     if (_can('stock.view')) 'low_stock_count': 2,
-    if (_can('reorder.view')) 'reorder_count': 1,
-    if (_can('purchasing.view')) 'open_orders_count': 1,
     if (_can('warranty.view')) 'open_claims_count': 4,
     if (_can('audit.view')) 'recent_activity': audit.take(3).toList(),
   };
@@ -250,7 +234,6 @@ class FakeReports {
         'summary' => summary(),
         'sales' => sales(),
         'stock' => stock(),
-        'purchasing' => purchasing(),
         'returns' => returns(),
         'expenses' => expenses(),
         _ => null,

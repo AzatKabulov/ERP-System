@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/api_client.dart';
 import '../api/api_exception.dart';
+import '../files/photo_cache.dart';
 import 'session_models.dart';
 
 enum SessionStatus {
@@ -159,6 +160,7 @@ class SessionController extends ChangeNotifier {
   }
 
   void _clear() {
+    PhotoCache.instance.clear();
     _user = null;
     _memberships = const [];
     _membership = null;

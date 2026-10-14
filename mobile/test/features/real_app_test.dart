@@ -230,7 +230,6 @@ void main() {
         'dashboard',
         'products',
         'inventory',
-        'purchasing',
         'sales',
         'expenses',
         'warranties',
@@ -259,7 +258,8 @@ void main() {
       await rig.launchSignedIn(tester);
       expect(key('nav-products'), findsOneWidget);
       expect(key('nav-inventory'), findsOneWidget);
-      expect(key('nav-purchasing'), findsNothing);
+      expect(key('nav-sales'), findsNothing);
+      expect(key('nav-reports'), findsNothing);
     });
 
     testWidgets(

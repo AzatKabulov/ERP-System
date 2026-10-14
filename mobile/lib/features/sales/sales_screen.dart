@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../catalog/catalog_models.dart';
 import '../catalog/catalog_repository.dart';
+import '../catalog/product_photo.dart';
 import '../inventory/inventory_repository.dart';
 import '../inventory/quantity_input.dart';
 import '../returns/returns_repository.dart';
@@ -402,7 +403,11 @@ class _SalesScreenState extends State<SalesScreen> {
           for (final product in _results)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: _ResultTile(product: product, onAdd: () => _add(product)),
+              child: _ResultTile(
+                product: product,
+                repository: widget.catalog,
+                onAdd: () => _add(product),
+              ),
             ),
       ],
     );
@@ -521,8 +526,13 @@ class _SalesScreenState extends State<SalesScreen> {
 }
 
 class _ResultTile extends StatelessWidget {
-  const _ResultTile({required this.product, required this.onAdd});
+  const _ResultTile({
+    required this.product,
+    required this.repository,
+    required this.onAdd,
+  });
   final Product product;
+  final CatalogRepository repository;
   final VoidCallback onAdd;
 
   @override
@@ -539,6 +549,13 @@ class _ResultTile extends StatelessWidget {
           padding: 14,
           child: Row(
             children: [
+              ProductPhoto(
+                product: product,
+                repository: repository,
+                width: 52,
+                height: 52,
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

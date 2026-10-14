@@ -4,7 +4,6 @@
   "dashboard": "Syn",
   "products": "Harytlar",
   "inventory": "Ammar",
-  "purchasing": "Satyn alyşlar",
   "sales": "Satuwlar",
   "expenses": "Çykdajylar",
   "warranties": "Kepillikler",
@@ -40,7 +39,6 @@
   "noActivity": "Görkezme amallaryňyz şu ýerde peýda bolar.",
   "quickActions": "Çalt amallar",
   "newSale": "Täze satuw",
-  "receiveGoods": "Haryt kabul etmek",
   "viewInventory": "Ammary açmak",
   "stockHealth": "Ätiýaçlygyň ýagdaýy",
   "stockHealthSubtitle": "Galyndylary görüň we üstüni ýetirmäge taýýarlanyň.",
@@ -91,7 +89,6 @@
   "operationSaved": "Görkezme amaly saklandy",
   "minimum": "Iň az mukdar",
   "suggestedOrder": "Sargyt teklibi",
-  "reorderHint": "Maksatlaýyn galynda çenli teklipler. Üpjin edijilere hakyky sargyt iberilmeýär.",
   "cart": "Sebet",
   "emptyCart": "Ilkinji harydy goşuň",
   "emptyCartHint": "Harydy gözläň ýa-da ştrih-kody giriziň.",
@@ -109,12 +106,9 @@
   "refund": "Harydy yzyna almak",
   "sellable": "Haryt satmaga ýaramly",
   "refundNotice": "Gaýtaryş saýlanan satuwa bagly. Ýaramly haryt öňki ammara gaýdýar; hakyky pul yzyna gaýtarylmaýar.",
-  "purchaseOrders": "Üpjin edijilere sargytlar",
-  "supplier": "Üpjin ediji",
   "order": "Sargyt",
   "expected": "Kabul edilmegine garaşýar",
   "received": "Görkezmede kabul edildi",
-  "purchasingHint": "Görkezme üpjünçiligini saýlanan ammara kabul edip, galyndynyň üýtgemegini görüň.",
   "newExpense": "Çykdajy goşmak",
   "expenseDescription": "Çykdajynyň maksady",
   "amount": "Möçber",
@@ -375,6 +369,65 @@
   "noProducts": "Entek haryt ýok",
   "noProductsHint": "Işe başlamak üçin ilkinji harydy goşuň.",
   "loadMore": "Ýene görkez",
+  "viewList": "Sanaw",
+  "viewGallery": "Galereýa",
+  "productPhotoTitle": "Surat",
+  "productPhotoNone": "Entek surat ýok. Ony goşuň: surat boýunça haryt tapmak aňsat.",
+  "productPhotoTake": "Surata düşürmek",
+  "productPhotoChoose": "Surat saýlamak",
+  "productPhotoChange": "Suraty çalyşmak",
+  "productPhotoRemove": "Suraty pozmak",
+  "productPhotoRemoveConfirm": "Bu harydyň suraty pozulsynmy?",
+  "productPhotoSaved": "Surat saklandy.",
+  "productPhotoRemoved": "Surat pozuldy.",
+  "productPhotoPickFailed": "Surat alyp bolmady. Programma kameranyň ýa-da faýllaryň elýeterliligi bar bolsa barlaň.",
+  "errorInvalidImage": "Bu ulanyp boljak surat däl. JPEG, PNG ýa-da WebP görnüşli surat saýlaň.",
+  "toCompleteTitle": "Maglumatlary doldurmak",
+  "toCompleteHint": "Harytlary bahasyz goşup bolýar, ýöne dogry girdeji üçin satyn alnan bahasy gerek. Ony şu ýerde giriziň: öňki satuwlaryň girdejisi täzeden hasaplanar.",
+  "toCompleteNone": "Hemme zat doldurylan. Girdeji ähli satuwlar boýunça hasaplanýar.",
+  "toCompleteNoPrice": "Satyş bahasy ýok",
+  "toCompleteNoCost": "Satyn alnan bahasy ýok",
+  "toCompleteStock": "Bahasyz galyndy: {pieces}",
+  "@toCompleteStock": {
+    "placeholders": {
+      "pieces": {
+        "type": "String"
+      }
+    }
+  },
+  "toCompleteSold": "Bahasyz satylan: {pieces}",
+  "@toCompleteSold": {
+    "placeholders": {
+      "pieces": {
+        "type": "String"
+      }
+    }
+  },
+  "toCompletePriceLabel": "Satyş bahasy",
+  "toCompleteCostLabel": "Satyn alnan bahasy",
+  "toCompleteSaved": "Saklandy.",
+  "toCompleteNothingTyped": "Satyş bahasyny ýa-da satyn alnan bahasyny giriziň.",
+  "dashToComplete": "Maglumatlary doldurmak",
+  "dashWithoutCostNote": "Aýyň girdejisine satyn alnan bahasy ýok satuwlar girmeýär: {amount}.",
+  "@dashWithoutCostNote": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reportWithoutCostNote": "Satyn alnan bahasy ýok satuwlar girdejä girmedi: {amount} (setir: {lines}). Bahasyny «Maglumatlary doldurmak» bölüminde görkeziň.",
+  "@reportWithoutCostNote": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "lines": {
+        "type": "int"
+      }
+    }
+  },
+  "saleProfitUnknown": "Girdeji belli däl: harydyň satyn alnan bahasy ýok.",
   "productSaved": "Haryt saklandy.",
   "productCardTitle": "Harydyň kartoçkasy",
   "scanTitle": "Kamerany ştrih-koda gönükdiriň",
@@ -438,56 +491,12 @@
   "errorOrderNotCancellable": "Bu sargydy indi ýatyryp bolmaýar.",
   "errorOrderNoLines": "Sargyda azyndan bir setir goşuň.",
   "fieldDuplicateProduct": "Bu haryt eýýäm sanawda bar.",
-  "suppliersTitle": "Üpjün edijiler",
-  "addSupplier": "Üpjün ediji goşmak",
-  "editSupplier": "Üpjün edijini üýtgetmek",
-  "supplierName": "Üpjün edijiniň ady",
-  "contactName": "Habarlaşmaly adam",
   "phoneLabel": "Telefon",
-  "addressLabel": "Salgy",
-  "notesLabel": "Bellikler",
-  "noSuppliers": "Entek üpjün edijiler ýok",
-  "noSuppliersHint": "Sargyt döretmek üçin üpjün ediji goşuň.",
-  "supplierSaved": "Üpjün ediji ýatda saklandy.",
-  "newOrder": "Üpjün edijä täze sargyt",
-  "editOrder": "Sargydy üýtgetmek",
-  "orderSaved": "Sargyt ýatda saklandy.",
   "statusAll": "Hemmesi",
-  "statusDraft": "Garalama",
-  "statusOrdered": "Resmileşdirilen",
-  "statusPartial": "Bölekleýin kabul edilen",
-  "statusReceived": "Doly kabul edilen",
-  "statusCancelled": "Ýatyrylan",
-  "supplierFieldLabel": "Üpjün ediji",
-  "deliverToLabel": "Nokada kabul etmek",
-  "expectedDateLabel": "Garaşylýan getirme senesi",
   "pickDate": "Sene saýlamak",
-  "orderLinesTitle": "Sargydyň setirleri",
-  "orderTotal": "Jemi: {amount}",
-  "orderProgress": "Sargyt edildi {ordered}, kabul edildi {received}",
-  "submitOrder": "Sargydy resmileşdirmek",
-  "submitOrderConfirm": "Resmileşdirilenden soň sargydy redaktirläp bolmaýar. Resmileşdirmelimi?",
-  "orderSubmitted": "Sargyt resmileşdirildi.",
-  "cancelOrder": "Sargydy ýatyrmak",
-  "cancelOrderConfirm": "Sargydyň ýerine ýetirilmedik galan bölegi ýatyrylar, eýýäm kabul edilen harytlar ammarda galar. Dowam etmelimi?",
   "cancelReasonLabel": "Ýatyrmagyň sebäbi (hökman däl)",
-  "orderCancelled": "Sargyt ýatyryldy.",
-  "receiveTitle": "{number} sargyt boýunça kabul",
-  "receiveQuantityLabel": "Häzir kabul etmek",
-  "outstandingLabel": "Kabul etmeli galan: {quantity}",
-  "receiveAll": "Galanlaryň hemmesini kabul etmek",
-  "receiveNothing": "Azyndan bir setir üçin mukdary görkeziň.",
-  "deliveryPosted": "Getirilen haryt kabul edildi, galyndylar täzelendi.",
-  "deliveriesTitle": "Kabul edilen getirmeler",
-  "deliveryEntry": "Getirme №{number} · {when} · {who}",
-  "noDeliveries": "Entek getirme bolmady.",
-  "noOrders": "Entek sargyt ýok",
-  "noOrdersHint": "Harytlary bölekleýin kabul etmek üçin üpjün edijä sargyt dörediň.",
-  "expectedOn": "Garaşylýar {date}",
-  "cancelledBecause": "Ýatyrmagyň sebäbi: {reason}",
   "viewHistoryFor": "Haryt boýunça hereketleriň taryhy",
   "costVisibleNote": "Öz bahasyny diňe eýesi we menejer görýär.",
-  "actionReceive": "Haryt kabul etmek",
   "actionOpening": "Başlangyç galyndylar",
   "actionAdjust": "Galyndylary düzetmek",
   "salesStartHint": "Harydy ady ýa-da artikuly boýunça tapyň ýa-da ştrih-kody skanerläp sebede goşuň.",
@@ -629,19 +638,6 @@
   "errorTargetBelowMinimum": "Maksat iň az derejeden pes bolup bilmez.",
   "actionReturnComplete": "Alyjydan yzyna gaýtarma",
   "actionReturnInspect": "Gaýtarma: barlag karary",
-  "actionSupplierReturn": "Üpjün edijä gaýtarma",
-  "supplierReturnsTitle": "Üpjün edijilere gaýtarmalar",
-  "supplierReturnsEmpty": "Üpjün edijilere entek gaýtarma ýok",
-  "supplierReturnNew": "Üpjün edijä gaýtarmak",
-  "supplierReturnSource": "{supplier} · {delivery}-nji iberiş",
-  "supplierReturnDone": "Üpjün edijä gaýtarma resmileşdirildi.",
-  "supplierReturnCredit": "Üpjün edijiniň hasaba alşy: {amount}",
-  "reorderTitle": "Zapasy dolduryş",
-  "reorderEmpty": "Hemmesi ýerinde: sargyt etmek hökman däl",
-  "reorderScreenHint": "Iň az derejeden pes harytlar (eýýäm sargyt edilenler hasaba alnyp). Gerekleri belläň we sargyt dörediň: üpjün edijini özüňiz saýlarsyňyz.",
-  "reorderRowLine": "Bar: {onHand} · sargytlarda: {onOrder} · iň az: {minimum}",
-  "reorderSuggested": "Sargyt etmek maslahat berilýär: {qty}",
-  "reorderCreate": "Sargyt döretmek",
   "productReturnDays": "Gaýtarmak möhleti, gün",
   "productReturnDaysHint": "Boş — çäklendirme ýok, 0 — yzyna kabul edilmeýär. Satuw güninden hasaplanýar.",
   "reorderLevelsTitle": "Nokatlar boýunça iň az we maksat",
@@ -763,7 +759,6 @@
   "reportTabSummary": "Jemler",
   "reportTabSales": "Satuwlar",
   "reportTabStock": "Ammar",
-  "reportTabPurchasing": "Satyn alyşlar",
   "reportTabReturns": "Gaýtarmalar",
   "reportTabExpenses": "Çykdajylar",
   "reportTabActivity": "Hereketler taryhy",
@@ -781,7 +776,6 @@
   "reportInventoryValue": "Ammaryň bahasy",
   "reportInventoryNote": "Partiýalaryň öz bahasy boýunça (FIFO)",
   "reportLowStock": "Minimumdan aşakda",
-  "reportOpenOrders": "Açyk sargytlar",
   "reportSalesCount": "Satuwlar: {count}",
   "@reportSalesCount": {
     "placeholders": {
@@ -889,84 +883,6 @@
       }
     }
   },
-  "reportOrdersCount": "Döredilen sargytlar: {count}",
-  "@reportOrdersCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "reportDeliveriesCount": "Kabul edilen eltip bermeler: {count}",
-  "@reportDeliveriesCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "reportOrderedTotal": "Sargytlaryň jemi: {amount}",
-  "@reportOrderedTotal": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "reportReceivedValue": "Kabul edilen jemi: {amount}",
-  "@reportReceivedValue": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "reportBySupplier": "Üpjünçiler boýunça",
-  "reportByStatus": "Sargytlaryň ýagdaýy boýunça",
-  "reportSupplierLine": "{name}: sargytlar {orders}",
-  "@reportSupplierLine": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "orders": {
-        "type": "int"
-      }
-    }
-  },
-  "reportSupplierLineValue": "{name}: sargytlar {orders}, kabul edilen {amount}",
-  "@reportSupplierLineValue": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "orders": {
-        "type": "int"
-      },
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "reportSupplierReturns": "Üpjünçilere gaýtarmalar: {count}",
-  "@reportSupplierReturns": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "reportSupplierReturnsCredit": "Üpjünçilere gaýtarmalar: {count}, hasaba alnan {credit}",
-  "@reportSupplierReturnsCredit": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "credit": {
-        "type": "String"
-      }
-    }
-  },
   "reportRefundTotal": "Alyjylara gaýtarylan: {amount}",
   "@reportRefundTotal": {
     "placeholders": {
@@ -1050,8 +966,6 @@
   "dashExpensesMonth": "Aýlyk çykdajylar",
   "dashInventoryValue": "Ammaryň bahasy",
   "dashLowStock": "Minimumdan aşakda",
-  "dashReorder": "Üpjünçä sargyt etmeli",
-  "dashOpenOrders": "Açyk sargytlar",
   "dashOpenClaims": "Açyk kepillikler",
   "dashRecent": "Soňky hereketler",
   "dashOpenReports": "Hasabatlary açmak",
@@ -1102,12 +1016,6 @@
   "auditLocationCreated": "Nokat goşuldy",
   "auditLocationUpdated": "Nokat üýtgedildi",
   "auditProductCreated": "Haryt goşuldy",
-  "auditPurchaseOrderCancelled": "Üpjünçä sargyt ýatyryldy",
-  "auditPurchaseOrderCreated": "Üpjünçä sargyt döredildi",
-  "auditPurchaseOrderReceived": "Sargyt boýunça haryt kabul edildi",
-  "auditPurchaseOrderSubmitted": "Üpjünçä sargyt resmileşdirildi",
-  "auditPurchaseOrderUpdated": "Üpjünçä sargyt üýtgedildi",
-  "auditReorderUpdated": "Minimum we maksat üýtgedildi",
   "auditReportExported": "Hasabat eksport edildi",
   "auditReturnInspected": "Gaýtarma barlagy boýunça karar",
   "auditSaleCompleted": "Satuw resmileşdirildi",
@@ -1117,9 +1025,6 @@
   "auditStaffUpdated": "Işgär üýtgedildi",
   "auditStockAdjustmentPosted": "Ammar düzedişi",
   "auditStockOpeningPosted": "Başlangyç galyndy",
-  "auditSupplierCreated": "Üpjünçi goşuldy",
-  "auditSupplierUpdated": "Üpjünçi üýtgedildi",
-  "auditSupplierReturnCreated": "Üpjünçä gaýtarma",
   "auditTransferCancelled": "Ýerini üýtgetme ýatyryldy",
   "auditTransferDispatched": "Ýerini üýtgetme iberildi",
   "auditTransferReceived": "Ýerini üýtgetme kabul edildi",
@@ -1138,6 +1043,7 @@
   "auditExpenseCategoryUpdated": "Çykdajy kategoriýasy üýtgedildi",
   "auditProductUpdated": "Haryt üýtgedildi",
   "auditProductArchived": "Haryt arhiwe goýuldy",
+  "auditProductCostSet": "Satyn alnan bahasy görkezildi",
   "auditProductRestored": "Haryt arhiwden yzyna alyndy",
   "serverLine": "Serwer: {url}",
   "@serverLine": {
@@ -1172,13 +1078,31 @@
   "intakeEmpty": "Gutyny açyp, her harydy skanirläň. Her skanirleme 1 sany goşýar, birmeňzeş harytlar bir setire birleşýär.",
   "intakeLookingUp": "Haryt katalogdan gözlenýär…",
   "intakeUnknown": "Bu haryt katalogda ýok: ony goşuň",
+  "intakeFoundOnline": "Internetde tapyldy: {name}",
+  "@intakeFoundOnline": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "intakeAddFound": "Goşmak",
+  "intakeEditFound": "Ady üýtgetmek",
+  "productFoundOnline": "Ady internetde tapyldy ({source}). Barlaň.",
+  "@productFoundOnline": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
   "intakeLookupFailed": "Serwer bilen aragatnaşyk ýok: haryt soňrak gözlener",
   "intakeAddProduct": "Haryt goşmak",
   "intakeLess": "Azaltmak",
   "intakeMore": "Köpeltmek",
   "intakeCostShown": "Öz bahasy: {amount}",
   "intakeSummary": "Setirler: {lines}, jemi: {units}",
-  "intakeCostMissingNote": "Käbir setirlerde öz bahasy görkezilmedi. Ol bolmasa hasabatlarda bu harytlaryň öz bahasy nol hasaplanýar, olardan alnan peýda ýokary görünýär. Görkezmek üçin setiriň sanyna basyň.",
+  "intakeCostMissingNote": "Käbir setirlerde satyn alnan bahasy görkezilmedi. Ony soňra «Maglumatlary doldurmak» bölüminde görkezip bolýar: baha bolmasa, bu harytlar boýunça girdeji hasaplanmaýar. Häzir görkezmek üçin setiriň sanyna basyň.",
   "intakeCostLabel": "Bir birligiň öz bahasy, TMT (hökman däl)",
   "intakeCostHelp": "Ýazmasaňyz hem bolýar: alyş bahasyny soň goşarsyňyz.",
   "intakeUnresolvedBlock": "Katalogdan harydy ýok setirler bar. Harydy goşuň, gözlegiň tamamlanmagyna garaşyň ýa-da setiri aýyryň.",

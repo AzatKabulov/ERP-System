@@ -8,21 +8,12 @@ import '../../core/session/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../inventory/stock_labels.dart';
-import '../purchasing/order_labels.dart';
 import '../shared/async_section.dart';
 import 'activity_view.dart';
 import 'reports_models.dart';
 import 'reports_repository.dart';
 
-enum ReportTab {
-  summary,
-  sales,
-  stock,
-  purchasing,
-  returns,
-  expenses,
-  activity,
-}
+enum ReportTab { summary, sales, stock, returns, expenses, activity }
 
 String _tm(int minor) => formatMoney(minor, 'TMT');
 String _qty(int milli) => formatQuantity(milli, 0);
@@ -56,7 +47,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     ReportTab.summary,
     ReportTab.sales,
     ReportTab.stock,
-    ReportTab.purchasing,
     ReportTab.returns,
     if (session.can('expense.view')) ReportTab.expenses,
     if (session.can('audit.view')) ReportTab.activity,
@@ -71,7 +61,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
       ReportTab.summary => l.reportTabSummary,
       ReportTab.sales => l.reportTabSales,
       ReportTab.stock => l.reportTabStock,
-      ReportTab.purchasing => l.reportTabPurchasing,
       ReportTab.returns => l.reportTabReturns,
       ReportTab.expenses => l.reportTabExpenses,
       ReportTab.activity => l.reportTabActivity,
@@ -216,17 +205,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
             _exportButton('stock'),
             const SizedBox(height: 12),
             _StockView(report: r),
-          ],
-        ),
-      ),
-      ReportTab.purchasing => AsyncSection<PurchasingReport>(
-        load: () => repo.purchasing(q),
-        builder: (context, r) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _exportButton('purchasing'),
-            const SizedBox(height: 12),
-            _PurchasingView(report: r),
           ],
         ),
       ),
@@ -379,12 +357,6 @@ class _SummaryView extends StatelessWidget {
               '${s.lowStockCount}',
               Icons.warning_amber_outlined,
             ),
-            _metric(
-              'rep-open-orders',
-              l.reportOpenOrders,
-              '${s.openOrdersCount}',
-              Icons.local_shipping_outlined,
-            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -393,6 +365,15 @@ class _SummaryView extends StatelessWidget {
           key: const ValueKey('rep-counts'),
           muted: true,
         ),
+        if (s.withoutCostLines > 0)
+          _Line(
+            l.reportWithoutCostNote(
+              _tm(s.withoutCost ?? 0),
+              s.withoutCostLines,
+            ),
+            key: const ValueKey('rep-without-cost-note'),
+            muted: true,
+          ),
         if (s.result != null)
           _Line(
             l.reportResultNote,
@@ -448,6 +429,15 @@ class _SalesView extends StatelessWidget {
             ),
           ],
         ),
+        if (r.withoutCostLines > 0)
+          _Line(
+            l.reportWithoutCostNote(
+              _tm(r.withoutCost ?? 0),
+              r.withoutCostLines,
+            ),
+            key: const ValueKey('rep-sales-without-cost-note'),
+            muted: true,
+          ),
         if (empty)
           _Line(l.reportEmpty, key: const ValueKey('rep-empty'), muted: true),
         if (r.byPayment.isNotEmpty)
@@ -585,82 +575,6 @@ class _StockView extends StatelessWidget {
   }
 }
 
-class _PurchasingView extends StatelessWidget {
-  const _PurchasingView({required this.report});
-  final PurchasingReport report;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = strings(context);
-    final r = report;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _Block(
-          title: l.reportTabPurchasing,
-          children: [
-            _Line(
-              l.reportOrdersCount(r.ordersCount),
-              key: const ValueKey('rep-orders'),
-            ),
-            _Line(
-              l.reportDeliveriesCount(r.deliveriesCount),
-              key: const ValueKey('rep-deliveries'),
-            ),
-            if (r.orderedTotal != null)
-              _Line(
-                l.reportOrderedTotal(_tm(r.orderedTotal!)),
-                key: const ValueKey('rep-ordered-total'),
-              ),
-            if (r.receivedValue != null)
-              _Line(
-                l.reportReceivedValue(_tm(r.receivedValue!)),
-                key: const ValueKey('rep-received-value'),
-              ),
-            _Line(
-              r.supplierReturnsCredit == null
-                  ? l.reportSupplierReturns(r.supplierReturnsCount)
-                  : l.reportSupplierReturnsCredit(
-                      r.supplierReturnsCount,
-                      _tm(r.supplierReturnsCredit!),
-                    ),
-              key: const ValueKey('rep-supplier-returns'),
-            ),
-          ],
-        ),
-        if (r.byStatus.isNotEmpty)
-          _Block(
-            title: l.reportByStatus,
-            children: [
-              for (final (status, count) in r.byStatus)
-                _Line(
-                  '${orderStatusLabel(l, status)}: $count',
-                  key: ValueKey('rep-status-$status'),
-                ),
-            ],
-          ),
-        if (r.bySupplier.isNotEmpty)
-          _Block(
-            title: l.reportBySupplier,
-            children: [
-              for (final s in r.bySupplier)
-                _Line(
-                  s.receivedValue == null
-                      ? l.reportSupplierLine(s.name, s.orders)
-                      : l.reportSupplierLineValue(
-                          s.name,
-                          s.orders,
-                          _tm(s.receivedValue!),
-                        ),
-                  key: ValueKey('rep-supplier-${s.name}'),
-                ),
-            ],
-          ),
-      ],
-    );
-  }
-}
-
 class _ReturnsView extends StatelessWidget {
   const _ReturnsView({required this.report});
   final ReturnsReport report;
@@ -682,15 +596,6 @@ class _ReturnsView extends StatelessWidget {
             _Line(
               l.reportRefundTotal(_tm(r.refundTotal)),
               key: const ValueKey('rep-refund-total'),
-            ),
-            _Line(
-              r.supplierReturnsCredit == null
-                  ? l.reportSupplierReturns(r.supplierReturnsCount)
-                  : l.reportSupplierReturnsCredit(
-                      r.supplierReturnsCount,
-                      _tm(r.supplierReturnsCredit!),
-                    ),
-              key: const ValueKey('rep-returns-supplier'),
             ),
           ],
         ),

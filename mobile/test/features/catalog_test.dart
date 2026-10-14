@@ -106,6 +106,112 @@ void main() {
       expect(find.text('4006381333931'), findsOneWidget);
     });
 
+    testWidgets('products show as a gallery by default, several across', (
+      tester,
+    ) async {
+      final rig = RealRig();
+      for (var i = 1; i <= 6; i++) {
+        seedProduct(rig.server, sku: 'G-$i', name: 'Товар $i');
+      }
+      await openCatalog(tester, rig);
+      expect(key('catalog-gallery'), findsOneWidget);
+      final first = tester.getTopLeft(key('product-G-1'));
+      final fourth = tester.getTopLeft(key('product-G-4'));
+      expect(fourth.dy, first.dy, reason: 'four cards share one row');
+      expect(fourth.dx, greaterThan(first.dx));
+      await tapKey(tester, 'product-G-2');
+      await settle(tester);
+      expect(find.text('Карточка товара'), findsOneWidget);
+    });
+
+    testWidgets('the list view is a choice, and it is remembered', (
+      tester,
+    ) async {
+      final rig = RealRig();
+      seedProduct(rig.server, sku: 'G-1', name: 'Первый');
+      seedProduct(rig.server, sku: 'G-2', name: 'Второй');
+      await openCatalog(tester, rig);
+      await tester.tap(
+        find.descendant(
+          of: key('catalog-view-toggle'),
+          matching: find.text('Список'),
+        ),
+      );
+      await settle(tester);
+      expect(key('catalog-gallery'), findsNothing);
+      expect(
+        tester.getTopLeft(key('product-G-2')).dy,
+        greaterThan(tester.getTopLeft(key('product-G-1')).dy),
+        reason: 'one product under the other',
+      );
+      expect(rig.prefs.getString('catalog_view'), 'list');
+      await tester.tap(
+        find.descendant(
+          of: key('catalog-view-toggle'),
+          matching: find.text('Галерея'),
+        ),
+      );
+      await settle(tester);
+      expect(key('catalog-gallery'), findsOneWidget);
+      expect(rig.prefs.getString('catalog_view'), 'gallery');
+    });
+
+    testWidgets('a person who chose the list starts in the list', (
+      tester,
+    ) async {
+      final rig = RealRig();
+      seedProduct(rig.server, sku: 'G-1', name: 'Первый');
+      await rig.launch(tester, prefsValues: {'catalog_view': 'list'});
+      await rig.signIn(tester);
+      await tapKey(tester, 'nav-products');
+      await settle(tester);
+      expect(key('catalog-gallery'), findsNothing);
+      expect(key('product-G-1'), findsOneWidget);
+    });
+
+    for (final size in [const Size(360, 800), const Size(800, 1100)]) {
+      testWidgets('both views fit $size with long names and doubled text', (
+        tester,
+      ) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final rig = RealRig();
+        for (var i = 1; i <= 5; i++) {
+          seedProduct(
+            rig.server,
+            sku: 'LONG-ARTICLE-NUMBER-$i',
+            name: 'Очень длинное название товара для проверки переноса $i',
+            currency: 'USD',
+          );
+        }
+        await rig.launch(tester, size: size);
+        await rig.signIn(tester);
+        if (size.width < 600) {
+          await tester.tap(find.byTooltip('Меню'));
+          await settle(tester, ms: 400);
+          await tester.scrollUntilVisible(
+            key('nav-products'),
+            200,
+            scrollable: find.descendant(
+              of: find.byType(Drawer),
+              matching: find.byType(Scrollable),
+            ),
+          );
+        }
+        await tapKey(tester, 'nav-products');
+        await settle(tester);
+        expect(tester.takeException(), isNull, reason: 'gallery');
+        await tester.tap(
+          find.descendant(
+            of: key('catalog-view-toggle'),
+            matching: find.text('Список'),
+          ),
+        );
+        await settle(tester);
+        expect(tester.takeException(), isNull, reason: 'list');
+      });
+    }
+
     testWidgets(
       'search narrows by name, SKU and barcode; Turkmen letters work',
       (tester) async {
@@ -391,6 +497,8 @@ void main() {
       await settle(tester);
       expect(rig.server.productsData.single['name'], 'New name');
       expect(find.text('New name'), findsWidgets);
+      // the "saved" message sits over the bottom of the (now longer) page until it goes
+      await tester.pump(const Duration(seconds: 6));
       await tapKey(tester, 'pd-archive');
       await settle(tester, ms: 400);
       await tester.tap(find.text('Подтвердить'));

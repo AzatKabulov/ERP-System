@@ -38,6 +38,10 @@ class IntakeEntry {
   /// Cost per unit in TMT hundredths; null = not entered (only roles that may see costs set it).
   int? costMinor;
 
+  /// A name the open databases know for an unknown code. Asked again when the draft is reopened,
+  /// so it is not kept on the device.
+  ExternalInfo? suggestion;
+
   Map<String, dynamic> toJson() => {
     'code': code,
     'quantity': quantityMilli,

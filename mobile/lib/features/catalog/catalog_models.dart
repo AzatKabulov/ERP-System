@@ -61,6 +61,7 @@ class Product {
     this.returnDays,
     this.category,
     this.brand,
+    this.photoVersion,
   });
 
   final String id;
@@ -87,6 +88,10 @@ class Product {
   final int? returnDays;
   final List<String> barcodes;
   final bool isActive;
+
+  /// The version of the product's picture; null when it has none. A new picture is a new
+  /// version, which is how a downloaded one is known to be out of date.
+  final String? photoVersion;
 
   factory Product.fromJson(Map<String, dynamic> json) {
     final price = (json['price'] as Map).cast<String, dynamic>();
@@ -116,6 +121,7 @@ class Product {
       returnDays: json['return_days'] as int?,
       barcodes: [for (final b in json['barcodes'] as List) b as String],
       isActive: json['is_active'] as bool,
+      photoVersion: (json['photo'] as Map?)?['version'] as String?,
     );
   }
 }
@@ -204,6 +210,100 @@ class ProductPage {
   const ProductPage(this.items, this.count);
   final List<Product> items;
   final int count;
+}
+
+/// Whether [code] could be a GTIN (EAN-8, UPC-A, EAN-13, GTIN-14): only then the server is
+/// asked what the open databases know. The server checks the check digit.
+bool looksLikeGtin(String code) =>
+    RegExp(r'^(\d{8}|\d{12,14})$').hasMatch(code.trim());
+
+/// What the open product databases know about a barcode: a name to start from. Never saved by
+/// itself; the person confirms or changes it.
+@immutable
+class ExternalInfo {
+  const ExternalInfo({
+    required this.name,
+    required this.brand,
+    required this.quantity,
+    required this.source,
+  });
+  final String name;
+  final String brand;
+  final String quantity;
+  final String source;
+
+  /// The name to offer: the product's own name, with the brand and the size added when the name
+  /// does not already say them ("CeraVe Moisturising Cream 454 g").
+  String get displayName {
+    final lower = name.toLowerCase();
+    return [
+      if (brand.isNotEmpty && !lower.contains(brand.toLowerCase())) brand,
+      name,
+      if (quantity.isNotEmpty && !lower.contains(quantity.toLowerCase()))
+        quantity,
+    ].join(' ');
+  }
+
+  /// Null when the databases know nothing (or could not be asked).
+  static ExternalInfo? fromJson(Map<String, dynamic> json) {
+    if (json['found'] != true) return null;
+    final name = ((json['name'] as String?) ?? '').trim();
+    if (name.isEmpty) return null;
+    return ExternalInfo(
+      name: name,
+      brand: ((json['brand'] as String?) ?? '').trim(),
+      quantity: ((json['quantity'] as String?) ?? '').trim(),
+      source: (json['source'] as String?) ?? '',
+    );
+  }
+}
+
+/// A product that still needs a selling price or a cost: the "to complete" list.
+@immutable
+class ToCompleteItem {
+  const ToCompleteItem({
+    required this.id,
+    required this.sku,
+    required this.name,
+    required this.unitSymbol,
+    required this.unitDecimals,
+    required this.priceMinor,
+    required this.priceCurrency,
+    required this.missingPrice,
+    required this.missingCost,
+    required this.stockWithoutCostMilli,
+    required this.soldWithoutCostMilli,
+  });
+
+  final String id;
+  final String sku;
+  final String name;
+  final String unitSymbol;
+  final int unitDecimals;
+  final int priceMinor;
+  final String priceCurrency;
+  final bool missingPrice;
+  final bool missingCost;
+
+  /// Pieces on the shelf, and pieces already sold, that wait for a cost (thousandths).
+  final int stockWithoutCostMilli;
+  final int soldWithoutCostMilli;
+
+  factory ToCompleteItem.fromJson(Map<String, dynamic> json) => ToCompleteItem(
+    id: json['id'] as String,
+    sku: json['sku'] as String,
+    name: json['name'] as String,
+    unitSymbol: (json['unit_symbol'] as String?) ?? '',
+    unitDecimals: (json['unit_decimals'] as int?) ?? 0,
+    priceMinor: parseServerDecimal(json['price_amount'] as String?, 2) ?? 0,
+    priceCurrency: (json['price_currency'] as String?) ?? 'TMT',
+    missingPrice: json['missing_price'] == true,
+    missingCost: json['missing_cost'] == true,
+    stockWithoutCostMilli:
+        parseServerDecimal(json['stock_without_cost'] as String?, 3) ?? 0,
+    soldWithoutCostMilli:
+        parseServerDecimal(json['sold_without_cost'] as String?, 3) ?? 0,
+  );
 }
 
 /// Minimum and target stock of a product at one location (the reorder list uses them).

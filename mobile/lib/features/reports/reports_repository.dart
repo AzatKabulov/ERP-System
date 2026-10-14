@@ -25,11 +25,6 @@ class ReportsRepository {
     (await api.get('$_base/reports/stock/', query: q.toQuery())).map,
   );
 
-  Future<PurchasingReport> purchasing(ReportQuery q) async =>
-      PurchasingReport.fromJson(
-        (await api.get('$_base/reports/purchasing/', query: q.toQuery())).map,
-      );
-
   Future<ReturnsReport> returns(ReportQuery q) async => ReturnsReport.fromJson(
     (await api.get('$_base/reports/returns/', query: q.toQuery())).map,
   );
@@ -39,7 +34,7 @@ class ReportsRepository {
         (await api.get('$_base/reports/expenses/', query: q.toQuery())).map,
       );
 
-  /// The report as a spreadsheet file ("sales", "stock", "purchasing", "returns", "expenses").
+  /// The report as a spreadsheet file ("sales", "stock", "returns", "expenses").
   Future<Uint8List> export(String slug, ReportQuery q) async {
     final response = await api.download(
       '$_base/reports/$slug/export/',
