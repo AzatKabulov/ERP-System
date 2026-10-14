@@ -21,6 +21,12 @@ urlpatterns = [
         views.SaleReturnCreateView.as_view(),
         name="sale-return-create",
     ),
+    path(f"{B}catalog/to-complete/", views.ToCompleteView.as_view(), name="to-complete"),
+    path(
+        f"{B}products/<uuid:product_id>/cost/",
+        views.ProductCostView.as_view(),
+        name="product-cost",
+    ),
     path(f"{B}returns/", views.ReturnListView.as_view(), name="return-list"),
     path(f"{B}returns/<uuid:return_id>/", views.ReturnDetailView.as_view(), name="return-detail"),
     path(

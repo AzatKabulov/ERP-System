@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../widgets/common.dart';
@@ -17,6 +18,8 @@ class BarcodeInput extends StatelessWidget {
     this.enabled = true,
     this.fieldKey,
     this.errorText,
+    this.focusNode,
+    this.keepFocusOnSubmit = false,
   });
 
   final TextEditingController controller;
@@ -29,6 +32,15 @@ class BarcodeInput extends StatelessWidget {
   final bool enabled;
   final Key? fieldKey;
   final String? errorText;
+
+  /// Lets the screen keep the field focused after a code was submitted, so a hand scanner (which
+  /// types the code and presses Enter) can read the next item straight away.
+  final FocusNode? focusNode;
+
+  /// By default Enter closes the keyboard and leaves the field. A hand scanner presses Enter after
+  /// every code, so a screen that expects several scans in a row keeps the field focused instead
+  /// (not in the browser build, which blurs the field itself).
+  final bool keepFocusOnSubmit;
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +58,12 @@ class BarcodeInput extends StatelessWidget {
             child: TextField(
               key: fieldKey,
               controller: controller,
+              focusNode: focusNode,
               enabled: enabled,
               autocorrect: false,
               enableSuggestions: false,
               onSubmitted: onSubmitted,
+              onEditingComplete: keepFocusOnSubmit && !kIsWeb ? () {} : null,
               onChanged: onChanged,
               decoration: InputDecoration(
                 labelText: label,

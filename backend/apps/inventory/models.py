@@ -45,6 +45,8 @@ class MovementType(models.TextChoices):
     SUPPLIER_RETURN = "supplier_return", "Return to supplier"
     WARRANTY_OUT = "warranty_out", "Warranty replacement (out)"
     WARRANTY_IN = "warranty_in", "Warranty defective unit (in)"
+    # Goods counted in by scanning, without a purchase order.
+    INTAKE = "intake", "Received by scanning"
 
 
 class StockBalance(UUIDModel):
@@ -82,6 +84,10 @@ class CostLayer(UUIDModel):
     unit_cost = models.DecimalField(
         max_digits=14, decimal_places=2, validators=[MinValueValidator(0)]
     )  # TMT
+    # False for goods received without a cost: `unit_cost` is then only a placeholder (the
+    # product's default cost or zero) until somebody enters the real cost. The flag follows the
+    # goods through transfers and returns, and profit leaves such sales out (reports).
+    cost_known = models.BooleanField(default=True)
     quantity_initial = models.DecimalField(max_digits=14, decimal_places=3)
     quantity_remaining = models.DecimalField(max_digits=14, decimal_places=3)
     created_at = models.DateTimeField(auto_now_add=True)

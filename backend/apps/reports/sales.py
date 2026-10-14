@@ -9,16 +9,20 @@ four different measures):
 * net_sales    = revenue - refunds.
 * cost_of_goods = sum of `SaleLine.cost_total` of the period's sales MINUS sum of
                  `SaleReturnLine.cost_total` of the period's returns (returned goods carry their
-                 cost back, in any condition). Exact FIFO cost, rounded half up once.
-* gross_profit = net_sales - cost_of_goods.
+                 cost back, in any condition). Exact FIFO cost, rounded half up once. A later
+                 `CostCorrection` is added to the line it belongs to.
+* gross_profit = net_sales - without_cost - cost_of_goods.
+* without_cost = net sales of lines whose cost is still only a placeholder (goods received
+                 without a cost and not yet priced): they are left out of cost AND profit
+                 instead of counting as free goods. `without_cost_lines` counts the sale lines.
 
 Cost of goods and gross profit need `sales.cost.view`; without it the keys are left out.
 Days are calendar days in the business time zone. `top_products` ranks the period's sale lines
 by `line_total` and does not net out returns.
 """
 
-from django.db.models import Count, Sum
-from django.db.models.functions import TruncDate
+from django.db.models import Count, DecimalField, F, Q, Sum, Value
+from django.db.models.functions import Coalesce, TruncDate
 
 from apps.sales.models import PaymentMethod, Sale, SaleLine, SaleReturn, SaleReturnLine
 
@@ -57,9 +61,18 @@ def return_lines(scope: Scope, period):
     )
 
 
+# A line whose cost is real: known when sold, or corrected since.
+COST_KNOWN = Q(cost_known=True) | Q(correction__isnull=False)
+COST_UNKNOWN = Q(cost_known=False, correction__isnull=True)
+CORRECTED_COST = F("cost_total") + Coalesce(
+    "correction__delta", Value(0), output_field=DecimalField(max_digits=18, decimal_places=5)
+)
+
+
 def figures(scope: Scope, period, rights) -> dict:
     """revenue, refunds, net_sales and the two counts; with `rights.sales_cost` also
-    cost_of_goods and gross_profit. Four queries at most, whatever the number of sales."""
+    cost_of_goods, gross_profit and what the profit leaves out. A handful of queries, whatever
+    the number of sales."""
     made = sales(scope, period).order_by().aggregate(count=Count("id"), total=Sum("total"))
     given = (
         returns(scope, period).order_by().aggregate(count=Count("id"), total=Sum("refund_total"))
@@ -73,11 +86,29 @@ def figures(scope: Scope, period, rights) -> dict:
         "returns_count": given["count"],
     }
     if rights.sales_cost:
-        sold = sale_lines(scope, period).order_by().aggregate(cost=Sum("cost_total"))["cost"]
-        back = return_lines(scope, period).order_by().aggregate(cost=Sum("cost_total"))["cost"]
-        cost = round_money(dec(sold) - dec(back))
+        sold = (
+            sale_lines(scope, period)
+            .order_by()
+            .aggregate(
+                cost=Sum(CORRECTED_COST, filter=COST_KNOWN),
+                skipped=Sum("line_total", filter=COST_UNKNOWN),
+                skipped_lines=Count("id", filter=COST_UNKNOWN),
+            )
+        )
+        back = (
+            return_lines(scope, period)
+            .order_by()
+            .aggregate(
+                cost=Sum(CORRECTED_COST, filter=COST_KNOWN),
+                skipped=Sum("refund_amount", filter=COST_UNKNOWN),
+            )
+        )
+        cost = round_money(dec(sold["cost"]) - dec(back["cost"]))
+        without = round_money(dec(sold["skipped"]) - dec(back["skipped"]))
         out["cost_of_goods"] = str(cost)
-        out["gross_profit"] = str(revenue - refunds - cost)
+        out["without_cost"] = str(without)
+        out["without_cost_lines"] = sold["skipped_lines"]
+        out["gross_profit"] = str(revenue - refunds - without - cost)
     return out
 
 
@@ -169,6 +200,8 @@ def sales_report(ctx: ReportContext) -> dict:
     }
     if ctx.rights.sales_cost:
         out["cost_of_goods"] = f["cost_of_goods"]
+        out["without_cost"] = f["without_cost"]
+        out["without_cost_lines"] = f["without_cost_lines"]
         out["gross_profit"] = f["gross_profit"]
     out["by_payment"] = _by_payment(scope, period)
     out["by_day"] = _by_day(scope, period)

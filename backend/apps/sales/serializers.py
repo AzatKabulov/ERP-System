@@ -9,6 +9,7 @@ from apps.common.fields import BusinessScopedField
 from apps.warranties.entitlement import warranty_until
 
 from . import returns
+from .costs import effective_line_cost
 from .models import (
     Customer,
     PaymentMethod,
@@ -87,6 +88,7 @@ class SaleLineSerializer(serializers.ModelSerializer):
             "unit_price",
             "line_total",
             "cost_total",
+            "cost_known",
             "warranty_months",
             "warranty_terms",
             "return_days",
@@ -104,8 +106,11 @@ class SaleLineSerializer(serializers.ModelSerializer):
         data["refunded_total"] = str(refunded.quantize(CENT))
         if not self.context.get("can_view_cost"):
             data.pop("cost_total", None)
+            data.pop("cost_known", None)
         else:
-            data["cost_total"] = str(instance.cost_total.quantize(CENT))
+            cost, known = effective_line_cost(instance)
+            data["cost_total"] = str(cost.quantize(CENT))
+            data["cost_known"] = known
         return data
 
 
@@ -167,9 +172,13 @@ class SaleSerializer(serializers.ModelSerializer):
             covered = warranty_until(instance.business, instance, line)
             line_data["warranty_until"] = covered.isoformat() if covered else None
         if self.context.get("can_view_cost"):
-            cost = sum((line.cost_total for line in instance.lines.all()), Decimal(0))
+            effective = [effective_line_cost(line) for line in instance.lines.all()]
+            cost = sum((c for c, _ in effective), Decimal(0))
+            known = all(k for _, k in effective)
             data["cost_total"] = str(cost.quantize(CENT))
-            data["profit"] = str((instance.total - cost).quantize(CENT))
+            data["cost_known"] = known
+            # With a placeholder cost in it, a profit would be wrong: say nothing instead
+            data["profit"] = str((instance.total - cost).quantize(CENT)) if known else None
         return data
 
 
@@ -251,6 +260,7 @@ class ReturnLineSerializer(serializers.ModelSerializer):
             "condition",
             "refund_amount",
             "cost_total",
+            "cost_known",
         ]
 
     def to_representation(self, instance):
@@ -262,8 +272,11 @@ class ReturnLineSerializer(serializers.ModelSerializer):
         data["awaiting_inspection"] = str(waiting)
         if not self.context.get("can_view_cost"):
             data.pop("cost_total", None)
+            data.pop("cost_known", None)
         else:
-            data["cost_total"] = str(instance.cost_total.quantize(CENT))
+            cost, known = effective_line_cost(instance)
+            data["cost_total"] = str(cost.quantize(CENT))
+            data["cost_known"] = known
         return data
 
 
@@ -330,3 +343,7 @@ class ReturnSummarySerializer(serializers.ModelSerializer):
                 if line.quantity > decided:
                     return True
         return False
+
+
+class CostInputSerializer(serializers.Serializer):
+    unit_cost = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=0)

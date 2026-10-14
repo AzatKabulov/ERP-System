@@ -43,8 +43,7 @@ void main() {
         expect(find.text(tm(15000)), findsOneWidget); // expenses
         expect(find.text(tm(133000)), findsOneWidget); // inventory value
         expect(key('dash-low-stock'), findsOneWidget);
-        expect(key('dash-reorder'), findsOneWidget);
-        expect(key('dash-open-orders'), findsOneWidget);
+        expect(key('dash-open-orders'), findsNothing);
         expect(key('dash-open-claims'), findsOneWidget);
         await tester.ensureVisible(key('dash-activity-a-100'));
         expect(find.text('Оформлена продажа'), findsWidgets);
@@ -71,7 +70,6 @@ void main() {
           'dash-expenses-month',
           'dash-inventory',
           'dash-low-stock',
-          'dash-open-orders',
           'dash-open-reports',
         ]) {
           expect(key(hidden), findsNothing, reason: hidden);
@@ -80,20 +78,12 @@ void main() {
       },
     );
 
-    testWidgets('a keeper sees stock and orders, never sales or money', (
-      tester,
-    ) async {
+    testWidgets('a keeper sees stock, never sales or money', (tester) async {
       final rig = RealRig();
       rig.server.role = 'warehouse';
-      rig.server.permissions = [
-        'catalog.view',
-        'stock.view',
-        'purchasing.view',
-        'dashboard.view',
-      ];
+      rig.server.permissions = ['catalog.view', 'stock.view', 'dashboard.view'];
       await rig.launchSignedIn(tester);
       expect(key('dash-low-stock'), findsOneWidget);
-      expect(key('dash-open-orders'), findsOneWidget);
       expect(key('dash-sales-today'), findsNothing);
       expect(key('dash-inventory'), findsNothing);
       expect(find.textContaining('TMT'), findsNothing);
@@ -260,26 +250,9 @@ void main() {
       expect(find.text('Тормозные колодки · BP-100'), findsOneWidget);
     });
 
-    testWidgets('purchasing, returns and expenses show their figures', (
-      tester,
-    ) async {
+    testWidgets('returns and expenses show their figures', (tester) async {
       final rig = RealRig();
-      await openReports(tester, rig, tab: 'purchasing');
-      expect(find.text('Заказов создано: 2'), findsOneWidget);
-      expect(find.text('Сумма заказов: ${tm(183000)}'), findsOneWidget);
-      expect(find.text('Принято на сумму: ${tm(50000)}'), findsOneWidget);
-      expect(find.text('Принят полностью: 1'), findsOneWidget);
-      expect(
-        find.text('Ашхабад Запчасти: заказов 2, принято на ${tm(50000)}'),
-        findsOneWidget,
-      );
-      expect(
-        find.text('Возвраты поставщикам: 1, зачёт ${tm(5000)}'),
-        findsOneWidget,
-      );
-
-      await tapKey(tester, 'reports-tab-returns');
-      await settle(tester);
+      await openReports(tester, rig, tab: 'returns');
       expect(find.text('Возвращено покупателям: ${tm(12000)}'), findsOneWidget);
       expect(find.text('Годный к продаже: 1 · ${tm(12000)}'), findsOneWidget);
       expect(
@@ -291,20 +264,6 @@ void main() {
       await settle(tester);
       expect(find.text('Всего: ${tm(15000)}'), findsOneWidget);
       expect(find.text('Аренда: ${tm(15000)} (1)'), findsOneWidget);
-    });
-
-    testWidgets('a keeper-style role gets no cost columns on purchasing', (
-      tester,
-    ) async {
-      final rig = RealRig();
-      rig.server.permissions = [
-        for (final p in rig.server.permissions)
-          if (p != 'purchasing.cost.view') p,
-      ];
-      await openReports(tester, rig, tab: 'purchasing');
-      expect(key('rep-ordered-total'), findsNothing);
-      expect(key('rep-received-value'), findsNothing);
-      expect(find.text('Возвраты поставщикам: 1'), findsOneWidget);
     });
 
     testWidgets('the expenses tab needs the expenses right', (tester) async {
@@ -483,7 +442,6 @@ void main() {
         'summary',
         'sales',
         'stock',
-        'purchasing',
         'returns',
         'expenses',
         'activity',

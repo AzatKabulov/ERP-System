@@ -7,7 +7,7 @@ from apps.catalog.models import Product
 from apps.common.fields import BusinessScopedField
 from apps.inventory.serializers import LocationRefSerializer, ProductRefSerializer
 
-from .models import StockCount, StockCountLine, Transfer, TransferLine
+from .models import StockCount, StockCountLine, StockIntake, StockIntakeLine, Transfer, TransferLine
 from .services import moved_since
 
 QUANTITY = {"max_digits": 14, "decimal_places": 3, "min_value": Decimal("0.001")}
@@ -245,3 +245,76 @@ class CountSerializer(serializers.ModelSerializer):
             row["variance"] = None if counted is None else str(counted - line.baseline_quantity)
             row["moved_since_start"] = bool(moved.get(line.product_id))
         return data
+
+
+# ---- receiving by scanning ------------------------------------------------------------------
+
+
+class IntakeLineInputSerializer(serializers.Serializer):
+    product = BusinessScopedField(queryset=Product.objects.select_related("unit"))
+    quantity = serializers.DecimalField(**QUANTITY)
+    unit_cost = serializers.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        min_value=Decimal("0"),
+        required=False,
+        allow_null=True,
+        default=None,
+    )
+
+
+class IntakeInputSerializer(serializers.Serializer):
+    location = BusinessScopedField(queryset=Location.objects.all())
+    note = serializers.CharField(max_length=500, allow_blank=True, default="")
+    lines = IntakeLineInputSerializer(many=True, allow_empty=False, max_length=300)
+
+
+class IntakeLineSerializer(serializers.ModelSerializer):
+    product = ProductRefSerializer()
+
+    class Meta:
+        model = StockIntakeLine
+        fields = ["id", "product", "quantity", "unit_cost", "cost_known"]
+
+    def to_representation(self, line):
+        data = super().to_representation(line)
+        if not self.context.get("can_view_cost"):
+            data.pop("unit_cost")
+            data.pop("cost_known")
+        return data
+
+
+class IntakeSummarySerializer(serializers.ModelSerializer):
+    location = LocationRefSerializer()
+    created_by = serializers.SerializerMethodField()
+    line_count = serializers.SerializerMethodField()
+    units = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StockIntake
+        fields = [
+            "id",
+            "number",
+            "location",
+            "note",
+            "created_by",
+            "created_at",
+            "line_count",
+            "units",
+        ]
+
+    def get_created_by(self, intake):
+        return _person(intake.created_by)
+
+    def get_line_count(self, intake):
+        return len(intake.lines.all())
+
+    def get_units(self, intake):
+        return str(sum((line.quantity for line in intake.lines.all()), Decimal("0")))
+
+
+class IntakeSerializer(IntakeSummarySerializer):
+    lines = IntakeLineSerializer(many=True)
+
+    class Meta(IntakeSummarySerializer.Meta):
+        fields = IntakeSummarySerializer.Meta.fields + ["lines"]

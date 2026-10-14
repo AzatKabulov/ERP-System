@@ -26,4 +26,9 @@ if [ "$APK" != "-" ]; then
   cp "$APK" "$INFRA/public/downloads/erp.apk"
   say "Android app installed: $(du -h "$INFRA/public/downloads/erp.apk" | cut -f1)"
 fi
-note "Nothing needs restarting. Install page: $(env_value SITE_ADDRESS)/install/"
+SITE="$(env_value SITE_ADDRESS)"
+case "$SITE" in
+  :*) PAGE="http://localhost:$(env_value HTTP_PORT)/install/" ;;
+  *) PAGE="https://$SITE/install/" ;;
+esac
+note "Nothing needs restarting. Install page: $PAGE"

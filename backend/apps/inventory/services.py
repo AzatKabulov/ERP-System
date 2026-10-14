@@ -45,6 +45,9 @@ class Line:
     movement_type: str
     unit_cost: Decimal | None = None
     condition: str = Condition.SELLABLE
+    # False when `unit_cost` is only a placeholder. Goods that arrive from existing batches
+    # (transfers, returns) pass on the flag of the batch they came from.
+    cost_known: bool = True
 
 
 @dataclass
@@ -157,6 +160,7 @@ def post(
                     balance=balance,
                     layer_no=balance.layer_seq,
                     unit_cost=line.unit_cost,
+                    cost_known=line.cost_known,
                     quantity_initial=line.quantity,
                     quantity_remaining=line.quantity,
                 )
@@ -193,6 +197,14 @@ def post(
                 balance.quantity -= needed
             balance.save(update_fields=["quantity", "layer_seq", "updated_at"])
         return posted
+
+
+def reprice_layers(layer_ids, unit_cost: Decimal) -> None:
+    """Give batches that were received without a cost their real cost. The caller holds the row
+    locks (see `apps.sales.costs.set_product_cost`); quantities are not touched."""
+    CostLayer.objects.filter(pk__in=list(layer_ids), cost_known=False).update(
+        unit_cost=unit_cost, cost_known=True
+    )
 
 
 # ---- documents built on post() --------------------------------------------------------------

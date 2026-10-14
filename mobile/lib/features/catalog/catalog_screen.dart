@@ -16,6 +16,7 @@ import 'catalog_models.dart';
 import 'catalog_repository.dart';
 import 'csv_import_screen.dart';
 import 'product_detail_screen.dart';
+import 'product_photo.dart';
 import 'product_form_screen.dart';
 
 /// The product catalog: search by name, SKU, brand or barcode (typed or scanned),
@@ -26,11 +27,15 @@ class CatalogScreen extends StatefulWidget {
     required this.session,
     required this.repository,
     required this.unsaved,
+    this.onOpenToComplete,
   });
 
   final SessionController session;
   final CatalogRepository repository;
   final UnsavedWork unsaved;
+
+  /// Opens the list of products that still need a price or a cost.
+  final VoidCallback? onOpenToComplete;
 
   @override
   State<CatalogScreen> createState() => _CatalogScreenState();
@@ -51,7 +56,17 @@ class _CatalogScreenState extends State<CatalogScreen> {
   int _requestId = 0; // answers to out-of-date searches are ignored
   String? _scannedCode; // the code that produced the current results
 
+  static const _viewKey = 'catalog_view';
+
+  /// Gallery (several products across) or the plain list; remembered on this device.
+  late bool _gallery = widget.session.preferences.getString(_viewKey) != 'list';
+
   bool get _canManage => widget.session.can('catalog.manage');
+
+  void _setGallery(bool value) {
+    setState(() => _gallery = value);
+    widget.session.preferences.setString(_viewKey, value ? 'gallery' : 'list');
+  }
 
   @override
   void initState() {
@@ -210,6 +225,16 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   onPressed: () => _add(),
                 ),
               ),
+            if (_canManage && widget.onOpenToComplete != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('catalog-to-complete'),
+                  onPressed: widget.onOpenToComplete,
+                  icon: const Icon(Icons.edit_note),
+                  label: Text(l.toCompleteTitle),
+                ),
+              ),
             if (widget.session.can('catalog.import'))
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -230,6 +255,27 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   label: Text(l.catalogExport),
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: SegmentedButton<bool>(
+                key: const ValueKey('catalog-view-toggle'),
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: true,
+                    icon: const Icon(Icons.grid_view_outlined),
+                    label: Text(l.viewGallery),
+                  ),
+                  ButtonSegment(
+                    value: false,
+                    icon: const Icon(Icons.view_list_outlined),
+                    label: Text(l.viewList),
+                  ),
+                ],
+                selected: {_gallery},
+                onSelectionChanged: (choice) => _setGallery(choice.first),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -303,14 +349,25 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   ),
           )
         else ...[
-          for (final product in _items)
+          if (_gallery)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _ProductTile(
-                product: product,
-                onTap: () => _open(product),
+              child: _ProductGallery(
+                products: _items,
+                onOpen: _open,
+                repository: widget.repository,
               ),
-            ),
+            )
+          else
+            for (final product in _items)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _ProductTile(
+                  product: product,
+                  repository: widget.repository,
+                  onTap: () => _open(product),
+                ),
+              ),
           if (_items.length < _count)
             Align(
               alignment: Alignment.centerLeft,
@@ -327,13 +384,17 @@ class _CatalogScreenState extends State<CatalogScreen> {
 }
 
 class _ProductTile extends StatelessWidget {
-  const _ProductTile({required this.product, required this.onTap});
+  const _ProductTile({
+    required this.product,
+    required this.repository,
+    required this.onTap,
+  });
   final Product product;
+  final CatalogRepository repository;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l = strings(context);
     final p = product;
     return Material(
       color: Colors.transparent,
@@ -354,17 +415,11 @@ class _ProductTile extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.tint,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.inventory_2_outlined,
-                        color: AppColors.blue,
-                      ),
+                    ProductPhoto(
+                      product: p,
+                      repository: repository,
+                      width: 52,
+                      height: 52,
                     ),
                     const SizedBox(width: 12),
                     Flexible(
@@ -391,30 +446,155 @@ class _ProductTile extends StatelessWidget {
                   ],
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    formatMoney(p.priceMinor, p.priceCurrency),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+              _PriceInfo(product: p, align: CrossAxisAlignment.end),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The price of a product (and, for a USD price, what it is in TMT) with the archived mark.
+class _PriceInfo extends StatelessWidget {
+  const _PriceInfo({required this.product, required this.align});
+  final Product product;
+  final CrossAxisAlignment align;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    final p = product;
+    return Column(
+      crossAxisAlignment: align,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          formatMoney(p.priceMinor, p.priceCurrency),
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        if (p.priceCurrency != 'TMT')
+          Text(
+            p.priceTmtMinor != null
+                ? l.priceInTmt(formatMoney(p.priceTmtMinor!, 'TMT'))
+                : l.rateMissingNote,
+            style: TextStyle(
+              fontSize: 12,
+              color: p.priceTmtMinor != null
+                  ? AppColors.muted
+                  : AppColors.warning,
+            ),
+          ),
+        if (!p.isActive) StatusPill(label: l.archivedLabel, warning: true),
+      ],
+    );
+  }
+}
+
+/// Products as cards, several across (four or five on a tablet), instead of one long list.
+class _ProductGallery extends StatelessWidget {
+  const _ProductGallery({
+    required this.products,
+    required this.onOpen,
+    required this.repository,
+  });
+  final List<Product> products;
+  final void Function(Product) onOpen;
+  final CatalogRepository repository;
+
+  static const _gap = 12.0;
+  static const _minCard = 170.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = ((constraints.maxWidth + _gap) / (_minCard + _gap))
+            .floor()
+            .clamp(2, 5);
+        // One row at a time, so the cards of a row are as tall as the tallest one.
+        return Column(
+          key: const ValueKey('catalog-gallery'),
+          children: [
+            for (var i = 0; i < products.length; i += columns)
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: i + columns < products.length ? _gap : 0,
+                ),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var j = 0; j < columns; j++) ...[
+                        if (j > 0) const SizedBox(width: _gap),
+                        Expanded(
+                          child: i + j < products.length
+                              ? _ProductCard(
+                                  product: products[i + j],
+                                  repository: repository,
+                                  onTap: () => onOpen(products[i + j]),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ],
                   ),
-                  if (p.priceCurrency != 'TMT')
-                    Text(
-                      p.priceTmtMinor != null
-                          ? l.priceInTmt(formatMoney(p.priceTmtMinor!, 'TMT'))
-                          : l.rateMissingNote,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: p.priceTmtMinor != null
-                            ? AppColors.muted
-                            : AppColors.warning,
-                      ),
-                    ),
-                  if (!p.isActive)
-                    StatusPill(label: l.archivedLabel, warning: true),
-                ],
+                ),
               ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ProductCard extends StatelessWidget {
+  const _ProductCard({
+    required this.product,
+    required this.repository,
+    required this.onTap,
+  });
+  final Product product;
+  final CatalogRepository repository;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = product;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: ValueKey('product-${p.sku}'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: SurfaceCard(
+          padding: 12,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ProductPhoto(
+                product: p,
+                repository: repository,
+                aspectRatio: 4 / 3,
+                iconSize: 32,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                p.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                [p.sku, ?p.brand?.name].join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              ),
+              const Spacer(),
+              const SizedBox(height: 8),
+              _PriceInfo(product: p, align: CrossAxisAlignment.start),
             ],
           ),
         ),

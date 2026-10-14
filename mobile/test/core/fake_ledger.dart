@@ -66,6 +66,11 @@ class FakeLedger {
 
   /// Commands the server actually carried out (to prove nothing happens twice).
   int transfersDispatched = 0;
+
+  // ---- receiving by scanning ----------------------------------------------------
+  final List<Map<String, dynamic>> intakes = []; // newest first
+  int _intakeNumber = 0;
+  int intakesPosted = 0;
   int transfersReceived = 0;
   int countsApproved = 0;
 
@@ -1657,6 +1662,47 @@ class FakeLedger {
   ) {
     final m = request.method;
     final q = request.url.queryParameters;
+
+    // ---- receiving by scanning ----
+    if (rest == 'intakes/' && m == 'POST') {
+      return server.runCommand(request, body, () {
+        final location = body['location'] as String;
+        final lines = (body['lines'] as List).cast<Map<String, dynamic>>();
+        if (!server.permissions.contains('stock.cost.view') &&
+            lines.any((l) => l['unit_cost'] != null)) {
+          return server.errorResponse(403, 'permission_denied');
+        }
+        final id = _id('in');
+        final error = _postAll([
+          for (final l in lines)
+            () => _post(
+              productId: l['product'] as String,
+              locationId: location,
+              condition: 'sellable',
+              milli: _milli(l['quantity']),
+              costMinor: l['unit_cost'] == null ? 0 : _minor(l['unit_cost']),
+              type: 'intake',
+              reason: '',
+              documentType: 'intake',
+              documentId: id,
+            ),
+        ]);
+        if (error != null) return error;
+        intakesPosted++;
+        final intake = {
+          'id': id,
+          'number': ++_intakeNumber,
+          'location': _where(location),
+          'note': body['note'] ?? '',
+          'created_by': _person(),
+          'created_at': '2026-10-07T09:00:00Z',
+          'line_count': lines.length,
+          'lines': lines,
+        };
+        intakes.insert(0, intake);
+        return (status: 201, body: intake);
+      });
+    }
 
     // ---- transfers ----
     if (rest == 'transfers/' && m == 'GET') {

@@ -43,6 +43,8 @@ class SalesReportTests(ReportsCase):
                 "net_sales": "920.00",
                 "cost_of_goods": "491.00",
                 "gross_profit": "429.00",
+                "without_cost": "0.00",
+                "without_cost_lines": 0,
                 "by_payment": [
                     {"method": "cash", "count": 2, "total": "472.50"},
                     {"method": "card", "count": 2, "total": "845.00"},
@@ -72,6 +74,8 @@ class SalesReportTests(ReportsCase):
                 "net_sales": "810.00",
                 "cost_of_goods": "436.00",
                 "gross_profit": "374.00",
+                "without_cost": "0.00",
+                "without_cost_lines": 0,
                 "by_payment": [
                     {"method": "cash", "count": 1, "total": "362.50"},
                     {"method": "card", "count": 2, "total": "845.00"},
@@ -98,6 +102,8 @@ class SalesReportTests(ReportsCase):
                 "net_sales": "110.00",
                 "cost_of_goods": "55.00",
                 "gross_profit": "55.00",
+                "without_cost": "0.00",
+                "without_cost_lines": 0,
                 "by_payment": [{"method": "cash", "count": 1, "total": "110.00"}],
                 "by_day": [
                     {"date": "2026-10-03", "count": 1, "revenue": "110.00", "refunds": "0.00"}
@@ -162,6 +168,8 @@ class SalesReportTests(ReportsCase):
                 "net_sales": "0.00",
                 "cost_of_goods": "0.00",
                 "gross_profit": "0.00",
+                "without_cost": "0.00",
+                "without_cost_lines": 0,
                 "by_payment": [],
                 "by_day": [],
                 "top_products": [],
@@ -216,6 +224,8 @@ class SummaryTests(ReportsCase):
                 "returns_count": 3,
                 "cost_of_goods": "491.00",
                 "gross_profit": "429.00",
+                "without_cost": "0.00",
+                "without_cost_lines": 0,
                 "expenses": "245.50",  # E2 45.50 + E3 200.00 (E1 is September, E4 is void)
                 "result": "183.50",  # 429.00 - 245.50
                 "inventory_value": "1594.00",
@@ -236,6 +246,8 @@ class SummaryTests(ReportsCase):
                 "returns_count": 3,
                 "cost_of_goods": "436.00",
                 "gross_profit": "374.00",
+                "without_cost": "0.00",
+                "without_cost_lines": 0,
                 "expenses": "45.50",
                 "result": "328.50",
                 "inventory_value": "779.00",
@@ -254,6 +266,8 @@ class SummaryTests(ReportsCase):
                 "returns_count": 0,
                 "cost_of_goods": "55.00",
                 "gross_profit": "55.00",
+                "without_cost": "0.00",
+                "without_cost_lines": 0,
                 "expenses": "200.00",
                 "result": "-145.00",  # an operating loss: the rent is bigger than the margin
                 "inventory_value": "815.00",
@@ -273,7 +287,13 @@ class SummaryTests(ReportsCase):
 
     def test_keys_the_caller_may_not_see_are_left_out(self):
         cases = {
-            "sales.cost.view": {"cost_of_goods", "gross_profit", "result"},
+            "sales.cost.view": {
+                "cost_of_goods",
+                "gross_profit",
+                "result",
+                "without_cost",
+                "without_cost_lines",
+            },
             "expense.view": {"expenses", "result"},
             "stock.cost.view": {"inventory_value"},
         }

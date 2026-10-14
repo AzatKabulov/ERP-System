@@ -109,10 +109,13 @@ def complete_sale(business, actor, data: dict) -> Sale:
         document_id=sale_id,
     )
     cost_by_product: dict = {}
+    unknown_cost: set = set()  # products with goods from a batch that was received without a cost
     for movement in posted.movements:
         cost_by_product[movement.product_id] = cost_by_product.get(movement.product_id, ZERO) + (
             -movement.quantity * movement.unit_cost
         )
+        if not movement.layer.cost_known:
+            unknown_cost.add(movement.product_id)
 
     customer = data.get("customer")
     # The number is taken last so the counter row is held only briefly.
@@ -145,6 +148,7 @@ def complete_sale(business, actor, data: dict) -> Sale:
                 unit_price=line["unit_price"],
                 line_total=line["line_total"],
                 cost_total=cost_by_product[line["product"].pk],
+                cost_known=line["product"].pk not in unknown_cost,
                 warranty_months=line["product"].warranty_months,
                 warranty_terms=line["product"].warranty_terms,
                 return_days=line["product"].return_days,

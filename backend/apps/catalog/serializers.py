@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from apps.businesses.models import Location
@@ -64,6 +65,7 @@ class ProductSerializer(serializers.ModelSerializer):
     price_tmt = serializers.SerializerMethodField()
     price_rate_missing = serializers.SerializerMethodField()
     barcodes = serializers.SerializerMethodField()
+    photo = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -74,6 +76,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "category",
             "brand",
             "unit",
+            "photo",
             "price",
             "price_tmt",
             "price_rate_missing",
@@ -102,6 +105,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_barcodes(self, product):
         return [b.code for b in product.barcodes.all()]
+
+    def get_photo(self, product):
+        """`{"version"}` when the product has a picture, else null. The app downloads the picture
+        itself (`products/<id>/photo/`) and keeps it for as long as the version is unchanged."""
+        try:
+            return {"version": str(product.photo.version)}
+        except ObjectDoesNotExist:
+            return None
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
