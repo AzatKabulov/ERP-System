@@ -11,7 +11,6 @@ import '../../widgets/common.dart';
 /// workflows are added; an unknown slug gets a neutral label, never raw text.
 String operationActionLabel(AppLocalizations l, String action) =>
     switch (action) {
-      'purchase_receive' => l.actionReceive,
       'stock_opening' => l.actionOpening,
       'stock_adjust' => l.actionAdjust,
       'stock_intake' => l.actionIntake,
@@ -22,7 +21,6 @@ String operationActionLabel(AppLocalizations l, String action) =>
       'count_approve' => l.actionCountApprove,
       'return_complete' => l.actionReturnComplete,
       'return_inspect' => l.actionReturnInspect,
-      'supplier_return_create' => l.actionSupplierReturn,
       'warranty_resolve' => l.actionWarrantyResolve,
       _ => l.unknownActionLabel,
     };

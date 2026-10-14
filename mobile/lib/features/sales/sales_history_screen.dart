@@ -484,6 +484,13 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                   key: const ValueKey('sd-profit'),
                   style: const TextStyle(color: AppColors.muted),
                 ),
+              ] else if (sale.costTotalMinor != null) ...[
+                const Divider(),
+                Text(
+                  l.saleProfitUnknown,
+                  key: const ValueKey('sd-profit-unknown'),
+                  style: const TextStyle(color: AppColors.muted),
+                ),
               ],
             ],
           ),

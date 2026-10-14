@@ -90,6 +90,7 @@ class IntakeController extends ChangeNotifier {
       if (!_entries.contains(entry)) return; // removed while asking
       if (product == null) {
         entry.state = IntakeEntryState.notFound;
+        _suggest(entry);
       } else {
         _attach(entry, product);
       }
@@ -104,6 +105,21 @@ class IntakeController extends ChangeNotifier {
       entry.state = IntakeEntryState.lookupFailed;
     }
     _changed();
+  }
+
+  /// Asks the server (which asks the open databases) for a name for an unknown code, in the
+  /// background: the line already stands, and nothing waits for the answer. A failure or a miss
+  /// just leaves the person to type the name.
+  Future<void> _suggest(IntakeEntry entry) async {
+    if (!looksLikeGtin(entry.code) || entry.suggestion != null) return;
+    try {
+      final info = await catalog.externalInfo(entry.code);
+      if (info == null || !_entries.contains(entry)) return;
+      entry.suggestion = info;
+      _notify();
+    } catch (_) {
+      // not found online, no connection or a refusal: the person types the name
+    }
   }
 
   /// Ties [entry] to [product]. When another line already stands for that product (two codes,

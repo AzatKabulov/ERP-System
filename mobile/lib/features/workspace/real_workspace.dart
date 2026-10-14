@@ -11,11 +11,10 @@ import '../admin/admin_repository.dart';
 import '../admin/administration_screen.dart';
 import '../catalog/catalog_repository.dart';
 import '../catalog/catalog_screen.dart';
+import '../catalog/to_complete_screen.dart';
 import '../inventory/inventory_repository.dart';
 import '../inventory/stock_screen.dart';
 import '../operations/pending_operations_banner.dart';
-import '../purchasing/purchasing_repository.dart';
-import '../purchasing/purchasing_screen.dart';
 import '../reports/dashboard_screen.dart';
 import '../reports/reports_repository.dart';
 import '../reports/reports_screen.dart';
@@ -77,7 +76,6 @@ class _RealWorkspaceState extends State<RealWorkspace> {
   bool _allowed(AppPage page) => switch (page) {
     AppPage.products => session.can('catalog.view'),
     AppPage.inventory => session.can('stock.view'),
-    AppPage.purchasing => session.can('purchasing.view'),
     AppPage.sales => session.can('sales.create') || session.can('sales.view'),
     AppPage.expenses => session.can('expense.view'),
     AppPage.warranties => session.can('warranty.view'),
@@ -98,6 +96,19 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         mounted;
   }
 
+  /// The list of products that still need a price or a cost; the dashboard is read again after.
+  Future<void> _openToComplete() async {
+    final membership = session.membership!;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => ToCompleteScreen(
+          repository: CatalogRepository(widget.api, membership.businessId),
+        ),
+      ),
+    );
+    if (mounted) setState(() => _reloadCounter++);
+  }
+
   Widget _content() {
     final membership = session.membership!;
     final page = _allowed(_page) ? _page : AppPage.dashboard;
@@ -107,26 +118,21 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         session: session,
         repository: ReportsRepository(widget.api, membership.businessId),
         onOpenReports: () => setState(() => _page = AppPage.reports),
+        onOpenToComplete: session.can('catalog.manage')
+            ? _openToComplete
+            : null,
       ),
       AppPage.products => CatalogScreen(
         key: ValueKey('catalog-${membership.id}'),
         session: session,
         repository: CatalogRepository(widget.api, membership.businessId),
         unsaved: widget.unsaved,
+        onOpenToComplete: _openToComplete,
       ),
       AppPage.inventory => StockScreen(
         key: ValueKey('stock-${membership.id}-$_reloadCounter'),
         session: session,
         repository: InventoryRepository(widget.api, membership.businessId),
-        catalog: CatalogRepository(widget.api, membership.businessId),
-        runner: widget.runner,
-        monitor: widget.monitor,
-        unsaved: widget.unsaved,
-      ),
-      AppPage.purchasing => PurchasingScreen(
-        key: ValueKey('purchasing-${membership.id}-$_reloadCounter'),
-        session: session,
-        repository: PurchasingRepository(widget.api, membership.businessId),
         catalog: CatalogRepository(widget.api, membership.businessId),
         runner: widget.runner,
         monitor: widget.monitor,

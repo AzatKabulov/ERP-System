@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../../core/api/api_client.dart';
 import '../../core/files/file_services.dart';
+import '../../core/files/photo_cache.dart';
 import '../../core/money/decimal_math.dart';
 import '../../core/api/api_exception.dart';
 import 'catalog_models.dart';
@@ -125,6 +126,74 @@ class CatalogRepository {
       for (final r in map['settings'] as List)
         ReorderLevel.fromJson((r as Map).cast<String, dynamic>()),
     ];
+  }
+
+  /// The picture of [product] (a small one for lists, the larger one for the product page), or
+  /// null when it has none. Downloaded once and kept in memory while its version stays the same.
+  Future<Uint8List?> photo(Product product, {bool full = false}) {
+    final version = product.photoVersion;
+    if (version == null) return Future.value(null);
+    final size = full ? 'full' : 'thumb';
+    return PhotoCache.instance.load(
+      '$businessId/${product.id}/$version/$size',
+      () async {
+        final response = await api.download(
+          '$_base/products/${product.id}/photo/',
+          query: {'size': size},
+          accept: 'image/jpeg',
+        );
+        return response.bytes;
+      },
+    );
+  }
+
+  /// Sets (or replaces) the product's picture. The server makes it small and clean.
+  Future<Product> uploadPhoto(String productId, PickedFile file) async =>
+      Product.fromJson(
+        (await api.upload(
+          '$_base/products/$productId/photo/',
+          ApiUpload(field: 'file', filename: file.name, bytes: file.bytes),
+        )).map,
+      );
+
+  Future<Product> removePhoto(String productId) async => Product.fromJson(
+    (await api.send('DELETE', '$_base/products/$productId/photo/')).map,
+  );
+
+  /// What the open product databases (asked by the server) say about a barcode, or null.
+  Future<ExternalInfo?> externalInfo(String code) async {
+    final response = await api.get(
+      '$_base/barcodes/info/',
+      query: {'code': code.trim()},
+    );
+    return ExternalInfo.fromJson(response.map);
+  }
+
+  /// Products that still need a selling price or a cost.
+  Future<List<ToCompleteItem>> toComplete() async {
+    final map = (await api.get('$_base/catalog/to-complete/')).map;
+    return [
+      for (final r in map['results'] as List)
+        ToCompleteItem.fromJson((r as Map).cast<String, dynamic>()),
+    ];
+  }
+
+  Future<void> setPrice(String id, int priceMinor, String currency) async {
+    await api.patch(
+      '$_base/products/$id/',
+      body: {
+        'price_amount': toServerDecimal(priceMinor, 2),
+        'price_currency': currency,
+      },
+    );
+  }
+
+  /// The real cost (TMT): batches that waited for it get it and past sales are corrected.
+  Future<void> setCost(String id, int costMinor) async {
+    await api.post(
+      '$_base/products/$id/cost/',
+      body: {'unit_cost': toServerDecimal(costMinor, 2)},
+    );
   }
 
   Future<Product> setActive(String id, bool active) async => Product.fromJson(

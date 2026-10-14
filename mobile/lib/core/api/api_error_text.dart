@@ -76,6 +76,10 @@ String apiErrorText(AppLocalizations l, ApiException e) {
       return l.errorFileType;
     case 'file_required':
       return l.errorFileRequired;
+    case 'invalid_image':
+      return l.errorInvalidImage;
+    case 'photo_not_found':
+      return l.errorNotFound;
     case 'future_date':
       return l.errorFutureDate;
     case 'expense_void':

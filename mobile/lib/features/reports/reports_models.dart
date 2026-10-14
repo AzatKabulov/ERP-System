@@ -90,7 +90,8 @@ class ReportSummary {
     required this.salesCount,
     required this.returnsCount,
     required this.lowStockCount,
-    required this.openOrdersCount,
+    this.withoutCost,
+    this.withoutCostLines = 0,
     this.costOfGoods,
     this.grossProfit,
     this.expenses,
@@ -104,7 +105,10 @@ class ReportSummary {
   final int salesCount;
   final int returnsCount;
   final int lowStockCount;
-  final int openOrdersCount;
+
+  /// Net sales the profit leaves out because the goods have no known cost (null: not shown).
+  final int? withoutCost;
+  final int withoutCostLines;
   final int? costOfGoods;
   final int? grossProfit;
   final int? expenses;
@@ -118,7 +122,8 @@ class ReportSummary {
     salesCount: _int(j['sales_count']),
     returnsCount: _int(j['returns_count']),
     lowStockCount: _int(j['low_stock_count']),
-    openOrdersCount: _int(j['open_orders_count']),
+    withoutCost: _moneyOrNull(j['without_cost']),
+    withoutCostLines: _int(j['without_cost_lines']),
     costOfGoods: _moneyOrNull(j['cost_of_goods']),
     grossProfit: _moneyOrNull(j['gross_profit']),
     expenses: _moneyOrNull(j['expenses']),
@@ -173,6 +178,8 @@ class SalesReport {
     required this.byPayment,
     required this.byDay,
     required this.topProducts,
+    this.withoutCost,
+    this.withoutCostLines = 0,
     this.costOfGoods,
     this.grossProfit,
   });
@@ -182,6 +189,8 @@ class SalesReport {
   final int refunds;
   final int returnsCount;
   final int netSales;
+  final int? withoutCost;
+  final int withoutCostLines;
   final int? costOfGoods;
   final int? grossProfit;
   final List<PaymentRow> byPayment;
@@ -194,6 +203,8 @@ class SalesReport {
     refunds: _money(j['refunds']),
     returnsCount: _int(j['returns_count']),
     netSales: _money(j['net_sales']),
+    withoutCost: _moneyOrNull(j['without_cost']),
+    withoutCostLines: _int(j['without_cost_lines']),
     costOfGoods: _moneyOrNull(j['cost_of_goods']),
     grossProfit: _moneyOrNull(j['gross_profit']),
     byPayment: [
@@ -325,58 +336,6 @@ class StockReport {
 }
 
 @immutable
-class SupplierRow {
-  const SupplierRow(this.name, this.orders, this.receivedValue);
-  final String name;
-  final int orders;
-  final int? receivedValue;
-}
-
-@immutable
-class PurchasingReport {
-  const PurchasingReport({
-    required this.ordersCount,
-    required this.deliveriesCount,
-    required this.byStatus,
-    required this.bySupplier,
-    required this.supplierReturnsCount,
-    this.orderedTotal,
-    this.receivedValue,
-    this.supplierReturnsCredit,
-  });
-
-  final int ordersCount;
-  final int deliveriesCount;
-  final List<(String status, int count)> byStatus;
-  final List<SupplierRow> bySupplier;
-  final int supplierReturnsCount;
-  final int? orderedTotal;
-  final int? receivedValue;
-  final int? supplierReturnsCredit;
-
-  factory PurchasingReport.fromJson(Map<String, dynamic> j) => PurchasingReport(
-    ordersCount: _int(j['orders_count']),
-    deliveriesCount: _int(j['deliveries_count']),
-    orderedTotal: _moneyOrNull(j['ordered_total']),
-    receivedValue: _moneyOrNull(j['received_value']),
-    supplierReturnsCount: _int(j['supplier_returns_count']),
-    supplierReturnsCredit: _moneyOrNull(j['supplier_returns_credit']),
-    byStatus: [
-      for (final r in _list(j['by_status']))
-        (r['status'] as String, _int(r['count'])),
-    ],
-    bySupplier: [
-      for (final r in _list(j['by_supplier']))
-        SupplierRow(
-          (_map(r['supplier'])['name'] as String?) ?? '',
-          _int(r['orders']),
-          _moneyOrNull(r['received_value']),
-        ),
-    ],
-  );
-}
-
-@immutable
 class ConditionRow {
   const ConditionRow(this.condition, this.quantityMilli, this.refund);
   final String condition;
@@ -399,21 +358,14 @@ class ReturnsReport {
     required this.refundTotal,
     required this.byCondition,
     required this.byReason,
-    required this.supplierReturnsCount,
-    this.supplierReturnsCredit,
   });
 
   final int returnsCount;
   final int refundTotal;
   final List<ConditionRow> byCondition;
   final List<ReasonRow> byReason;
-  final int supplierReturnsCount;
-  final int? supplierReturnsCredit;
 
   factory ReturnsReport.fromJson(Map<String, dynamic> j) {
-    final supplier = j['supplier_returns'] == null
-        ? const <String, dynamic>{}
-        : _map(j['supplier_returns']);
     return ReturnsReport(
       returnsCount: _int(j['returns_count']),
       refundTotal: _money(j['refund_total']),
@@ -433,8 +385,6 @@ class ReturnsReport {
             _money(r['refund']),
           ),
       ],
-      supplierReturnsCount: _int(supplier['count']),
-      supplierReturnsCredit: _moneyOrNull(supplier['credit']),
     );
   }
 }
@@ -530,9 +480,9 @@ class Dashboard {
     this.expensesMonth,
     this.inventoryValue,
     this.lowStockCount,
-    this.reorderCount,
-    this.openOrdersCount,
     this.openClaimsCount,
+    this.toCompleteCount,
+    this.withoutCostMonth,
     this.recentActivity,
   });
 
@@ -544,9 +494,13 @@ class Dashboard {
   final int? expensesMonth;
   final int? inventoryValue;
   final int? lowStockCount;
-  final int? reorderCount;
-  final int? openOrdersCount;
   final int? openClaimsCount;
+
+  /// Products that still need a price or a cost (only for people who can fill them in).
+  final int? toCompleteCount;
+
+  /// This month's net sales that the profit leaves out (no known cost yet).
+  final int? withoutCostMonth;
   final List<AuditEntry>? recentActivity;
 
   bool get hasAnything =>
@@ -556,9 +510,8 @@ class Dashboard {
       expensesMonth != null ||
       inventoryValue != null ||
       lowStockCount != null ||
-      reorderCount != null ||
-      openOrdersCount != null ||
       openClaimsCount != null ||
+      toCompleteCount != null ||
       recentActivity != null;
 
   factory Dashboard.fromJson(Map<String, dynamic> j) {
@@ -575,15 +528,13 @@ class Dashboard {
       lowStockCount: j['low_stock_count'] == null
           ? null
           : _int(j['low_stock_count']),
-      reorderCount: j['reorder_count'] == null
-          ? null
-          : _int(j['reorder_count']),
-      openOrdersCount: j['open_orders_count'] == null
-          ? null
-          : _int(j['open_orders_count']),
       openClaimsCount: j['open_claims_count'] == null
           ? null
           : _int(j['open_claims_count']),
+      toCompleteCount: j['to_complete_count'] == null
+          ? null
+          : _int(j['to_complete_count']),
+      withoutCostMonth: _moneyOrNull(j['without_cost_month']),
       recentActivity: j['recent_activity'] == null
           ? null
           : [

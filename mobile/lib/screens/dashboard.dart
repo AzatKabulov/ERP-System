@@ -125,11 +125,6 @@ class DashboardScreen extends StatelessWidget {
               onPressed: () => onNavigate(AppPage.sales),
             ),
             OutlinedButton.icon(
-              onPressed: () => onNavigate(AppPage.purchasing),
-              icon: const Icon(Icons.local_shipping_outlined),
-              label: Text(l.receiveGoods),
-            ),
-            OutlinedButton.icon(
               onPressed: () => onNavigate(AppPage.expenses),
               icon: const Icon(Icons.account_balance_wallet_outlined),
               label: Text(l.newExpense),

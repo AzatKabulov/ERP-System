@@ -106,13 +106,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ],
         ),
         const SizedBox(height: 24),
-        if (widget.inventory) ...[
-          Text(
-            l.reorderHint,
-            style: const TextStyle(color: AppColors.muted, height: 1.5),
-          ),
-          const SizedBox(height: 20),
-        ],
         if (products.isEmpty)
           SurfaceCard(
             child: EmptyState(

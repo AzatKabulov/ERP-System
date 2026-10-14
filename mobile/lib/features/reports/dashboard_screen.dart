@@ -22,6 +22,7 @@ class DashboardScreen extends StatelessWidget {
     required this.session,
     required this.repository,
     this.onOpenReports,
+    this.onOpenToComplete,
   });
 
   final SessionController session;
@@ -29,6 +30,9 @@ class DashboardScreen extends StatelessWidget {
 
   /// Shown as a button for people who may open the reports page.
   final VoidCallback? onOpenReports;
+
+  /// Opens the list of products that still need a price or a cost.
+  final VoidCallback? onOpenToComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +70,7 @@ class DashboardScreen extends StatelessWidget {
             builder: (context, d) => _Figures(
               dashboard: d,
               onOpenReports: session.can('report.view') ? onOpenReports : null,
+              onOpenToComplete: onOpenToComplete,
             ),
           ),
       ],
@@ -74,9 +79,14 @@ class DashboardScreen extends StatelessWidget {
 }
 
 class _Figures extends StatelessWidget {
-  const _Figures({required this.dashboard, this.onOpenReports});
+  const _Figures({
+    required this.dashboard,
+    this.onOpenReports,
+    this.onOpenToComplete,
+  });
   final Dashboard dashboard;
   final VoidCallback? onOpenReports;
+  final VoidCallback? onOpenToComplete;
 
   Widget _card(String key, String label, String value, IconData icon) =>
       KeyedSubtree(
@@ -124,6 +134,23 @@ class _Figures extends StatelessWidget {
                 _tm(d.grossProfitMonth!),
                 Icons.savings_outlined,
               ),
+            if ((d.toCompleteCount ?? 0) > 0)
+              KeyedSubtree(
+                key: const ValueKey('dash-to-complete'),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: onOpenToComplete,
+                  child: Semantics(
+                    container: true,
+                    button: true,
+                    child: MetricCard(
+                      label: l.dashToComplete,
+                      value: '${d.toCompleteCount}',
+                      icon: Icons.edit_note,
+                    ),
+                  ),
+                ),
+              ),
             if (d.expensesMonth != null)
               _card(
                 'dash-expenses-month',
@@ -145,20 +172,6 @@ class _Figures extends StatelessWidget {
                 '${d.lowStockCount}',
                 Icons.warning_amber_outlined,
               ),
-            if (d.reorderCount != null)
-              _card(
-                'dash-reorder',
-                l.dashReorder,
-                '${d.reorderCount}',
-                Icons.shopping_cart_outlined,
-              ),
-            if (d.openOrdersCount != null)
-              _card(
-                'dash-open-orders',
-                l.dashOpenOrders,
-                '${d.openOrdersCount}',
-                Icons.local_shipping_outlined,
-              ),
             if (d.openClaimsCount != null)
               _card(
                 'dash-open-claims',
@@ -168,6 +181,14 @@ class _Figures extends StatelessWidget {
               ),
           ],
         ),
+        if ((d.withoutCostMonth ?? 0) != 0) ...[
+          const SizedBox(height: 8),
+          Text(
+            l.dashWithoutCostNote(_tm(d.withoutCostMonth!)),
+            key: const ValueKey('dash-without-cost-note'),
+            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+          ),
+        ],
         if (onOpenReports != null) ...[
           const SizedBox(height: 12),
           Align(

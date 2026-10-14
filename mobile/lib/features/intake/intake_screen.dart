@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/connectivity/connection_monitor.dart';
+import '../../core/files/file_services.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/money/decimal_math.dart';
 import '../../core/operations/operation_runner.dart';
@@ -204,6 +205,34 @@ class _IntakeScreenState extends State<IntakeScreen> {
     }
   }
 
+  /// Adds the product under the name the open databases suggested, in one tap: the unit is the
+  /// piece unit and the article number the code. The name can be changed in the catalog later.
+  Future<void> _addFound(IntakeEntry entry) async {
+    final info = entry.suggestion;
+    if (info == null || _busy) return;
+    final l = strings(context);
+    try {
+      final unit = defaultPieceUnit(await widget.catalog.units());
+      if (unit == null) {
+        if (mounted) showFeedback(context, l.loadFailed);
+        return;
+      }
+      await _ctl.addProduct(
+        entry,
+        name: info.displayName,
+        sku: codeFitsAsArticle(entry.code) ? entry.code : '',
+        unit: unit,
+      );
+      if (mounted) showFeedback(context, l.intakeProductAdded);
+    } on ApiException catch (e) {
+      // e.g. a taken article number: the dialog shows what is wrong and lets the person fix it
+      if (mounted) {
+        showFeedback(context, apiErrorText(l, e));
+        _addProduct(entry);
+      }
+    }
+  }
+
   Future<void> _submit() async {
     if (_busy || _ctl.isEmpty) return;
     final l = strings(context);
@@ -385,6 +414,7 @@ class _IntakeScreenState extends State<IntakeScreen> {
                         onEdit: () => _edit(entry),
                         onRemove: () => _ctl.remove(entry),
                         onAdd: () => _addProduct(entry),
+                        onAddFound: () => _addFound(entry),
                         onRetry: () => _ctl.retryLookup(entry),
                       ),
                     ),
@@ -482,6 +512,7 @@ class _EntryCard extends StatelessWidget {
     required this.onEdit,
     required this.onRemove,
     required this.onAdd,
+    required this.onAddFound,
     required this.onRetry,
   });
 
@@ -493,6 +524,7 @@ class _EntryCard extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onRemove;
   final VoidCallback onAdd;
+  final VoidCallback onAddFound;
   final VoidCallback onRetry;
 
   @override
@@ -526,7 +558,12 @@ class _EntryCard extends StatelessWidget {
                         product == null
                             ? switch (entry.state) {
                                 IntakeEntryState.lookingUp => l.intakeLookingUp,
-                                IntakeEntryState.notFound => l.intakeUnknown,
+                                IntakeEntryState.notFound =>
+                                  entry.suggestion == null
+                                      ? l.intakeUnknown
+                                      : l.intakeFoundOnline(
+                                          entry.suggestion!.displayName,
+                                        ),
                                 _ => l.intakeLookupFailed,
                               }
                             : '${product.sku}${product.sku == entry.code ? '' : ' · ${entry.code}'}',
@@ -598,12 +635,26 @@ class _EntryCard extends StatelessWidget {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                if (unknown)
+                if (unknown && entry.suggestion != null)
+                  FilledButton.icon(
+                    key: ValueKey('intake-add-found-${entry.code}'),
+                    onPressed: busy ? null : onAddFound,
+                    icon: const Icon(Icons.add_box_outlined),
+                    label: Text(l.intakeAddFound),
+                  ),
+                if (unknown && entry.suggestion == null)
                   FilledButton.tonalIcon(
                     key: ValueKey('intake-add-${entry.code}'),
                     onPressed: busy ? null : onAdd,
                     icon: const Icon(Icons.add_box_outlined),
                     label: Text(l.intakeAddProduct),
+                  ),
+                if (unknown && entry.suggestion != null)
+                  OutlinedButton.icon(
+                    key: ValueKey('intake-add-${entry.code}'),
+                    onPressed: busy ? null : onAdd,
+                    icon: const Icon(Icons.edit_outlined),
+                    label: Text(l.intakeEditFound),
                   ),
                 if (entry.state == IntakeEntryState.lookupFailed)
                   OutlinedButton.icon(
@@ -758,7 +809,9 @@ class _NewProductDialog extends StatefulWidget {
 }
 
 class _NewProductDialogState extends State<_NewProductDialog> {
-  final _name = TextEditingController();
+  late final _name = TextEditingController(
+    text: widget.entry.suggestion?.displayName ?? '',
+  );
   late final _sku = TextEditingController(
     text: codeFitsAsArticle(widget.entry.code) ? widget.entry.code : '',
   );
@@ -767,6 +820,9 @@ class _NewProductDialogState extends State<_NewProductDialog> {
   bool _submitted = false;
   bool _busy = false;
   ApiException? _error;
+
+  /// A picture of the new product, taken or chosen here; sent once the product exists.
+  PickedFile? _photo;
 
   @override
   void initState() {
@@ -795,6 +851,19 @@ class _NewProductDialogState extends State<_NewProductDialog> {
     super.dispose();
   }
 
+  Future<void> _pickPhoto() async {
+    if (_busy) return;
+    final picking = FilesScope.pickingOf(context);
+    try {
+      final file = await picking.pickPhoto(camera: picking.hasCamera);
+      if (file != null && mounted) setState(() => _photo = file);
+    } catch (_) {
+      if (mounted) {
+        showFeedback(context, strings(context).productPhotoPickFailed);
+      }
+    }
+  }
+
   Future<void> _save() async {
     if (_busy) return;
     setState(() {
@@ -814,6 +883,16 @@ class _NewProductDialogState extends State<_NewProductDialog> {
         sku: _sku.text,
         unit: _unit!,
       );
+      // The product exists now. Its picture is a bonus: if it cannot be sent, say so and go on.
+      final photo = _photo;
+      final id = widget.entry.product?.id;
+      if (photo != null && id != null) {
+        try {
+          await widget.catalog.uploadPhoto(id, photo);
+        } on ApiException catch (e) {
+          if (mounted) showFeedback(context, apiErrorText(strings(context), e));
+        }
+      }
       if (mounted) Navigator.of(context).pop(true);
     } on ApiException catch (e) {
       if (mounted) {
@@ -899,6 +978,43 @@ class _NewProductDialogState extends State<_NewProductDialog> {
                       ),
               ),
             ],
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (_photo != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.memory(
+                      _photo!.bytes,
+                      key: const ValueKey('intake-new-photo-preview'),
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Flexible(
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('intake-new-photo'),
+                    onPressed: _busy ? null : _pickPhoto,
+                    icon: Icon(
+                      FilesScope.pickingOf(context).hasCamera
+                          ? Icons.photo_camera_outlined
+                          : Icons.photo_library_outlined,
+                    ),
+                    label: Text(
+                      _photo != null
+                          ? l.productPhotoChange
+                          : FilesScope.pickingOf(context).hasCamera
+                          ? l.productPhotoTake
+                          : l.productPhotoChoose,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             if (_error != null && _error!.fields.isEmpty) ...[
               const SizedBox(height: 12),
               Semantics(

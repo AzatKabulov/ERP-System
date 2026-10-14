@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -102,6 +103,8 @@ class FakeServer {
     'customer.manage',
     'catalog.manage',
     'catalog.cost.view',
+    'cost.set',
+    'catalog.photo',
     'exchange_rate.view',
     'exchange_rate.manage',
     'return.view',
@@ -204,6 +207,36 @@ class FakeServer {
 
   /// Products the server was asked to create or change (to prove scans save nothing).
   int productWrites = 0;
+
+  /// What the "to complete" list answers: products that still need a price or a cost, as the
+  /// API sends them. Entering a cost or a price removes what it fills in.
+  final List<Map<String, dynamic>> toCompleteData = [];
+
+  /// The pictures the server holds, by product id: (version, bytes).
+  final Map<String, ({String version, Uint8List bytes})> photosData = {};
+  int _photoCounter = 0;
+
+  /// How often a picture was sent to the server, and what was downloaded ("id:size").
+  int photoUploads = 0;
+  final List<String> photoDownloads = [];
+
+  /// When set, sending a picture answers with this error code (400).
+  String? photoFails;
+
+  /// What the open product databases "know", by barcode: name, brand, quantity.
+  final Map<String, Map<String, String>> externalInfo = {};
+
+  /// The codes the app asked the databases about, in order.
+  final List<String> externalAsked = [];
+
+  /// When true, the online lookup answers with a server error.
+  bool externalFails = false;
+
+  /// The costs the server was asked to set: (product id, unit cost).
+  final List<(String, String)> costsSet = [];
+
+  /// When set, entering a cost answers with this error code (409).
+  String? costFails;
 
   final List<String> resetRequests = [];
   String? passwordResetTo;
@@ -615,6 +648,8 @@ class FakeServer {
     }
     out['price_tmt'] = tmt;
     out['price_rate_missing'] = currency != 'TMT' && rate == null;
+    final stored = photosData['${raw['id']}'];
+    out['photo'] = stored == null ? null : {'version': stored.version};
     out['category'] = _ref(categoriesData, raw['category']);
     out['brand'] = _ref(brandsData, raw['brand']);
     out['unit'] = unitsData.firstWhere((u) => u['id'] == raw['unit']);
@@ -720,6 +755,22 @@ class FakeServer {
       return _json(201, entry);
     }
 
+    if (rest == 'barcodes/info/' && method == 'GET') {
+      final code = (request.url.queryParameters['code'] ?? '').trim();
+      externalAsked.add(code);
+      if (externalFails) return _error(500, 'server_error');
+      final info = externalInfo[code];
+      return _json(200, {
+        'code': code,
+        'found': info != null,
+        'name': info?['name'] ?? '',
+        'brand': info?['brand'] ?? '',
+        'quantity': info?['quantity'] ?? '',
+        'source': info == null ? '' : 'Open Beauty Facts',
+        'unavailable': false,
+      });
+    }
+
     if (rest == 'barcodes/lookup/' && method == 'GET') {
       final code = (request.url.queryParameters['code'] ?? '').trim();
       // like the server: a barcode first, then the article number (any letter case)
@@ -772,6 +823,77 @@ class FakeServer {
       productsData.add(created);
       return _json(201, _present(created));
     }
+    if (rest == 'catalog/to-complete/' && method == 'GET') {
+      if (!permissions.contains('catalog.manage')) {
+        return _error(403, 'permission_denied');
+      }
+      return _json(200, {
+        'count': toCompleteData.length,
+        'results': toCompleteData,
+      });
+    }
+    final photo = RegExp(r'^products/([^/]+)/photo/$').firstMatch(rest);
+    if (photo != null) {
+      final id = photo.group(1)!;
+      final product = productsData.where((p) => p['id'] == id).firstOrNull;
+      if (product == null) return _error(404, 'not_found');
+      if (method == 'GET') {
+        photoDownloads.add('$id:${request.url.queryParameters['size']}');
+        final stored = photosData[id];
+        if (stored == null) return _error(404, 'photo_not_found');
+        return http.Response.bytes(
+          stored.bytes,
+          200,
+          headers: {'content-type': 'image/jpeg'},
+        );
+      }
+      if (!permissions.contains('catalog.photo')) {
+        return _error(403, 'permission_denied');
+      }
+      if (method == 'POST') {
+        if (photoFails != null) return _error(400, photoFails!);
+        final raw = body['__multipart'] as Uint8List?;
+        final text = raw == null ? '' : latin1.decode(raw);
+        final start = text.indexOf('\r\n\r\n');
+        final end = text.lastIndexOf('\r\n--');
+        if (raw == null || start < 0 || end <= start) {
+          return _error(400, 'file_required');
+        }
+        photosData[id] = (
+          version: 'v${++_photoCounter}',
+          bytes: Uint8List.fromList(raw.sublist(start + 4, end)),
+        );
+        photoUploads++;
+        return _json(201, _present(product));
+      }
+      if (method == 'DELETE') {
+        photosData.remove(id);
+        return _json(200, _present(product));
+      }
+    }
+    final cost = RegExp(r'^products/([^/]+)/cost/$').firstMatch(rest);
+    if (cost != null && method == 'POST') {
+      if (!permissions.contains('cost.set')) {
+        return _error(403, 'permission_denied');
+      }
+      if (costFails != null) return _error(409, costFails!);
+      final id = cost.group(1)!;
+      costsSet.add((id, '${body['unit_cost']}'));
+      for (final item in toCompleteData.where((i) => i['id'] == id)) {
+        item['missing_cost'] = false;
+        item['stock_without_cost'] = '0.000';
+        item['sold_without_cost'] = '0.000';
+      }
+      toCompleteData.removeWhere(
+        (i) => i['missing_cost'] != true && i['missing_price'] != true,
+      );
+      return _json(200, {
+        'unit_cost': '${body['unit_cost']}',
+        'layers': 1,
+        'sale_lines': 0,
+        'return_lines': 0,
+      });
+    }
     final one = RegExp(r'^products/([^/]+)/$').firstMatch(rest);
     if (one != null) {
       final existing = productsData
@@ -784,6 +906,17 @@ class FakeServer {
         final err = _validateProduct(body, existing);
         if (err != null) return err;
         existing.addAll(body);
+        if (body['price_amount'] != null &&
+            double.tryParse('${body['price_amount']}') != 0) {
+          for (final item in toCompleteData.where(
+            (i) => i['id'] == existing['id'],
+          )) {
+            item['missing_price'] = false;
+          }
+          toCompleteData.removeWhere(
+            (i) => i['missing_cost'] != true && i['missing_price'] != true,
+          );
+        }
         return _json(200, _present(existing));
       }
     }

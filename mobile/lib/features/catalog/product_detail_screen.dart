@@ -10,6 +10,7 @@ import '../workspace/unsaved_work.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
 import 'product_form_screen.dart';
+import 'product_photo.dart';
 import 'reorder_levels_screen.dart';
 
 /// One product, read-only, with edit and archive for those who may. Closes with
@@ -117,6 +118,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    ProductPhotoSection(
+                      product: p,
+                      repository: widget.repository,
+                      canEdit: widget.session.can('catalog.photo'),
+                      onChanged: (updated) => setState(() {
+                        _product = updated;
+                        _changed = true;
+                      }),
+                    ),
+                    const SizedBox(height: 16),
                     SurfaceCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
