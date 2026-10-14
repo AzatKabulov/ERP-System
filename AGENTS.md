@@ -14,7 +14,7 @@ The repository contains a Flutter interface prototype under `mobile/`, using in-
 
 ## Before You Start
 
-1. Read this file, `docs/PRD.md`, `HANDOFF.md` (current state), and `PLAN.md` (phased delivery order).
+1. Read this file, `docs/START_HERE.md` (onboarding and team workflow), `docs/PRD.md`, `HANDOFF.md` (current state), and `PLAN.md` (phased delivery order).
 2. Read `docs/DESIGN_SYSTEM.md` before UI changes and `docs/ARCHITECTURE.md` before technical changes. The architecture distinguishes the current demonstration implementation from the planned production backend.
 3. Inspect the working tree, relevant source files, existing widgets and services, dependency manifests, version pins, and any more specific `AGENTS.md` instructions before editing.
 4. Follow the user's latest decisions. If documentation is stale, update the affected document as part of the authorized task rather than continuing with the old decision.
@@ -56,7 +56,7 @@ The repository contains a Flutter interface prototype under `mobile/`, using in-
 
 ## Design Rules
 
-- Follow `docs/DESIGN_SYSTEM.md`: off-white surfaces, electric-blue accents, restrained depth, and tablet-focused layouts. Distinguish provisional choices from established design tokens.
+- Follow `docs/DESIGN_SYSTEM.md`, which implements the owner's "Premium Minimalist ERP UI" Figma mock-up: warm ivory canvas, ink text, one flat cobalt accent, a thin brass detail, serif page titles, soft cards, and tablet-focused layouts. The owner likes that mock-up: do not restyle it; extend it with the shared widgets in `mobile/lib/widgets/common.dart`.
 - Build reusable Flutter themes and widgets rather than hardcoding separate styles in each screen.
 - Design for tablet portrait and landscape layouts, then adapt to smaller screens. Base layout decisions on available space rather than device names alone.
 - Provide readable contrast, text scaling, accessible labels, comfortable touch targets, and clear focus behavior where keyboard or scanner input is supported.
