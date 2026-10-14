@@ -33,6 +33,8 @@ class OwnerDashboardTests(DashboardCase):
                 "sales_today": {"count": 1, "total": "110.00"},  # S4, at the warehouse
                 "sales_month": {"count": 4, "total": "1317.50"},
                 "gross_profit_month": "429.00",  # net of the three returns
+                "without_cost_month": "0.00",
+                "to_complete_count": 0,
                 "expenses_month": "245.50",  # not September's rent, not the void expense
                 "inventory_value": "1594.00",
                 "low_stock_count": 3,
@@ -89,7 +91,8 @@ class OwnerDashboardTests(DashboardCase):
     def test_sections_the_role_may_not_see_are_left_out(self):
         cases = {
             "sales.view": {"sales_today", "sales_month"},
-            "sales.cost.view": {"gross_profit_month"},
+            "sales.cost.view": {"gross_profit_month", "without_cost_month"},
+            "catalog.manage": {"to_complete_count"},
             "expense.view": {"expenses_month"},
             "stock.cost.view": {"inventory_value"},
             "stock.view": {"low_stock_count"},
@@ -183,6 +186,8 @@ class EmptyBusinessTests(DashboardCase):
                 "sales_today": {"count": 0, "total": "0.00"},
                 "sales_month": {"count": 0, "total": "0.00"},
                 "gross_profit_month": "0.00",
+                "without_cost_month": "0.00",
+                "to_complete_count": 0,
                 "expenses_month": "0.00",
                 "inventory_value": "0.00",
                 "low_stock_count": 0,

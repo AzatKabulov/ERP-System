@@ -171,3 +171,25 @@ class ReorderSetting(UUIDModel, TimestampedModel):
                 name="catalog_reorder_target_ge_min",
             ),
         ]
+
+
+class ProductPhoto(models.Model):
+    """The picture of a product, so people can find it by looking: one per product, replaced when
+    a new one is taken. Two small JPEG files (a thumbnail for lists and a larger one for the
+    product page) live under the private files root; this row only knows which version is current.
+    The version changes with every new picture, so the app can keep a downloaded picture for as
+    long as it has not changed."""
+
+    product = models.OneToOneField(
+        Product, primary_key=True, on_delete=models.CASCADE, related_name="photo"
+    )
+    business = models.ForeignKey("businesses.Business", on_delete=models.PROTECT, related_name="+")
+    version = models.UUIDField()
+    full_size = models.PositiveIntegerField()  # bytes
+    thumb_size = models.PositiveIntegerField()  # bytes
+    updated_by = models.ForeignKey("accounts.User", on_delete=models.PROTECT, related_name="+")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def storage_name(self, size: str) -> str:
+        """Where one of the two files is, relative to the private files root."""
+        return f"{self.business_id}/product-photos/{self.product_id}/{self.version}-{size}.jpg"

@@ -87,6 +87,9 @@ class SaleLine(UUIDModel, AppendOnlyModel):
     line_total = models.DecimalField(max_digits=14, decimal_places=2)
     # What the goods cost (FIFO, from the stock movements). Exact, so five decimals.
     cost_total = models.DecimalField(max_digits=18, decimal_places=5)
+    # False when some of the goods came from a batch received without a cost: `cost_total` is
+    # then a placeholder and the line stays out of the profit until a `CostCorrection` exists.
+    cost_known = models.BooleanField(default=True)
     # Copied from the product so a later catalog edit never changes the entitlement.
     warranty_months = models.PositiveSmallIntegerField(default=0)
     warranty_terms = models.TextField(blank=True)
@@ -162,6 +165,8 @@ class SaleReturnLine(UUIDModel, AppendOnlyModel):
     refund_amount = models.DecimalField(max_digits=14, decimal_places=2)  # TMT
     # What the goods cost when they were sold (FIFO), carried back with them. Five decimals.
     cost_total = models.DecimalField(max_digits=18, decimal_places=5)
+    # As on the sale line: False while the cost is only a placeholder.
+    cost_known = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["position", "id"]
@@ -194,5 +199,33 @@ class ReturnInspection(UUIDModel, AppendOnlyModel):
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(quantity__gt=0), name="sales_inspection_quantity_positive"
+            ),
+        ]
+
+
+class CostCorrection(UUIDModel, AppendOnlyModel):
+    """The real cost of goods that were sold or returned before it was known. Written once, for
+    a sale line or a return line, when somebody enters the cost of a product: `delta` is
+    what must be added to the line's `cost_total`, so the profit of the day it was sold becomes
+    right without rewriting the sale."""
+
+    business = models.ForeignKey("businesses.Business", on_delete=models.PROTECT, related_name="+")
+    sale_line = models.OneToOneField(
+        SaleLine, null=True, blank=True, on_delete=models.PROTECT, related_name="correction"
+    )
+    return_line = models.OneToOneField(
+        SaleReturnLine, null=True, blank=True, on_delete=models.PROTECT, related_name="correction"
+    )
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=2)  # the cost that was entered
+    delta = models.DecimalField(max_digits=18, decimal_places=5)
+    created_by = models.ForeignKey("accounts.User", on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(sale_line__isnull=False, return_line__isnull=True)
+                | models.Q(sale_line__isnull=True, return_line__isnull=False),
+                name="sales_correction_one_line",
             ),
         ]

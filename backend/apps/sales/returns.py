@@ -74,8 +74,10 @@ def _check_window(business, sale, line) -> None:
 
 
 def _slices(business, sale, line, skip: Decimal, quantity: Decimal) -> list[tuple]:
-    """(quantity, unit cost) pieces to bring back: the sale's own FIFO slices of this product
-    in the order they were taken, leaving out what earlier returns already brought back."""
+    """(quantity, unit cost, cost known) pieces to bring back: the sale's own FIFO slices of this
+    product in the order they were taken, leaving out what earlier returns already brought back.
+    The cost is the batch's current one: it differs from the cost at the time of the sale only
+    when the real cost of goods received without one was entered later."""
     rows = (
         StockMovement.objects.filter(
             business=business,
@@ -85,11 +87,11 @@ def _slices(business, sale, line, skip: Decimal, quantity: Decimal) -> list[tupl
             quantity__lt=0,
         )
         .order_by("layer__layer_no", "id")
-        .values_list("quantity", "unit_cost")
+        .values_list("quantity", "layer__unit_cost", "layer__cost_known")
     )
     pieces: list[tuple] = []
     need = quantity
-    for movement_quantity, unit_cost in rows:
+    for movement_quantity, unit_cost, known in rows:
         available = -movement_quantity
         if skip >= available:
             skip -= available
@@ -97,7 +99,7 @@ def _slices(business, sale, line, skip: Decimal, quantity: Decimal) -> list[tupl
         available -= skip
         skip = ZERO
         take = min(available, need)
-        pieces.append((take, unit_cost))
+        pieces.append((take, unit_cost, known))
         need -= take
         if need == ZERO:
             break
@@ -172,13 +174,14 @@ def create_return(
                 refund = min(_money(quantity * line.unit_price), line.line_total - refunded)
             refund = max(refund, ZERO)
             pieces = _slices(business, sale, line, returned, quantity)
-            for take, unit_cost in pieces:
+            for take, unit_cost, known in pieces:
                 stock_lines.append(
                     inventory.Line(
                         product=line.product,
                         location=sale.location,
                         quantity=take,
                         unit_cost=unit_cost,
+                        cost_known=known,
                         movement_type=MovementType.RETURN_IN,
                         condition=row["condition"],
                     )
@@ -189,7 +192,8 @@ def create_return(
                     "quantity": quantity,
                     "condition": row["condition"],
                     "refund": refund,
-                    "cost": sum((take * cost for take, cost in pieces), ZERO),
+                    "cost": sum((take * cost for take, cost, _ in pieces), ZERO),
+                    "cost_known": all(known for _, _, known in pieces),
                 }
             )
         sale_return = SaleReturn(
@@ -228,6 +232,7 @@ def create_return(
                     condition=b["condition"],
                     refund_amount=b["refund"],
                     cost_total=b["cost"],
+                    cost_known=b["cost_known"],
                 )
                 for index, b in enumerate(built)
             ]
@@ -328,6 +333,7 @@ def inspect_return(business, actor, membership, return_id, rows: list[dict]) -> 
                     location=sale_return.location,
                     quantity=-m.quantity,
                     unit_cost=m.unit_cost,
+                    cost_known=m.layer.cost_known,
                     movement_type=MovementType.INSPECTION_IN,
                     condition=outcome_by_product[m.product_id],
                 )

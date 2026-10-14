@@ -84,6 +84,10 @@ class CostLayer(UUIDModel):
     unit_cost = models.DecimalField(
         max_digits=14, decimal_places=2, validators=[MinValueValidator(0)]
     )  # TMT
+    # False for goods received without a cost: `unit_cost` is then only a placeholder (the
+    # product's default cost or zero) until somebody enters the real cost. The flag follows the
+    # goods through transfers and returns, and profit leaves such sales out (reports).
+    cost_known = models.BooleanField(default=True)
     quantity_initial = models.DecimalField(max_digits=14, decimal_places=3)
     quantity_remaining = models.DecimalField(max_digits=14, decimal_places=3)
     created_at = models.DateTimeField(auto_now_add=True)

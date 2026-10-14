@@ -46,3 +46,12 @@ class ResetRequestIdentityThrottle(_HashedIdentityThrottle):
 
 class ResetConfirmIPThrottle(_IPThrottle):
     scope = "reset_confirm_ip"
+
+
+class BarcodeLookupThrottle(SimpleRateThrottle):
+    """A scanner can ask many times; every asked code may cost a call to a public database."""
+
+    scope = "barcode_lookup"
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {"scope": self.scope, "ident": str(request.user.pk)}

@@ -109,20 +109,22 @@ class CostTests(IntakeCase):
         layer = CostLayer.objects.get(balance__product=self.w.pad)
         self.assertEqual((layer.unit_cost, layer.quantity_remaining), (D("35.50"), D(4)))
 
-    def test_without_a_cost_the_default_purchase_cost_is_used_but_not_counted_as_known(self):
+    def test_without_a_cost_the_default_purchase_cost_is_used_and_is_a_known_cost(self):
         self.w.pad.default_purchase_cost = D("40.00")
         self.w.pad.save()
         data = self.received(client=self.owner)
         self.assertEqual(
-            (data["lines"][0]["unit_cost"], data["lines"][0]["cost_known"]), ("40.00", False)
+            (data["lines"][0]["unit_cost"], data["lines"][0]["cost_known"]), ("40.00", True)
         )
-        self.assertEqual(CostLayer.objects.get().unit_cost, D("40.00"))
+        layer = CostLayer.objects.get()
+        self.assertEqual((layer.unit_cost, layer.cost_known), (D("40.00"), True))
 
     def test_without_any_cost_the_layer_costs_zero_and_says_so(self):
         data = self.received(client=self.owner)
         self.assertEqual(
             (data["lines"][0]["unit_cost"], data["lines"][0]["cost_known"]), ("0.00", False)
         )
+        self.assertFalse(CostLayer.objects.get().cost_known)
 
     def test_a_role_that_cannot_see_costs_cannot_enter_one(self):
         response = self.receive(lines=[self.line(self.w.pad, 5, "10.00")])
