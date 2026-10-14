@@ -163,8 +163,9 @@ class StockIntakeLine(UUIDModel, AppendOnlyModel):
     product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="+")
     quantity = models.DecimalField(max_digits=14, decimal_places=3)
     # What the goods cost per unit (TMT). Optional for the person receiving: when it was not
-    # entered, the product's default purchase cost (or zero) is used and `cost_known` is False,
-    # so a later correction or report can tell a real cost from a placeholder.
+    # entered, the product's default purchase cost is used (a known cost) or, with none, zero
+    # and `cost_known` is False, so a later correction or report can tell a real cost from a
+    # placeholder.
     unit_cost = models.DecimalField(max_digits=14, decimal_places=2)
     cost_known = models.BooleanField(default=False)
 

@@ -42,7 +42,7 @@ QUERY_LIMITS = {
     "reports/purchasing/export/": 8,
     "reports/returns/export/": 6,
     "reports/expenses/export/": 4,
-    "dashboard/": 15,
+    "dashboard/": 16,
     "audit/": 3,
     "audit/actions/": 2,
 }

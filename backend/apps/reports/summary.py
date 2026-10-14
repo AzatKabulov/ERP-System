@@ -9,6 +9,9 @@ the result stay separate measures:
 * inventory_value, low_stock_count and open_orders_count are snapshots of now (restricted to the
   locations in scope), not figures of the period.
 
+`without_cost` and `without_cost_lines` say how much of the period's sales the profit leaves out
+because the goods were received without a cost (see `apps.sales.costs`).
+
 Dashboard (`dashboard.view`): a flat object with ONLY the sections the caller may see, for the
 caller's own locations. "Today" and "this month" are calendar days in the business time zone;
 this month runs from its first day to today. Sales figures are sale totals (revenue); the gross
@@ -23,6 +26,7 @@ from apps.audit.models import AuditEvent
 from apps.audit.serializers import AuditEventSerializer
 from apps.businesses.permissions import has_permission
 from apps.purchasing import reorder
+from apps.sales import costs
 from apps.warranties.models import WarrantyClaim
 
 from . import expenses as expense_figures
@@ -78,7 +82,11 @@ def dashboard(request) -> dict:
         out["sales_today"] = {"count": made["today_count"], "total": money(made["today_total"])}
         out["sales_month"] = {"count": made["month_count"], "total": money(made["month_total"])}
     if rights.sales_cost:
-        out["gross_profit_month"] = sales_figures.figures(scope, month, rights)["gross_profit"]
+        month_figures = sales_figures.figures(scope, month, rights)
+        out["gross_profit_month"] = month_figures["gross_profit"]
+        out["without_cost_month"] = month_figures["without_cost"]
+    if has_permission(role, "catalog.manage"):
+        out["to_complete_count"] = costs.count_to_complete(business)
     if rights.expenses:
         out["expenses_month"] = money(expense_figures.expenses_total(scope, month))
     if rights.stock_cost:

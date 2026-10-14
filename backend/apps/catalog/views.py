@@ -1,9 +1,12 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
+from apps.accounts.throttles import BarcodeLookupThrottle
+from apps.attachments.services import MAX_BYTES, too_large
 from apps.audit import services as audit
 from apps.businesses.access import (
     BusinessAPIView,
@@ -16,7 +19,7 @@ from apps.common.errors import ApiError
 from apps.common.negotiation import IgnoreClientContentNegotiation
 from apps.common.uploads import declared_size_exceeds
 
-from . import csvio, services
+from . import csvio, lookup, photos, services
 from .models import Barcode, Brand, Category, Product, ReorderSetting, Unit
 from .serializers import (
     BrandSerializer,
@@ -40,7 +43,7 @@ def _product_context(request):
 def _products(business):
     return (
         Product.objects.filter(business=business)
-        .select_related("category", "brand", "unit")
+        .select_related("category", "brand", "unit", "photo")
         .prefetch_related("barcodes")
     )
 
@@ -135,6 +138,97 @@ class BarcodeLookupView(BusinessAPIView):
                 "barcode_not_found", "No active product has this barcode", status_code=404
             )
         return Response(ProductSerializer(product, context=_product_context(request)).data)
+
+
+class BarcodeInfoView(BusinessAPIView):
+    """Read-only: what the public open databases say about a barcode (a name to start from, never
+    saved by itself). `found: false` is normal and says nothing is known; `unavailable: true`
+    means the databases could not be reached (or the lookup is switched off)."""
+
+    required_permission = "catalog.view"
+    throttle_classes = [BarcodeLookupThrottle]
+
+    def get(self, request, business_id):
+        code = services.normalize_code(request.query_params.get("code", ""))
+        if not lookup.valid_gtin(code):
+            raise ApiError(
+                "validation_error",
+                "Not a valid barcode number",
+                fields={"code": [{"code": "invalid", "message": "Not a valid barcode number"}]},
+            )
+        info = lookup.lookup(code)
+        return Response(
+            {
+                "code": code,
+                "found": info.found,
+                "name": info.name,
+                "brand": info.brand,
+                "quantity": info.quantity,
+                "source": info.source,
+                "unavailable": info.unavailable,
+            }
+        )
+
+
+class ProductPhotoView(BusinessAPIView):
+    """The picture of one product. GET sends it (`size=thumb` for lists and the gallery, `full` for
+    the product page) to anyone who may see the catalog; POST (multipart, field `file`) replaces it
+    and DELETE removes it, for anyone who may add pictures. What is stored is made from the upload
+    (see `photos.py`), never the upload itself."""
+
+    permission_by_method = {
+        "GET": "catalog.view",
+        "POST": "catalog.photo",
+        "DELETE": "catalog.photo",
+    }
+    parser_classes = [MultiPartParser]
+    content_negotiation_class = IgnoreClientContentNegotiation
+
+    def _product(self, request, product_id):
+        return get_object_or_404(_products(request.business), pk=product_id)
+
+    def _answer(self, request, product_id, status=200):
+        product = self._product(request, product_id)
+        return Response(
+            ProductSerializer(product, context=_product_context(request)).data, status=status
+        )
+
+    def get(self, request, business_id, product_id):
+        product = self._product(request, product_id)
+        size = request.query_params.get("size", "full")
+        if size not in photos.SIZES:
+            raise ApiError(
+                "validation_error",
+                "size must be thumb or full",
+                fields={"size": [{"code": "invalid", "message": "thumb or full"}]},
+            )
+        try:
+            photo = product.photo
+        except ObjectDoesNotExist:
+            raise ApiError(
+                "photo_not_found", "This product has no picture", status_code=404
+            ) from None
+        etag = f'"{photo.version}-{size}"'
+        if request.META.get("HTTP_IF_NONE_MATCH") == etag:
+            response = HttpResponse(status=304)
+        else:
+            response = HttpResponse(photos.read_photo(photo, size), content_type="image/jpeg")
+        response["ETag"] = etag
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Cache-Control"] = "private, max-age=86400"
+        return response
+
+    def post(self, request, business_id, product_id):
+        if declared_size_exceeds(request, MAX_BYTES):
+            raise too_large()
+        product = self._product(request, product_id)
+        photos.set_photo(request.business, request.user, product, request.FILES.get("file"))
+        return self._answer(request, product_id, status=201)
+
+    def delete(self, request, business_id, product_id):
+        product = self._product(request, product_id)
+        photos.remove_photo(request.business, request.user, product)
+        return self._answer(request, product_id)
 
 
 class ReorderSettingsView(BusinessAPIView):

@@ -16,13 +16,15 @@ from apps.businesses.access import (
     restrict_to_locations,
 )
 from apps.businesses.permissions import has_permission
+from apps.catalog.models import Product
 from apps.common.errors import ApiError
 from apps.common.negotiation import IgnoreClientContentNegotiation
 
-from . import returns, services
+from . import costs, returns, services
 from .documents import LABELS, number, render_receipt
-from .models import Customer, Sale, SaleLine, SaleReturn
+from .models import Customer, Sale, SaleLine, SaleReturn, SaleReturnLine
 from .serializers import (
+    CostInputSerializer,
     CustomerSerializer,
     InspectionInputSerializer,
     ReturnInputSerializer,
@@ -41,7 +43,7 @@ def _sales(request):
         .prefetch_related(
             Prefetch(
                 "lines",
-                queryset=SaleLine.objects.annotate(
+                queryset=SaleLine.objects.select_related("correction").annotate(
                     returned_quantity=Coalesce(
                         Sum("return_lines__quantity"),
                         Value(0, output_field=DecimalField(max_digits=14, decimal_places=3)),
@@ -202,7 +204,14 @@ def _returns(request):
     return restrict_to_locations(
         SaleReturn.objects.filter(business=request.business)
         .select_related("sale", "location", "created_by")
-        .prefetch_related("lines__inspections"),
+        .prefetch_related(
+            Prefetch(
+                "lines",
+                queryset=SaleReturnLine.objects.select_related("correction").prefetch_related(
+                    "inspections"
+                ),
+            )
+        ),
         request.membership,
     )
 
@@ -280,3 +289,49 @@ class ReturnInspectView(BusinessAPIView):
         return run_idempotent(
             request, business=request.business, action="return_inspect", handler=handler
         )
+
+
+class ToCompleteView(BusinessAPIView):
+    """Products that still need a selling price or a cost, for the owner or a manager to fill in."""
+
+    required_permission = "catalog.manage"
+
+    def get(self, request, business_id):
+        rows = costs.products_to_complete(request.business)
+        return Response(
+            {
+                "count": len(rows),
+                "results": [
+                    {
+                        "id": str(r["product"].pk),
+                        "sku": r["product"].sku,
+                        "name": r["product"].name,
+                        "unit_symbol": r["product"].unit.symbol,
+                        "unit_decimals": r["product"].unit.decimal_places,
+                        "price_amount": str(r["product"].price_amount),
+                        "price_currency": r["product"].price_currency,
+                        "missing_price": r["missing_price"],
+                        "missing_cost": r["missing_cost"],
+                        "stock_without_cost": str(r["stock_without_cost"]),
+                        "sold_without_cost": str(r["sold_without_cost"]),
+                    }
+                    for r in rows
+                ],
+            }
+        )
+
+
+class ProductCostView(BusinessAPIView):
+    """Enter the real cost of a product: batches that were waiting for a cost get it and the sales
+    and returns made from them are corrected (see `costs.set_product_cost`)."""
+
+    required_permission = "cost.set"
+
+    def post(self, request, business_id, product_id):
+        product = get_object_or_404(Product, pk=product_id, business=request.business)
+        serializer = CostInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        done = costs.set_product_cost(
+            request.business, request.user, product, serializer.validated_data["unit_cost"]
+        )
+        return Response({"unit_cost": str(serializer.validated_data["unit_cost"]), **done})

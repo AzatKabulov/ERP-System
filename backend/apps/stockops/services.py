@@ -73,6 +73,7 @@ def _carry(posted, location, condition) -> list[inventory.Line]:
             location=location,
             quantity=-m.quantity,
             unit_cost=m.unit_cost,
+            cost_known=m.layer.cost_known,
             movement_type=MovementType.TRANSFER_IN,
             condition=condition,
         )
@@ -459,16 +460,19 @@ def submit_count(business, actor, membership, count_id) -> StockCount:
     return count
 
 
-def _surplus_cost(business, product, location) -> Decimal:
-    """Unit cost for goods found that the system did not know about: the latest layer here,
-    else the latest anywhere, else the product's default purchase cost, else zero (provisional,
+def _surplus_cost(business, product, location) -> tuple[Decimal, bool]:
+    """Unit cost for goods found that the system did not know about, and whether that cost is
+    known: the latest layer here, else the latest anywhere (both keep their own flag), else the
+    product's default purchase cost, else zero, which is only a placeholder (provisional,
     PLAN.md D7)."""
     layers = CostLayer.objects.filter(business=business, balance__product=product)
     here = layers.filter(balance__location=location).order_by("-created_at").first()
     layer = here or layers.order_by("-created_at").first()
     if layer is not None:
-        return layer.unit_cost
-    return product.default_purchase_cost or ZERO
+        return layer.unit_cost, layer.cost_known
+    if product.default_purchase_cost is not None:
+        return product.default_purchase_cost, True
+    return ZERO, False
 
 
 def approve_count(business, actor, membership, count_id, reason: str) -> StockCount:
@@ -487,6 +491,11 @@ def approve_count(business, actor, membership, count_id, reason: str) -> StockCo
         reason = (reason or "").strip()
         if deltas:
             reason = _need_reason(reason)
+            surplus = {
+                line.pk: _surplus_cost(business, line.product, count.location)
+                for line, delta in deltas
+                if delta > 0
+            }
             inventory.post(
                 business,
                 actor,
@@ -495,11 +504,8 @@ def approve_count(business, actor, membership, count_id, reason: str) -> StockCo
                         product=line.product,
                         location=count.location,
                         quantity=delta,
-                        unit_cost=(
-                            _surplus_cost(business, line.product, count.location)
-                            if delta > 0
-                            else None
-                        ),
+                        unit_cost=surplus[line.pk][0] if delta > 0 else None,
+                        cost_known=surplus[line.pk][1] if delta > 0 else True,
                         movement_type=(
                             MovementType.ADJUSTMENT_IN if delta > 0 else MovementType.ADJUSTMENT_OUT
                         ),
@@ -577,7 +583,8 @@ def receive_intake(business, actor, membership, data: dict) -> StockIntake:
         lines = []
         for position, row in enumerate(rows, start=1):
             given = row.get("unit_cost")
-            cost = given if given is not None else (row["product"].default_purchase_cost or ZERO)
+            default = row["product"].default_purchase_cost
+            cost = given if given is not None else (default if default is not None else ZERO)
             lines.append(
                 StockIntakeLine(
                     intake=intake,
@@ -585,7 +592,7 @@ def receive_intake(business, actor, membership, data: dict) -> StockIntake:
                     product=row["product"],
                     quantity=row["quantity"],
                     unit_cost=cost,
-                    cost_known=given is not None,
+                    cost_known=given is not None or default is not None,
                 )
             )
         StockIntakeLine.objects.bulk_create(lines)
@@ -598,6 +605,7 @@ def receive_intake(business, actor, membership, data: dict) -> StockIntake:
                     location=location,
                     quantity=line.quantity,
                     unit_cost=line.unit_cost,
+                    cost_known=line.cost_known,
                     movement_type=MovementType.INTAKE,
                 )
                 for line in lines

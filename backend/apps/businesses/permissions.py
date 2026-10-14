@@ -20,6 +20,9 @@ MATRIX: dict[str, frozenset[str]] = {
     "catalog.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
     "catalog.manage": frozenset({Role.OWNER, Role.MANAGER}),
     "catalog.cost.view": frozenset({Role.OWNER, Role.MANAGER}),
+    # a picture of a product (owner 2026-10-14: the workers add them so goods can be found by
+    # sight); it changes nothing about stock or money, so every member may
+    "catalog.photo": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
     "catalog.import": frozenset({Role.OWNER, Role.MANAGER}),
     "catalog.export": frozenset({Role.OWNER, Role.MANAGER}),
     # inventory
@@ -60,6 +63,8 @@ MATRIX: dict[str, frozenset[str]] = {
     # by roles that may see costs)
     "intake.view": frozenset({Role.OWNER, Role.MANAGER, Role.WAREHOUSE}),
     "intake.create": frozenset({Role.OWNER, Role.MANAGER, Role.WAREHOUSE}),
+    # entering the real cost of goods that were received without one (owner and manager)
+    "cost.set": frozenset({Role.OWNER, Role.MANAGER}),
     # private files (receipt photos) and shop expenses (owner and manager only)
     "attachment.upload": frozenset({Role.OWNER, Role.MANAGER}),
     "attachment.view": frozenset({Role.OWNER, Role.MANAGER}),

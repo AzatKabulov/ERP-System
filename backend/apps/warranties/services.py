@@ -33,6 +33,7 @@ from apps.inventory import services as inventory
 from apps.inventory.models import Condition, MovementType, StockMovement
 from apps.purchasing.services import next_number
 from apps.sales import returns
+from apps.sales.costs import effective_line_cost
 from apps.sales.models import Sale, SaleLine, SaleReturn, SaleReturnLine
 
 from .entitlement import warranty_until
@@ -181,7 +182,8 @@ def add_note(business, actor, membership, claim_id, note: str) -> WarrantyClaim:
 def _replace(business, actor, claim, sale, line) -> None:
     """One posting for the swap: the new unit leaves sellable stock, the defective one arrives
     in the damaged pile, valued at what the sold unit cost (average over the sold line)."""
-    unit_cost = (line.cost_total / line.quantity).quantize(CENT, rounding=ROUND_HALF_UP)
+    total, known = effective_line_cost(line)
+    unit_cost = (total / line.quantity).quantize(CENT, rounding=ROUND_HALF_UP)
     inventory.post(
         business,
         actor,
@@ -198,6 +200,7 @@ def _replace(business, actor, claim, sale, line) -> None:
                 location=sale.location,
                 quantity=claim.quantity,
                 unit_cost=unit_cost,
+                cost_known=known,
                 movement_type=MovementType.WARRANTY_IN,
                 condition=Condition.DAMAGED,
             ),
