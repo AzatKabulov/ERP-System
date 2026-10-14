@@ -47,6 +47,8 @@ Show sales totals, inventory value, low-stock alerts, reorder suggestions, and r
 
 ### Products and Barcode Scanning
 
+> **Added 2026-10-14 (owner):** goods are received by scanning one item and typing the count; an unknown barcode gets a suggested name from public open databases (asked by the server, only the digits leave it); a price or a cost may be left empty and filled in later from a "to complete" list, and profit leaves out sales whose cost is not known yet instead of treating the goods as free. The products page has a gallery view as well as a list. Each product can have a picture, added by any worker with the camera or from the gallery, so goods can be found by sight (shown in the gallery, list, product page and sales search). The scanner's role is decided by the screen: a scan while receiving adds, a scan at the till sells.
+
 Manage names, SKUs, barcodes, categories, brands, units, purchase costs, selling prices, and warranty terms. Support product lookup by text or barcode during sales, receiving, and stock counts.
 
 The first Android release must support at least one agreed scanning method on a real tablet. The agreed first method is the tablet camera (decided 2026-10-06), always with manual entry as a fallback. Typed entry alone does not satisfy the scanning acceptance check. External scanner support is tested separately once a device is chosen; support for arbitrary scanners is not assumed.
@@ -57,7 +59,11 @@ Track stock separately for each location, with optional shelf or bin information
 
 Transfers distinguish goods dispatched, in transit, and received. Goods must not appear available at both locations during a transfer.
 
+Receiving by scanning: when a box arrives, staff scan every item with a hand scanner or the camera; each scan adds one to that product's line, identical items add up, and one tap puts the counted list on the shelf. A code the catalog does not know is added with just a name. The list survives a crash. The cost is optional, so the main purpose, knowing what is on the shelf, never waits for prices.
+
 ### Purchasing and Reordering
+
+> **Scope change (owner, 2026-10-14): this feature is removed.** Purchasing was judged unnecessary and too complicated for the shops. Goods arrive by scanning (see below); suppliers, purchase orders, deliveries, supplier returns and the reorder list are no longer part of the product. Minimum stock per place stays, so items below the minimum are still shown. The text below describes what was built before the change (the server code is still being removed, PLAN 9.10).
 
 Manage suppliers and purchase orders. Record partial deliveries and outstanding quantities. Stock increases when goods are received, not when an order is created.
 
@@ -118,6 +124,7 @@ Restoration is a controlled administrator operation. CSV exports alone do not sa
 5. Stock count: staff record physical quantities, review discrepancies, and an authorized user approves explained adjustments.
 6. Return: staff find an original sale, record eligible returned items and their condition, and record the refund and appropriate stock changes.
 7. Warranty: staff find the original sale, check entitlement, open a claim, and record the resolution.
+9. Receiving by scanning: staff open a box, scan each item (hand scanner or camera), add any unknown product with a name, and put the counted list on the shelf; the same code scanned at the sale takes one piece off.
 8. Owner review: an owner filters reports to understand sales, expenses, stock value, and replenishment needs.
 
 ## Functional and Quality Requirements

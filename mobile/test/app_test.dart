@@ -40,7 +40,6 @@ void main() {
         'dashboard',
         'products',
         'inventory',
-        'purchasing',
         'sales',
         'expenses',
         'warranties',

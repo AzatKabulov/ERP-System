@@ -48,6 +48,8 @@ class ProductFormScreen extends StatefulWidget {
 }
 
 class _ProductFormScreenState extends State<ProductFormScreen> {
+  /// The database a suggested name came from (null when the name was typed).
+  String? _foundOnline;
   late final Future<_FormData> _data = _load();
   late final _sku = TextEditingController(text: widget.existing?.sku ?? '');
   late final _name = TextEditingController(text: widget.existing?.name ?? '');
@@ -124,6 +126,23 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     super.initState();
     if (widget.initialBarcode != null) _dirty = true;
     widget.unsaved.mark(this, dirty: _dirty);
+    final code = widget.initialBarcode;
+    if (widget.existing == null && code != null && looksLikeGtin(code)) {
+      // A scanned code the catalog does not know: offer the name the open databases have, unless
+      // the person has already typed one. A miss or a failure changes nothing.
+      widget.repository
+          .externalInfo(code)
+          .then((info) {
+            if (info == null || !mounted || _name.text.trim().isNotEmpty) {
+              return;
+            }
+            setState(() {
+              _name.text = info.displayName;
+              _foundOnline = info.source;
+            });
+          })
+          .catchError((_) {});
+    }
   }
 
   @override
@@ -324,6 +343,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 decoration: InputDecoration(
                   labelText: l.productName,
                   errorText: _fieldText('name'),
+                  helperText: _foundOnline == null
+                      ? null
+                      : l.productFoundOnline(_foundOnline!),
+                  helperMaxLines: 3,
                 ),
               ),
               const SizedBox(height: 16),

@@ -207,6 +207,8 @@ class EmptyBusinessTests(ReportsCase):
                 "returns_count": 0,
                 "cost_of_goods": "0.00",
                 "gross_profit": "0.00",
+                "without_cost": "0.00",
+                "without_cost_lines": 0,
                 "expenses": "0.00",
                 "result": "0.00",
                 "inventory_value": "0.00",
@@ -265,7 +267,7 @@ class QueryCountTests(ReportsCase):
         "reports/purchasing/": 7,
         "reports/returns/": 5,
         "reports/expenses/": 3,
-        "dashboard/": 15,
+        "dashboard/": 16,
         "audit/": 3,
         "audit/actions/": 2,
     }

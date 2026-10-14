@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../catalog/catalog_models.dart';
 import '../catalog/catalog_repository.dart';
+import '../catalog/product_photo.dart';
 import '../inventory/inventory_repository.dart';
 import '../inventory/quantity_input.dart';
 import '../returns/returns_repository.dart';
@@ -59,6 +60,7 @@ class SalesScreen extends StatefulWidget {
 
 class _SalesScreenState extends State<SalesScreen> {
   final _search = TextEditingController();
+  final _searchFocus = FocusNode();
   Timer? _debounce;
   List<Product> _results = const [];
   bool _searching = false;
@@ -92,6 +94,7 @@ class _SalesScreenState extends State<SalesScreen> {
     widget.unsaved.mark(this, dirty: false);
     _debounce?.cancel();
     _search.dispose();
+    _searchFocus.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -194,6 +197,32 @@ class _SalesScreenState extends State<SalesScreen> {
     } catch (_) {
       if (mounted) showFeedback(context, l.loadFailed);
     }
+  }
+
+  /// Enter in the search field. A hand scanner types the code of the item and presses Enter: when
+  /// the text is exactly a barcode or article number of a product, that product goes into the
+  /// cart (like a camera scan) and the field stays ready for the next item. Anything else is an
+  /// ordinary search, and a code nobody has also just searches (it says nothing, unlike a camera
+  /// scan, because the person may have been typing a name).
+  Future<void> _submitted(String text) async {
+    _debounce?.cancel();
+    final code = text.trim();
+    if (code.isNotEmpty && !code.contains(RegExp(r'\s'))) {
+      try {
+        final product = await widget.catalog.lookup(code);
+        if (!mounted) return;
+        if (product != null) {
+          _search.clear();
+          setState(() => _results = const []);
+          await _add(product);
+          if (mounted && !_searchFocus.hasFocus) _searchFocus.requestFocus();
+          return;
+        }
+      } catch (_) {
+        // no answer: fall through to the ordinary search, which reports the problem
+      }
+    }
+    if (mounted) _runSearch();
   }
 
   Future<void> _chooseCustomer() async {
@@ -340,10 +369,9 @@ class _SalesScreenState extends State<SalesScreen> {
           controller: _search,
           label: l.searchProducts,
           onChanged: _typed,
-          onSubmitted: (_) {
-            _debounce?.cancel();
-            _runSearch();
-          },
+          focusNode: _searchFocus,
+          keepFocusOnSubmit: true,
+          onSubmitted: _submitted,
           onScanned: _scanned,
         ),
         const SizedBox(height: 12),
@@ -375,7 +403,11 @@ class _SalesScreenState extends State<SalesScreen> {
           for (final product in _results)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: _ResultTile(product: product, onAdd: () => _add(product)),
+              child: _ResultTile(
+                product: product,
+                repository: widget.catalog,
+                onAdd: () => _add(product),
+              ),
             ),
       ],
     );
@@ -494,8 +526,13 @@ class _SalesScreenState extends State<SalesScreen> {
 }
 
 class _ResultTile extends StatelessWidget {
-  const _ResultTile({required this.product, required this.onAdd});
+  const _ResultTile({
+    required this.product,
+    required this.repository,
+    required this.onAdd,
+  });
   final Product product;
+  final CatalogRepository repository;
   final VoidCallback onAdd;
 
   @override
@@ -512,6 +549,13 @@ class _ResultTile extends StatelessWidget {
           padding: 14,
           child: Row(
             children: [
+              ProductPhoto(
+                product: product,
+                repository: repository,
+                width: 52,
+                height: 52,
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

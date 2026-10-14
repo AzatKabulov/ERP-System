@@ -225,10 +225,10 @@ class SingleWriterTests(APITestCase):
             if (
                 "tests" in parts
                 or "migrations" in parts
-                or str(relative) == "inventory/services.py"
+                or relative.as_posix() == "inventory/services.py"
             ):
                 continue
-            if write.search(path.read_text()):
+            if write.search(path.read_text(encoding="utf-8")):
                 offenders.append(str(relative))
         self.assertEqual(offenders, [])
 

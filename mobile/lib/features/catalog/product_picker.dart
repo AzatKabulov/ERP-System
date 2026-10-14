@@ -8,6 +8,7 @@ import '../scanning/barcode_input.dart';
 import '../shared/async_section.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
+import 'product_photo.dart';
 
 /// Asks which product a line is for: type a name, SKU or barcode, or scan the code.
 /// A scan only fills the search box; the person still taps the product to choose it.
@@ -146,6 +147,13 @@ class _ProductPickerDialogState extends State<_ProductPickerDialog> {
         final p = _items[index];
         return ListTile(
           key: ValueKey('picker-${p.sku}'),
+          leading: ProductPhoto(
+            product: p,
+            repository: widget.repository,
+            width: 44,
+            height: 44,
+            radius: 10,
+          ),
           title: Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis),
           subtitle: Text(
             [p.sku, ?p.brand?.name].join(' · '),

@@ -17,6 +17,8 @@ jobs:
     name: Mobile (format, analyze, test, web, Android debug APK)
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: write # only to publish the test build as a pre-release (see the last step)
     steps:
       - uses: actions/checkout@v4
 
@@ -98,6 +100,31 @@ jobs:
           name: erp-system-test-build
           path: ${{ runner.temp }}/test-build
           retention-days: 14
+
+      # Everything in ONE download for a Windows or Mac computer: the server code, the web app, the
+      # Android test app and the tool that starts it. Unzip, double-click START (scripts/package).
+      - name: Build ERP-Test.zip (the one-download test package)
+        run: |
+          mkdir -p "$RUNNER_TEMP/package"
+          bash scripts/package/make_test_package.sh \
+            "$RUNNER_TEMP/test-build/erp-system-test-web.zip" \
+            "$RUNNER_TEMP/test-build/erp-system-test-debug.apk" \
+            "$RUNNER_TEMP/package/ERP-Test.zip"
+
+      # The same files as plain downloads: the Android app can be tapped and installed straight
+      # from the release page on a phone (no zip to open). One pre-release, replaced on every push of
+      # a working branch; for testing only (unsigned debug build).
+      - name: Publish the test build as the pre-release "test-build"
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/claude/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete test-build --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
+          gh release create test-build --repo "$GITHUB_REPOSITORY" --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Latest test build ($GITHUB_REF_NAME)" \
+            --notes "Unsigned test build of $GITHUB_SHA. ERP-Test.zip is everything in one download: unzip it and double-click START.bat (Windows) or START.command (Mac). erp-system-test-debug.apk is the Android app alone (open this page on the phone and tap it; type the server address on its sign-in screen). erp-system-test-web.zip is the web app alone. For testing only." \
+            "$RUNNER_TEMP/package/ERP-Test.zip" "$RUNNER_TEMP/test-build/erp-system-test-debug.apk" "$RUNNER_TEMP/test-build/erp-system-test-web.zip"
 
   backend:
     name: Backend (lint, checks, tests on PostgreSQL)
@@ -183,3 +210,33 @@ jobs:
           docker logs api
           exit 1
 
+  # The no-Docker local run (docs/LOCAL_TEST.md): an embedded PostgreSQL, the server and the sample
+  # shop must start from nothing and let the owner sign in.
+  local-run:
+    name: Local run without Docker starts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Start it, wait for the health page, sign in as the owner
+        run: |
+          export ERP_SAMPLE_PASSWORD='Ci-Local-Passw0rd-1!'
+          setsid uv run --project backend --with pixeltable-pgserver==0.6.0 \
+            python scripts/local/run_local.py --data "$RUNNER_TEMP/local" --port 8000 \
+            > "$RUNNER_TEMP/local.log" 2>&1 &
+          server=$!
+          # stop the server and its database whatever happens: a process left running keeps the
+          # runner's clean-up step waiting
+          trap 'kill -TERM -- "-$server" 2>/dev/null || true; sleep 5' EXIT
+          ok=""
+          for _ in $(seq 1 120); do
+            if curl -sf http://127.0.0.1:8000/api/v1/health/ | grep -q '"ok"'; then ok=1; break; fi
+            sleep 2
+          done
+          if [ -z "$ok" ]; then echo "::error::the local run did not start"; cat "$RUNNER_TEMP/local.log"; exit 1; fi
+          code=$(curl -s -o "$RUNNER_TEMP/login.json" -w '%{http_code}' -X POST http://127.0.0.1:8000/api/v1/auth/login/ \
+            -H 'Content-Type: application/json' \
+            -d "{\"username\": \"owner\", \"password\": \"$ERP_SAMPLE_PASSWORD\"}")
+          if [ "$code" != "200" ]; then echo "::error::the owner could not sign in ($code)"; cat "$RUNNER_TEMP/login.json" "$RUNNER_TEMP/local.log"; exit 1; fi
+          echo "the local run started and the owner signed in"

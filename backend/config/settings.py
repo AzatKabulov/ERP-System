@@ -130,6 +130,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # permission check: never by static or media URLs. Keep this directory out of the web server's
 # document root, outside the code tree in production, and back it up with the database.
 PRIVATE_FILES_ROOT = Path(env.get("PRIVATE_FILES_ROOT", str(BASE_DIR / "private_files")))
+
+# Product names for scanned barcodes come from public open databases (apps/catalog/lookup.py).
+# The server asks; what leaves it is the barcode digits only. "false" sends nothing out.
+BARCODE_LOOKUP_ENABLED = env.get_bool("ERP_BARCODE_LOOKUP", True)
+BARCODE_LOOKUP_TIMEOUT = env.get_int("ERP_BARCODE_LOOKUP_TIMEOUT", 4)
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
@@ -156,6 +161,7 @@ REST_FRAMEWORK = {
         "reset_request_ip": "10/hour",
         "reset_request_identity": "3/hour",
         "reset_confirm_ip": "20/hour",
+        "barcode_lookup": "120/min",
     },
 }
 

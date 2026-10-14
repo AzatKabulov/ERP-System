@@ -19,79 +19,6 @@ class ManagementScreen extends StatelessWidget {
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
 
-  List<Widget> _purchasing(BuildContext context) {
-    final l = strings(context);
-    final orders = [
-      ('PO-001', 'brake', 20, 'Brembo'),
-      ('PO-002', 'oil', 24, 'Shell'),
-      ('PO-003', 'battery', 6, 'Varta'),
-    ];
-    return [
-      Text(
-        l.purchasingHint,
-        style: const TextStyle(color: AppColors.muted, height: 1.5),
-      ),
-      const SizedBox(height: 24),
-      for (final (id, productId, quantity, supplier) in orders)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: SurfaceCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(id, style: Theme.of(context).textTheme.titleMedium),
-                    StatusPill(
-                      label: store.orderReceived(id) ? l.received : l.expected,
-                      warning: !store.orderReceived(id),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  store.product(productId).name,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${l.supplier}: $supplier · ${l.quantity}: $quantity',
-                  style: const TextStyle(color: AppColors.muted),
-                ),
-                const SizedBox(height: 16),
-                GradientButton(
-                  label: l.receiveGoods,
-                  icon: Icons.download_outlined,
-                  onPressed: store.orderReceived(id)
-                      ? null
-                      : () async {
-                          if (!await confirmAction(
-                                context,
-                                l.receiveGoods,
-                                '${l.stockActionNotice}\n\n${locationLabel(l, store.location)}\n${store.product(productId).name} · $quantity',
-                              ) ||
-                              !context.mounted) {
-                            return;
-                          }
-                          if (store.receive(
-                            store.product(productId),
-                            quantity,
-                            orderId: id,
-                          )) {
-                            showFeedback(context, l.operationSaved);
-                          }
-                        },
-                ),
-              ],
-            ),
-          ),
-        ),
-    ];
-  }
-
   List<Widget> _expenses(BuildContext context) {
     final l = strings(context);
     return [
@@ -388,7 +315,6 @@ class ManagementScreen extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(24),
     children: switch (page) {
-      AppPage.purchasing => _purchasing(context),
       AppPage.expenses => _expenses(context),
       AppPage.warranties => _warranties(context),
       AppPage.reports => _reports(context),

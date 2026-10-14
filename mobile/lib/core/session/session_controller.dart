@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/api_client.dart';
 import '../api/api_exception.dart';
+import '../files/photo_cache.dart';
 import 'session_models.dart';
 
 enum SessionStatus {
@@ -31,6 +32,9 @@ class SessionController extends ChangeNotifier {
   bool _unreachable = false;
 
   SessionStatus get status => _status;
+
+  /// The device's preferences, for small per-person drafts kept between visits.
+  SharedPreferences get preferences => _prefs;
   UserProfile? get user => _user;
   List<MembershipInfo> get memberships => _memberships;
   MembershipInfo? get membership => _membership;
@@ -156,6 +160,7 @@ class SessionController extends ChangeNotifier {
   }
 
   void _clear() {
+    PhotoCache.instance.clear();
     _user = null;
     _memberships = const [];
     _membership = null;
