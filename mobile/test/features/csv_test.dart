@@ -188,6 +188,11 @@ void main() {
       await tapKey(tester, 'nav-products');
       await settle(tester);
       expect(tester.takeException(), isNull, reason: 'catalog');
+      if (size.width < 600) {
+        // On a phone import and export sit behind the "more" menu.
+        await tapKey(tester, 'catalog-more');
+        await settle(tester);
+      }
       await tapKey(tester, 'catalog-import');
       await settle(tester);
       await chooseFile(

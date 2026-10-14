@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/connectivity/connection_monitor.dart';
@@ -188,10 +189,10 @@ class _ReturnDetailScreenState extends State<ReturnDetailScreen> {
                           children: [
                             ListenableBuilder(
                               listenable: widget.monitor,
-                              builder: (context, _) => GradientButton(
+                              builder: (context, _) => PrimaryButton(
                                 key: ValueKey('rd-sellable-${line.id}'),
                                 label: l.returnInspectSellable,
-                                icon: Icons.check,
+                                icon: AppIcons.check,
                                 onPressed: _busy || !widget.monitor.online
                                     ? null
                                     : () => _decide(doc, line, 'sellable'),
@@ -202,7 +203,7 @@ class _ReturnDetailScreenState extends State<ReturnDetailScreen> {
                               onPressed: _busy || !widget.monitor.online
                                   ? null
                                   : () => _decide(doc, line, 'damaged'),
-                              icon: const Icon(Icons.heart_broken_outlined),
+                              icon: const AppIcon(AppIcons.warning),
                               label: Text(l.returnInspectDamaged),
                             ),
                           ],

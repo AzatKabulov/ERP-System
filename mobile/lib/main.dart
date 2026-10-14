@@ -25,7 +25,7 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   LicenseRegistry.addLicense(() async* {
-    for (final font in ['Inter', 'NotoSerif']) {
+    for (final font in ['Inter', 'NotoSerifDisplay', 'JetBrainsMono']) {
       final text = await rootBundle.loadString(
         'assets/fonts/$font-LICENSE.txt',
       );

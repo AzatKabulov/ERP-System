@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -77,7 +78,7 @@ class _ReorderLevelsCardState extends State<ReorderLevelsCard> {
               OutlinedButton.icon(
                 key: const ValueKey('pd-reorder-edit'),
                 onPressed: () => _edit(levels),
-                icon: const Icon(Icons.tune),
+                icon: const AppIcon(AppIcons.tune),
                 label: Text(l.reorderLevelsEdit),
               ),
             ],
@@ -282,10 +283,10 @@ class _ReorderLevelsScreenState extends State<ReorderLevelsScreen> {
                       ),
                     ),
                   const SizedBox(height: 16),
-                  GradientButton(
+                  PrimaryButton(
                     key: const ValueKey('rl-save'),
                     label: l.save,
-                    icon: Icons.check,
+                    icon: AppIcons.check,
                     onPressed: _saving || !_valid ? null : _save,
                   ),
                 ],

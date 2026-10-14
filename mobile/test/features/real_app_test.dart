@@ -43,9 +43,7 @@ void main() {
       await rig.signIn(tester, password: 'nope');
       expect(find.text('Неверный логин или пароль.'), findsOneWidget);
       expect(find.textContaining('invalid_credentials'), findsNothing);
-      await tapKey(tester, 'language-selector');
-      await settle(tester, ms: 400);
-      await tester.tap(find.text('Türkmençe').last);
+      await tapKey(tester, 'language-tk');
       await settle(tester, ms: 400);
       expect(find.text('Login ýa-da parol nädogry.'), findsOneWidget);
     });

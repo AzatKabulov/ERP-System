@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -97,27 +98,47 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) =>
+        _page(context, constraints.maxWidth < 600),
+  );
+
+  Widget _page(BuildContext context, bool compact) {
     final l = strings(context);
     final places = session.membership?.locations ?? const [];
     final tab = _tabs.contains(_tab) ? _tab : ReportTab.summary;
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(
+        compact ? 16 : 32,
+        compact ? 20 : 32,
+        compact ? 16 : 32,
+        40,
+      ),
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final t in _tabs)
-              ChoiceChip(
-                key: ValueKey('reports-tab-${t.name}'),
-                label: Text(_tabLabel(t)),
-                selected: tab == t,
-                onSelected: (_) => setState(() => _tab = t),
+        PageHead(
+          title: l.reports,
+          subtitle: [
+            if (places.length > 1)
+              places
+                      .where((p) => p.id == _locationId)
+                      .map((p) => p.name)
+                      .firstOrNull ??
+                  l.reportAllLocations
+            else
+              ?session.location?.name,
+            _periodLabel(_period),
+          ].join(' · '),
+          actions: [
+            if (_exportSlug(tab) != null)
+              OutlinedButton.icon(
+                key: const ValueKey('report-export'),
+                onPressed: _exporting ? null : () => _export(_exportSlug(tab)!),
+                icon: const AppIcon(AppIcons.download, size: 20),
+                label: Text(l.reportExport),
               ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 24),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -132,10 +153,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
             if (places.length > 1)
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 240),
-                child: DropdownButton<String?>(
-                  key: const ValueKey('reports-location'),
-                  isExpanded: true,
+                constraints: const BoxConstraints(maxWidth: 220),
+                child: FilterSelect<String?>(
+                  fieldKey: const ValueKey('reports-location'),
+                  leading: AppIcons.stock,
                   value: places.any((p) => p.id == _locationId)
                       ? _locationId
                       : null,
@@ -156,6 +177,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
           ],
         ),
         const SizedBox(height: 16),
+        AppTabs<ReportTab>(
+          keyPrefix: 'reports-tab',
+          keyName: (t) => t.name,
+          tabs: [for (final t in _tabs) (t, _tabLabel(t))],
+          value: tab,
+          onChanged: (t) => setState(() => _tab = t),
+        ),
+        const SizedBox(height: 24),
         // A new key for every tab and filter: the section loads again from scratch.
         KeyedSubtree(
           key: ValueKey('${tab.name}|${_query.hashCode}'),
@@ -165,18 +194,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _exportButton(String slug) {
-    final l = strings(context);
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: OutlinedButton.icon(
-        key: const ValueKey('report-export'),
-        onPressed: _exporting ? null : () => _export(slug),
-        icon: const Icon(Icons.download_outlined),
-        label: Text(l.reportExport),
-      ),
-    );
-  }
+  /// The CSV export a tab offers, if any.
+  String? _exportSlug(ReportTab tab) => switch (tab) {
+    ReportTab.sales => 'sales',
+    ReportTab.stock => 'stock',
+    ReportTab.returns => 'returns',
+    ReportTab.expenses => 'expenses',
+    _ => null,
+  };
 
   Widget _content(ReportTab tab) {
     final q = _query;
@@ -184,50 +209,37 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return switch (tab) {
       ReportTab.summary => AsyncSection<ReportSummary>(
         load: () => repo.summary(q),
-        builder: (context, s) => _SummaryView(summary: s),
+        builder: (context, s) => _SummaryView(
+          summary: s,
+          sales: widget.session.can('report.view') ? () => repo.sales(q) : null,
+        ),
       ),
       ReportTab.sales => AsyncSection<SalesReport>(
         load: () => repo.sales(q),
         builder: (context, r) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _exportButton('sales'),
-            const SizedBox(height: 12),
-            _SalesView(report: r),
-          ],
+          children: [_SalesView(report: r)],
         ),
       ),
       ReportTab.stock => AsyncSection<StockReport>(
         load: () => repo.stock(q),
         builder: (context, r) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _exportButton('stock'),
-            const SizedBox(height: 12),
-            _StockView(report: r),
-          ],
+          children: [_StockView(report: r)],
         ),
       ),
       ReportTab.returns => AsyncSection<ReturnsReport>(
         load: () => repo.returns(q),
         builder: (context, r) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _exportButton('returns'),
-            const SizedBox(height: 12),
-            _ReturnsView(report: r),
-          ],
+          children: [_ReturnsView(report: r)],
         ),
       ),
       ReportTab.expenses => AsyncSection<ExpensesReport>(
         load: () => repo.expenses(q),
         builder: (context, r) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _exportButton('expenses'),
-            const SizedBox(height: 12),
-            _ExpensesView(report: r),
-          ],
+          children: [_ExpensesView(report: r)],
         ),
       ),
       ReportTab.activity => ActivityView(repository: repo, period: q),
@@ -276,89 +288,74 @@ class _Block extends StatelessWidget {
   );
 }
 
-Widget _metric(String key, String label, String value, IconData icon) =>
-    KeyedSubtree(
-      key: ValueKey(key),
-      child: Semantics(
-        container: true,
-        child: MetricCard(label: label, value: value, icon: icon),
-      ),
-    );
+Widget _metric(String key, String label, String value) => KeyedSubtree(
+  key: ValueKey(key),
+  child: Semantics(
+    container: true,
+    child: MetricCard(label: label, value: value),
+  ),
+);
 
-class _SummaryView extends StatelessWidget {
-  const _SummaryView({required this.summary});
+class _SummaryView extends StatefulWidget {
+  const _SummaryView({required this.summary, this.sales});
   final ReportSummary summary;
+
+  /// Loads the sales report of the same period for the charts (null: no chart).
+  final Future<SalesReport> Function()? sales;
+
+  @override
+  State<_SummaryView> createState() => _SummaryViewState();
+}
+
+class _SummaryViewState extends State<_SummaryView> {
+  late final Future<SalesReport?>? _sales = widget.sales == null
+      ? null
+      : widget.sales!().then<SalesReport?>((r) => r).catchError((_) => null);
 
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
-    final s = summary;
+    final s = widget.summary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AdaptiveGrid(
+          minimumWidth: 150,
+          maxColumns: 7,
+          gap: 12,
           children: [
-            _metric(
-              'rep-revenue',
-              l.reportRevenue,
-              _tm(s.revenue),
-              Icons.payments_outlined,
-            ),
-            _metric(
-              'rep-refunds',
-              l.reportRefunds,
-              _tm(s.refunds),
-              Icons.assignment_return_outlined,
-            ),
-            _metric(
-              'rep-net',
-              l.reportNetSales,
-              _tm(s.netSales),
-              Icons.trending_up,
-            ),
+            _metric('rep-revenue', l.reportRevenue, _tm(s.revenue)),
+            _metric('rep-refunds', l.reportRefunds, _tm(s.refunds)),
+            _metric('rep-net', l.reportNetSales, _tm(s.netSales)),
             if (s.costOfGoods != null)
-              _metric(
-                'rep-cost',
-                l.reportCostOfGoods,
-                _tm(s.costOfGoods!),
-                Icons.inventory_2_outlined,
-              ),
+              _metric('rep-cost', l.reportCostOfGoods, _tm(s.costOfGoods!)),
             if (s.grossProfit != null)
-              _metric(
-                'rep-profit',
-                l.reportGrossProfit,
-                _tm(s.grossProfit!),
-                Icons.savings_outlined,
-              ),
+              _metric('rep-profit', l.reportGrossProfit, _tm(s.grossProfit!)),
             if (s.expenses != null)
-              _metric(
-                'rep-expenses',
-                l.reportExpenses,
-                _tm(s.expenses!),
-                Icons.account_balance_wallet_outlined,
-              ),
+              _metric('rep-expenses', l.reportExpenses, _tm(s.expenses!)),
             if (s.result != null)
-              _metric(
-                'rep-result',
-                l.reportResult,
-                _tm(s.result!),
-                Icons.balance_outlined,
-              ),
+              _metric('rep-result', l.reportResult, _tm(s.result!)),
             if (s.inventoryValue != null)
               _metric(
                 'rep-inventory',
                 l.reportInventoryValue,
                 _tm(s.inventoryValue!),
-                Icons.warehouse_outlined,
               ),
-            _metric(
-              'rep-low-stock',
-              l.reportLowStock,
-              '${s.lowStockCount}',
-              Icons.warning_amber_outlined,
-            ),
+            _metric('rep-low-stock', l.reportLowStock, '${s.lowStockCount}'),
           ],
         ),
+        if (_sales != null)
+          FutureBuilder<SalesReport?>(
+            future: _sales,
+            builder: (context, snapshot) {
+              final report = snapshot.data;
+              if (report == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: _Charts(report: report),
+              );
+            },
+          ),
         const SizedBox(height: 12),
         _Line(
           '${l.reportSalesCount(s.salesCount)} · ${l.reportReturnsCount(s.returnsCount)}',
@@ -382,6 +379,126 @@ class _SummaryView extends StatelessWidget {
           ),
         if (s.inventoryValue != null) _Line(l.reportInventoryNote, muted: true),
       ],
+    );
+  }
+}
+
+/// The two cards under the figures of the summary: revenue by day as a line, and the best
+/// selling products as bars. Both are drawn from the sales report of the same period.
+class _Charts extends StatelessWidget {
+  const _Charts({required this.report});
+  final SalesReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    final line = report.byDay.length > 1
+        ? _RevenueChart(days: report.byDay)
+        : null;
+    final bars = report.topProducts.isNotEmpty
+        ? _TopBars(products: report.topProducts)
+        : null;
+    if (line == null && bars == null) {
+      return const SizedBox.shrink();
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 700) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ?line,
+              if (line != null && bars != null) const SizedBox(height: 16),
+              ?bars,
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (line != null) Expanded(flex: 3, child: line),
+            if (line != null && bars != null) const SizedBox(width: 16),
+            if (bars != null) Expanded(flex: 2, child: bars),
+            if (line == null && bars != null) const Spacer(flex: 3),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Best sellers of the period as thin cobalt bars; the highest one is ink.
+class _TopBars extends StatelessWidget {
+  const _TopBars({required this.products});
+  final List<TopProduct> products;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    final shown = products.take(6).toList();
+    final top = shown.map((p) => p.revenue).reduce((a, b) => a > b ? a : b);
+    final topIndex = shown.indexWhere((p) => p.revenue == top);
+    return SurfaceCard(
+      key: const ValueKey('rep-top-bars'),
+      padding: 20,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Eyebrow(l.products),
+          const SizedBox(height: 8),
+          Text(
+            l.reportTopProducts,
+            style: const TextStyle(
+              fontSize: 16,
+              fontVariations: [FontVariation.weight(650)],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 190,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (var i = 0; i < shown.length; i++)
+                  Expanded(
+                    child: Tooltip(
+                      message: '${shown[i].name}: ${_tm(shown[i].revenue)}',
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: 30,
+                            height: top <= 0
+                                ? 4
+                                : (4 + 138 * shown[i].revenue / top),
+                            decoration: BoxDecoration(
+                              color: i == topIndex
+                                  ? AppColors.ink
+                                  : AppColors.blue,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(4),
+                                bottom: Radius.circular(1),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            shown[i].name.split(' ').first,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -454,6 +571,11 @@ class _SalesView extends StatelessWidget {
                   key: ValueKey('rep-pay-${p.method}'),
                 ),
             ],
+          ),
+        if (r.byDay.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _RevenueChart(days: r.byDay),
           ),
         if (r.byDay.isNotEmpty)
           _Block(
@@ -681,4 +803,166 @@ class _ExpensesView extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Revenue by day as one thin cobalt line with a point per day, the highest value labelled and
+/// the first and last dates under the axis. Drawn from the report's own rows.
+class _RevenueChart extends StatelessWidget {
+  const _RevenueChart({required this.days});
+  final List<DayRow> days;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    final top = days.map((d) => d.revenue).reduce((a, b) => a > b ? a : b);
+    return Semantics(
+      container: true,
+      label: '${l.reportByDay}: ${days.first.date} - ${days.last.date}',
+      child: SurfaceCard(
+        key: const ValueKey('rep-chart'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Eyebrow(l.reportTabSales),
+            const SizedBox(height: 8),
+            Text(l.reportByDay, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 190,
+              child: ExcludeSemantics(
+                child: CustomPaint(
+                  size: Size.infinite,
+                  painter: _LinePainter(
+                    values: [for (final d in days) d.revenue],
+                    first: days.first.date,
+                    last: days.last.date,
+                    topLabel: _tm(top),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LinePainter extends CustomPainter {
+  _LinePainter({
+    required this.values,
+    required this.first,
+    required this.last,
+    required this.topLabel,
+  });
+  final List<int> values;
+  final String first;
+  final String last;
+  final String topLabel;
+
+  void _label(
+    Canvas canvas,
+    String text,
+    Offset at, {
+    TextAlign align = TextAlign.left,
+    FontWeight weight = FontWeight.w500,
+    Color color = AppColors.muted,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          fontFamily: AppFonts.ui,
+          fontSize: 11,
+          fontWeight: weight,
+          color: color,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final x = switch (align) {
+      TextAlign.right => at.dx - painter.width,
+      TextAlign.center => at.dx - painter.width / 2,
+      _ => at.dx,
+    };
+    painter.paint(canvas, Offset(x, at.dy));
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const labelBand = 22.0;
+    const topPad = 20.0;
+    final plot = Rect.fromLTRB(
+      8,
+      topPad,
+      size.width - 8,
+      size.height - labelBand,
+    );
+    final maxV = values.reduce((a, b) => a > b ? a : b);
+    final minV = values.reduce((a, b) => a < b ? a : b);
+    final span = (maxV - minV) == 0 ? 1 : (maxV - minV);
+    Offset point(int i) => Offset(
+      plot.left + plot.width * i / (values.length - 1),
+      plot.bottom - plot.height * (values[i] - minV) / span,
+    );
+    final path = Path()..moveTo(point(0).dx, point(0).dy);
+    for (var i = 1; i < values.length; i++) {
+      // A gentle curve between points: no sharp corners, no invented values beyond the rows.
+      final a = point(i - 1);
+      final b = point(i);
+      final mid = (a.dx + b.dx) / 2;
+      path.cubicTo(mid, a.dy, mid, b.dy, b.dx, b.dy);
+    }
+    canvas
+      ..drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 12
+          ..strokeCap = StrokeCap.round
+          ..color = AppColors.blue.withValues(alpha: 0.1),
+      )
+      ..drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..strokeCap = StrokeCap.round
+          ..color = AppColors.blue,
+      );
+    for (var i = 0; i < values.length; i++) {
+      canvas
+        ..drawCircle(point(i), 4, Paint()..color = Colors.white)
+        ..drawCircle(
+          point(i),
+          4,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = AppColors.blue,
+        );
+    }
+    _label(
+      canvas,
+      topLabel,
+      Offset(size.width, 0),
+      align: TextAlign.right,
+      weight: FontWeight.w600,
+      color: AppColors.ink,
+    );
+    _label(canvas, first, Offset(plot.left, size.height - 14));
+    _label(
+      canvas,
+      last,
+      Offset(plot.right, size.height - 14),
+      align: TextAlign.right,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_LinePainter old) =>
+      old.values != values ||
+      old.first != first ||
+      old.last != last ||
+      old.topLabel != topLabel;
 }

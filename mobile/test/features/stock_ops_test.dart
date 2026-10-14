@@ -8,7 +8,7 @@ import 'catalog_test.dart' show seedProduct;
 
 /// Whether the filled button with this key can be pressed.
 bool canPress(WidgetTester tester, String name) =>
-    tester.widget<GradientButton>(key(name)).onPressed != null;
+    tester.widget<PrimaryButton>(key(name)).onPressed != null;
 
 /// The names a screen reader gives every text field on screen.
 List<String> fieldNames(WidgetTester tester) {
@@ -580,6 +580,8 @@ void main() {
       expect(tester.takeException(), isNull);
       await openFirstTransfer(tester);
       expect(tester.takeException(), isNull);
+      // The "sent" toast covers the lower part of a doubled-text phone screen: let it go.
+      await settle(tester, ms: 6000);
       await tapKey(tester, 'td-receive');
       await settle(tester);
       expect(tester.takeException(), isNull);

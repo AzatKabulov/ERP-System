@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_icons.dart';
 
 import '../demo/demo_store.dart';
 import '../theme/app_theme.dart';
@@ -64,7 +65,7 @@ class _SalesScreenState extends State<SalesScreen> {
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
             labelText: l.searchProducts,
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: const AppIcon(AppIcons.search),
           ),
         ),
         const SizedBox(height: 12),
@@ -83,7 +84,7 @@ class _SalesScreenState extends State<SalesScreen> {
               }
               _add(matches.first);
             },
-            icon: const Icon(Icons.qr_code_scanner),
+            icon: const AppIcon(AppIcons.scan),
             label: Text(l.scan),
           ),
         ),
@@ -147,7 +148,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                 (widget.store.cart[p.id] ?? 0)
                             ? () => _add(p)
                             : null,
-                        icon: const Icon(Icons.add, size: 18),
+                        icon: const AppIcon(AppIcons.plus, size: 18),
                         label: Text(l.add),
                       ),
                     ],
@@ -177,7 +178,7 @@ class _SalesScreenState extends State<SalesScreen> {
             EmptyState(
               title: l.emptyCart,
               subtitle: l.emptyCartHint,
-              icon: Icons.shopping_bag_outlined,
+              icon: AppIcons.cart,
             ),
           for (final entry in widget.store.cart.entries)
             Padding(
@@ -199,7 +200,7 @@ class _SalesScreenState extends State<SalesScreen> {
                         onPressed: () => widget.store.removeFromCart(
                           widget.store.product(entry.key),
                         ),
-                        icon: const Icon(Icons.remove_circle_outline),
+                        icon: const AppIcon(AppIcons.removeCircle),
                       ),
                       Text(
                         '${entry.value}',
@@ -208,7 +209,7 @@ class _SalesScreenState extends State<SalesScreen> {
                       IconButton(
                         tooltip: l.increase,
                         onPressed: () => _add(widget.store.product(entry.key)),
-                        icon: const Icon(Icons.add_circle_outline),
+                        icon: const AppIcon(AppIcons.addCircle),
                       ),
                       Text(
                         money(
@@ -232,10 +233,10 @@ class _SalesScreenState extends State<SalesScreen> {
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
-            child: GradientButton(
+            child: PrimaryButton(
               key: const ValueKey('checkout'),
               label: l.checkout,
-              icon: Icons.check,
+              icon: AppIcons.check,
               onPressed: widget.store.cart.isEmpty ? null : _checkout,
             ),
           ),
@@ -257,10 +258,7 @@ class _SalesScreenState extends State<SalesScreen> {
     final l = strings(context);
     if (widget.store.sales.isEmpty) {
       return SurfaceCard(
-        child: EmptyState(
-          title: l.noSales,
-          icon: Icons.assignment_return_outlined,
-        ),
+        child: EmptyState(title: l.noSales, icon: AppIcons.returnArrow),
       );
     }
     return Column(

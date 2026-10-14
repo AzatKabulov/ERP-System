@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -261,7 +262,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
               onPressed: _busy || _note.text.trim().isEmpty
                   ? null
                   : () => _addNote(c),
-              icon: const Icon(Icons.note_add_outlined),
+              icon: const AppIcon(AppIcons.noteAdd),
               label: Text(l.warrantyAddNote),
             ),
           ),
@@ -304,10 +305,10 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
                 const SizedBox(height: 12),
                 ListenableBuilder(
                   listenable: widget.monitor,
-                  builder: (context, _) => GradientButton(
+                  builder: (context, _) => PrimaryButton(
                     key: const ValueKey('wd-close'),
                     label: l.warrantyClose,
-                    icon: Icons.check,
+                    icon: AppIcons.check,
                     onPressed: _busy || !widget.monitor.online || !_closeReady()
                         ? null
                         : () => _close(c),

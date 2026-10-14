@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -147,10 +148,10 @@ class _ExchangeRateSectionState extends State<ExchangeRateSection> {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: GradientButton(
+                  child: PrimaryButton(
                     key: const ValueKey('rate-save'),
                     label: l.setRate,
-                    icon: Icons.check,
+                    icon: AppIcons.check,
                     onPressed: _busy ? null : _save,
                   ),
                 ),

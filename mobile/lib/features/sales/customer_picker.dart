@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -130,7 +131,7 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
                     key: const ValueKey('customer-close'),
                     tooltip: l.close,
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                    icon: const AppIcon(AppIcons.close),
                   ),
                 ],
               ),
@@ -192,7 +193,7 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
                   },
                   decoration: InputDecoration(
                     labelText: l.customerNameLabel,
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: const AppIcon(AppIcons.search),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -203,13 +204,13 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
                       key: const ValueKey('customer-none'),
                       onPressed: () =>
                           Navigator.of(context).pop(const CustomerChoice(null)),
-                      icon: const Icon(Icons.person_off_outlined),
+                      icon: const AppIcon(AppIcons.personOff),
                       label: Text(l.customerNone),
                     ),
                     TextButton.icon(
                       key: const ValueKey('customer-new'),
                       onPressed: () => setState(() => _creating = true),
-                      icon: const Icon(Icons.person_add_alt_1_outlined),
+                      icon: const AppIcon(AppIcons.personAdd),
                       label: Text(l.customerNew),
                     ),
                   ],

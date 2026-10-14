@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -190,129 +191,176 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          _page(context, constraints.maxWidth < 600, constraints.maxWidth),
+    );
+  }
+
+  Widget _page(BuildContext context, bool compact, double width) {
     final l = strings(context);
     final searching =
         _search.text.trim().isNotEmpty || _categoryId != null || _archived;
+    final search = BarcodeInput(
+      fieldKey: const ValueKey('catalog-search'),
+      controller: _search,
+      label: l.searchProducts,
+      onChanged: _onSearchChanged,
+      onSubmitted: (_) {
+        _debounce?.cancel();
+        _load(reset: true);
+      },
+      onScanned: _onScanned,
+    );
+    final add = _canManage
+        ? PrimaryButton(
+            key: const ValueKey('catalog-add'),
+            label: l.addProduct,
+            icon: AppIcons.plus,
+            onPressed: () => _add(),
+          )
+        : null;
+    final hasSecondary =
+        (_canManage && widget.onOpenToComplete != null) ||
+        widget.session.can('catalog.import') ||
+        widget.session.can('catalog.export');
+    final secondary = <Widget>[
+      if (_canManage && widget.onOpenToComplete != null)
+        OutlinedButton.icon(
+          key: const ValueKey('catalog-to-complete'),
+          onPressed: widget.onOpenToComplete,
+          icon: const AppIcon(AppIcons.edit, size: 20),
+          label: Text(l.toCompleteTitle),
+        ),
+      if (widget.session.can('catalog.import'))
+        OutlinedButton.icon(
+          key: const ValueKey('catalog-import'),
+          onPressed: _import,
+          icon: const AppIcon(AppIcons.upload, size: 20),
+          label: Text(l.catalogImport),
+        ),
+      if (widget.session.can('catalog.export'))
+        OutlinedButton.icon(
+          key: const ValueKey('catalog-export'),
+          onPressed: _exporting ? null : _export,
+          icon: const AppIcon(AppIcons.download, size: 20),
+          label: Text(l.catalogExport),
+        ),
+    ];
+    final more = PopupMenuButton<String>(
+      key: const ValueKey('catalog-more'),
+      tooltip: l.menu,
+      icon: const AppIcon(AppIcons.dots),
+      onSelected: (value) => switch (value) {
+        'complete' => widget.onOpenToComplete?.call(),
+        'import' => _import(),
+        _ => _exporting ? null : _export(),
+      },
+      itemBuilder: (context) => [
+        if (_canManage && widget.onOpenToComplete != null)
+          PopupMenuItem(
+            key: const ValueKey('catalog-to-complete'),
+            value: 'complete',
+            child: Text(l.toCompleteTitle),
+          ),
+        if (widget.session.can('catalog.import'))
+          PopupMenuItem(
+            key: const ValueKey('catalog-import'),
+            value: 'import',
+            child: Text(l.catalogImport),
+          ),
+        if (widget.session.can('catalog.export'))
+          PopupMenuItem(
+            key: const ValueKey('catalog-export'),
+            value: 'export',
+            child: Text(l.catalogExport),
+          ),
+      ],
+    );
+    final toggle = AppSegmented<bool>(
+      key: const ValueKey('catalog-view-toggle'),
+      options: [(true, l.viewGallery), (false, l.viewList)],
+      value: _gallery,
+      onChanged: _setGallery,
+    );
+    final chips = _chipRow([
+      ChoiceChip(
+        label: Text(l.allCategories),
+        selected: _categoryId == null,
+        onSelected: (_) {
+          _categoryId = null;
+          _load(reset: true);
+        },
+      ),
+      for (final category in _categories)
+        ChoiceChip(
+          key: ValueKey('catalog-category-${category.name}'),
+          label: Text(category.name),
+          selected: _categoryId == category.id,
+          onSelected: (_) {
+            _categoryId = category.id;
+            _load(reset: true);
+          },
+        ),
+      FilterChip(
+        key: const ValueKey('catalog-archived-toggle'),
+        label: Text(l.showArchived),
+        selected: _archived,
+        onSelected: (value) {
+          _archived = value;
+          _load(reset: true);
+        },
+      ),
+    ]);
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(
+        compact ? 16 : 32,
+        compact ? 20 : 32,
+        compact ? 16 : 32,
+        40,
+      ),
       children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          crossAxisAlignment: WrapCrossAlignment.start,
-          children: [
-            SizedBox(
-              width: 440,
-              child: BarcodeInput(
-                fieldKey: const ValueKey('catalog-search'),
-                controller: _search,
-                label: l.searchProducts,
-                onChanged: _onSearchChanged,
-                onSubmitted: (_) {
-                  _debounce?.cancel();
-                  _load(reset: true);
-                },
-                onScanned: _onScanned,
-              ),
-            ),
-            if (_canManage)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: GradientButton(
-                  key: const ValueKey('catalog-add'),
-                  label: l.addProduct,
-                  icon: Icons.add,
-                  onPressed: () => _add(),
-                ),
-              ),
-            if (_canManage && widget.onOpenToComplete != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: OutlinedButton.icon(
-                  key: const ValueKey('catalog-to-complete'),
-                  onPressed: widget.onOpenToComplete,
-                  icon: const Icon(Icons.edit_note),
-                  label: Text(l.toCompleteTitle),
-                ),
-              ),
-            if (widget.session.can('catalog.import'))
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: OutlinedButton.icon(
-                  key: const ValueKey('catalog-import'),
-                  onPressed: _import,
-                  icon: const Icon(Icons.upload_file),
-                  label: Text(l.catalogImport),
-                ),
-              ),
-            if (widget.session.can('catalog.export'))
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: OutlinedButton.icon(
-                  key: const ValueKey('catalog-export'),
-                  onPressed: _exporting ? null : _export,
-                  icon: const Icon(Icons.download_outlined),
-                  label: Text(l.catalogExport),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: SegmentedButton<bool>(
-                key: const ValueKey('catalog-view-toggle'),
-                showSelectedIcon: false,
-                segments: [
-                  ButtonSegment(
-                    value: true,
-                    icon: const Icon(Icons.grid_view_outlined),
-                    label: Text(l.viewGallery),
-                  ),
-                  ButtonSegment(
-                    value: false,
-                    icon: const Icon(Icons.view_list_outlined),
-                    label: Text(l.viewList),
-                  ),
-                ],
-                selected: {_gallery},
-                onSelectionChanged: (choice) => _setGallery(choice.first),
-              ),
-            ),
-          ],
+        PageHead(
+          title: l.products,
+          actions: compact
+              ? [?add, if (hasSecondary) more]
+              : [...secondary, ?add],
         ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            ChoiceChip(
-              label: Text(l.allCategories),
-              selected: _categoryId == null,
-              onSelected: (_) {
-                _categoryId = null;
-                _load(reset: true);
-              },
-            ),
-            for (final category in _categories)
-              ChoiceChip(
-                key: ValueKey('catalog-category-${category.name}'),
-                label: Text(category.name),
-                selected: _categoryId == category.id,
-                onSelected: (_) {
-                  _categoryId = category.id;
-                  _load(reset: true);
-                },
+        const SizedBox(height: 24),
+        if (compact) ...[
+          search,
+          const SizedBox(height: 12),
+          Align(alignment: Alignment.centerLeft, child: toggle),
+          const SizedBox(height: 12),
+          chips,
+        ] else if (width - 64 >= 1000)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 420, child: search),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: chips,
+                ),
               ),
-            FilterChip(
-              key: const ValueKey('catalog-archived-toggle'),
-              label: Text(l.showArchived),
-              selected: _archived,
-              onSelected: (value) {
-                _archived = value;
-                _load(reset: true);
-              },
-            ),
-          ],
-        ),
+              const SizedBox(width: 12),
+              toggle,
+            ],
+          )
+        else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: search),
+              const SizedBox(width: 12),
+              toggle,
+            ],
+          ),
+          const SizedBox(height: 12),
+          chips,
+        ],
         const SizedBox(height: 20),
         if (_error != null)
           ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
@@ -329,12 +377,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       EmptyState(
                         title: l.errorBarcodeNotFound,
                         subtitle: l.scannedCode(_scannedCode!),
-                        icon: Icons.qr_code_2,
+                        icon: AppIcons.qr,
                       ),
                       OutlinedButton.icon(
                         key: const ValueKey('catalog-add-scanned'),
                         onPressed: () => _add(barcode: _scannedCode),
-                        icon: const Icon(Icons.add),
+                        icon: const AppIcon(AppIcons.plus),
                         label: Text(l.addProduct),
                       ),
                     ],
@@ -345,7 +393,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     key: const ValueKey('catalog-empty'),
                     title: l.noProducts,
                     subtitle: l.noProductsHint,
-                    icon: Icons.category_outlined,
+                    icon: AppIcons.overview,
                   ),
           )
         else ...[
@@ -358,7 +406,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 repository: widget.repository,
               ),
             )
-          else
+          else if (compact)
             for (final product in _items)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -367,7 +415,16 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   repository: widget.repository,
                   onTap: () => _open(product),
                 ),
+              )
+          else
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _ProductTable(
+                products: _items,
+                repository: widget.repository,
+                onOpen: _open,
               ),
+            ),
           if (_items.length < _count)
             Align(
               alignment: Alignment.centerLeft,
@@ -396,63 +453,80 @@ class _ProductTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = product;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        key: ValueKey('product-${p.sku}'),
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: SurfaceCard(
-          padding: 16,
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            alignment: WrapAlignment.spaceBetween,
-            children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 200, maxWidth: 560),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ProductPhoto(
-                      product: p,
-                      repository: repository,
-                      width: 52,
-                      height: 52,
-                    ),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            p.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            [p.sku, ?p.brand?.name].join(' · '),
-                            style: const TextStyle(
-                              color: AppColors.muted,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+    return SurfaceCard(
+      key: ValueKey('product-${p.sku}'),
+      onTap: onTap,
+      padding: 16,
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        alignment: WrapAlignment.spaceBetween,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 200, maxWidth: 560),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ProductPhoto(
+                  product: p,
+                  repository: repository,
+                  width: 56,
+                  height: 56,
                 ),
-              ),
-              _PriceInfo(product: p, align: CrossAxisAlignment.end),
-            ],
+                const SizedBox(width: 14),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        p.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      _SkuLine(product: p),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          _PriceInfo(product: p, align: CrossAxisAlignment.end),
+        ],
       ),
     );
   }
+}
+
+/// The SKU in the monospace face (so similar codes are easy to tell apart), then the brand.
+class _SkuLine extends StatelessWidget {
+  const _SkuLine({required this.product});
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) => Text.rich(
+    TextSpan(
+      children: [
+        TextSpan(
+          text: product.sku,
+          style: const TextStyle(
+            fontFamily: AppFonts.mono,
+            fontSize: 12,
+            letterSpacing: 0.2,
+          ),
+        ),
+        if (product.brand != null) TextSpan(text: ' · ${product.brand!.name}'),
+      ],
+    ),
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: const TextStyle(color: AppColors.muted, fontSize: 13),
+  );
 }
 
 /// The price of a product (and, for a USD price, what it is in TMT) with the archived mark.
@@ -471,7 +545,12 @@ class _PriceInfo extends StatelessWidget {
       children: [
         Text(
           formatMoney(p.priceMinor, p.priceCurrency),
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            letterSpacing: -0.2,
+            fontFeatures: AppFonts.tabular,
+          ),
         ),
         if (p.priceCurrency != 'TMT')
           Text(
@@ -485,7 +564,10 @@ class _PriceInfo extends StatelessWidget {
                   : AppColors.warning,
             ),
           ),
-        if (!p.isActive) StatusPill(label: l.archivedLabel, warning: true),
+        if (!p.isActive) ...[
+          const SizedBox(height: 4),
+          StatusPill(label: l.archivedLabel, warning: true),
+        ],
       ],
     );
   }
@@ -502,7 +584,7 @@ class _ProductGallery extends StatelessWidget {
   final void Function(Product) onOpen;
   final CatalogRepository repository;
 
-  static const _gap = 12.0;
+  static const _gap = 16.0;
   static const _minCard = 170.0;
 
   @override
@@ -561,43 +643,191 @@ class _ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = product;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        key: ValueKey('product-${p.sku}'),
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: SurfaceCard(
-          padding: 12,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ProductPhoto(
-                product: p,
-                repository: repository,
-                aspectRatio: 4 / 3,
-                iconSize: 32,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                p.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                [p.sku, ?p.brand?.name].join(' · '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
-              ),
-              const Spacer(),
-              const SizedBox(height: 8),
-              _PriceInfo(product: p, align: CrossAxisAlignment.start),
-            ],
+    return SurfaceCard(
+      key: ValueKey('product-${p.sku}'),
+      onTap: onTap,
+      padding: 12,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ProductPhoto(
+            product: p,
+            repository: repository,
+            aspectRatio: 4 / 3,
+            iconSize: 32,
           ),
-        ),
+          const SizedBox(height: 12),
+          Text(
+            p.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          _SkuLine(product: p),
+          const Spacer(),
+          const SizedBox(height: 10),
+          _PriceInfo(product: p, align: CrossAxisAlignment.start),
+        ],
+      ),
+    );
+  }
+}
+
+/// Filter chips: one row that scrolls sideways, so many categories never push the products
+/// down the screen.
+Widget _chipRow(List<Widget> chips) => SizedBox(
+  height: 48,
+  child: SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: [
+        for (final chip in chips)
+          Padding(padding: const EdgeInsets.only(right: 8), child: chip),
+      ],
+    ),
+  ),
+);
+
+/// The list view of the catalog on a wide screen: a header row and one row per product.
+class _ProductTable extends StatelessWidget {
+  const _ProductTable({
+    required this.products,
+    required this.repository,
+    required this.onOpen,
+  });
+  final List<Product> products;
+  final CatalogRepository repository;
+  final void Function(Product) onOpen;
+
+  static const _header = TextStyle(
+    color: AppColors.muted,
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.7,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    Widget cell(
+      int flex,
+      Widget child, {
+      Alignment align = Alignment.centerLeft,
+    }) => Expanded(
+      flex: flex,
+      child: Align(alignment: align, child: child),
+    );
+    return SurfaceCard(
+      padding: 0,
+      child: Column(
+        key: const ValueKey('catalog-table'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            color: AppColors.surfaceSoft,
+            child: Row(
+              children: [
+                cell(2, Text(l.sku.toUpperCase(), style: _header)),
+                cell(6, Text(l.productName.toUpperCase(), style: _header)),
+                cell(3, Text(l.category.toUpperCase(), style: _header)),
+                cell(
+                  2,
+                  Text(l.price.toUpperCase(), style: _header),
+                  align: Alignment.centerRight,
+                ),
+              ],
+            ),
+          ),
+          for (final p in products)
+            InkWell(
+              key: ValueKey('product-${p.sku}'),
+              onTap: () => onOpen(p),
+              hoverColor: AppColors.surfaceSoft,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 64),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: AppColors.line)),
+                ),
+                child: Row(
+                  children: [
+                    cell(
+                      2,
+                      Text(
+                        p.sku,
+                        style: const TextStyle(
+                          fontFamily: AppFonts.mono,
+                          fontSize: 13,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 6,
+                      child: Row(
+                        children: [
+                          ProductPhoto(
+                            product: p,
+                            repository: repository,
+                            width: 44,
+                            height: 44,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  p.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                if (p.barcodes.isNotEmpty)
+                                  Text(
+                                    p.barcodes.first,
+                                    style: const TextStyle(
+                                      fontFamily: AppFonts.mono,
+                                      fontSize: 12,
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    cell(
+                      3,
+                      Text(
+                        [?p.category?.name, ?p.brand?.name].join(' · '),
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    cell(
+                      2,
+                      _PriceInfo(product: p, align: CrossAxisAlignment.end),
+                      align: Alignment.centerRight,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

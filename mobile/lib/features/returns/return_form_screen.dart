@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -260,10 +261,10 @@ class _ReturnFormScreenState extends State<ReturnFormScreen> {
                   const SizedBox(height: 20),
                   ListenableBuilder(
                     listenable: widget.monitor,
-                    builder: (context, _) => GradientButton(
+                    builder: (context, _) => PrimaryButton(
                       key: const ValueKey('return-confirm'),
                       label: l.returnButton,
-                      icon: Icons.assignment_return_outlined,
+                      icon: AppIcons.returnArrow,
                       onPressed: _busy || !widget.monitor.online || !_canSubmit
                           ? null
                           : _submit,

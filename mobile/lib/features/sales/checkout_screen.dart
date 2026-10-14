@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -264,10 +265,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                               ),
                             ),
-                          GradientButton(
+                          PrimaryButton(
                             key: const ValueKey('checkout-confirm'),
                             label: l.completeSale,
-                            icon: Icons.check,
+                            icon: AppIcons.check,
                             onPressed: _busy || !widget.monitor.online
                                 ? null
                                 : _confirm,

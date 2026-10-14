@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -250,10 +251,10 @@ class _TransferDetailScreenState extends State<TransferDetailScreen> {
                           children: [
                             if (session.can('transfer.receive') &&
                                 _mayUse(t.toId))
-                              GradientButton(
+                              PrimaryButton(
                                 key: const ValueKey('td-receive'),
                                 label: l.transferReceive,
-                                icon: Icons.inventory_2_outlined,
+                                icon: AppIcons.box,
                                 onPressed: () => _receive(t),
                               ),
                             if (session.can('transfer.create') &&
@@ -261,7 +262,7 @@ class _TransferDetailScreenState extends State<TransferDetailScreen> {
                               OutlinedButton.icon(
                                 key: const ValueKey('td-cancel'),
                                 onPressed: () => _cancel(t),
-                                icon: const Icon(Icons.close),
+                                icon: const AppIcon(AppIcons.close),
                                 label: Text(l.transferCancel),
                               ),
                           ],
@@ -532,10 +533,10 @@ class _ReceiveTransferScreenState extends State<ReceiveTransferScreen> {
                   const SizedBox(height: 20),
                   ListenableBuilder(
                     listenable: widget.monitor,
-                    builder: (context, _) => GradientButton(
+                    builder: (context, _) => PrimaryButton(
                       key: const ValueKey('receive-confirm'),
                       label: l.transferReceive,
-                      icon: Icons.check,
+                      icon: AppIcons.check,
                       onPressed: _busy || !widget.monitor.online || !_canSubmit
                           ? null
                           : _submit,

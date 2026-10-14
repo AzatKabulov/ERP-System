@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_icons.dart';
 
 import '../demo/demo_store.dart';
 import '../theme/app_theme.dart';
@@ -31,9 +32,9 @@ class ManagementScreen extends StatelessWidget {
             money(store.expenseTotal),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          GradientButton(
+          PrimaryButton(
             label: l.newExpense,
-            icon: Icons.add,
+            icon: AppIcons.plus,
             onPressed: () => showDialog<void>(
               context: context,
               builder: (context) => ExpenseDialog(store: store),
@@ -45,12 +46,7 @@ class ManagementScreen extends StatelessWidget {
       Text(l.expenseHint, style: const TextStyle(color: AppColors.muted)),
       const SizedBox(height: 24),
       if (store.expenses.isEmpty)
-        SurfaceCard(
-          child: EmptyState(
-            title: l.noExpenses,
-            icon: Icons.account_balance_wallet_outlined,
-          ),
-        ),
+        SurfaceCard(child: EmptyState(title: l.noExpenses)),
       for (final expense in store.expenses)
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -148,26 +144,10 @@ class ManagementScreen extends StatelessWidget {
       const SizedBox(height: 24),
       AdaptiveGrid(
         children: [
-          MetricCard(
-            label: l.salesTotal,
-            value: money(store.salesTotal),
-            icon: Icons.shopping_bag_outlined,
-          ),
-          MetricCard(
-            label: l.refundTotal,
-            value: money(store.refundTotal),
-            icon: Icons.assignment_return_outlined,
-          ),
-          MetricCard(
-            label: l.expenseTotal,
-            value: money(store.expenseTotal),
-            icon: Icons.account_balance_wallet_outlined,
-          ),
-          MetricCard(
-            label: l.stockValue,
-            value: money(store.inventoryValue),
-            icon: Icons.inventory_2_outlined,
-          ),
+          MetricCard(label: l.salesTotal, value: money(store.salesTotal)),
+          MetricCard(label: l.refundTotal, value: money(store.refundTotal)),
+          MetricCard(label: l.expenseTotal, value: money(store.expenseTotal)),
+          MetricCard(label: l.stockValue, value: money(store.inventoryValue)),
         ],
       ),
       const SizedBox(height: 24),
@@ -265,10 +245,7 @@ class ManagementScreen extends StatelessWidget {
             for (final id in DemoStore.locationIds)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(
-                  Icons.storefront_outlined,
-                  color: AppColors.blue,
-                ),
+                leading: const AppIcon(AppIcons.stock, color: AppColors.blue),
                 title: Text(locationLabel(l, id)),
                 subtitle: Text(
                   '${l.stockUnits}: ${store.products.fold(0, (sum, p) => sum + store.stock(p, id))}',
@@ -299,7 +276,7 @@ class ManagementScreen extends StatelessWidget {
             ])
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.lock_outline, color: AppColors.muted),
+                leading: const AppIcon(AppIcons.lock, color: AppColors.muted),
                 title: Text(label),
                 subtitle: Text(l.backendPending),
               ),

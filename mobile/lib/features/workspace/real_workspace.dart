@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/connectivity/connection_monitor.dart';
@@ -185,7 +186,8 @@ class _RealWorkspaceState extends State<RealWorkspace> {
     final l = strings(context);
     final membership = session.membership!;
     return Wrap(
-      spacing: 4,
+      spacing: 8,
+      runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         if (session.memberships.length > 1)
@@ -200,9 +202,10 @@ class _RealWorkspaceState extends State<RealWorkspace> {
               for (final m in session.memberships)
                 PopupMenuItem(value: m.id, child: Text(m.businessName)),
             ],
-            child: _SelectorLabel(
-              icon: Icons.business_outlined,
+            child: TopbarControl(
+              icon: AppIcons.stock,
               text: membership.businessName,
+              chevron: true,
             ),
           ),
         if (membership.locations.isEmpty)
@@ -222,8 +225,8 @@ class _RealWorkspaceState extends State<RealWorkspace> {
               for (final location in membership.locations)
                 PopupMenuItem(value: location.id, child: Text(location.name)),
             ],
-            child: _SelectorLabel(
-              icon: Icons.storefront_outlined,
+            child: TopbarControl(
+              icon: AppIcons.stock,
               text: session.location?.name ?? '',
               chevron: true,
             ),
@@ -253,7 +256,7 @@ class _RealWorkspaceState extends State<RealWorkspace> {
               key: const ValueKey('offline-banner'),
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              color: const Color(0xFFFEF2F2),
+              color: AppColors.dangerTint,
               child: Text(
                 l.offlineBanner,
                 style: const TextStyle(fontSize: 12, color: AppColors.danger),
@@ -264,55 +267,10 @@ class _RealWorkspaceState extends State<RealWorkspace> {
             onResolved: () => setState(() => _reloadCounter++),
           ),
         ],
-        sidebarFooter: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              session.user?.displayName ?? '',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            Text(
-              '${roleLabel(l, membership.role)} · ${membership.businessName}',
-              style: const TextStyle(fontSize: 13, color: AppColors.muted),
-            ),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              key: const ValueKey('sidebar-sign-out'),
-              onPressed: session.signOut,
-              icon: const Icon(Icons.logout, size: 18),
-              label: Text(l.signOut),
-            ),
-          ],
-        ),
+        userName: session.user?.displayName ?? '',
+        roleName: roleLabel(l, membership.role),
+        onSignOut: session.signOut,
       );
     },
-  );
-}
-
-class _SelectorLabel extends StatelessWidget {
-  const _SelectorLabel({
-    required this.icon,
-    required this.text,
-    this.chevron = false,
-  });
-  final IconData icon;
-  final String text;
-  final bool chevron;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 20, color: AppColors.muted),
-        const SizedBox(width: 8),
-        Flexible(child: Text(text, style: const TextStyle(fontSize: 14))),
-        if (chevron) ...[
-          const SizedBox(width: 6),
-          const Icon(Icons.expand_more, size: 18),
-        ],
-      ],
-    ),
   );
 }

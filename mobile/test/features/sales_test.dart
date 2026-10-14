@@ -14,7 +14,7 @@ String tmt(int minor) => formatMoney(minor, 'TMT');
 
 /// Whether the filled button with this key can be pressed.
 bool canPress(WidgetTester tester, String name) =>
-    tester.widget<GradientButton>(key(name)).onPressed != null;
+    tester.widget<PrimaryButton>(key(name)).onPressed != null;
 
 /// What is typed in the text field with this key.
 String typed(WidgetTester tester, String name) =>
@@ -324,9 +324,7 @@ void main() {
         typed(tester, 'cart-price-0'),
         '90',
       ); // the typed price is kept too
-      await tapKey(tester, 'language-selector');
-      await settle(tester, ms: 400);
-      await tester.tap(find.text('Türkmençe').last);
+      await tapKey(tester, 'language-tk');
       await settle(tester, ms: 600);
       expect(key('cart-qty-0'), findsOneWidget);
       expect(

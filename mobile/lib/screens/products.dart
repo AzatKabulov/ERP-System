@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_icons.dart';
 
 import '../demo/demo_store.dart';
 import '../theme/app_theme.dart';
@@ -58,12 +59,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
                   labelText: l.searchProducts,
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const AppIcon(AppIcons.search),
                   suffixIcon: _search.text.isEmpty
                       ? null
                       : IconButton(
                           tooltip: l.clearSearch,
-                          icon: const Icon(Icons.close),
+                          icon: const AppIcon(AppIcons.close),
                           onPressed: () => setState(_search.clear),
                         ),
                 ),
@@ -76,7 +77,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   setState(() => _search.text = code);
                 }
               },
-              icon: const Icon(Icons.qr_code_scanner),
+              icon: const AppIcon(AppIcons.scan),
               label: Text(l.scan),
             ),
             if (widget.inventory)
@@ -111,7 +112,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             child: EmptyState(
               title: l.noResults,
               subtitle: l.noResultsHint,
-              icon: Icons.search_off,
+              icon: AppIcons.search,
             ),
           ),
         for (final product in products)
@@ -195,10 +196,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 product,
                                 StockAction.receive,
                               ),
-                              icon: const Icon(
-                                Icons.add_box_outlined,
-                                size: 18,
-                              ),
+                              icon: const AppIcon(AppIcons.plus, size: 18),
                               label: Text(l.receive),
                             ),
                             OutlinedButton.icon(
@@ -208,7 +206,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 product,
                                 StockAction.transfer,
                               ),
-                              icon: const Icon(Icons.swap_horiz, size: 18),
+                              icon: const AppIcon(AppIcons.swap, size: 18),
                               label: Text(l.transfer),
                             ),
                             OutlinedButton.icon(
@@ -218,10 +216,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 product,
                                 StockAction.count,
                               ),
-                              icon: const Icon(
-                                Icons.fact_check_outlined,
-                                size: 18,
-                              ),
+                              icon: const AppIcon(AppIcons.checklist, size: 18),
                               label: Text(l.countStock),
                             ),
                           ],

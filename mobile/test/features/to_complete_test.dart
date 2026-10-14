@@ -262,9 +262,20 @@ void main() {
         }
         await tapKey(tester, 'nav-products');
         await settle(tester);
+        if (size.width < 600) {
+          // On a phone this action sits behind the "more" menu.
+          await tapKey(tester, 'catalog-more');
+          await settle(tester);
+        }
         await tapKey(tester, 'catalog-to-complete');
         await settle(tester);
         expect(tester.takeException(), isNull);
+        // With doubled text the explanation fills the first screen: scroll to the row.
+        await tester.scrollUntilVisible(
+          key('complete-LONG-ARTICLE-NUMBER-1'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(key('complete-LONG-ARTICLE-NUMBER-1'), findsOneWidget);
       });
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/money/decimal_math.dart';
@@ -142,27 +143,36 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) =>
+        _page(context, constraints.maxWidth < 600),
+  );
+
+  Widget _page(BuildContext context, bool compact) {
     final l = strings(context);
     final summary = _summary;
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(
+        compact ? 16 : 32,
+        compact ? 20 : 32,
+        compact ? 16 : 32,
+        40,
+      ),
       children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
+        PageHead(
+          title: l.expenses,
+          subtitle: session.location?.name,
+          actions: [
             if (session.can('expense.manage'))
-              GradientButton(
+              PrimaryButton(
                 key: const ValueKey('expense-add'),
                 label: l.expenseAddButton,
-                icon: Icons.add,
+                icon: AppIcons.plus,
                 onPressed: _add,
               ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 24),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -184,9 +194,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               ),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 240),
-              child: DropdownButton<String?>(
-                key: const ValueKey('expense-category-filter'),
-                isExpanded: true,
+              child: FilterSelect<String?>(
+                fieldKey: const ValueKey('expense-category-filter'),
                 value: _categories.any((c) => c.id == _categoryId)
                     ? _categoryId
                     : null,
@@ -208,41 +217,36 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        if (summary != null && _error == null)
-          SurfaceCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.expenseTotalLine(formatMoney(summary.totalMinor, 'TMT')),
-                  key: const ValueKey('expense-total'),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
+        if (summary != null && _error == null) ...[
+          AdaptiveGrid(
+            children: [
+              KeyedSubtree(
+                key: const ValueKey('expense-total'),
+                child: Semantics(
+                  container: true,
+                  child: MetricCard(
+                    label: l.cartTotalLabel,
+                    value: formatMoney(summary.totalMinor, 'TMT'),
+                    meta: l.expenseOperationsCount(summary.count),
                   ),
                 ),
-                if (summary.byCategory.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  for (final c in summary.byCategory)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Wrap(
-                        spacing: 12,
-                        alignment: WrapAlignment.spaceBetween,
-                        children: [
-                          Text(c.name),
-                          Text(
-                            formatMoney(c.totalMinor, 'TMT'),
-                            key: ValueKey('expense-cat-${c.categoryId}'),
-                            style: const TextStyle(color: AppColors.muted),
-                          ),
-                        ],
-                      ),
+              ),
+              for (final c in summary.byCategory)
+                KeyedSubtree(
+                  key: ValueKey('expense-cat-${c.categoryId}'),
+                  child: Semantics(
+                    container: true,
+                    child: MetricCard(
+                      label: c.name,
+                      value: formatMoney(c.totalMinor, 'TMT'),
+                      meta: l.expenseOperationsCount(c.count),
                     ),
-                ],
-              ],
-            ),
+                  ),
+                ),
+            ],
           ),
+          const SizedBox(height: 16),
+        ],
         const SizedBox(height: 16),
         if (_error != null)
           ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
@@ -257,86 +261,40 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               key: const ValueKey('expenses-empty'),
               title: l.expensesEmpty,
               subtitle: '',
-              icon: Icons.payments_outlined,
+              icon: AppIcons.expense,
             ),
           )
         else ...[
-          for (final e in _items)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  key: ValueKey('expense-${e.id}'),
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () => _open(e),
-                  child: SurfaceCard(
-                    padding: 14,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${e.categoryName} · ${e.spentOn}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  decoration: e.voided
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                ),
+          SurfaceCard(
+            padding: 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < _items.length; i++)
+                  InkWell(
+                    key: ValueKey('expense-${_items[i].id}'),
+                    onTap: () => _open(_items[i]),
+                    hoverColor: AppColors.surfaceSoft,
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 68),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        border: i == 0
+                            ? null
+                            : const Border(
+                                top: BorderSide(color: AppColors.line),
                               ),
-                              if (e.description.isNotEmpty)
-                                Text(
-                                  e.description,
-                                  style: const TextStyle(
-                                    color: AppColors.muted,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              Text(
-                                e.locationName,
-                                style: const TextStyle(
-                                  color: AppColors.muted,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              formatMoney(e.amountMinor, 'TMT'),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            if (e.attachment != null)
-                              const Icon(
-                                Icons.attach_file,
-                                size: 16,
-                                color: AppColors.muted,
-                              ),
-                            if (e.voided)
-                              Text(
-                                l.expenseVoidedBadge,
-                                style: const TextStyle(
-                                  color: AppColors.danger,
-                                  fontSize: 12,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
+                      ),
+                      child: _ExpenseRow(expense: _items[i], index: i),
                     ),
                   ),
-                ),
-              ),
+              ],
             ),
+          ),
+          const SizedBox(height: 16),
           if (_items.length < _count)
             Align(
               alignment: Alignment.centerLeft,
@@ -347,6 +305,91 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               ),
             ),
         ],
+      ],
+    );
+  }
+}
+
+class _ExpenseRow extends StatelessWidget {
+  const _ExpenseRow({required this.expense, required this.index});
+  final Expense expense;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    final e = expense;
+    final title = e.description.isNotEmpty ? e.description : e.categoryName;
+    return Row(
+      children: [
+        Glyph(
+          AppIcons.receipt,
+          background: e.voided
+              ? AppColors.dangerTint
+              : index.isOdd
+              ? AppColors.warningTint
+              : AppColors.surfaceMuted,
+          color: e.voided ? AppColors.danger : AppColors.neutral,
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  decoration: e.voided ? TextDecoration.lineThrough : null,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                [e.categoryName, e.locationName].join(' · '),
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (e.attachment != null) ...[
+                  const AppIcon(
+                    AppIcons.attach,
+                    size: 16,
+                    color: AppColors.muted,
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  formatMoney(e.amountMinor, 'TMT'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              e.voided ? l.expenseVoidedBadge : e.spentOn,
+              style: TextStyle(
+                color: e.voided ? AppColors.danger : AppColors.muted,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

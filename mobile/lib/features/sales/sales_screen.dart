@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/connectivity/connection_monitor.dart';
 import '../../core/money/decimal_math.dart';
@@ -273,17 +274,21 @@ class _SalesScreenState extends State<SalesScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 900;
-        final left = _canSell ? _findPanel(context) : const SizedBox.shrink();
-        final right = _canSell ? _cartPanel(context) : const SizedBox.shrink();
+        final compact = constraints.maxWidth < 600;
         return ListView(
           controller: _scroll,
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.fromLTRB(
+            compact ? 16 : 32,
+            compact ? 20 : 32,
+            compact ? 16 : 32,
+            40,
+          ),
           children: [
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
+            PageHead(
+              eyebrow: l.sales,
+              title: l.salesCashDesk,
+              subtitle: session.location?.name,
+              actions: [
                 if (session.can('sales.view'))
                   OutlinedButton.icon(
                     key: const ValueKey('sales-history'),
@@ -298,7 +303,7 @@ class _SalesScreenState extends State<SalesScreen> {
                         ),
                       ),
                     ),
-                    icon: const Icon(Icons.receipt_long_outlined),
+                    icon: const AppIcon(AppIcons.sale, size: 20),
                     label: Text(l.saleHistoryTitle),
                   ),
                 if (session.can('return.view'))
@@ -318,12 +323,12 @@ class _SalesScreenState extends State<SalesScreen> {
                         ),
                       ),
                     ),
-                    icon: const Icon(Icons.assignment_return_outlined),
+                    icon: const AppIcon(AppIcons.returnArrow, size: 20),
                     label: Text(l.returnsTitle),
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             if (!_canSell)
               SurfaceCard(
                 child: Text(
@@ -337,18 +342,27 @@ class _SalesScreenState extends State<SalesScreen> {
                 const SizedBox(height: 16),
               ],
               if (wide)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 5, child: left),
-                    const SizedBox(width: 20),
-                    Expanded(flex: 5, child: right),
-                  ],
+                SizedBox(
+                  height: (constraints.maxHeight - 200).clamp(540.0, 1400.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 108,
+                        child: _findPanel(context, fixed: true),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 92,
+                        child: _cartPanel(context, fixed: true),
+                      ),
+                    ],
+                  ),
                 )
               else ...[
-                left,
+                _findPanel(context, fixed: false),
                 const SizedBox(height: 16),
-                right,
+                _cartPanel(context, fixed: false),
               ],
             ],
           ],
@@ -359,124 +373,216 @@ class _SalesScreenState extends State<SalesScreen> {
 
   // ---- the product finder --------------------------------------------------------
 
-  Widget _findPanel(BuildContext context) {
+  Widget _findPanel(BuildContext context, {required bool fixed}) {
     final l = strings(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        BarcodeInput(
-          fieldKey: const ValueKey('sales-search'),
-          controller: _search,
-          label: l.searchProducts,
-          onChanged: _typed,
-          focusNode: _searchFocus,
-          keepFocusOnSubmit: true,
-          onSubmitted: _submitted,
-          onScanned: _scanned,
-        ),
-        const SizedBox(height: 12),
-        if (_searchError != null)
-          ErrorPanel(error: _searchError!, onRetry: _runSearch)
-        else if (_searching && _results.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (_search.text.trim().isEmpty)
-          SurfaceCard(
-            child: EmptyState(
-              key: const ValueKey('sales-start'),
-              title: l.cartEmpty,
-              subtitle: l.salesStartHint,
-              icon: Icons.qr_code_scanner,
-            ),
-          )
-        else if (_results.isEmpty)
-          SurfaceCard(
-            child: EmptyState(
-              key: const ValueKey('sales-no-match'),
-              title: l.noResults,
-              subtitle: l.salesNoMatch,
-            ),
-          )
-        else
-          for (final product in _results)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _ResultTile(
+    final Widget results;
+    if (_searchError != null) {
+      results = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: ErrorPanel(error: _searchError!, onRetry: _runSearch),
+      );
+    } else if (_searching && _results.isEmpty) {
+      results = const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    } else if (_search.text.trim().isEmpty) {
+      results = EmptyState(
+        key: const ValueKey('sales-start'),
+        title: l.cartEmpty,
+        subtitle: l.salesStartHint,
+        icon: AppIcons.scan,
+      );
+    } else if (_results.isEmpty) {
+      results = EmptyState(
+        key: const ValueKey('sales-no-match'),
+        title: l.noResults,
+        subtitle: l.salesNoMatch,
+      );
+    } else {
+      results = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Column(
+          children: [
+            for (final product in _results)
+              _ResultTile(
                 product: product,
                 repository: widget.catalog,
                 onAdd: () => _add(product),
               ),
+          ],
+        ),
+      );
+    }
+    return SurfaceCard(
+      padding: 0,
+      child: Column(
+        mainAxisSize: fixed ? MainAxisSize.max : MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: BarcodeInput(
+              fieldKey: const ValueKey('sales-search'),
+              controller: _search,
+              label: l.searchProducts,
+              onChanged: _typed,
+              focusNode: _searchFocus,
+              keepFocusOnSubmit: true,
+              onSubmitted: _submitted,
+              onScanned: _scanned,
             ),
-      ],
+          ),
+          if (fixed)
+            Expanded(child: SingleChildScrollView(child: results))
+          else
+            results,
+        ],
+      ),
     );
   }
 
   // ---- the cart --------------------------------------------------------------------
 
-  Widget _cartPanel(BuildContext context) {
+  Widget _cartPanel(BuildContext context, {required bool fixed}) {
     final l = strings(context);
-    return SurfaceCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(l.cartTitle, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
-          if (session.can('customer.view'))
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                key: const ValueKey('cart-customer'),
-                onPressed: _chooseCustomer,
-                icon: const Icon(Icons.person_outline),
-                label: Text(cart.customer?.name ?? l.customerChoose),
+    final pieces = cart.lines.length;
+    final lines = <Widget>[
+      if (_lastAdded != null && !cart.isEmpty)
+        Semantics(
+          liveRegion: true,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              _lastAdded!,
+              key: const ValueKey('cart-added'),
+              style: const TextStyle(color: AppColors.success, fontSize: 13),
+            ),
+          ),
+        ),
+      for (var i = 0; i < cart.lines.length; i++)
+        _CartLineCard(
+          key: ObjectKey(cart.lines[i]),
+          cart: cart,
+          line: cart.lines[i],
+          index: i,
+          first: i == 0 && _lastAdded == null,
+        ),
+    ];
+    final head = Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 16, 0),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 56),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                l.cartTitle,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontVariations: [FontVariation.weight(650)],
+                ),
               ),
             ),
-          const SizedBox(height: 12),
-          if (cart.isEmpty)
-            Text(
-              l.cartEmpty,
-              key: const ValueKey('cart-empty'),
-              style: const TextStyle(color: AppColors.muted),
-            )
-          else ...[
-            if (_lastAdded != null)
-              Semantics(
-                liveRegion: true,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    _lastAdded!,
-                    key: const ValueKey('cart-added'),
-                    style: const TextStyle(color: AppColors.success),
+            if (session.can('customer.view'))
+              Flexible(
+                child: TextButton.icon(
+                  key: const ValueKey('cart-customer'),
+                  onPressed: _chooseCustomer,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(48, 40),
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  icon: const AppIcon(AppIcons.user, size: 16),
+                  label: Text(
+                    cart.customer?.name ?? l.customerChoose,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
-            for (final line in cart.lines)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _CartLineCard(
-                  key: ObjectKey(line),
-                  cart: cart,
-                  line: line,
-                  index: cart.lines.indexOf(line),
-                ),
-              ),
-            const Divider(height: 28),
-            Text(
-              l.saleTotal(formatMoney(cart.totalMinor, 'TMT')),
-              key: const ValueKey('cart-total'),
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-            GradientButton(
-              key: const ValueKey('cart-checkout'),
-              label: l.toPayment,
-              icon: Icons.payments_outlined,
-              onPressed: cart.isReady ? _checkout : null,
-            ),
           ],
+        ),
+      ),
+    );
+    final Widget body;
+    if (cart.isEmpty) {
+      body = EmptyState(
+        key: const ValueKey('cart-empty'),
+        title: l.cartEmpty,
+        subtitle: l.salesStartHint,
+        icon: AppIcons.cart,
+      );
+    } else {
+      body = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(children: lines),
+      );
+    }
+    final summary = cart.isEmpty
+        ? null
+        : Container(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: AppColors.line)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l.cartTotalLabel,
+                        style: const TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        formatMoney(cart.totalMinor, 'TMT'),
+                        key: const ValueKey('cart-total'),
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          fontFamily: AppFonts.display,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 32,
+                          letterSpacing: -1.28,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                PrimaryButton(
+                  key: const ValueKey('cart-checkout'),
+                  label: l.toPayment,
+                  onPressed: cart.isReady ? _checkout : null,
+                ),
+              ],
+            ),
+          );
+    return SurfaceCard(
+      padding: 0,
+      child: Column(
+        mainAxisSize: fixed ? MainAxisSize.max : MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          head,
+          if (fixed)
+            Expanded(child: SingleChildScrollView(child: body))
+          else
+            body,
+          ?summary,
         ],
       ),
     );
@@ -493,7 +599,7 @@ class _SalesScreenState extends State<SalesScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.check_circle, color: AppColors.success),
+              const AppIcon(AppIcons.checkCircle, color: AppColors.success),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -513,10 +619,10 @@ class _SalesScreenState extends State<SalesScreen> {
             saleNumber: sale.number,
           ),
           const SizedBox(height: 16),
-          GradientButton(
+          PrimaryButton(
             key: const ValueKey('sale-new'),
             label: l.newSaleAction,
-            icon: Icons.add,
+            icon: AppIcons.plus,
             onPressed: () => setState(() => _done = null),
           ),
         ],
@@ -539,59 +645,71 @@ class _ResultTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = strings(context);
     final unit = product.priceTmtMinor;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        key: ValueKey('sell-${product.sku}'),
-        borderRadius: BorderRadius.circular(16),
-        onTap: onAdd,
-        child: SurfaceCard(
-          padding: 14,
-          child: Row(
-            children: [
-              ProductPhoto(
-                product: product,
-                repository: repository,
-                width: 52,
-                height: 52,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+    return InkWell(
+      key: ValueKey('sell-${product.sku}'),
+      onTap: onAdd,
+      hoverColor: AppColors.surfaceSoft,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 80),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.line)),
+        ),
+        child: Row(
+          children: [
+            ProductPhoto(
+              product: product,
+              repository: repository,
+              width: 48,
+              height: 48,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
-                    Text(
-                      [product.sku, ?product.brand?.name].join(' · '),
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Flexible(
-                child: Text(
-                  unit == null ? l.rateMissingNote : formatMoney(unit, 'TMT'),
-                  textAlign: TextAlign.end,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: unit == null ? AppColors.warning : null,
-                    fontSize: unit == null ? 12 : null,
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    [product.sku, ?product.brand?.name].join(' · '),
+                    style: const TextStyle(
+                      fontFamily: AppFonts.mono,
+                      color: AppColors.muted,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              const Icon(Icons.add_circle_outline, color: AppColors.blue),
-            ],
-          ),
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    unit == null ? l.rateMissingNote : formatMoney(unit, 'TMT'),
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: unit == null ? AppColors.warning : null,
+                      fontSize: unit == null ? 12 : 14,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const AppIcon(AppIcons.plus, size: 20),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -604,10 +722,14 @@ class _CartLineCard extends StatefulWidget {
     required this.cart,
     required this.line,
     required this.index,
+    this.first = false,
   });
   final CartController cart;
   final CartLine line;
   final int index;
+
+  /// The first row has no line above it.
+  final bool first;
 
   @override
   State<_CartLineCard> createState() => _CartLineCardState();
@@ -664,85 +786,143 @@ class _CartLineCardState extends State<_CartLineCard> {
     final problem = cart.problem(line);
     final catalogPrice = line.product.priceTmtMinor;
     final lineTotal = cart.lineTotalMinor(line);
-    final step = 1000; // one whole unit
+    const step = 1000; // one whole unit
+    final meta = [
+      line.product.sku,
+      line.product.unit.symbol,
+      if (line.availableMilli != null)
+        l.availableHere(
+          quantityWithUnit(line.availableMilli!, line.product.unit),
+        ),
+    ].join(' · ');
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.line),
-        borderRadius: BorderRadius.circular(12),
+        border: widget.first
+            ? null
+            : const Border(top: BorderSide(color: AppColors.line)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  line.product.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      line.product.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontVariations: [FontVariation.weight(650)],
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      meta,
+                      style: const TextStyle(
+                        fontFamily: AppFonts.mono,
+                        letterSpacing: -0.24,
+                        color: AppColors.muted,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _Stepper(
+                          index: widget.index,
+                          controller: _quantity,
+                          label: l.quantity,
+                          onMinus: () => cart.step(line, -step),
+                          onPlus: () => cart.step(line, step),
+                          onChanged: (v) => cart.setQuantityText(line, v),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          key: ValueKey('cart-remove-${widget.index}'),
+                          tooltip: l.removeLine,
+                          style: IconButton.styleFrom(
+                            minimumSize: const Size(40, 40),
+                            foregroundColor: AppColors.muted,
+                          ),
+                          onPressed: () => cart.remove(line),
+                          icon: const AppIcon(AppIcons.trash, size: 20),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              IconButton(
-                key: ValueKey('cart-remove-${widget.index}'),
-                tooltip: l.removeLine,
-                onPressed: () => cart.remove(line),
-                icon: const Icon(Icons.delete_outline),
-              ),
-            ],
-          ),
-          Text(
-            [
-              line.product.sku,
-              if (catalogPrice != null)
-                l.catalogPriceLine(formatMoney(catalogPrice, 'TMT')),
-              if (line.availableMilli != null)
-                l.availableHere(
-                  quantityWithUnit(line.availableMilli!, line.product.unit),
-                ),
-            ].join(' · '),
-            style: const TextStyle(color: AppColors.muted, fontSize: 12),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.start,
-            children: [
-              IconButton.outlined(
-                key: ValueKey('cart-minus-${widget.index}'),
-                onPressed: () => cart.step(line, -step),
-                icon: const Icon(Icons.remove),
-              ),
+              const SizedBox(width: 12),
               SizedBox(
-                width: 130,
-                child: TextField(
-                  key: ValueKey('cart-qty-${widget.index}'),
-                  controller: _quantity,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  onChanged: (v) => cart.setQuantityText(line, v),
-                  decoration: InputDecoration(
-                    labelText: l.quantity,
-                    suffixText: line.product.unit.symbol,
-                  ),
-                ),
-              ),
-              IconButton.outlined(
-                key: ValueKey('cart-plus-${widget.index}'),
-                onPressed: () => cart.step(line, step),
-                icon: const Icon(Icons.add),
-              ),
-              SizedBox(
-                width: 190,
-                child: TextField(
-                  key: ValueKey('cart-price-${widget.index}'),
-                  controller: _price,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  onChanged: (v) => cart.setPriceText(line, v),
-                  decoration: InputDecoration(labelText: l.priceFieldLabel),
+                width: 126,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                      height: 42,
+                      child: TextField(
+                        key: ValueKey('cart-price-${widget.index}'),
+                        controller: _price,
+                        textAlign: TextAlign.end,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        onChanged: (v) => cart.setPriceText(line, v),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontVariations: [FontVariation.weight(650)],
+                        ),
+                        decoration: InputDecoration(
+                          labelText: l.priceFieldLabel,
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.line),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: AppColors.blue,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (catalogPrice != null) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        l.catalogPriceLine(formatMoney(catalogPrice, 'TMT')),
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    if (lineTotal != null) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        formatMoney(lineTotal, 'TMT'),
+                        key: ValueKey('cart-line-total-${widget.index}'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
@@ -756,15 +936,78 @@ class _CartLineCardState extends State<_CartLineCard> {
                 style: const TextStyle(color: AppColors.danger, fontSize: 13),
               ),
             ),
-          if (lineTotal != null)
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                formatMoney(lineTotal, 'TMT'),
-                key: ValueKey('cart-line-total-${widget.index}'),
-                style: const TextStyle(fontWeight: FontWeight.w700),
+        ],
+      ),
+    );
+  }
+}
+
+/// The quantity control of the design: minus, the number, plus, in one bordered box.
+class _Stepper extends StatelessWidget {
+  const _Stepper({
+    required this.index,
+    required this.controller,
+    required this.label,
+    required this.onMinus,
+    required this.onPlus,
+    required this.onChanged,
+  });
+  final int index;
+  final TextEditingController controller;
+  final String label;
+  final VoidCallback onMinus;
+  final VoidCallback onPlus;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget button(Key key, AppIconData icon, VoidCallback onTap) => InkWell(
+      key: key,
+      onTap: onTap,
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: Center(child: AppIcon(icon, size: 16)),
+      ),
+    );
+    return Container(
+      height: 40,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          button(ValueKey('cart-minus-$index'), AppIcons.minus, onMinus),
+          SizedBox(
+            width: 52,
+            child: TextField(
+              key: ValueKey('cart-qty-$index'),
+              controller: controller,
+              textAlign: TextAlign.center,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              onChanged: onChanged,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              decoration: InputDecoration(
+                labelText: label,
+                floatingLabelBehavior: FloatingLabelBehavior.never,
+                filled: false,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
               ),
             ),
+          ),
+          button(ValueKey('cart-plus-$index'), AppIcons.plus, onPlus),
         ],
       ),
     );

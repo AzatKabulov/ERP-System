@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -104,7 +105,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               IconButton(
                 key: const ValueKey('pd-edit'),
                 tooltip: l.editProduct,
-                icon: const Icon(Icons.edit_outlined),
+                icon: const AppIcon(AppIcons.edit),
                 onPressed: _busy ? null : _edit,
               ),
           ],
@@ -281,10 +282,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             p.isActive ? 'pd-archive' : 'pd-restore',
                           ),
                           onPressed: _busy ? null : _toggleActive,
-                          icon: Icon(
-                            p.isActive
-                                ? Icons.archive_outlined
-                                : Icons.unarchive_outlined,
+                          icon: AppIcon(
+                            p.isActive ? AppIcons.archive : AppIcons.archive,
                           ),
                           label: Text(
                             p.isActive ? l.archiveProduct : l.restoreProduct,

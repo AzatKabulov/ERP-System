@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -309,7 +310,7 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
                                                 .dispose();
                                             _touch();
                                           },
-                                    icon: const Icon(Icons.delete_outline),
+                                    icon: const AppIcon(AppIcons.trash),
                                   ),
                                 ],
                               ),
@@ -331,7 +332,7 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
                       child: OutlinedButton.icon(
                         key: const ValueKey('transfer-add-line'),
                         onPressed: _busy ? null : _addProduct,
-                        icon: const Icon(Icons.add),
+                        icon: const AppIcon(AppIcons.plus),
                         label: Text(l.addLineProduct),
                       ),
                     ),
@@ -371,10 +372,10 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
                                 ),
                               ),
                             ),
-                          GradientButton(
+                          PrimaryButton(
                             key: const ValueKey('transfer-submit'),
                             label: l.transferSend,
-                            icon: Icons.local_shipping_outlined,
+                            icon: AppIcons.truck,
                             onPressed: _busy || !widget.monitor.online
                                 ? null
                                 : _submit,

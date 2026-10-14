@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -386,7 +387,7 @@ class _CountScreenState extends State<CountScreen> {
             child: OutlinedButton.icon(
               key: const ValueKey('count-add-line'),
               onPressed: _busy ? null : _addProduct,
-              icon: const Icon(Icons.add),
+              icon: const AppIcon(AppIcons.plus),
               label: Text(l.addLineProduct),
             ),
           ),
@@ -410,13 +411,13 @@ class _CountScreenState extends State<CountScreen> {
               OutlinedButton.icon(
                 key: const ValueKey('count-save'),
                 onPressed: _busy || !_entriesValid ? null : _saveEntries,
-                icon: const Icon(Icons.save_outlined),
+                icon: const AppIcon(AppIcons.save),
                 label: Text(l.countSaveEntries),
               ),
-              GradientButton(
+              PrimaryButton(
                 key: const ValueKey('count-submit'),
                 label: l.countSubmit,
-                icon: Icons.send_outlined,
+                icon: AppIcons.send,
                 onPressed: _busy || !_entriesValid || counted == 0
                     ? null
                     : _submit,
@@ -443,10 +444,10 @@ class _CountScreenState extends State<CountScreen> {
           const SizedBox(height: 12),
           ListenableBuilder(
             listenable: widget.monitor,
-            builder: (context, _) => GradientButton(
+            builder: (context, _) => PrimaryButton(
               key: const ValueKey('count-approve'),
               label: l.countApprove,
-              icon: Icons.check,
+              icon: AppIcons.check,
               onPressed:
                   _busy ||
                       !widget.monitor.online ||
@@ -464,7 +465,7 @@ class _CountScreenState extends State<CountScreen> {
             child: TextButton.icon(
               key: const ValueKey('count-cancel'),
               onPressed: _busy ? null : () => _cancel(doc),
-              icon: const Icon(Icons.close),
+              icon: const AppIcon(AppIcons.close),
               label: Text(l.countCancel),
             ),
           ),

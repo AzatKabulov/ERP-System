@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/format/format_stamp.dart';
 import '../../core/operations/operation_runner.dart';
@@ -54,7 +55,7 @@ class PendingOperationsBanner extends StatelessWidget {
           spacing: 12,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            const Icon(Icons.hourglass_top, size: 18, color: AppColors.warning),
+            const AppIcon(AppIcons.clock, size: 18, color: AppColors.warning),
             Text(
               l.pendingBanner(runner.pending.length),
               key: const ValueKey('pending-banner'),

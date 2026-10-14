@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -234,7 +235,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                           key: const ValueKey('ed-share-receipt'),
                           onPressed: () =>
                               _shareReceipt(attachment, snapshot.data!),
-                          icon: const Icon(Icons.ios_share),
+                          icon: const AppIcon(AppIcons.share),
                           label: Text(
                             '${l.expenseOpenReceipt}: ${attachment.name}',
                           ),
@@ -252,16 +253,16 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
             spacing: 12,
             runSpacing: 12,
             children: [
-              GradientButton(
+              PrimaryButton(
                 key: const ValueKey('ed-edit'),
                 label: l.expenseEdit,
-                icon: Icons.edit_outlined,
+                icon: AppIcons.edit,
                 onPressed: _busy ? null : () => _edit(e),
               ),
               OutlinedButton.icon(
                 key: const ValueKey('ed-void'),
                 onPressed: _busy ? null : () => _void(e),
-                icon: const Icon(Icons.block),
+                icon: const AppIcon(AppIcons.block),
                 label: Text(l.expenseVoid),
               ),
             ],

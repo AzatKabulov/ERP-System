@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -83,7 +84,7 @@ class _ContinuousScanScreenState extends State<ContinuousScanScreen> {
           IconButton(
             key: const ValueKey('scan-torch'),
             tooltip: l.scanTorch,
-            icon: const Icon(Icons.flashlight_on_outlined),
+            icon: const AppIcon(AppIcons.flash),
             onPressed: () => _controller.toggleTorch(),
           ),
         ],
@@ -128,7 +129,7 @@ class _ContinuousScanScreenState extends State<ContinuousScanScreen> {
                 FilledButton.icon(
                   key: const ValueKey('scan-done'),
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.check),
+                  icon: const AppIcon(AppIcons.check),
                   label: Text(l.intakeCameraDone),
                 ),
               ],

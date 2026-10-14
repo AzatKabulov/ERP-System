@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -56,7 +57,7 @@ class NamedRefPicker extends StatelessWidget {
           value: _addNew,
           child: Row(
             children: [
-              const Icon(Icons.add, size: 18, color: AppColors.blue),
+              const AppIcon(AppIcons.plus, size: 18, color: AppColors.blue),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(

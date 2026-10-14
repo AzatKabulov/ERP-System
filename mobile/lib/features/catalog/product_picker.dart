@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
@@ -102,7 +103,7 @@ class _ProductPickerDialogState extends State<_ProductPickerDialog> {
                     key: const ValueKey('picker-close'),
                     tooltip: l.close,
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                    icon: const AppIcon(AppIcons.close),
                   ),
                 ],
               ),

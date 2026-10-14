@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/connectivity/connection_monitor.dart';
 import '../../core/format/format_stamp.dart';
@@ -129,7 +130,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                   },
                   decoration: InputDecoration(
                     labelText: l.returnSearchHint,
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: const AppIcon(AppIcons.search),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -146,7 +147,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                       key: const ValueKey('returns-empty'),
                       title: l.returnsEmpty,
                       subtitle: '',
-                      icon: Icons.assignment_return_outlined,
+                      icon: AppIcons.returnArrow,
                     ),
                   )
                 else ...[

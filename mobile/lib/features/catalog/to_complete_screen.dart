@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/api/api_error_text.dart';
@@ -47,7 +48,7 @@ class _ToCompleteScreenState extends State<ToCompleteScreen> {
                   child: EmptyState(
                     key: const ValueKey('complete-none'),
                     title: l.toCompleteNone,
-                    icon: Icons.check_circle_outline,
+                    icon: AppIcons.checkCircle,
                   ),
                 );
               }
@@ -245,10 +246,10 @@ class _CompleteRowState extends State<_CompleteRow> {
                 ),
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: GradientButton(
+                child: PrimaryButton(
                   key: ValueKey('complete-save-${item.sku}'),
                   label: l.save,
-                  icon: Icons.check,
+                  icon: AppIcons.check,
                   onPressed: _saving ? null : _save,
                 ),
               ),

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -43,14 +44,14 @@ class ProductPhoto extends StatelessWidget {
 
   Widget _tile(Widget? child) => DecoratedBox(
     decoration: BoxDecoration(
-      color: AppColors.tint,
+      color: AppColors.surfaceMuted,
       borderRadius: BorderRadius.circular(radius),
     ),
     child: child ?? Center(child: _icon()),
   );
 
   Widget _icon() =>
-      Icon(Icons.inventory_2_outlined, size: iconSize, color: AppColors.blue);
+      AppIcon(AppIcons.box, size: iconSize, color: AppColors.neutral);
 
   @override
   Widget build(BuildContext context) {
@@ -214,13 +215,13 @@ class _ProductPhotoSectionState extends State<ProductPhotoSection> {
                   FilledButton.icon(
                     key: const ValueKey('pd-photo-take'),
                     onPressed: _busy ? null : () => _pick(camera: true),
-                    icon: const Icon(Icons.photo_camera_outlined),
+                    icon: const AppIcon(AppIcons.camera),
                     label: Text(l.productPhotoTake),
                   ),
                 OutlinedButton.icon(
                   key: const ValueKey('pd-photo-choose'),
                   onPressed: _busy ? null : () => _pick(camera: false),
-                  icon: const Icon(Icons.photo_library_outlined),
+                  icon: const AppIcon(AppIcons.image),
                   label: Text(
                     has ? l.productPhotoChange : l.productPhotoChoose,
                   ),
@@ -229,7 +230,7 @@ class _ProductPhotoSectionState extends State<ProductPhotoSection> {
                   TextButton.icon(
                     key: const ValueKey('pd-photo-remove'),
                     onPressed: _busy ? null : _remove,
-                    icon: const Icon(Icons.delete_outline),
+                    icon: const AppIcon(AppIcons.trash),
                     label: Text(l.productPhotoRemove),
                   ),
                 if (_busy)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/api/api_error_text.dart';
@@ -573,7 +574,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 child: TextButton.icon(
                   key: const ValueKey('pf-barcode-add'),
                   onPressed: _saving ? null : _addBarcode,
-                  icon: const Icon(Icons.add),
+                  icon: const AppIcon(AppIcons.plus),
                   label: Text(l.addBarcode),
                 ),
               ),
@@ -636,10 +637,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 ),
               ],
               const SizedBox(height: 24),
-              GradientButton(
+              PrimaryButton(
                 key: const ValueKey('pf-save'),
                 label: l.save,
-                icon: Icons.check,
+                icon: AppIcons.check,
                 onPressed: _saving ? null : _save,
               ),
             ],

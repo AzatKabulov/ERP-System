@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/connectivity/connection_monitor.dart';
 import '../../core/format/format_stamp.dart';
@@ -122,7 +123,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                   },
                   decoration: InputDecoration(
                     labelText: l.saleSearchHint,
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: const AppIcon(AppIcons.search),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -139,7 +140,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                       key: const ValueKey('sales-history-empty'),
                       title: l.salesHistoryEmpty,
                       subtitle: '',
-                      icon: Icons.receipt_long_outlined,
+                      icon: AppIcons.sale,
                     ),
                   )
                 else ...[
@@ -523,10 +524,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerLeft,
-            child: GradientButton(
+            child: PrimaryButton(
               key: const ValueKey('sd-return'),
               label: l.returnButton,
-              icon: Icons.assignment_return_outlined,
+              icon: AppIcons.returnArrow,
               onPressed: () => _startReturn(sale),
             ),
           ),
@@ -540,7 +541,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
             child: OutlinedButton.icon(
               key: const ValueKey('sd-warranty'),
               onPressed: () => _startWarranty(sale),
-              icon: const Icon(Icons.verified_user_outlined),
+              icon: const AppIcon(AppIcons.shield),
               label: Text(l.warrantyFromSale),
             ),
           ),

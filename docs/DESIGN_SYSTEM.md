@@ -1,298 +1,140 @@
 # Design System
 
-Status: Based on the user's supplied **Minimalist Modern** reference and adapted for the Flutter ERP. The prototype under `mobile/` builds for web and Android. Browser checks cover phone/tablet layouts, and widget tests cover doubled text size. Physical-device and iOS accessibility checks remain to be done.
+Status: Implemented in the Flutter app from the owner's **"Premium Minimalist ERP UI"** Figma Make mock-up (2026-10-14). The mock-up's palette, type, shell, page layout and components were adopted as they are; only names, sections and content were tailored to this product (our own module list, no Purchasing, our fields). It replaces the earlier "Minimalist Modern" blue-gradient direction. The app builds for web and Android; browser checks cover phone (390), tablet (820) and desktop (1440) widths, and widget tests cover doubled text size. Physical-device and iOS accessibility checks remain to be done.
 
-## Brand Direction
+## Direction
 
-Clarity through structure, character through deliberate detail.
+Calm, precise and expensive-looking: a warm ivory canvas, white surfaces with hairlines and a very soft two-layer shadow, ink-black text, **one** flat cobalt accent for actions, and a **thin brass** detail used only as decoration (a hairline, the selected-tab marker). One figure per page may sit on an ink "spotlight" surface. Headlines are serif; everything operational is Inter; codes are monospace.
 
-The application should feel modern, confident, and approachable: an off-white canvas, crisp white surfaces, deep slate text, and concentrated electric-blue accents. Warm display typography adds personality; operational screens remain clear and efficient.
-
-Use whitespace to group information and emphasize actions. Keep inventory, prices, statuses, and totals easy to scan. The style must support a full working day on a tablet, including frequent data entry and barcode scanning.
-
-### Applying the Reference
-
-| Reference element | Application treatment |
-| --- | --- |
-| Electric-blue gradient | Signature primary actions and limited brand highlights |
-| White cards and soft shadows | Dashboard summaries, forms, and detail panels |
-| Inverted slate sections | Optional dashboard spotlight or sign-in brand panel |
-| Warm serif headlines | Welcome or overview headlines using a font with both required scripts |
-| Monospace accents | SKUs, barcodes, and compact reference numbers |
-| Section badges | Meaningful status and context chips |
-| Asymmetric layouts | Useful master/detail and sale/cart proportions |
-| Floating artwork and rotating rings | Reserved for future promotional material; operational screens use restrained feedback |
-
-Use the reference's visual direction with Flutter widgets and themes. Its React, CSS, Tailwind, shadcn/ui, and Framer Motion examples are not the implementation stack.
-
-The initial theme is light. A slate spotlight panel is a component variation, not a commitment to a complete dark theme.
+Not used (by design): gradients on buttons, glows, dot textures, floating or pulsing artwork, glass blur in data views.
 
 ## Color Tokens
 
-Keep colors centralized. Widgets should consume semantic tokens rather than repeat literal color values.
+Defined once in `mobile/lib/theme/app_theme.dart` (`AppColors`). Widgets use the names, never literal colors.
 
 | Token | Value | Purpose |
 | --- | --- | --- |
-| `background` | `#FAFAFA` | Main application canvas |
-| `surface` | `#FFFFFF` | Cards, sheets, dialogs, and form surfaces |
-| `surfaceMuted` | `#F1F5F9` | Secondary panels and quiet fills |
-| `textPrimary` | `#0F172A` | Main text and operational headings |
-| `textSecondary` | `#64748B` | Metadata and secondary descriptions |
-| `primary` | `#0052FF` | Main actions, links, selection, and focus |
-| `primaryGradientEnd` | `#3568E8` | Accessible lighter endpoint for white-text primary buttons |
-| `accentDecorative` | `#4D7CFF` | Original reference endpoint for decoration without small white text |
-| `onPrimary` | `#FFFFFF` | Text on primary actions |
-| `primaryTint` | `#EFF6FF` | Selected rows, navigation, and blue-tinted context |
-| `borderSubtle` | `#E2E8F0` | Decorative card borders and dividers |
-| `borderControl` | `#8291A8` | Visible outlines of enabled input controls |
-| `focus` | `#0052FF` | Keyboard and scanner-input focus |
-| `inverseSurface` | `#0F172A` | Optional spotlight panel |
-| `onInverse` | `#FFFFFF` | Text on slate surfaces |
+| `canvas` | `#F5F2EC` | Page background |
+| `surface` / `surfaceSoft` | `#FFFFFF` / `#FAF8F4` | Cards, table headers, quiet fills |
+| `ink` | `#0D1311` | Text, the spotlight surface, the avatar |
+| `muted` | `#5D6561` | Secondary text |
+| `line` / `lineStrong` | `#E4DFD5` / `#CBC4B8` | Card borders and dividers / hover border |
+| `control` | `#8E887B` | Outline of an enabled input (about 3.2:1 on white). The mock-up uses `line` here; the darker warm gray keeps fields visible per the accessibility rule |
+| `blue` / `blueDark` | `#1740FF` / `#1234D6` | Primary action, links, focus, current tab; darker on hover |
+| `tint` | `#EAEEFF` | Soft blue fill (info badge, current phone tab) |
+| `brass` | `#B08D57` | Decoration only: hairlines, the current-item marker. Never text or a main action |
+| `onInverse` / `onInverseMuted` | `#FFFFFF` / `#B9C0BC` | Text on ink |
 
-### Status Tokens
-
-| Status | Foreground | Background | Example |
-| --- | --- | --- | --- |
-| Success | `#166534` | `#F0FDF4` | Delivery received |
-| Warning | `#92400E` | `#FFFBEB` | Low stock or review required |
-| Error | `#B91C1C` | `#FEF2F2` | Invalid quantity or failed operation |
-| Information | `#1D4ED8` | `#EFF6FF` | Goods in transit |
-| Neutral | `#475569` | `#F1F5F9` | Draft or inactive record |
-
-Every status includes a readable label, with an icon where helpful. Color alone must never communicate stock state, approval, or failure. Green and red trends require context; an increase in expenses is not automatically a positive result.
-
-### Gradient and Contrast Rules
-
-- Default primary button gradient: `#0052FF` to `#3568E8`, horizontal or diagonal. Use one shared implementation.
-- The reference endpoint `#4D7CFF` gives white text approximately **3.72:1** contrast, below the **4.5:1** target for ordinary text. Keep it decorative or pair it with an appropriately contrasting foreground.
-- White text on the adopted primary endpoints gives approximately **5.75:1** and **4.89:1** contrast. Verify actual rendered gradients and all interaction states during implementation.
-- `textSecondary` on the canvas gives approximately **4.56:1**; do not reduce its opacity for readable metadata.
-- `borderControl` on white gives approximately **3.20:1**. `borderSubtle` is for decoration, not the sole visible boundary of an input.
-- Do not brighten gradient buttons on hover if that reduces text contrast. Use a state overlay or controlled shadow instead.
-
-These are calculated token-pair ratios, not an accessibility certification of the future interface.
+Status colors (foreground / soft background): success `#14703B` / `#E8F4EC`, warning `#8C5300` / `#FFF4E0`, error `#B3261E` / `#FDECEA`, info = `blue` / `tint`, neutral `#4B544F` / `#EEEBE4`. Every status has a label and, where useful, an icon. Color alone never carries meaning; trends need context.
 
 ## Typography
 
-### Font Direction
+- **UI and body:** Inter (bundled).
+- **Display:** Noto Serif, weight 600, for page titles, the spotlight figure, dialog titles and the sign-in headline. The mock-up's Noto Serif Display is replaced by the bundled Noto Serif, which covers Russian and Turkmen.
+- **Identifiers:** JetBrains Mono for SKUs, barcodes and document numbers. All three fonts were checked for Russian and the Turkmen letters.
+- Digits in money and quantities are tabular. Numeric table cells are right-aligned.
 
-- **UI and body:** Inter, weights 400, 500, 600, and 700. Verify the bundled files cover Russian Cyrillic and Turkmen Latin; use a verified Noto Sans fallback if necessary.
-- **Display:** Noto Serif, weight 600 or 700, for selective welcome and dashboard headlines. The reference's Calistoga is not adopted because its Cyrillic coverage is unsuitable for the required Russian interface.
-- **Identifiers:** JetBrains Mono, weights 400 and 500, after verifying the actual font assets. Use tabular figures for aligned financial and quantity columns.
-
-Bundle appropriately licensed fonts as app assets. Do not depend on runtime font downloads. Verify glyph coverage in receipts and PDFs separately from screen rendering.
-
-### Type Scale
-
-Sizes use Flutter logical pixels; line-height values are multipliers. Respect platform text scaling.
-
-| Role | Size | Weight | Line height | Use |
-| --- | --- | --- | --- | --- |
-| Display | 32, up to 36 in wide layouts | 600–700 | 1.25 | Optional welcome or overview title |
-| Page title | 24 | 600 | 1.30 | Products, inventory, sales, reports |
-| Section title | 20 | 600 | 1.35 | Card groups and detail sections |
-| Metric | 28–32 | 600–700 | 1.20 | Dashboard totals, with room to wrap |
-| Body | 16 | 400 | 1.50 | Descriptions and normal content |
-| Control label | 14–16 | 500 | 1.40 | Buttons, fields, tabs, and navigation |
-| Table text | 14–16 | 400–500 | 1.40 | Operational lists |
-| Metadata | 13–14 | 400–500 | 1.45 | Dates, secondary references |
-
-Use sentence case and natural letter spacing for Russian and Turkmen. Avoid uppercase, widely tracked labels as the default. Never shrink text to force a price, translation, or heading into a fixed box.
-
-## Spacing and Layout
-
-Use the shared spacing scale: **4, 8, 12, 16, 24, 32, 48, 64** logical pixels.
-
-- Page padding: 16 in compact layouts; 24 in medium and expanded layouts.
-- Card padding: 16 for operational content; 24 for dashboard summaries.
-- Related field spacing: 16; major form groups: 24–32.
-- Grid gaps: 16–24.
-- Enabled touch targets: at least 48 × 48, including icon buttons and embedded row actions.
-- Standard input height: minimum 56; allow growth for scaled text and error messages.
-- Interactive rows: minimum 56; use 64 or more when showing two lines.
-
-Layout is based on available content width after navigation, safe areas, and the on-screen keyboard. Do not use the reference's large landing-page section padding in operational screens.
-
-Keep tables, filter bars, and forms aligned. Use asymmetric columns only when they serve a task, such as a wider product list beside a narrower sale summary. Avoid decorative overlap near actionable controls.
-
-## Radius, Borders, and Shadows
-
-| Token | Value | Use |
+| Role | Size | Notes |
 | --- | --- | --- |
-| `radiusSmall` | 8 | Inline containers and compact controls |
-| `radiusControl` | 12 | Buttons and fields |
-| `radiusCard` | 16 | Cards and panels |
-| `radiusDialog` | 20 | Dialogs and sheets |
-| `radiusPill` | Fully rounded | Status and filter chips |
+| Spotlight figure | 52 (34 on a phone) | Serif, tight tracking |
+| Page title | 28 (24 on a phone) | Serif |
+| Dialog title | 24 | Serif |
+| Section title | 16 | Inter 600 |
+| Metric | 24 | Inter 600, tabular |
+| Body | 14 | |
+| Label / table text | 13 | |
+| Eyebrow, table header | 11–12 | Inter 700, uppercase, wide tracking |
+| Metadata | 12 | |
 
-Borders are normally 1 logical pixel. Focus uses a clearly visible 2-pixel outline with separation where needed.
+## Spacing, Radius, Shadow
 
-Flutter `BoxShadow` starting values:
+- Spacing scale 4, 8, 16, 24, 32, 40, 48, 64. Page padding 32 (16 on a phone); the page content is centred and limited to 1500.
+- Radius: card 14, control 12, dialog 18, badge and chip pill, top-bar controls 10.
+- Card shadow: `0 1 2` at 4% plus `0 8 24` at 5% ink. Overlays use a larger, softer shadow.
+- Minimum touch target 48 × 48.
 
-| Shadow | Color and opacity | Offset | Blur | Use |
-| --- | --- | --- | --- | --- |
-| Quiet | Slate `#0F172A`, 6% | (0, 2) | 8 | Dashboard cards |
-| Raised | Slate `#0F172A`, 10% | (0, 8) | 24 | Dialogs and floating panels |
-| Accent | Blue `#0052FF`, 16% | (0, 4) | 12 | Limited primary-action emphasis |
+## Application Shell
 
-Use borders without shadows for dense lists. Keep dot textures and blue glows confined to an optional brand or spotlight panel, away from text and controls. Avoid expensive backdrop blurs in scrolling data views.
+- **Wide and tablet (768 and above):** a white side navigation, 216 wide (196 under 1200): the brand square and name, the modules as 48-pixel items (the current one on a soft neutral fill with a brass marker), and the signed-in person (initials avatar, name, role) with sign-out at the bottom.
+- **Phone (under 768):** no side navigation. A bottom bar of four modules (overview, products, sales, stock) with the current one on a soft blue fill, and a menu button that opens a drawer with every module and sign-out. The bar steps aside while the keyboard is open.
+- **Top bar:** the page name, then the location, the RU | TM switch and (on wide screens) the role. On a phone the location moves to a second row.
+- Show only the modules a role may use; the server stays the authority.
+- Page decisions use available width (`LayoutBuilder`), never `MediaQuery` size: a page beside a side navigation is narrower than the window, and the widget tests resize the surface, not the view.
 
-## Application Shell and Navigation
+## Shared Primitives
 
-- **Expanded layout:** labeled side navigation, with the selected module highlighted using a blue tint and a clear indicator.
-- **Medium layout:** navigation rail with labels where they fit; provide an accessible overflow or drawer for all permitted modules.
-- **Compact layout:** the initial prototype uses a labeled menu button and drawer containing all modules. A future primary navigation bar plus More may be added after task-based device review. All permitted modules remain reachable.
-- Keep the current store or warehouse visible near the page heading and sales context. Switching locations must handle unsaved work explicitly.
-- Provide language selection using `Русский` and `Türkmençe`, with the current choice clear.
-- Keep global navigation separate from page-level tabs and filters.
-- Show destinations according to permissions, while retaining backend authorization checks.
+In `mobile/lib/widgets/common.dart` (tokens in `app_theme.dart`). Screens use these, not one-off styling.
 
-## Components
+| Primitive | Use |
+| --- | --- |
+| `PageHead` | Eyebrow, serif title, subtitle and the page's actions (below the title on a narrow page) |
+| `SurfaceCard` | White card, hairline, soft shadow; with `onTap` it is a button (stronger border on hover) |
+| `PrimaryButton` | The main action: flat cobalt, darker on hover, press scale 0.98, a separated focus ring. Secondary actions are the theme's outlined button, quiet ones the text button |
+| `StatusPill` | Soft tone badge with icon and label |
+| `MetricCard` | Label on top, the figure and a note below |
+| `SpotlightCard` | The ink surface with a brass hairline: one per page, for the figure that matters most |
+| `Glyph`, `BrandMark` | An icon on a soft square (list rows); the brand square |
+| `Eyebrow` | Small uppercase label |
+| `AppSegmented`, `AppTabs` | The soft segmented switch (RU \| TM, gallery \| list); underlined tabs for a page's sections |
+| `TopbarControl`, `FilterSelect` | Selector boxes and drop-down filters |
+| `NoticeBanner` | Info, warning, error and success strips |
+| `EmptyState` | Calm line icon in a circle, one sentence, a hint |
+| `FadeUp` | A page's content arriving: 180 ms fade with a 4 px rise, skipped when reduced motion is on |
 
-### Buttons
-
-- Primary: accessible blue gradient, white text, 12-pixel radius, minimum 48-pixel height.
-- Secondary: white or muted surface, visible outline, slate text.
-- Text or ghost: restrained text action with a full touch target.
-- Destructive: error styling with a specific label explaining the action.
-- Use one dominant primary action per task area. Labels name the action, such as receiving a delivery or completing a sale.
-- Submission shows progress and prevents accidental duplicate taps. Preserve entered work on failure.
-
-### Fields, Search, and Scanning
-
-- Persistent labels; placeholders supplement rather than replace them.
-- Put helper and validation text directly beneath the field. Explain how to correct an error.
-- Product search supports names, SKU, and barcode entry. Give scanning a labeled action and keep manual lookup available.
-- Keep scanner or keyboard focus deliberate and visible. Receiving a scan must not unexpectedly submit a form, finalize a sale, or move stock.
-- Numeric fields make units and currency clear. Validation and parsing must support the selected locale.
-
-### Cards, Metrics, and Charts
-
-- White cards, subtle borders, restrained shadows, and consistent title/value placement.
-- Financial cards show currency, period, and location context. A missing value is not displayed as zero.
-- Give one important overview card a slate treatment where appropriate. Avoid turning every card into a gradient feature.
-- Charts show labels, units, and an accessible summary or table. Trends describe their comparison period.
-
-### Tables and Lists
-
-- Keep names left-aligned and quantities and money consistently aligned with tabular figures.
-- Use clear column headings, a quiet header surface, row separators, and a visible selected state.
-- Support search, relevant filters, sorting, and pagination or incremental loading appropriate to the data source.
-- In compact layouts, show prioritized fields in cards or list rows and expose full details on selection.
-- Where a wide comparison table remains necessary, provide intentional horizontal scrolling without trapping page navigation.
-- Row actions have labeled controls or an accessible menu; important actions are not available only through a swipe or hover.
-
-### Status Chips and Feedback
-
-- Pills use the semantic status foreground and background, an explicit label, and optional icon.
-- Information badges never imply a record has been saved or synchronized unless that state is verified.
-- Routine confirmations may use a snackbar with a relevant next action. Persistent failures use an inline message or banner with retry where appropriate.
-- Approval-required states explain the next step without granting unauthorized actions.
-
-### Dialogs and Sheets
-
-- Use dialogs for short confirmations and decisions; use full pages or roomy sheets for long forms.
-- Refund and stock-adjustment confirmations show the affected items, quantities, location, and financial or stock consequence.
-- Support keyboard focus, back navigation, and explicit cancellation. Preserve drafts appropriately and do not hide required fields behind the keyboard.
-- Never rely solely on a dialog to enforce a business policy or permission.
+Material chips are themed to the design: a pill with a hairline; the selected chip gets an ink outline and a brass line along its bottom edge. Inputs are 48+ high with 12 radius and a cobalt focus outline. Dialogs use radius 18 and a serif title.
 
 ## Screen Patterns
 
-| Area | Visual and interaction pattern |
+| Area | Pattern |
 | --- | --- |
-| Dashboard | Context filters, responsive metric grid, low-stock list, recent activity |
-| Products | Search and scan toolbar, product list, detail/edit panel |
-| Inventory | Visible location, balances and movement history, clear receiving/transfer/count actions |
-| Purchasing | Order list with statuses, line-item details, received and outstanding quantities |
-| Sales | Product lookup beside a cart and totals when space permits; distinct finalize action |
-| Returns | Original-sale context, eligible quantities, item condition, refund summary |
-| Physical counts | Location and count context, count-entry rows, variance review before adjustment |
-| Reordering | Suggested quantities and stock context, review and purchase-order action |
-| Expenses | Filterable expense list, short entry form, receipt attachment preview |
-| Warranties | Original-sale context, entitlement summary, claim history and resolution |
-| Reports | Date/location filters, labeled totals, table or chart, permitted export action |
-| Administration | Grouped settings for business, locations, roles, language, import/export, and recovery |
+| Overview | Page head with the greeting; today's sales on the ink spotlight; the other figures as metric cards; recent activity as a card of rows with a glyph, the action, and who and when |
+| Products | Page head with import, export, "to complete" and Add product; search with scan, category chips, gallery \| list switch. The list is a table (article in mono, name with barcode, category and brand, price); the gallery is cards with the picture |
+| Stock | Page head with the receiving actions; search and location chips; a table (product, location, condition badge, quantity, value) |
+| Sales | Page head with history and returns; a workbench: product search and results in one card beside the cart card; large total and the payment choice |
+| Expenses, Warranties | Page head with the add action, filter chips, one card of rows with a glyph and a badge |
+| Reports | Page head, period chips and location filter, underlined tabs, metric cards; the sales tab also draws revenue by day as a thin cobalt line from the report's own rows |
+| Settings | Page head and cards per area |
 
-Imports show preview, errors, and a clear apply step. Recovery screens communicate the administrator's intended action and remain separate from ordinary stock operations. Exact approval and recovery policies come from the PRD and later architecture decisions.
+Imports show a preview, errors and a clear apply step. Recovery screens stay separate from ordinary stock operations.
 
 ## Interaction States
 
-| State | Required behavior |
+| State | Behavior |
 | --- | --- |
-| Default | Clear label, stable geometry, readable contrast |
-| Hover | Optional pointer feedback without movement of dense rows |
-| Focus | Visible outline and sensible traversal; not dependent on hover |
-| Pressed | Brief tint or state overlay; small scale feedback only where it does not move nearby controls |
-| Disabled | Clear unavailable state and a reason when needed; no hidden active hit area |
-| Loading | Relevant progress indicator or stable skeleton; retain context |
-| Empty | Explain the absence of records and offer a permitted next action |
-| Error | Specific localized message, retained input, and a suitable recovery action |
-| Success | Confirm the completed backend operation and show updated state |
-| Offline or stale | Persistent understandable indication; stock-changing actions unavailable in the initial version |
+| Hover | Subtle: a stronger border, a row tint, a darker primary button. No movement of dense rows |
+| Pressed | Brief overlay; the primary button scales to 0.98 |
+| Focus | A visible outline or ring, never dependent on hover |
+| Disabled | The primary button fades to about 40%; other controls use the muted fill |
+| Loading, empty, error | A progress indicator that keeps the page; a calm empty state with a next step; a specific message with retry |
+| Offline or pending | A persistent banner; success is shown only after the server confirms |
 
-Skeletons must not imply actual records exist. Failed requests must not produce success colors, changed stock totals, or misleading receipts.
+Failed requests never produce success colors, changed totals or misleading receipts.
 
 ## Motion
 
-- Press and focus feedback: approximately 100–150 ms.
-- Panels, selection transitions, and dialogs: approximately 180–240 ms using ease-out curves.
-- Keep scroll performance smooth on the selected Android tablet. Avoid recurring animation in tables, metric values, or scanning controls.
-- Honor platform reduced-motion settings. Disable decorative motion and shorten nonessential transitions.
-- Use Flutter's implicit animations for simple transitions; introduce an animation package only for a demonstrated need.
-- Rotating rings, floating hero artwork, and constant pulsing are not part of the initial operational interface. A status indicator must reflect an actual state rather than simulate live activity.
+100–180 ms for hover, press and the page's arrival (ease-out). No recurring animation in tables, figures or scanning controls. Reduced motion removes the arrival fade.
 
-## Responsive Rules
+## Russian and Turkmen
 
-Starting breakpoints use available Flutter logical width and may be adjusted after testing:
-
-| Width | Layout |
-| --- | --- |
-| Under 600 | Compact: stacked forms, simplified lists, menu and drawer |
-| 600–839 | Medium: rail or drawer, adaptive one/two-column panels |
-| 840 and above | Expanded: labeled navigation and suitable master/detail layouts |
-
-Dashboard grids adapt to card content, usually one or two columns in compact layouts and up to four with sufficient width. Prefer wrapping to shrinking values.
-
-Sales uses product/cart panels only when both retain usable width. In compact layouts, the cart is a clearly reachable page or panel with item count and totals. A checkout action must remain reachable without covering fields or validation messages.
-
-Use safe areas and keyboard insets. Preserve drafts, selection, and scroll position where appropriate across rotation and layout changes. Test tablet portrait, landscape, and iPad split-view widths.
-
-## Russian and Turkmen Requirements
-
-- All user-facing system labels and feedback use the localization resources required by `AGENTS.md`.
-- Test complete Russian and Turkmen screens, not just translated headings. Do not force English-length widths on navigation, buttons, or fields.
-- Verify `Ёё` and Turkmen characters including `Ää`, `Çç`, `Ňň`, `Öö`, `Şş`, `Üü`, `Ýý`, and `Žž` in bundled fonts and document output.
-- Product names and identifiers retain their stored spelling when the interface language changes.
-- Interface language and receipt/invoice language are independent settings. Use the configured currency; do not infer it from the selected language.
-- Translation and business terminology review by fluent speakers remains required before release.
+- All user-facing text comes from the localization files (`AGENTS.md`). The RU | TM switch is in the top bar and on the sign-in page.
+- Uppercase eyebrows and table headers are used as in the mock-up (Turkmen has no dotted capital İ, so plain uppercase is correct).
+- Verify `Ёё` and `Ää Çç Ňň Öö Şş Üü Ýý Žž` in every font and in documents. Product names and identifiers keep their stored spelling.
+- Interface language and receipt language are independent. The currency is configured, never inferred from the language.
+- Translation and terminology review by fluent speakers is still required.
 
 ## Accessibility
 
-- Target at least 4.5:1 contrast for ordinary text, 3:1 for eligible large text, and 3:1 for meaningful non-text controls against adjacent surfaces.
-- Use at least 48 × 48 logical-pixel touch targets on both platforms. Keep adjacent controls sufficiently separated.
-- Test substantial text scaling, including approximately 200%, without clipped actions or inaccessible content. Let layouts reflow or scroll.
-- Provide Flutter semantics for icon actions, quantities, selected states, chart summaries, and form errors. Exclude decorative graphics from screen-reader navigation.
-- Test TalkBack on Android and VoiceOver before the Apple release, along with keyboard/scanner focus and navigation.
-- Do not require color perception, animation, hover, or gestures without an alternative to complete a task.
-- Announce important validation or completion feedback appropriately without repeatedly reading the entire screen.
-
-## Flutter Implementation Guidance
-
-- Centralize the semantic palette in `ThemeData`/`ColorScheme` and additional tokens in typed `ThemeExtension` values where needed. Use one shared `TextTheme` and component theme set.
-- Implement the primary gradient in a reusable button that preserves Material feedback, semantics, focus, disabled states, and minimum target size.
-- Build shared primitives for page headers, location selection, search/scan fields, status chips, metric cards, table/list rows, form sections, error panels, and empty states.
-- Use `LayoutBuilder` and available constraints for responsive decisions. Do not lock orientation or disable text scaling to make layouts fit.
-- Keep widgets independent of direct database access and stock calculations. UI composition follows the future architecture document; the backend remains authoritative.
-- Bundle fonts and asset licenses. Use a consistent icon family with accessible labels rather than mixing styles.
-- Use realistic fixtures clearly identified as demonstration data in any prototype. Prototype sales, stock, or backups must never be presented as working backend operations.
+- Text at least 4.5:1 on its surface; the muted text on the canvas is about 5.4:1. Brass is never used for text.
+- Enabled input outlines are at least 3:1 (`control`); the card hairline `line` is decoration.
+- Touch targets at least 48 × 48. Test text scaling to 200%; layouts reflow or scroll.
+- Semantics for icon actions, selected tabs and segments, quantities and form errors; decorative marks are excluded.
+- Do not rely on color, animation, hover or gestures alone; every action is reachable by tap and keyboard.
 
 ## Review Checklist
 
-- Compare dashboard, products, inventory, and sales against this specification before expanding to the other modules.
-- Check both languages, long names, large totals, portrait and landscape, narrow layouts, and scaled text.
-- Exercise loading, empty, error, disabled, offline, and success states without losing drafts.
-- Measure the final control and text contrast, including gradients and interaction overlays.
-- Test scrolling, focus, actual scanning hardware, and representative printed/PDF output on the chosen devices.
-- Verify that all agreed features remain discoverable and permission restrictions remain clear.
+- Compare Overview, Products, Stock, Sales and Reports with the mock-up at phone, tablet and desktop widths.
+- Both languages, long names, large totals, portrait and landscape, doubled text.
+- Loading, empty, error, disabled, offline and success states without losing drafts.
+- Real scanning hardware and printed or PDF output on the chosen devices.
 
-This document defines the intended frontend direction. Compliance must be demonstrated by the implemented widgets, accessibility checks, and device validation rather than inferred from these tokens alone.
+This document describes the intended frontend. Compliance is shown by the implemented widgets, the tests and device checks, not by the tokens alone.

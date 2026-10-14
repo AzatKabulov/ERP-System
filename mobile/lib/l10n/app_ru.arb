@@ -1622,5 +1622,30 @@
   "intakeSubmit": "Принять на склад",
   "actionIntake": "Приёмка товара",
   "movementIntake": "Приёмка (сканирование)",
-  "auditStockIntakePosted": "Товар принят сканированием"
+  "auditStockIntakePosted": "Товар принят сканированием",
+  "brandTagline": "Склад, продажи и прибыль — в одном месте.",
+  "navMore": "Ещё",
+  "auditProductPhotoSet": "Добавлено фото товара",
+  "auditProductPhotoRemoved": "Фото товара удалено",
+  "brandFoot": "Учёт для магазинов и складов",
+  "dashVersusYesterday": "{percent} ко вчера",
+  "@dashVersusYesterday": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "stockTabByLocation": "По точкам",
+  "salesCashDesk": "Касса",
+  "cartTotalLabel": "Итого",
+  "expenseOperationsCount": "Операций: {count}",
+  "@expenseOperationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportDynamics": "Динамика продаж"
 }

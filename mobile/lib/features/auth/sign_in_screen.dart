@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -78,178 +79,264 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final l = strings(context);
+  Widget _languageSwitch() => AppSegmented<String>(
+    key: const ValueKey('language-selector'),
+    keyPrefix: 'language',
+    options: const [('ru', 'RU'), ('tk', 'TM')],
+    value: widget.languageCode,
+    onChanged: widget.onLanguageChanged,
+  );
+
+  Widget _form(AppLocalizations l) {
     final session = widget.session;
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: PopupMenuButton<String>(
-                      key: const ValueKey('language-selector'),
-                      tooltip: l.language,
-                      initialValue: widget.languageCode,
-                      onSelected: widget.onLanguageChanged,
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'ru',
-                          child: Text(l.languageRussian),
-                        ),
-                        PopupMenuItem(
-                          value: 'tk',
-                          child: Text(l.languageTurkmen),
-                        ),
-                      ],
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.translate,
-                              size: 20,
-                              color: AppColors.blue,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              widget.languageCode == 'ru'
-                                  ? l.languageRussian
-                                  : l.languageTurkmen,
-                            ),
-                          ],
+    return AutofillGroup(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(alignment: Alignment.centerLeft, child: _languageSwitch()),
+          const SizedBox(height: 18),
+          Text(l.signInTitle, style: Theme.of(context).textTheme.headlineLarge),
+          const SizedBox(height: 8),
+          Text(
+            l.signInSubtitle,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          if (session.sessionExpired)
+            _Notice(
+              text: l.sessionExpiredNotice,
+              key: const ValueKey('notice-expired'),
+            ),
+          if (session.serverUnreachable)
+            _Notice(
+              text: l.serverUnreachableNotice,
+              key: const ValueKey('notice-unreachable'),
+              action: TextButton(
+                key: const ValueKey('retry-restore'),
+                onPressed: session.restore,
+                child: Text(l.retry),
+              ),
+            ),
+          if (!widget.server.configured)
+            _Notice(
+              text: l.serverNotConfigured,
+              key: const ValueKey('notice-unconfigured'),
+            ),
+          TextField(
+            key: const ValueKey('sign-in-username'),
+            controller: _username,
+            enabled: !_busy,
+            autofillHints: const [AutofillHints.username],
+            textInputAction: TextInputAction.next,
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(
+              labelText: l.username,
+              prefixIcon: const AppIcon(AppIcons.user),
+            ),
+          ),
+          const SizedBox(height: 18),
+          TextField(
+            key: const ValueKey('sign-in-password'),
+            controller: _password,
+            enabled: !_busy,
+            obscureText: true,
+            autofillHints: const [AutofillHints.password],
+            onSubmitted: (_) => _submit(),
+            decoration: InputDecoration(
+              labelText: l.password,
+              prefixIcon: const AppIcon(AppIcons.lock),
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                key: const ValueKey('sign-in-error'),
+                apiErrorText(l, _error!),
+                style: const TextStyle(color: AppColors.danger),
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              key: const ValueKey('forgot-password'),
+              style: TextButton.styleFrom(padding: EdgeInsets.zero),
+              onPressed: _busy || !widget.server.configured
+                  ? null
+                  : () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => PasswordResetScreen(
+                          api: widget.session.api,
+                          initialIdentifier: _username.text.trim(),
                         ),
                       ),
                     ),
+              child: Text(l.forgotPassword),
+            ),
+          ),
+          const SizedBox(height: 10),
+          PrimaryButton(
+            key: const ValueKey('sign-in-submit'),
+            label: _busy ? l.signingIn : l.signInAction,
+            trailingIcon: AppIcons.arrow,
+            onPressed: _busy || !widget.server.configured ? null : _submit,
+          ),
+          if (!widget.server.fixed) ...[
+            const Divider(height: 40),
+            _ServerLine(server: widget.server, enabled: !_busy),
+          ],
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    return Scaffold(
+      backgroundColor: AppColors.canvas,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 768;
+            final form = Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(wide ? 40 : 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: FadeUp(child: _form(l)),
+                ),
+              ),
+            );
+            if (!wide) {
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _BrandPanel(l: l, compact: true),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
+                      child: _form(l),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(flex: 9, child: _BrandPanel(l: l, compact: false)),
+                  Expanded(flex: 11, child: form),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// The ink side of the sign-in page: the wordmark, one serif line and a short caption, with a
+/// thin brass hairline near the top right corner.
+class _BrandPanel extends StatelessWidget {
+  const _BrandPanel({required this.l, required this.compact});
+  final AppLocalizations l;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = compact
+        ? const BorderRadius.vertical(bottom: Radius.circular(18))
+        : BorderRadius.circular(18);
+    return LayoutBuilder(
+      builder: (context, constraints) => Container(
+        constraints: BoxConstraints(minHeight: compact ? 220 : 0),
+        decoration: BoxDecoration(color: AppColors.ink, borderRadius: radius),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: compact
+              ? _content()
+              : SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(child: _content()),
                   ),
-                  SurfaceCard(
-                    padding: 28,
-                    child: AutofillGroup(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            l.appName,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l.signInTitle,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l.signInSubtitle,
-                            style: const TextStyle(
-                              color: AppColors.muted,
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          if (session.sessionExpired)
-                            _Notice(
-                              text: l.sessionExpiredNotice,
-                              key: const ValueKey('notice-expired'),
-                            ),
-                          if (session.serverUnreachable)
-                            _Notice(
-                              text: l.serverUnreachableNotice,
-                              key: const ValueKey('notice-unreachable'),
-                              action: TextButton(
-                                key: const ValueKey('retry-restore'),
-                                onPressed: session.restore,
-                                child: Text(l.retry),
-                              ),
-                            ),
-                          if (!widget.server.configured)
-                            _Notice(
-                              text: l.serverNotConfigured,
-                              key: const ValueKey('notice-unconfigured'),
-                            ),
-                          TextField(
-                            key: const ValueKey('sign-in-username'),
-                            controller: _username,
-                            enabled: !_busy,
-                            autofillHints: const [AutofillHints.username],
-                            textInputAction: TextInputAction.next,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            decoration: InputDecoration(
-                              labelText: l.username,
-                              prefixIcon: const Icon(Icons.person_outline),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            key: const ValueKey('sign-in-password'),
-                            controller: _password,
-                            enabled: !_busy,
-                            obscureText: true,
-                            autofillHints: const [AutofillHints.password],
-                            onSubmitted: (_) => _submit(),
-                            decoration: InputDecoration(
-                              labelText: l.password,
-                              prefixIcon: const Icon(Icons.lock_outline),
-                            ),
-                          ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 12),
-                            Semantics(
-                              liveRegion: true,
-                              child: Text(
-                                key: const ValueKey('sign-in-error'),
-                                apiErrorText(l, _error!),
-                                style: const TextStyle(color: AppColors.danger),
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 20),
-                          GradientButton(
-                            key: const ValueKey('sign-in-submit'),
-                            label: _busy ? l.signingIn : l.signInAction,
-                            icon: Icons.login,
-                            onPressed: _busy || !widget.server.configured
-                                ? null
-                                : _submit,
-                          ),
-                          const SizedBox(height: 8),
-                          TextButton(
-                            key: const ValueKey('forgot-password'),
-                            onPressed: _busy || !widget.server.configured
-                                ? null
-                                : () => Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => PasswordResetScreen(
-                                        api: widget.session.api,
-                                        initialIdentifier: _username.text
-                                            .trim(),
-                                      ),
-                                    ),
-                                  ),
-                            child: Text(l.forgotPassword),
-                          ),
-                          if (!widget.server.fixed) ...[
-                            const Divider(height: 24),
-                            _ServerLine(server: widget.server, enabled: !_busy),
-                          ],
-                        ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _content() {
+    return Stack(
+      children: [
+        Positioned(
+          top: 0,
+          right: 40,
+          child: ExcludeSemantics(
+            child: Container(width: 72, height: 2, color: AppColors.brass),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.all(compact ? 24 : 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  BrandMark(l.appName.characters.first.toUpperCase()),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      l.appName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.4,
+                        color: AppColors.onInverse,
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
+              SizedBox(height: compact ? 28 : 48),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Text(
+                  l.brandTagline,
+                  style: TextStyle(
+                    fontFamily: AppFonts.display,
+                    fontWeight: FontWeight.w600,
+                    fontSize: compact ? 28 : 44,
+                    height: 1.08,
+                    letterSpacing: compact ? -1 : -1.6,
+                    color: AppColors.onInverse,
+                  ),
+                ),
+              ),
+              SizedBox(height: compact ? 20 : 48),
+              Text(
+                l.brandFoot,
+                style: const TextStyle(color: Color(0xFFAAB2AE), fontSize: 12),
+              ),
+            ],
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -260,20 +347,9 @@ class _Notice extends StatelessWidget {
   final Widget? action;
 
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 16),
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: AppColors.tint,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(text, style: const TextStyle(height: 1.4)),
-        ?action,
-      ],
-    ),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: NoticeBanner(text: text, action: action),
   );
 }
 

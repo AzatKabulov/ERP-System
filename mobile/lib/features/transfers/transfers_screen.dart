@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/connectivity/connection_monitor.dart';
 import '../../core/format/format_stamp.dart';
@@ -21,6 +22,7 @@ import 'transfers_repository.dart';
 class TransfersScreen extends StatefulWidget {
   const TransfersScreen({
     super.key,
+    this.embedded = false,
     required this.session,
     required this.repository,
     required this.admin,
@@ -29,6 +31,9 @@ class TransfersScreen extends StatefulWidget {
     required this.monitor,
     required this.unsaved,
   });
+
+  /// True when the screen sits inside another page (a tab): no app bar, no scrolling of its own.
+  final bool embedded;
 
   final SessionController session;
   final TransfersRepository repository;
@@ -136,134 +141,137 @@ class _TransfersScreenState extends State<TransfersScreen> {
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
+    final list = ListView(
+      shrinkWrap: widget.embedded,
+      physics: widget.embedded ? const NeverScrollableScrollPhysics() : null,
+      padding: widget.embedded ? EdgeInsets.zero : const EdgeInsets.all(20),
+      children: [
+        if (session.can('transfer.create'))
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PrimaryButton(
+              key: const ValueKey('transfer-new'),
+              label: l.transferNew,
+              icon: AppIcons.plus,
+              onPressed: _create,
+            ),
+          ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ChoiceChip(
+              key: const ValueKey('transfer-filter-all'),
+              label: Text(l.statusAll),
+              selected: _status == null,
+              onSelected: (_) {
+                _status = null;
+                _load(reset: true);
+              },
+            ),
+            for (final status in transferStatuses)
+              ChoiceChip(
+                key: ValueKey('transfer-filter-$status'),
+                label: Text(transferStatusLabel(l, status)),
+                selected: _status == status,
+                onSelected: (_) {
+                  _status = status;
+                  _load(reset: true);
+                },
+              ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        if (_error != null)
+          ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
+        else if (_loading && _items.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_items.isEmpty)
+          SurfaceCard(
+            child: EmptyState(
+              key: const ValueKey('transfers-empty'),
+              title: l.transfersEmpty,
+              subtitle: '',
+              icon: AppIcons.swap,
+            ),
+          )
+        else ...[
+          for (final t in _items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: ValueKey('transfer-${transferNumber(t.number)}'),
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _open(t.id),
+                  child: SurfaceCard(
+                    padding: 16,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                transferNumber(t.number),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                l.transferRoute(t.fromName, t.toName),
+                                style: const TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                formatStamp(t.createdAt),
+                                style: const TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          child: StatusPill(
+                            label: transferStatusLabel(l, t.status),
+                            warning: t.status != 'received',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (_items.length < _count)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton(
+                key: const ValueKey('transfers-load-more'),
+                onPressed: _loading ? null : () => _load(reset: false),
+                child: Text(l.loadMore),
+              ),
+            ),
+        ],
+      ],
+    );
+    if (widget.embedded) return list;
     return Scaffold(
       appBar: AppBar(title: Text(l.transfersTitle)),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                if (session.can('transfer.create'))
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: GradientButton(
-                      key: const ValueKey('transfer-new'),
-                      label: l.transferNew,
-                      icon: Icons.add,
-                      onPressed: _create,
-                    ),
-                  ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ChoiceChip(
-                      key: const ValueKey('transfer-filter-all'),
-                      label: Text(l.statusAll),
-                      selected: _status == null,
-                      onSelected: (_) {
-                        _status = null;
-                        _load(reset: true);
-                      },
-                    ),
-                    for (final status in transferStatuses)
-                      ChoiceChip(
-                        key: ValueKey('transfer-filter-$status'),
-                        label: Text(transferStatusLabel(l, status)),
-                        selected: _status == status,
-                        onSelected: (_) {
-                          _status = status;
-                          _load(reset: true);
-                        },
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                if (_error != null)
-                  ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
-                else if (_loading && _items.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (_items.isEmpty)
-                  SurfaceCard(
-                    child: EmptyState(
-                      key: const ValueKey('transfers-empty'),
-                      title: l.transfersEmpty,
-                      subtitle: '',
-                      icon: Icons.swap_horiz,
-                    ),
-                  )
-                else ...[
-                  for (final t in _items)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          key: ValueKey('transfer-${transferNumber(t.number)}'),
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () => _open(t.id),
-                          child: SurfaceCard(
-                            padding: 16,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        transferNumber(t.number),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Text(
-                                        l.transferRoute(t.fromName, t.toName),
-                                        style: const TextStyle(
-                                          color: AppColors.muted,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      Text(
-                                        formatStamp(t.createdAt),
-                                        style: const TextStyle(
-                                          color: AppColors.muted,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Flexible(
-                                  child: StatusPill(
-                                    label: transferStatusLabel(l, t.status),
-                                    warning: t.status != 'received',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (_items.length < _count)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: OutlinedButton(
-                        key: const ValueKey('transfers-load-more'),
-                        onPressed: _loading ? null : () => _load(reset: false),
-                        child: Text(l.loadMore),
-                      ),
-                    ),
-                ],
-              ],
-            ),
+            child: list,
           ),
         ),
       ),

@@ -27,9 +27,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(store.cartCount, 1);
 
-      await tester.tap(find.byKey(const ValueKey('language-selector')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Türkmençe').last);
+      await tester.tap(find.byKey(const ValueKey('language-tk')));
       await tester.pumpAndSettle();
       expect(prefs.getString('language'), 'tk');
       expect(store.cartCount, 1);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/connectivity/connection_monitor.dart';
 import '../../core/format/format_stamp.dart';
@@ -120,22 +121,35 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) =>
+        _page(context, constraints.maxWidth < 600),
+  );
+
+  Widget _page(BuildContext context, bool compact) {
     final l = strings(context);
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(
+        compact ? 16 : 32,
+        compact ? 20 : 32,
+        compact ? 16 : 32,
+        40,
+      ),
       children: [
-        if (session.can('warranty.open'))
-          Align(
-            alignment: Alignment.centerLeft,
-            child: GradientButton(
-              key: const ValueKey('warranty-new'),
-              label: l.warrantyNew,
-              icon: Icons.add,
-              onPressed: _new,
-            ),
-          ),
-        const SizedBox(height: 12),
+        PageHead(
+          title: l.warranties,
+          subtitle: session.location?.name,
+          actions: [
+            if (session.can('warranty.open'))
+              PrimaryButton(
+                key: const ValueKey('warranty-new'),
+                label: l.warrantyNew,
+                icon: AppIcons.plus,
+                onPressed: _new,
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -164,7 +178,7 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         if (_error != null)
           ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
         else if (_loading && _items.isEmpty)
@@ -178,67 +192,42 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
               key: const ValueKey('warranties-empty'),
               title: l.warrantiesEmpty,
               subtitle: '',
-              icon: Icons.verified_user_outlined,
+              icon: AppIcons.shield,
             ),
           )
         else ...[
-          for (final c in _items)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  key: ValueKey('warranty-${warrantyNumber(c.number)}'),
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () => _open(c),
-                  child: SurfaceCard(
-                    padding: 14,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${warrantyNumber(c.number)} · ${formatStamp(c.openedAt)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+          SurfaceCard(
+            padding: 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < _items.length; i++)
+                  InkWell(
+                    key: ValueKey(
+                      'warranty-${warrantyNumber(_items[i].number)}',
+                    ),
+                    onTap: () => _open(_items[i]),
+                    hoverColor: AppColors.surfaceSoft,
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 68),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        border: i == 0
+                            ? null
+                            : const Border(
+                                top: BorderSide(color: AppColors.line),
                               ),
-                              Text(
-                                '${c.productName} · ${saleNumber(c.saleNumber)}',
-                                style: const TextStyle(
-                                  color: AppColors.muted,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              if (c.customerName.isNotEmpty)
-                                Text(
-                                  c.customerName,
-                                  style: const TextStyle(
-                                    color: AppColors.muted,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 150),
-                          child: StatusPill(
-                            label: c.isOpen
-                                ? l.warrantyStatusOpen
-                                : warrantyOutcomeLabel(l, c.outcome),
-                            warning: c.isOpen,
-                          ),
-                        ),
-                      ],
+                      ),
+                      child: _ClaimRow(claim: _items[i]),
                     ),
                   ),
-                ),
-              ),
+              ],
             ),
+          ),
+          const SizedBox(height: 16),
           if (_items.length < _count)
             Align(
               alignment: Alignment.centerLeft,
@@ -249,6 +238,69 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
               ),
             ),
         ],
+      ],
+    );
+  }
+}
+
+class _ClaimRow extends StatelessWidget {
+  const _ClaimRow({required this.claim});
+  final WarrantyClaim claim;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    final c = claim;
+    return Row(
+      children: [
+        const Glyph(AppIcons.shield),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: warrantyNumber(c.number),
+                      style: const TextStyle(
+                        fontFamily: AppFonts.mono,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    TextSpan(text: ' · ${formatStamp(c.openedAt)}'),
+                  ],
+                ),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${c.productName} · ${saleNumber(c.saleNumber)}',
+                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              ),
+              if (c.customerName.isNotEmpty)
+                Text(
+                  c.customerName,
+                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 160),
+          child: StatusPill(
+            label: c.isOpen
+                ? l.warrantyStatusOpen
+                : warrantyOutcomeLabel(l, c.outcome),
+            tone: c.isOpen ? StatusTone.warning : StatusTone.success,
+            icon: c.isOpen ? AppIcons.clock : AppIcons.check,
+          ),
+        ),
       ],
     );
   }

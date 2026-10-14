@@ -59,10 +59,7 @@ void main() {
       expect(key('stock-BP-1-Esasy dükan-sellable'), findsOneWidget);
       expect(find.text('20 шт'), findsOneWidget);
       // 10 x 50 + 10 x 60 = 1 100,00
-      expect(
-        find.text('Стоимость: ${formatMoney(110000, 'TMT')}'),
-        findsOneWidget,
-      );
+      expect(find.text(formatMoney(110000, 'TMT')), findsOneWidget);
       expect(find.text('3 шт'), findsOneWidget);
       expect(find.text('Повреждённый'), findsOneWidget);
     });
@@ -191,10 +188,7 @@ void main() {
       expect(find.text('Проведено.'), findsOneWidget);
       expect(key('stock-BP-1-Esasy dükan-sellable'), findsOneWidget);
       expect(find.text('12 шт'), findsOneWidget);
-      expect(
-        find.text('Стоимость: ${formatMoney(58200, 'TMT')}'),
-        findsOneWidget,
-      );
+      expect(find.text(formatMoney(58200, 'TMT')), findsOneWidget);
       final sent = rig.server.records.values.single.body;
       expect(sent['document_id'], isNotNull);
       expect(rig.store.backing, isEmpty); // confirmed, so nothing stays pending

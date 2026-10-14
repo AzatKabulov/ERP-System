@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -22,6 +23,7 @@ import 'counts_repository.dart';
 class CountsScreen extends StatefulWidget {
   const CountsScreen({
     super.key,
+    this.embedded = false,
     required this.session,
     required this.repository,
     required this.catalog,
@@ -29,6 +31,9 @@ class CountsScreen extends StatefulWidget {
     required this.monitor,
     required this.unsaved,
   });
+
+  /// True when the screen sits inside another page (a tab): no app bar, no scrolling of its own.
+  final bool embedded;
 
   final SessionController session;
   final CountsRepository repository;
@@ -120,134 +125,137 @@ class _CountsScreenState extends State<CountsScreen> {
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
+    final list = ListView(
+      shrinkWrap: widget.embedded,
+      physics: widget.embedded ? const NeverScrollableScrollPhysics() : null,
+      padding: widget.embedded ? EdgeInsets.zero : const EdgeInsets.all(20),
+      children: [
+        if (session.can('count.perform'))
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PrimaryButton(
+              key: const ValueKey('count-new'),
+              label: l.countStart,
+              icon: AppIcons.plus,
+              onPressed: _start,
+            ),
+          ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ChoiceChip(
+              key: const ValueKey('count-filter-all'),
+              label: Text(l.statusAll),
+              selected: _status == null,
+              onSelected: (_) {
+                _status = null;
+                _load(reset: true);
+              },
+            ),
+            for (final status in countStatuses)
+              ChoiceChip(
+                key: ValueKey('count-filter-$status'),
+                label: Text(countStatusLabel(l, status)),
+                selected: _status == status,
+                onSelected: (_) {
+                  _status = status;
+                  _load(reset: true);
+                },
+              ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        if (_error != null)
+          ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
+        else if (_loading && _items.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_items.isEmpty)
+          SurfaceCard(
+            child: EmptyState(
+              key: const ValueKey('counts-empty'),
+              title: l.countsEmpty,
+              subtitle: '',
+              icon: AppIcons.checklist,
+            ),
+          )
+        else ...[
+          for (final c in _items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: ValueKey('count-${countNumber(c.number)}'),
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _open(c.id),
+                  child: SurfaceCard(
+                    padding: 16,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${countNumber(c.number)} · ${c.locationName}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                formatStamp(c.createdAt),
+                                style: const TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                '${l.countProgress(c.countedCount, c.lineCount)} · ${l.countDifferences(c.differenceCount)}',
+                                style: const TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          child: StatusPill(
+                            label: countStatusLabel(l, c.status),
+                            warning: c.status != 'approved',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (_items.length < _count)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton(
+                key: const ValueKey('counts-load-more'),
+                onPressed: _loading ? null : () => _load(reset: false),
+                child: Text(l.loadMore),
+              ),
+            ),
+        ],
+      ],
+    );
+    if (widget.embedded) return list;
     return Scaffold(
       appBar: AppBar(title: Text(l.countsTitle)),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                if (session.can('count.perform'))
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: GradientButton(
-                      key: const ValueKey('count-new'),
-                      label: l.countStart,
-                      icon: Icons.add,
-                      onPressed: _start,
-                    ),
-                  ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ChoiceChip(
-                      key: const ValueKey('count-filter-all'),
-                      label: Text(l.statusAll),
-                      selected: _status == null,
-                      onSelected: (_) {
-                        _status = null;
-                        _load(reset: true);
-                      },
-                    ),
-                    for (final status in countStatuses)
-                      ChoiceChip(
-                        key: ValueKey('count-filter-$status'),
-                        label: Text(countStatusLabel(l, status)),
-                        selected: _status == status,
-                        onSelected: (_) {
-                          _status = status;
-                          _load(reset: true);
-                        },
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                if (_error != null)
-                  ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
-                else if (_loading && _items.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (_items.isEmpty)
-                  SurfaceCard(
-                    child: EmptyState(
-                      key: const ValueKey('counts-empty'),
-                      title: l.countsEmpty,
-                      subtitle: '',
-                      icon: Icons.fact_check_outlined,
-                    ),
-                  )
-                else ...[
-                  for (final c in _items)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          key: ValueKey('count-${countNumber(c.number)}'),
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () => _open(c.id),
-                          child: SurfaceCard(
-                            padding: 16,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${countNumber(c.number)} · ${c.locationName}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Text(
-                                        formatStamp(c.createdAt),
-                                        style: const TextStyle(
-                                          color: AppColors.muted,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${l.countProgress(c.countedCount, c.lineCount)} · ${l.countDifferences(c.differenceCount)}',
-                                        style: const TextStyle(
-                                          color: AppColors.muted,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Flexible(
-                                  child: StatusPill(
-                                    label: countStatusLabel(l, c.status),
-                                    warning: c.status != 'approved',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (_items.length < _count)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: OutlinedButton(
-                        key: const ValueKey('counts-load-more'),
-                        onPressed: _loading ? null : () => _load(reset: false),
-                        child: Text(l.loadMore),
-                      ),
-                    ),
-                ],
-              ],
-            ),
+            child: list,
           ),
         ),
       ),
@@ -379,7 +387,7 @@ class _CountStartScreenState extends State<CountStartScreen> {
                           tooltip: l.removeLine,
                           onPressed: () =>
                               setState(() => _products.removeAt(i)),
-                          icon: const Icon(Icons.delete_outline),
+                          icon: const AppIcon(AppIcons.trash),
                         ),
                       ),
                     Align(
@@ -387,7 +395,7 @@ class _CountStartScreenState extends State<CountStartScreen> {
                       child: OutlinedButton.icon(
                         key: const ValueKey('count-add-product'),
                         onPressed: _busy ? null : _add,
-                        icon: const Icon(Icons.add),
+                        icon: const AppIcon(AppIcons.plus),
                         label: Text(l.addLineProduct),
                       ),
                     ),
@@ -400,10 +408,10 @@ class _CountStartScreenState extends State<CountStartScreen> {
                     ),
                   ],
                   const SizedBox(height: 20),
-                  GradientButton(
+                  PrimaryButton(
                     key: const ValueKey('count-start'),
                     label: l.countStart,
-                    icon: Icons.fact_check_outlined,
+                    icon: AppIcons.checklist,
                     onPressed: _busy || !_valid ? null : _start,
                   ),
                 ],

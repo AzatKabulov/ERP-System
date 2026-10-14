@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -62,7 +63,7 @@ class _ScanScreenState extends State<ScanScreen> {
           IconButton(
             key: const ValueKey('scan-torch'),
             tooltip: l.scanTorch,
-            icon: const Icon(Icons.flashlight_on_outlined),
+            icon: const AppIcon(AppIcons.flash),
             onPressed: () => _controller.toggleTorch(),
           ),
         ],
@@ -86,7 +87,7 @@ class _ScanScreenState extends State<ScanScreen> {
               child: FilledButton.tonalIcon(
                 key: const ValueKey('scan-manual'),
                 onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.keyboard_outlined),
+                icon: const AppIcon(AppIcons.keyboard),
                 label: Text(l.enterManually),
               ),
             ),
@@ -120,11 +121,7 @@ class ScanErrorPanel extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.no_photography_outlined,
-                color: Colors.white70,
-                size: 40,
-              ),
+              const AppIcon(AppIcons.image, color: Colors.white70, size: 40),
               const SizedBox(height: 16),
               Text(
                 key: const ValueKey('scan-error'),
@@ -133,10 +130,10 @@ class ScanErrorPanel extends StatelessWidget {
                 style: const TextStyle(color: Colors.white, height: 1.5),
               ),
               const SizedBox(height: 20),
-              GradientButton(
+              PrimaryButton(
                 key: const ValueKey('scan-error-manual'),
                 label: l.enterManually,
-                icon: Icons.keyboard_outlined,
+                icon: AppIcons.keyboard,
                 onPressed: onManual,
               ),
             ],

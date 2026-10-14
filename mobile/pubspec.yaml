@@ -32,11 +32,15 @@ flutter:
   generate: true
   assets:
     - assets/fonts/Inter-LICENSE.txt
-    - assets/fonts/NotoSerif-LICENSE.txt
+    - assets/fonts/NotoSerifDisplay-LICENSE.txt
+    - assets/fonts/JetBrainsMono-LICENSE.txt
   fonts:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter.ttf
-    - family: NotoSerif
+    - family: NotoSerifDisplay
       fonts:
-        - asset: assets/fonts/NotoSerif.ttf
+        - asset: assets/fonts/NotoSerifDisplay.ttf
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono.ttf

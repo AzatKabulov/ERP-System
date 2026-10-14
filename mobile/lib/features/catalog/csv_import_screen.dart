@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -124,10 +125,10 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                   const SizedBox(height: 16),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: GradientButton(
+                    child: PrimaryButton(
                       key: const ValueKey('import-choose'),
                       label: l.importChoose,
-                      icon: Icons.upload_file,
+                      icon: AppIcons.upload,
                       onPressed: _busy ? null : _choose,
                     ),
                   ),
@@ -202,10 +203,10 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                     const SizedBox(height: 16),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: GradientButton(
+                      child: PrimaryButton(
                         key: const ValueKey('import-apply'),
                         label: l.importApply,
-                        icon: Icons.check,
+                        icon: AppIcons.check,
                         onPressed: _busy || !preview.canApply ? null : _apply,
                       ),
                     ),

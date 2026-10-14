@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../widgets/common.dart';
 import 'document_actions.dart';
@@ -58,13 +59,13 @@ class _DocumentButtonsState extends State<DocumentButtons> {
         OutlinedButton.icon(
           key: const ValueKey('doc-receipt-print'),
           onPressed: _busy ? null : () => _run(true),
-          icon: const Icon(Icons.print_outlined),
+          icon: const AppIcon(AppIcons.print),
           label: Text('${l.receiptAction} · ${l.printAction}'),
         ),
         OutlinedButton.icon(
           key: const ValueKey('doc-receipt-share'),
           onPressed: _busy ? null : () => _run(false),
-          icon: const Icon(Icons.ios_share_outlined),
+          icon: const AppIcon(AppIcons.share),
           label: Text('${l.receiptAction} · ${l.shareAction}'),
         ),
         if (_busy)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error_text.dart';
@@ -106,18 +107,18 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (_step == _Step.done) ...[
-                      const Icon(
-                        Icons.check_circle_outline,
+                      const AppIcon(
+                        AppIcons.checkCircle,
                         color: AppColors.success,
                         size: 40,
                       ),
                       const SizedBox(height: 12),
                       Text(l.passwordChanged, textAlign: TextAlign.center),
                       const SizedBox(height: 20),
-                      GradientButton(
+                      PrimaryButton(
                         key: const ValueKey('reset-done-back'),
                         label: l.backToSignIn,
-                        icon: Icons.login,
+                        icon: AppIcons.login,
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                     ] else ...[
@@ -136,7 +137,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                         autocorrect: false,
                         decoration: InputDecoration(
                           labelText: l.identifierLabel,
-                          prefixIcon: const Icon(Icons.alternate_email),
+                          prefixIcon: const AppIcon(AppIcons.mail),
                         ),
                       ),
                       if (_step == _Step.confirm) ...[
@@ -160,7 +161,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                           textCapitalization: TextCapitalization.characters,
                           decoration: InputDecoration(
                             labelText: l.codeLabel,
-                            prefixIcon: const Icon(Icons.pin_outlined),
+                            prefixIcon: const AppIcon(AppIcons.tag),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -171,7 +172,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                           obscureText: true,
                           decoration: InputDecoration(
                             labelText: l.newPassword,
-                            prefixIcon: const Icon(Icons.lock_outline),
+                            prefixIcon: const AppIcon(AppIcons.lock),
                             errorText: fieldError(l, _error, 'new_password'),
                             errorMaxLines: 3,
                           ),
@@ -190,10 +191,10 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                       ],
                       const SizedBox(height: 20),
                       if (_step == _Step.request) ...[
-                        GradientButton(
+                        PrimaryButton(
                           key: const ValueKey('reset-send'),
                           label: l.sendCode,
-                          icon: Icons.mail_outline,
+                          icon: AppIcons.mail,
                           onPressed: _busy ? null : _requestCode,
                         ),
                         TextButton(
@@ -204,10 +205,10 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                           child: Text(l.haveCode),
                         ),
                       ] else ...[
-                        GradientButton(
+                        PrimaryButton(
                           key: const ValueKey('reset-confirm'),
                           label: l.savePassword,
-                          icon: Icons.check,
+                          icon: AppIcons.check,
                           onPressed: _busy ? null : _confirm,
                         ),
                         TextButton(

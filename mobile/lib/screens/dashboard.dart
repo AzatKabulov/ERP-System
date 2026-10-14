@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_icons.dart';
 
 import '../demo/demo_store.dart';
 import '../theme/app_theme.dart';
@@ -42,26 +43,10 @@ class DashboardScreen extends StatelessWidget {
         const SizedBox(height: 24),
         AdaptiveGrid(
           children: [
-            MetricCard(
-              label: l.salesTotal,
-              value: money(store.salesTotal),
-              icon: Icons.shopping_bag_outlined,
-            ),
-            MetricCard(
-              label: l.stockValue,
-              value: money(store.inventoryValue),
-              icon: Icons.inventory_2_outlined,
-            ),
-            MetricCard(
-              label: l.stockUnits,
-              value: '${store.unitCount}',
-              icon: Icons.layers_outlined,
-            ),
-            MetricCard(
-              label: l.lowStock,
-              value: '${store.lowStock.length}',
-              icon: Icons.warning_amber_outlined,
-            ),
+            MetricCard(label: l.salesTotal, value: money(store.salesTotal)),
+            MetricCard(label: l.stockValue, value: money(store.inventoryValue)),
+            MetricCard(label: l.stockUnits, value: '${store.unitCount}'),
+            MetricCard(label: l.lowStock, value: '${store.lowStock.length}'),
           ],
         ),
         const SizedBox(height: 24),
@@ -103,9 +88,9 @@ class DashboardScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                GradientButton(
+                PrimaryButton(
                   label: l.viewInventory,
-                  icon: Icons.arrow_forward,
+                  icon: AppIcons.arrow,
                   onPressed: () => onNavigate(AppPage.inventory),
                 ),
               ],
@@ -119,14 +104,14 @@ class DashboardScreen extends StatelessWidget {
           spacing: 12,
           runSpacing: 12,
           children: [
-            GradientButton(
+            PrimaryButton(
               label: l.newSale,
-              icon: Icons.add,
+              icon: AppIcons.plus,
               onPressed: () => onNavigate(AppPage.sales),
             ),
             OutlinedButton.icon(
               onPressed: () => onNavigate(AppPage.expenses),
-              icon: const Icon(Icons.account_balance_wallet_outlined),
+              icon: const AppIcon(AppIcons.expense),
               label: Text(l.newExpense),
             ),
           ],
@@ -145,7 +130,7 @@ class DashboardScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               if (store.lowStock.isEmpty)
-                EmptyState(title: l.healthy, icon: Icons.check_circle_outline),
+                EmptyState(title: l.healthy, icon: AppIcons.checkCircle),
               for (final p in store.lowStock)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -210,7 +195,7 @@ class ActivityPanel extends StatelessWidget {
           SectionHeading(l.recentActivity),
           const SizedBox(height: 12),
           if (store.activities.isEmpty)
-            EmptyState(title: l.noActivity, icon: Icons.history),
+            EmptyState(title: l.noActivity, icon: AppIcons.history),
           for (final activity in store.activities.take(12))
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),

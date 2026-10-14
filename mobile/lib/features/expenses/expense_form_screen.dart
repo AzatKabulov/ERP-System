@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/api/api_error_text.dart';
@@ -332,7 +333,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                             OutlinedButton.icon(
                               key: const ValueKey('ef-date'),
                               onPressed: _saving ? null : _pickDate,
-                              icon: const Icon(Icons.event_outlined),
+                              icon: const AppIcon(AppIcons.event),
                               label: Text(l.pickDate),
                             ),
                           ],
@@ -386,7 +387,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                             spacing: 8,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              const Icon(Icons.attach_file, size: 18),
+                              const AppIcon(AppIcons.attach, size: 18),
                               Text(
                                 l.expenseReceiptAttached(_attachment!.name),
                                 key: const ValueKey('ef-attached'),
@@ -419,7 +420,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                                 onPressed: _saving || _uploading
                                     ? null
                                     : () => _attach(camera: true),
-                                icon: const Icon(Icons.photo_camera_outlined),
+                                icon: const AppIcon(AppIcons.camera),
                                 label: Text(l.expenseTakePhoto),
                               ),
                             OutlinedButton.icon(
@@ -427,7 +428,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                               onPressed: _saving || _uploading
                                   ? null
                                   : () => _attach(camera: false),
-                              icon: const Icon(Icons.folder_open_outlined),
+                              icon: const AppIcon(AppIcons.folder),
                               label: Text(l.expenseChoosePhoto),
                             ),
                             if (_uploading)
@@ -452,10 +453,10 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                           ),
                         ],
                         const SizedBox(height: 24),
-                        GradientButton(
+                        PrimaryButton(
                           key: const ValueKey('ef-save'),
                           label: l.save,
-                          icon: Icons.check,
+                          icon: AppIcons.check,
                           onPressed: _saving || _uploading ? null : _save,
                         ),
                       ],

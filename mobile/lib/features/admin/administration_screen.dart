@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -66,11 +67,22 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
     final user = session.user;
     // A plain scrolling column (not a lazy list): the page is short, and every
     // section should exist for accessibility tools and tests alike.
+    final narrow = MediaQuery.sizeOf(context).width < 768; // padding only
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(
+        narrow ? 16 : 32,
+        narrow ? 20 : 32,
+        narrow ? 16 : 32,
+        40,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          PageHead(
+            title: l.administration,
+            subtitle: session.membership?.businessName,
+          ),
+          const SizedBox(height: 24),
           SurfaceCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +122,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                 OutlinedButton.icon(
                   key: const ValueKey('admin-sign-out'),
                   onPressed: session.signOut,
-                  icon: const Icon(Icons.logout),
+                  icon: const AppIcon(AppIcons.logout),
                   label: Text(l.signOut),
                 ),
                 const SizedBox(height: 12),
@@ -169,7 +181,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                                 await _locationsChanged();
                               }
                             },
-                            icon: const Icon(Icons.add),
+                            icon: const AppIcon(AppIcons.plus),
                             label: Text(l.addLocation),
                           )
                         : null,
@@ -185,10 +197,10 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                           ListTile(
                             key: ValueKey('location-${item.name}'),
                             contentPadding: EdgeInsets.zero,
-                            leading: Icon(
+                            leading: AppIcon(
                               item.kind == 'warehouse'
-                                  ? Icons.warehouse_outlined
-                                  : Icons.storefront_outlined,
+                                  ? AppIcons.stock
+                                  : AppIcons.stock,
                               color: AppColors.blue,
                             ),
                             title: Text(item.name),
@@ -206,7 +218,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                                   IconButton(
                                     key: ValueKey('edit-location-${item.name}'),
                                     tooltip: l.editLocation,
-                                    icon: const Icon(Icons.edit_outlined),
+                                    icon: const AppIcon(AppIcons.edit),
                                     onPressed: () async {
                                       if (await showLocationDialog(
                                             context,
@@ -245,7 +257,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                                 _staff.currentState?.reload();
                               }
                             },
-                            icon: const Icon(Icons.person_add_alt),
+                            icon: const AppIcon(AppIcons.personAdd),
                             label: Text(l.addStaff),
                           )
                         : null,
@@ -259,8 +271,8 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                           ListTile(
                             key: ValueKey('staff-${member.username}'),
                             contentPadding: EdgeInsets.zero,
-                            leading: const Icon(
-                              Icons.person_outline,
+                            leading: const AppIcon(
+                              AppIcons.user,
                               color: AppColors.blue,
                             ),
                             title: Text(
@@ -286,7 +298,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                                       'edit-staff-${member.username}',
                                     ),
                                     tooltip: l.editStaff,
-                                    icon: const Icon(Icons.edit_outlined),
+                                    icon: const AppIcon(AppIcons.edit),
                                     onPressed: () async {
                                       if (await showStaffDialog(
                                             context,
@@ -461,10 +473,10 @@ class _BusinessFormState extends State<_BusinessForm> {
         ],
         if (widget.canEdit) ...[
           const SizedBox(height: 16),
-          GradientButton(
+          PrimaryButton(
             key: const ValueKey('business-save'),
             label: l.save,
-            icon: Icons.check,
+            icon: AppIcons.check,
             onPressed: _busy ? null : _save,
           ),
         ],
@@ -902,7 +914,7 @@ class _StaffDialogState extends State<_StaffDialog> {
                 TextButton.icon(
                   key: const ValueKey('staff-send-code'),
                   onPressed: _busy ? null : _sendCode,
-                  icon: const Icon(Icons.mail_outline),
+                  icon: const AppIcon(AppIcons.mail),
                   label: Text(l.sendResetCode),
                 ),
                 if (_codeSent)

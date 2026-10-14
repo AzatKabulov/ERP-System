@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/format/format_stamp.dart';
 import '../../core/money/decimal_math.dart';
@@ -15,10 +16,14 @@ import 'stock_labels.dart';
 class MovementsScreen extends StatefulWidget {
   const MovementsScreen({
     super.key,
+    this.embedded = false,
     required this.repository,
     required this.canSeeCost,
     this.product,
   });
+
+  /// True when the screen sits inside another page (a tab): no app bar, no scrolling of its own.
+  final bool embedded;
 
   final InventoryRepository repository;
   final bool canSeeCost;
@@ -71,6 +76,46 @@ class _MovementsScreenState extends State<MovementsScreen> {
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
+    final list = ListView(
+      shrinkWrap: widget.embedded,
+      physics: widget.embedded ? const NeverScrollableScrollPhysics() : null,
+      padding: widget.embedded ? EdgeInsets.zero : const EdgeInsets.all(20),
+      children: [
+        if (_error != null)
+          ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
+        else if (_loading && _items.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_items.isEmpty)
+          SurfaceCard(
+            child: EmptyState(
+              key: const ValueKey('history-empty'),
+              title: l.historyEmpty,
+              subtitle: '',
+              icon: AppIcons.history,
+            ),
+          )
+        else ...[
+          for (final m in _items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _MovementTile(movement: m, canSeeCost: widget.canSeeCost),
+            ),
+          if (_items.length < _count)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton(
+                key: const ValueKey('history-load-more'),
+                onPressed: _loading ? null : () => _load(reset: false),
+                child: Text(l.loadMore),
+              ),
+            ),
+        ],
+      ],
+    );
+    if (widget.embedded) return list;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -83,46 +128,7 @@ class _MovementsScreenState extends State<MovementsScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 860),
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                if (_error != null)
-                  ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
-                else if (_loading && _items.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (_items.isEmpty)
-                  SurfaceCard(
-                    child: EmptyState(
-                      key: const ValueKey('history-empty'),
-                      title: l.historyEmpty,
-                      subtitle: '',
-                      icon: Icons.history,
-                    ),
-                  )
-                else ...[
-                  for (final m in _items)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _MovementTile(
-                        movement: m,
-                        canSeeCost: widget.canSeeCost,
-                      ),
-                    ),
-                  if (_items.length < _count)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: OutlinedButton(
-                        key: const ValueKey('history-load-more'),
-                        onPressed: _loading ? null : () => _load(reset: false),
-                        child: Text(l.loadMore),
-                      ),
-                    ),
-                ],
-              ],
-            ),
+            child: list,
           ),
         ),
       ),

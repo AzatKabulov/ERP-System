@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/api/api_error_text.dart';
@@ -339,7 +340,7 @@ class _IntakeScreenState extends State<IntakeScreen> {
                           onSubmitted: _typed,
                           decoration: InputDecoration(
                             labelText: l.intakeScanLabel,
-                            prefixIcon: const Icon(Icons.qr_code_2),
+                            prefixIcon: const AppIcon(AppIcons.qr),
                             helperText: l.intakeScanHelp,
                             helperMaxLines: 3,
                           ),
@@ -358,7 +359,7 @@ class _IntakeScreenState extends State<IntakeScreen> {
                               minHeight: 56,
                             ),
                             onPressed: _busy ? null : _camera,
-                            icon: const Icon(Icons.qr_code_scanner),
+                            icon: const AppIcon(AppIcons.scan),
                           ),
                         ),
                       ],
@@ -370,7 +371,10 @@ class _IntakeScreenState extends State<IntakeScreen> {
                       padding: 12,
                       child: Row(
                         children: [
-                          const Icon(Icons.history, color: AppColors.warning),
+                          const AppIcon(
+                            AppIcons.history,
+                            color: AppColors.warning,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -478,10 +482,10 @@ class _IntakeScreenState extends State<IntakeScreen> {
                               ),
                             ),
                           ),
-                        GradientButton(
+                        PrimaryButton(
                           key: const ValueKey('intake-submit'),
                           label: l.intakeSubmit,
-                          icon: Icons.inventory_2_outlined,
+                          icon: AppIcons.box,
                           onPressed:
                               _busy || _ctl.isEmpty || !widget.monitor.online
                               ? null
@@ -579,7 +583,7 @@ class _EntryCard extends StatelessWidget {
                   key: ValueKey('intake-remove-${entry.code}'),
                   tooltip: l.removeLine,
                   onPressed: busy ? null : onRemove,
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const AppIcon(AppIcons.trash),
                 ),
               ],
             ),
@@ -593,7 +597,7 @@ class _EntryCard extends StatelessWidget {
                   key: ValueKey('intake-minus-${entry.code}'),
                   tooltip: l.intakeLess,
                   onPressed: busy ? null : onMinus,
-                  icon: const Icon(Icons.remove),
+                  icon: const AppIcon(AppIcons.minus),
                 ),
                 InkWell(
                   key: ValueKey('intake-qty-${entry.code}'),
@@ -619,7 +623,7 @@ class _EntryCard extends StatelessWidget {
                   key: ValueKey('intake-plus-${entry.code}'),
                   tooltip: l.intakeMore,
                   onPressed: busy ? null : onPlus,
-                  icon: const Icon(Icons.add),
+                  icon: const AppIcon(AppIcons.plus),
                 ),
                 if (canCost && entry.costMinor != null)
                   Text(
@@ -639,28 +643,28 @@ class _EntryCard extends StatelessWidget {
                   FilledButton.icon(
                     key: ValueKey('intake-add-found-${entry.code}'),
                     onPressed: busy ? null : onAddFound,
-                    icon: const Icon(Icons.add_box_outlined),
+                    icon: const AppIcon(AppIcons.plus),
                     label: Text(l.intakeAddFound),
                   ),
                 if (unknown && entry.suggestion == null)
                   FilledButton.tonalIcon(
                     key: ValueKey('intake-add-${entry.code}'),
                     onPressed: busy ? null : onAdd,
-                    icon: const Icon(Icons.add_box_outlined),
+                    icon: const AppIcon(AppIcons.plus),
                     label: Text(l.intakeAddProduct),
                   ),
                 if (unknown && entry.suggestion != null)
                   OutlinedButton.icon(
                     key: ValueKey('intake-add-${entry.code}'),
                     onPressed: busy ? null : onAdd,
-                    icon: const Icon(Icons.edit_outlined),
+                    icon: const AppIcon(AppIcons.edit),
                     label: Text(l.intakeEditFound),
                   ),
                 if (entry.state == IntakeEntryState.lookupFailed)
                   OutlinedButton.icon(
                     key: ValueKey('intake-retry-${entry.code}'),
                     onPressed: busy ? null : onRetry,
-                    icon: const Icon(Icons.refresh),
+                    icon: const AppIcon(AppIcons.retry),
                     label: Text(l.retry),
                   ),
               ],
@@ -999,10 +1003,10 @@ class _NewProductDialogState extends State<_NewProductDialog> {
                   child: OutlinedButton.icon(
                     key: const ValueKey('intake-new-photo'),
                     onPressed: _busy ? null : _pickPhoto,
-                    icon: Icon(
+                    icon: AppIcon(
                       FilesScope.pickingOf(context).hasCamera
-                          ? Icons.photo_camera_outlined
-                          : Icons.photo_library_outlined,
+                          ? AppIcons.camera
+                          : AppIcons.image,
                     ),
                     label: Text(
                       _photo != null

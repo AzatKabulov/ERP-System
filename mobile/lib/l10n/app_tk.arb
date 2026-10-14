@@ -1119,5 +1119,16 @@
   "intakeSubmit": "Ammara kabul etmek",
   "actionIntake": "Harydy kabul etmek",
   "movementIntake": "Kabul etmek (skanirleme)",
-  "auditStockIntakePosted": "Haryt skanirläp kabul edildi"
+  "auditStockIntakePosted": "Haryt skanirläp kabul edildi",
+  "brandTagline": "Ammar, satuw we girdeji — bir ýerde.",
+  "navMore": "Ýene",
+  "auditProductPhotoSet": "Harydyň suraty goşuldy",
+  "auditProductPhotoRemoved": "Harydyň suraty pozuldy",
+  "brandFoot": "Dükanlar we ammarlar üçin hasap",
+  "dashVersusYesterday": "Düýne görä {percent}",
+  "stockTabByLocation": "Nokatlar boýunça",
+  "salesCashDesk": "Satuw nokady",
+  "cartTotalLabel": "Jemi",
+  "expenseOperationsCount": "Amallar: {count}",
+  "reportDynamics": "Satuwlaryň depgini"
 }

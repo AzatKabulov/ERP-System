@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -185,7 +186,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
           },
           decoration: InputDecoration(
             labelText: l.saleSearchHint,
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: const AppIcon(AppIcons.search),
           ),
         ),
         const SizedBox(height: 16),
@@ -199,7 +200,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
               key: const ValueKey('wn-empty'),
               title: l.salesHistoryEmpty,
               subtitle: '',
-              icon: Icons.receipt_long_outlined,
+              icon: AppIcons.sale,
             ),
           )
         else
@@ -313,7 +314,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
                   ),
                 ),
                 if (selected)
-                  const Icon(Icons.check_circle, color: AppColors.blue),
+                  const AppIcon(AppIcons.checkCircle, color: AppColors.blue),
               ],
             ),
           ),
@@ -403,10 +404,10 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
         ),
       ],
       const SizedBox(height: 20),
-      GradientButton(
+      PrimaryButton(
         key: const ValueKey('wn-open'),
         label: l.warrantyOpenButton,
-        icon: Icons.verified_user_outlined,
+        icon: AppIcons.shield,
         onPressed: _busy || !_canSubmit ? null : _submit,
       ),
     ];

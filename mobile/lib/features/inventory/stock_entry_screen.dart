@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -276,7 +277,7 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
                       child: OutlinedButton.icon(
                         key: const ValueKey('entry-add-line'),
                         onPressed: _busy ? null : _addProduct,
-                        icon: const Icon(Icons.add),
+                        icon: const AppIcon(AppIcons.plus),
                         label: Text(l.addLineProduct),
                       ),
                     ),
@@ -324,12 +325,12 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
                                 ),
                               ),
                             ),
-                          GradientButton(
+                          PrimaryButton(
                             key: const ValueKey('entry-submit'),
                             label: _isOpening
                                 ? l.postOpening
                                 : l.postAdjustment,
-                            icon: Icons.check,
+                            icon: AppIcons.check,
                             onPressed: _busy || !widget.monitor.online
                                 ? null
                                 : _submit,
@@ -419,7 +420,7 @@ class _EntryLineEditorState extends State<_EntryLineEditor> {
                 key: ValueKey('entry-remove-${widget.index}'),
                 tooltip: l.removeLine,
                 onPressed: widget.enabled ? widget.onRemove : null,
-                icon: const Icon(Icons.delete_outline),
+                icon: const AppIcon(AppIcons.trash),
               ),
             ],
           ),

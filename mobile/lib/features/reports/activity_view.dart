@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/format/format_stamp.dart';
@@ -106,9 +107,8 @@ class _ActivityViewState extends State<ActivityView> {
               child: Semantics(
                 container: true,
                 explicitChildNodes: true,
-                child: DropdownButton<String?>(
-                  key: const ValueKey('activity-action'),
-                  isExpanded: true,
+                child: FilterSelect<String?>(
+                  fieldKey: const ValueKey('activity-action'),
                   value: _actions.contains(_action) ? _action : null,
                   items: [
                     DropdownMenuItem<String?>(
@@ -146,7 +146,7 @@ class _ActivityViewState extends State<ActivityView> {
                     suffixIcon: IconButton(
                       key: const ValueKey('activity-search-go'),
                       tooltip: l.activitySearchHint,
-                      icon: const Icon(Icons.search),
+                      icon: const AppIcon(AppIcons.search),
                       onPressed: _submit,
                     ),
                   ),

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
+import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import 'barcode_scanner.dart';
 
@@ -67,7 +69,14 @@ class BarcodeInput extends StatelessWidget {
               onChanged: onChanged,
               decoration: InputDecoration(
                 labelText: label,
-                prefixIcon: const Icon(Icons.qr_code_2),
+                // The label acts as the placeholder: it is shown while the field is empty and
+                // is not repeated above the text (the design's search field).
+                floatingLabelBehavior: FloatingLabelBehavior.never,
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14),
+                  child: AppIcon(AppIcons.search, size: 20),
+                ),
+                prefixIconConstraints: const BoxConstraints(minWidth: 48),
                 errorText: errorText,
                 errorMaxLines: 3,
               ),
@@ -76,22 +85,38 @@ class BarcodeInput extends StatelessWidget {
           if (scanner.isAvailable) ...[
             const SizedBox(width: 8),
             Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: IconButton.filledTonal(
-                key: const ValueKey('scan-button'),
-                tooltip: l.scanWithCamera,
-                iconSize: 28,
-                constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
-                onPressed: enabled
-                    ? () async {
-                        final code = await scanner.scan(context);
-                        if (code == null || !context.mounted) return;
-                        controller.text = code;
-                        onChanged?.call(code);
-                        onScanned?.call(code);
-                      }
-                    : null,
-                icon: const Icon(Icons.qr_code_scanner),
+              padding: const EdgeInsets.only(top: 0),
+              child: Tooltip(
+                message: l.scanWithCamera,
+                child: Material(
+                  color: AppColors.blue,
+                  borderRadius: BorderRadius.circular(AppRadius.control),
+                  child: InkWell(
+                    key: const ValueKey('scan-button'),
+                    borderRadius: BorderRadius.circular(AppRadius.control),
+                    hoverColor: AppColors.blueDark,
+                    onTap: enabled
+                        ? () async {
+                            final code = await scanner.scan(context);
+                            if (code == null || !context.mounted) return;
+                            controller.text = code;
+                            onChanged?.call(code);
+                            onScanned?.call(code);
+                          }
+                        : null,
+                    child: const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: AppIcon(
+                          AppIcons.scan,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

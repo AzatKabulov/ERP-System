@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_icons.dart';
 
 import '../demo/demo_store.dart';
 import '../theme/app_theme.dart';
@@ -69,27 +70,10 @@ class _WorkspaceState extends State<Workspace> {
             (id) => PopupMenuItem(value: id, child: Text(locationLabel(l, id))),
           )
           .toList(),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.storefront_outlined,
-              size: 20,
-              color: AppColors.muted,
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                locationLabel(l, widget.store.location),
-                style: const TextStyle(fontSize: 14),
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(Icons.expand_more, size: 18),
-          ],
-        ),
+      child: TopbarControl(
+        icon: AppIcons.stock,
+        text: locationLabel(l, widget.store.location),
+        chevron: true,
       ),
     );
   }
@@ -118,10 +102,7 @@ class _WorkspaceState extends State<Workspace> {
             ),
           ),
         ],
-        sidebarFooter: Text(
-          l.owner,
-          style: const TextStyle(fontSize: 13, color: AppColors.muted),
-        ),
+        roleName: l.owner,
       );
     },
   );

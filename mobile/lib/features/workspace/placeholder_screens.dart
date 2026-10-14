@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/session/session_controller.dart';
 import '../../widgets/common.dart';
@@ -28,7 +29,7 @@ class NoBusinessScreen extends StatelessWidget {
                 OutlinedButton.icon(
                   key: const ValueKey('no-business-sign-out'),
                   onPressed: session.signOut,
-                  icon: const Icon(Icons.logout),
+                  icon: const AppIcon(AppIcons.logout),
                   label: Text(l.signOut),
                 ),
               ],

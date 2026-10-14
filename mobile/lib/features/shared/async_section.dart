@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -24,7 +25,7 @@ class ErrorPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.error_outline, color: AppColors.warning),
+              const AppIcon(AppIcons.info, color: AppColors.warning),
               const SizedBox(width: 8),
               Expanded(child: Text(message)),
             ],
@@ -33,7 +34,7 @@ class ErrorPanel extends StatelessWidget {
           TextButton.icon(
             key: const ValueKey('retry-load'),
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
+            icon: const AppIcon(AppIcons.retry),
             label: Text(l.retry),
           ),
         ],
