@@ -2,7 +2,7 @@
 
 For your own testing. One program starts everything: the database, the server, the web app, the install page and the Android app. Nothing to sign up for, nothing is opened to the internet.
 
-Status (2026-10-10): checked on Linux (all 682 backend tests on this database, and the full browser run of 216 checks against it). **Not tried on Windows or on a Mac yet**: if something fails, send the last lines it printed.
+Status (2026-10-13): checked on Linux (all 682 backend tests on this database, and the full browser run of 216 checks against it). Tried on **Windows 11** from the source code (not the `ERP-Test.zip` download): the database, the server, the web app in a browser and the app on an Android emulator (`http://10.0.2.2:8000`) all work, once **Git for Windows** is installed (see "Good to know"). **Not tried on a Mac yet**: if something fails, send the last lines it printed.
 
 ## The easiest way: one download
 
@@ -53,4 +53,6 @@ Or build it once and let the server show it on port 8000: `cd mobile && flutter 
 - If port 8000 is taken, add `--port 8001` to the command.
 - The database here is a PostgreSQL program carried by a Python package (`pixeltable-pgserver`, PostgreSQL 18); the real servers use PostgreSQL 16 in Docker. The server code is the same. It is a development server for testing: do not keep real shop data in it, and do not leave it open on an untrusted network.
 - The database program cannot run from an elevated "Run as administrator" window: use a normal window.
+- **Windows needs Git for Windows** (free, https://git-scm.com/download/win). The Windows build of the database program leaves out one library (`libwinpthread-1.dll`) and Git carries it; `run_local.py` finds it by itself. Without it the start stops with a message saying so (the raw error is `0xC0000135`). The `ERP-Test.zip` start has the same need.
+- **Android emulator:** the app inside the emulator reaches this computer at `http://10.0.2.2:8000` (type it at Server > Change; `127.0.0.1` there means the emulator itself). A debug build allows plain `http`.
 - The test app is a debug build signed with a throwaway key. When a newer test build comes out, remove the old app from the tablet before installing the new one (the data lives on the computer, not on the tablet).
