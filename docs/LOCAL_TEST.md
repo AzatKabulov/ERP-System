@@ -24,8 +24,8 @@ Nothing else to install: the package carries the tool that starts it, and the fi
    - Windows: open PowerShell and run `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`, then close PowerShell.
    - Mac: open Terminal and run `curl -LsSf https://astral.sh/uv/install.sh | sh`, then close Terminal.
 2. **Download two things from GitHub** and leave both in your Downloads folder:
-   - the code: open the branch `claude/laughing-faraday-3dkwcb` on GitHub, Code > Download ZIP, then unzip it;
-   - the app: Actions > the latest green **CI** run of the branch > Artifacts > `erp-system-test-build` (do not unzip it).
+   - the code: open the default branch `main` on GitHub, Code > Download ZIP, then unzip it;
+   - the app: Actions > the latest green **CI** run of `main` > Artifacts > `erp-system-test-build` (do not unzip it). Use the same commit for the code and app when possible; the mutable `test-build` release may be older than `main`.
 3. **Start it.**
    - Windows: double-click `scripts\local\start_local.bat` in the unzipped folder.
    - Mac (or any computer): open Terminal in the unzipped folder and run

@@ -4,7 +4,7 @@ Last updated 2026-10-14 (the owner's new flow: names from the internet, optional
 
 ## 1. Branch and commits
 
-- Working branch: `claude/laughing-faraday-3dkwcb` (the only branch this environment may push to). **Pull request 1 was merged into `main` on 2026-10-10** (merge commit `ef39aba`, all CI checks green); the branch was then restarted from `main`, and the later commits (receiving by scanning) are new work on top of it, not yet in `main`.
+- Repository state reviewed on 2026-10-16: `main` at `dedd55feccad08bf4c69510abb40bcd18f44f574` includes the merged scanning, missing-cost, pictures and gallery work. The earlier cloud branch `claude/laughing-faraday-3dkwcb` and its branch restriction belong to the historical environment. The commit narrative below records earlier development; use the current Git history for branch state.
 - Commits on the branch, oldest first: onboarding (`73b6a6d`), plan (`dd689a8`, `ac5197b`), Phase 0 CI (`7699ea1`), Phase 1 backend foundation (`1367358`), Phase 2 app foundation (`104ace4`), Phase 3 catalog and scanning (`223f4fe`), Phase 4 backend (`d5e8d10`), Phase 4 app (`6aab221`), Phase 4 documentation (`7f5c431`), Phase 5 backend (`80ff348`), Phase 5 app (`13422e5`), the screen-reader fix and extended browser run (`7ed1e7a`), Phase 5 documentation (`e3f0da9`), then the **simplification after the owner's review**: backend (`3b73a75`), app (`c14fa7a`) Phase 6 backend (`f12d138`, lint follow-up `704b534`), Phase 6 app (`2e735e2`), the Phase 6 results commit (`ab7c9b0`), Phase 7 backend (`02656a6`, `67feefe`), Phase 7 app (`c85eb89`), Phase 8 backend (`6629d17`, `51f1840`, `d61cac0`), Phase 8 app (`c5213d8`), the Phase 7-8 results commit (`c574818`), Phase 9 app (`8f9b877`), Phase 9 backend (`5f896c8`, `28f9676`, `d9cf7c6`), the Phase 9 integration commit (`1b3c422`), then the Phase 9 results commit (see `git log --oneline`).
 - CI (GitHub Actions) was green on every push through the Phase 9 integration commit (`1b3c422`, which holds all Phase 9 code, backend and app; the run for `8f9b877` was superseded by the next push); check the run for the newest (documentation-only) commit on GitHub. Before that: green through the Phase 8 app commit (`c5213d8`), all three jobs each time (`mobile` including the debug APK, which now includes the `printing`, `image_picker`, `file_picker` and `share_plus` plugins, `backend` on PostgreSQL, `docker` image build). Check the run for the newest commit on GitHub.
 
@@ -112,6 +112,10 @@ D1 Django + DRF + PostgreSQL (confirmed). D3 business currency TMT; selling pric
 - The unfinished list lives only on the device (one per person and business), by design: it is a draft, not a document, until it is sent.
 
 ## 4. Checks actually run
+
+### Documentation and preview refresh — 2026-10-16
+
+README and setup documentation were reviewed against `main` source commit `dedd55feccad08bf4c69510abb40bcd18f44f574`. The demo web build passed on Windows with the pinned Flutter 3.47.6 / Dart 3.13.5 after `flutter pub get --enforce-lockfile` and `flutter gen-l10n`. Russian and Turkmen dashboards were opened in a browser, their language navigation checked, and both 1440 × 1100 screenshots visually reviewed. Relative documentation links and whitespace were checked. This documentation-only pass did not rerun the backend or Flutter test suites, Android builds, or real-device workflows. The results below are historical results from their recorded environment.
 
 Run from this VM (Flutter 3.47.6 / Dart 3.13.5; Python 3.13 with uv; PostgreSQL 16):
 

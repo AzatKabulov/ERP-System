@@ -6,11 +6,11 @@ This project is an inventory-focused ERP for shops and wholesalers, with car par
 
 - Confirmed client: Flutter and Dart, with Android tablets first, followed by iPad and iPhone.
 - Confirmed launch market and languages: Turkmenistan; complete Russian (`ru`) and Turkmen (`tk`, modern Latin script) interfaces are required from the first Android release.
-- Confirmed backend (2026-10-06): Python, Django, and Django REST Framework; not yet implemented.
-- Confirmed database (2026-10-06): PostgreSQL; not yet implemented.
+- Backend: Python 3.13, Django, and Django REST Framework, implemented under `backend/`.
+- Database: PostgreSQL; SQLite is unsupported. CI uses PostgreSQL 16.
 - Initial operating model: internet access is required for stock-changing actions; business records are isolated by business and location permissions.
 
-The repository contains a Flutter interface prototype under `mobile/`, using in-memory demonstration operations and persistent language selection. Android and web hosts are present. Flutter 3.47.6 is pinned in `.flutter-version`; cloud activation and setup helpers are under `scripts/`. Analysis, 12 tests, web and debug APK builds, and interactive browser checks passed. Physical Android hardware and iOS remain untested. The backend under `backend/` is being built phase by phase (see `PLAN.md` and `HANDOFF.md` for what exists); the Flutter app still shows demonstration data unless a phase says it is connected. Do not describe demonstration operations as production functionality.
+The Flutter app under `mobile/` uses the real API by default and starts at sign-in. A separate build with `--dart-define=DEMO_MODE=true` uses in-memory sample operations with a visible banner. Flutter 3.47.6 is pinned in `.flutter-version`; cloud setup helpers are under `scripts/`. Read `HANDOFF.md` for recorded validation and `PLAN.md` for remaining work. Purchasing has been removed from app navigation; its legacy backend remains pending removal (step 9.10). Physical Android hardware and iOS remain unverified. Do not describe demonstration operations as production functionality.
 
 ## Before You Start
 

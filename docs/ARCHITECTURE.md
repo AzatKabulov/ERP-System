@@ -1,6 +1,6 @@
 # Architecture
 
-Status: The Flutter interface prototype is implemented. Analysis, 12 unit/widget tests, web and debug Android builds, APK signature verification, and interactive browser checks passed during prototype development. Physical Android hardware and iOS remain untested. Django REST Framework and PostgreSQL were confirmed as the backend and database on 2026-10-06. They, the authentication, and the deployment described below have not been implemented yet; [PLAN.md](../PLAN.md) sets the delivery order.
+Status: The Flutter app and Django REST Framework/PostgreSQL backend are implemented. Normal builds use authenticated API workflows; the explicit demonstration build uses in-memory sample data. Local test and deployment tooling are present; a production deployment, physical Android hardware and iOS remain unverified. See [HANDOFF.md](../HANDOFF.md) for recorded checks and [PLAN.md](../PLAN.md) for remaining work. Purchasing was removed from the app on 2026-10-14; references to its backend below describe retained legacy code pending step 9.10, not current app functionality.
 
 Product requirements live in [PRD.md](PRD.md), visual rules in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), and development rules in [AGENTS.md](../AGENTS.md). This document describes how the agreed inventory ERP should fit together.
 
