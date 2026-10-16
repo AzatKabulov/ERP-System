@@ -1,100 +1,106 @@
 # ERP System
 
-Inventory ERP for shops in Turkmenistan, with Russian and Turkmen interfaces. Android tablets are the first target; iPad and iPhone follow later. A Flutter app (`mobile/`) talks to a Django REST API on PostgreSQL (`backend/`); the delivery plan is in [PLAN.md](PLAN.md).
+A bilingual, tablet-first inventory ERP for shops and wholesalers in Turkmenistan. Manage products, receive goods by scanning, track stock across locations, record sales and returns, and review business activity in **Russian** or **Turkmen**.
 
-## What is included
+Built with **Flutter · Django REST Framework · PostgreSQL**. Android tablets are the first target; the browser build supports development and testing. iPad and iPhone are a later stage.
 
-- **Real build (default):** sign-in against the Django API, session restore, restart-safe pending operations, administration (business, locations, staff, language, USD→TMT rate), the product catalog with camera barcode scanning, stock (ledger with FIFO costs, opening stock, adjustments, history), suppliers, purchase orders and partial deliveries, and sales: the seller sets the quantity and price of every line (prices are not fixed), cash or card, optional customers, sales history, and one plain receipt as a PDF in Russian or Turkmen, with a restart-safe save; transfers between locations (goods wait in transit, are received in full or short with a reason, or sent back) and stock counts (a person counts, an owner or manager approves, the differences go through the ledger); customer returns against a sale (each product has its own return period; the refund is the price that was charged; goods come back as sellable, damaged or awaiting inspection at the cost they were sold at), returns to suppliers, a reorder list that becomes a draft purchase order; expenses with an optional photo of the receipt; warranty claims (repair, replacement, refund or rejection, an expired warranty only accepted by an owner or manager with a note); and CSV import and export of the catalog (the whole file is checked first; an invalid file changes nothing). The dashboard (today's and the month's sales, gross profit, expenses, stock value, items below their minimum, open orders and claims, recent activity: each only for the roles that may see it) and the Reports page (summary, sales, stock, purchasing, returns, expenses, each with a CSV export, and the activity history; owners and managers) read the real figures: revenue, refunds, net sales, cost of goods, gross profit, expenses and the result are separate measures, and the result is not an accounting profit.
-- **Demonstration build** (`--dart-define=DEMO_MODE=true`): the earlier interface prototype with dashboard, products, inventory, purchasing, sales and returns, expenses, warranties, reports and administration screens on in-memory sample data, three demonstration locations and a searchable car-part catalog.
-- Persistent language selection, ARB translations, and custom Turkmen delegates for the controls used here.
-- Bundled Inter and Noto Serif fonts, their licenses, and Android and web platform scaffolds.
-
-The visible demonstration banner is intentional. In the demonstration build operations change sample data in memory and reset when the application restarts; warranty cards are examples, and transfers complete immediately (the production transfer workflow will track dispatch, transit and receipt). A dedicated receipt printer and backups are not connected. Photos and files go to a private folder on the server (`PRIVATE_FILES_ROOT`) that must be backed up with the database. Payments are only recorded as cash or card (no gateway, no change, no tax, no invoices). This is an ERP, not a cash register. TMT is the business currency (decided); selling prices may be stated in TMT or USD. Turkmen terminology needs fluent-speaker review.
-
-## Running a test server and installing the app
-
-A free one-machine test server (HTTPS, web app, install page for testers, nightly backups) and a signed Android app for direct install: see [docs/DEPLOY_TESTING.md](docs/DEPLOY_TESTING.md) and [docs/ANDROID_RELEASE.md](docs/ANDROID_RELEASE.md). The app is told its server on the sign-in screen, so one installation file serves every client's own server. Short guides for testers: [Russian](docs/USER_GUIDE_ru.md), [Turkmen (draft)](docs/USER_GUIDE_tk.md).
+[Try it locally](#try-it-locally) · [Developer setup](docs/DEVELOPMENT.md) · [Russian guide](docs/USER_GUIDE_ru.md) · [Turkmen guide — draft](docs/USER_GUIDE_tk.md)
 
 ## Interface preview
 
-![Russian dashboard](docs/images/dashboard-ru.png)
+![ERP System dashboard in Russian](docs/images/dashboard-ru.png)
 
-[View the Turkmen dashboard](docs/images/dashboard-tk.png).
+<details>
+<summary>View the Turkmen dashboard</summary>
 
-## Toolchain
+![ERP System dashboard in Turkmen](docs/images/dashboard-tk.png)
 
-Flutter **3.47.6**, pinned in `.flutter-version`, from official commit `5fc346839b5d0eef006ed8404392afb4dfae428d`. Android uses the corresponding Flutter templates, Android API 36, and the Gradle wrapper's pinned distribution checksum. The cloud setup installs a complete Temurin Java 21 JDK.
+</details>
 
-## Run on your development machine
+The previews use the explicit demonstration build with sample records and a visible demo banner. Changes in this mode reset when the app restarts; they do not represent a connected shop. See [preview notes](docs/images/README.md).
 
-Install the pinned Flutter SDK and the Android SDK appropriate to your workstation, then select an attached Android device or emulator:
+## What the app does
 
-```bash
+| Workflow | Included |
+| --- | --- |
+| Catalog | Products, barcodes and article numbers, categories, units, pictures, list/gallery views, CSV import and export |
+| Receiving | Scan or type a code, enter a quantity, add an unknown product, and post a restart-safe receipt |
+| Missing information | Receive without a cost; complete missing prices and costs later. Profit excludes sales with unknown costs and identifies the omitted amounts |
+| Inventory | Per-location stock, FIFO costs, opening stock, adjustments, history, transfers in transit, and approved stock counts |
+| Sales | Search or scan, set each line's selling price, record cash/card, and generate a Russian or Turkmen receipt PDF |
+| After-sales | Customer returns linked to the sale, condition tracking, return periods, and warranty claims |
+| Business review | Expenses with private receipt attachments, role-aware dashboard, reports, CSV exports, and activity history |
+| Administration | Business profile, locations, staff access, language settings, and USD-to-TMT exchange rate |
+
+The server enforces business isolation, role permissions, stock availability, and duplicate-request protection. Stock-changing actions require internet access. TMT is the business currency; product selling prices may be stated in USD and converted using the configured rate.
+
+**Current scope:** purchasing, suppliers, purchase orders, supplier returns, and the reorder workflow have been removed from the app. Minimum-stock alerts remain. Legacy purchasing backend code still exists and is tracked for removal in [PLAN.md, step 9.10](PLAN.md). The current roles are owner, manager, sales and warehouse; a proposed three-role replacement is still pending a decision.
+
+This is an inventory ERP, with cash/card recorded as payment labels. It does not process payments, calculate tax or change, issue invoices, or provide full accounting. The report's operating result is not accounting profit.
+
+## Try it locally
+
+### Full system with sample business records
+
+Follow [the local test guide](docs/LOCAL_TEST.md) for the one-download test package or the source-based launcher. It starts a local PostgreSQL database, Django server, web app and install page without Docker, and prints test accounts and a generated password.
+
+The [Latest test build](https://github.com/AzatKabulov/ERP-System/releases/tag/test-build) is a mutable testing release. Check its commit against the source you are using; it can lag behind `main`. Use only disposable sample data for this setup.
+
+### Interface-only demo for developers
+
+Install the pinned **Flutter 3.47.6** SDK, then from a clone of this repository:
+
+```sh
 cd mobile
-flutter pub get
+flutter pub get --enforce-lockfile
 flutter gen-l10n
-flutter devices
-flutter run -d <android-device-id>
+flutter run -d chrome --dart-define=DEMO_MODE=true
 ```
 
-To try the same Flutter interface in an installed Chrome browser:
+No backend or sign-in is needed for this demo. To run on an Android device instead, find its identifier with `flutter devices` and replace `chrome` with that identifier. Scanning and printing need separate checks on real hardware.
 
-```bash
-cd mobile
-flutter run -d chrome
+### Connected app development
+
+Normal builds start at sign-in and need the API. See [developer setup](docs/DEVELOPMENT.md) for PostgreSQL, backend settings, test commands, and the cloud helpers. The browser build normally uses the origin it was served from; local development can set `API_BASE_URL`. Android users select their server on the sign-in screen.
+
+For a test server and signed direct-install Android build, use [test deployment](docs/DEPLOY_TESTING.md) and [Android release instructions](docs/ANDROID_RELEASE.md).
+
+## How it fits together
+
+```mermaid
+flowchart LR
+    A[Flutter app: Russian and Turkmen] -->|Authenticated API requests| B[Django REST Framework]
+    B --> C[Business permissions and transaction services]
+    C --> D[(PostgreSQL: records and stock ledger)]
+    C --> E[Private product photos and attachments]
 ```
 
-The debug Android APK and web build have been verified. Installation on physical Android hardware remains to be tested. iOS platform generation and validation are deferred to the Apple stage and require macOS/Xcode or a suitable build service.
+Pending operations retain their identities across retries and restarts. The API owns stock and money calculations; finalized movements retain their history. Private files are served through permission checks and must be backed up with the database.
 
-## Cloud setup and validation
+## Repository map
 
-From `/workspace/ERP-System`:
+| Path | Purpose |
+| --- | --- |
+| [`mobile/`](mobile/) | Shared Flutter app, Russian/Turkmen localizations, unit and widget tests, Android/web hosts |
+| [`backend/`](backend/) | Django API, migrations, transaction services, PostgreSQL tests, and locked Python dependencies |
+| [`infra/`](infra/) | Container stack, HTTPS proxy, installation page, and deployment runbook |
+| [`scripts/`](scripts/) | Environment setup, local test launcher, packaging, deployment, and browser checks |
+| [`docs/`](docs/) | Requirements, architecture, design system, setup, and user guides |
 
-```bash
-bash scripts/setup_cloud.sh
-source scripts/cloud_env.sh
-cd mobile
-dart format lib test
-flutter analyze
-flutter test
-flutter build web --no-web-resources-cdn
-flutter build apk --debug
-```
+## Validation and remaining work
 
-The setup helper reuses the pinned SDK, installs missing Android prerequisites, and uses frozen dependency resolution with the retained application lockfile. The pinned Android command-line tools handle licensing without a separate prompt. It does not scaffold over application code. Keep `mobile/pubspec.lock` with the application.
+[HANDOFF.md, section 4](HANDOFF.md#4-checks-actually-run) records prior validation with its environment and limitations. [GitHub Actions](https://github.com/AzatKabulov/ERP-System/actions/workflows/ci.yml) runs Flutter checks, web/Android builds, backend checks on PostgreSQL, and a container build. Check the run for the commit you use; historical results do not establish that every later commit passes.
 
-Cloud Java clients use the environment's existing proxy and its provided public CA while retaining TLS verification. Because Maven Central rate-limits the shared cloud egress address, the helper configures Google's public Maven Central mirror inside the cloud Gradle cache. Workstation and project repository settings are unaffected. The web build bundles rendering resources locally.
-
-For an internal cloud smoke run after the web build:
-
-```bash
-cd /workspace/ERP-System/mobile/build/web
-python -m http.server 8080 --bind 127.0.0.1
-```
-
-Use internal browser requests for validation. The onboarding UI does not provide a localhost application preview.
-
-### Claude Code cloud
-
-The helpers above assume the Codex cloud (`/workspace` paths). In a Claude Code cloud session, run `bash scripts/setup_claude_cloud.sh` once, then `source scripts/claude_cloud_env.sh` before Flutter commands. The setup installs the pinned Flutter SDK under `~/.tools` and supports the format, analysis, test, and web build commands above. It omits Android because `dl.google.com` is blocked by that environment's default network policy; see `HANDOFF.md`.
-
-### Backend and CI
-
-The Django API lives in `backend/` (Python 3.13, Django 5.2 LTS, Django REST Framework, PostgreSQL). Commands, environment variables and the local PostgreSQL helper are in [AGENTS.md](AGENTS.md); deployment files are in `infra/`. GitHub Actions (`.github/workflows/ci.yml`) runs the Flutter checks plus a debug Android APK build, the backend checks against PostgreSQL, and a container image build on every push and pull request.
-
-The app starts at sign-in and talks to the API at `API_BASE_URL` (`--dart-define=API_BASE_URL=https://...`; debug builds default to `http://127.0.0.1:8000`). For the in-memory demonstration instead, build with `--dart-define=DEMO_MODE=true`. Never present the demonstration as real functionality.
-
-### Current validation status
-
-The exact results of the last checks, and what has **not** been verified, are in [HANDOFF.md](HANDOFF.md) section 4. In short: the app's format, analysis and tests, the backend's lint, checks and PostgreSQL tests, the web build, and (in GitHub Actions) the debug Android APK and the container image build all pass. Camera scanning on a real tablet, a deployed staging server, real email delivery, TalkBack and iOS have not been verified.
-
-Build artifacts are `mobile/build/web/` and `mobile/build/app/outputs/flutter-apk/app-debug.apk`. These are ignored outputs and can be recreated with the commands above. The Android APK uses development signing; it is not a store release.
+Real-tablet camera scanning, receipt printing/sharing, TalkBack, a deployed staging server, real recovery-email delivery, and iOS still need validation. Turkmen terminology needs fluent-speaker review. Tooling for backups and deployment is present; production readiness requires the pilot and recovery checks in the plan.
 
 ## Project documents
 
-- [Product requirements](docs/PRD.md)
-- [Delivery plan](PLAN.md)
-- [Current state and handoff notes](HANDOFF.md)
-- [Agent instructions](AGENTS.md)
-- [Design system](docs/DESIGN_SYSTEM.md)
-- [Architecture and prototype boundaries](docs/ARCHITECTURE.md)
+- [Product requirements](docs/PRD.md) — scope and business decisions
+- [Delivery plan](PLAN.md) — remaining steps and open decisions
+- [Current state and validation](HANDOFF.md) — implementation notes and evidence
+- [Architecture](docs/ARCHITECTURE.md) — application boundaries and data rules
+- [Design system](docs/DESIGN_SYSTEM.md) — shared visual and accessibility rules
+- [Developer setup](docs/DEVELOPMENT.md) — toolchains, commands, and cloud environments
+- [Agent instructions](AGENTS.md) — repository contribution rules
+
+For a bug report, include the app/server commit, device, interface language, steps, expected result, and actual result. Use sample records and remove credentials or customer details from screenshots.
