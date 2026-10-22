@@ -25,7 +25,7 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   LicenseRegistry.addLicense(() async* {
-    for (final font in ['Inter', 'NotoSerifDisplay', 'JetBrainsMono']) {
+    for (final font in ['Onest']) {
       final text = await rootBundle.loadString(
         'assets/fonts/$font-LICENSE.txt',
       );
@@ -100,7 +100,7 @@ class _ErpAppState extends State<ErpApp> {
 
   late final ApiClient _api = ApiClient(
     baseUrl: _startServer.isEmpty ? 'http://invalid.local' : _startServer,
-    tokens: widget.tokenStore ?? SecureTokenStore(),
+    tokens: widget.tokenStore ?? createTokenStore(),
     httpClient: _httpClient,
     monitor: _monitor,
     onSessionExpired: () => _session.handleSessionExpired(),

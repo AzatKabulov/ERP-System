@@ -31,16 +31,8 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
-    - assets/fonts/Inter-LICENSE.txt
-    - assets/fonts/NotoSerifDisplay-LICENSE.txt
-    - assets/fonts/JetBrainsMono-LICENSE.txt
+    - assets/fonts/Onest-LICENSE.txt
   fonts:
-    - family: Inter
+    - family: Onest
       fonts:
-        - asset: assets/fonts/Inter.ttf
-    - family: NotoSerifDisplay
-      fonts:
-        - asset: assets/fonts/NotoSerifDisplay.ttf
-    - family: JetBrainsMono
-      fonts:
-        - asset: assets/fonts/JetBrainsMono.ttf
+        - asset: assets/fonts/Onest.ttf

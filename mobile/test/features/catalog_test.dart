@@ -359,6 +359,8 @@ void main() {
       await tapKey(tester, 'pf-barcode-add');
       await tester.enterText(key('pf-warranty-months'), '12');
       await tester.enterText(key('pf-warranty-terms'), 'Гарантия на дефекты.');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
       await tapKey(tester, 'pf-save');
       await settle(tester);
       expect(rig.server.productsData, hasLength(1));
@@ -378,6 +380,8 @@ void main() {
     ) async {
       final rig = RealRig();
       await openForm(tester, rig);
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
       await tapKey(tester, 'pf-save');
       await settle(tester);
       expect(find.text('Обязательное поле.'), findsWidgets);
@@ -395,6 +399,8 @@ void main() {
       await tester.enterText(key('pf-name'), 'Another');
       await pickUnit(tester, 'Штука (шт)');
       await tester.enterText(key('pf-price'), '10');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
       await tapKey(tester, 'pf-save');
       await settle(tester);
       expect(find.text('Этот артикул уже используется.'), findsOneWidget);
@@ -434,6 +440,8 @@ void main() {
       await pickUnit(tester, 'Штука (шт)');
       await tester.enterText(key('pf-sku'), 'U-1');
       await tester.enterText(key('pf-name'), 'Imported');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
       await tapKey(tester, 'pf-save');
       await settle(tester);
       final saved = rig.server.productsData.single;
@@ -457,6 +465,8 @@ void main() {
       await tester.enterText(key('pf-name'), 'Thing');
       await pickUnit(tester, 'Штука (шт)');
       await tester.enterText(key('pf-price'), '5');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
       await tapKey(tester, 'pf-save');
       await settle(tester);
       expect(
@@ -493,6 +503,8 @@ void main() {
       await tapKey(tester, 'pd-edit');
       await settle(tester);
       await tester.enterText(key('pf-name'), 'New name');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
       await tapKey(tester, 'pf-save');
       await settle(tester);
       expect(rig.server.productsData.single['name'], 'New name');
@@ -559,6 +571,8 @@ void main() {
         await tester.tap(find.text('Штука (шт)').last);
         await settle(tester, ms: 400);
         await tester.enterText(key('pf-price'), '3');
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pump();
         await tapKey(tester, 'pf-save');
         await settle(tester);
         expect(rig.server.productsData.single['barcodes'], ['9999999999994']);

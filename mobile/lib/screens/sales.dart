@@ -59,13 +59,15 @@ class _SalesScreenState extends State<SalesScreen> {
         .toList();
     return Column(
       children: [
-        TextField(
-          key: const ValueKey('sales-search'),
-          controller: _search,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            labelText: l.searchProducts,
-            prefixIcon: const AppIcon(AppIcons.search),
+        LabeledField(
+          label: l.searchProducts,
+          child: TextField(
+            key: const ValueKey('sales-search'),
+            controller: _search,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              prefixIcon: const AppIcon(AppIcons.search),
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -385,18 +387,21 @@ Future<void> refundDialog(
                   children: [
                     Text(store.product(productId).name),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: controller,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: l.quantity),
-                      validator: (text) {
-                        final n = int.tryParse(text ?? '');
-                        return n == null ||
-                                n <= 0 ||
-                                n > store.returnable(sale, productId)
-                            ? l.validQuantity
-                            : null;
-                      },
+                    LabeledField(
+                      label: l.quantity,
+                      child: TextFormField(
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(),
+                        validator: (text) {
+                          final n = int.tryParse(text ?? '');
+                          return n == null ||
+                                  n <= 0 ||
+                                  n > store.returnable(sale, productId)
+                              ? l.validQuantity
+                              : null;
+                        },
+                      ),
                     ),
                     const SizedBox(height: 12),
                     CheckboxListTile(

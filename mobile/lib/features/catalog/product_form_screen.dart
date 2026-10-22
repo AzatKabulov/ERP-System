@@ -324,30 +324,32 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
-                key: const ValueKey('pf-sku'),
-                controller: _sku,
-                enabled: !_saving,
-                autocorrect: false,
-                onChanged: (_) => _touch(),
-                decoration: InputDecoration(
-                  labelText: l.productSku,
-                  errorText: _fieldText('sku'),
+              LabeledField(
+                label: l.productSku,
+                child: TextField(
+                  key: const ValueKey('pf-sku'),
+                  controller: _sku,
+                  enabled: !_saving,
+                  autocorrect: false,
+                  onChanged: (_) => _touch(),
+                  decoration: InputDecoration(errorText: _fieldText('sku')),
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
-                key: const ValueKey('pf-name'),
-                controller: _name,
-                enabled: !_saving,
-                onChanged: (_) => _touch(),
-                decoration: InputDecoration(
-                  labelText: l.productName,
-                  errorText: _fieldText('name'),
-                  helperText: _foundOnline == null
-                      ? null
-                      : l.productFoundOnline(_foundOnline!),
-                  helperMaxLines: 3,
+              LabeledField(
+                label: l.productName,
+                child: TextField(
+                  key: const ValueKey('pf-name'),
+                  controller: _name,
+                  enabled: !_saving,
+                  onChanged: (_) => _touch(),
+                  decoration: InputDecoration(
+                    errorText: _fieldText('name'),
+                    helperText: _foundOnline == null
+                        ? null
+                        : l.productFoundOnline(_foundOnline!),
+                    helperMaxLines: 3,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -459,21 +461,25 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 children: [
                   SizedBox(
                     width: 220,
-                    child: TextField(
-                      key: const ValueKey('pf-price'),
-                      controller: _price,
-                      enabled: !_saving,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,  ]')),
-                      ],
-                      onChanged: (_) => _touch(),
-                      decoration: InputDecoration(
-                        labelText: l.priceLabel,
-                        errorText: _fieldText('price_amount'),
-                        errorMaxLines: 3,
+                    child: LabeledField(
+                      label: l.priceLabel,
+                      child: TextField(
+                        key: const ValueKey('pf-price'),
+                        controller: _price,
+                        enabled: !_saving,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9.,  ]'),
+                          ),
+                        ],
+                        onChanged: (_) => _touch(),
+                        decoration: InputDecoration(
+                          errorText: _fieldText('price_amount'),
+                          errorMaxLines: 3,
+                        ),
                       ),
                     ),
                   ),
@@ -518,18 +524,20 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 const SizedBox(height: 16),
                 SizedBox(
                   width: 320,
-                  child: TextField(
-                    key: const ValueKey('pf-cost'),
-                    controller: _cost,
-                    enabled: !_saving,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onChanged: (_) => _touch(),
-                    decoration: InputDecoration(
-                      labelText: l.defaultCostLabel,
-                      errorText: _fieldText('default_purchase_cost'),
-                      errorMaxLines: 3,
+                  child: LabeledField(
+                    label: l.defaultCostLabel,
+                    child: TextField(
+                      key: const ValueKey('pf-cost'),
+                      controller: _cost,
+                      enabled: !_saving,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      onChanged: (_) => _touch(),
+                      decoration: InputDecoration(
+                        errorText: _fieldText('default_purchase_cost'),
+                        errorMaxLines: 3,
+                      ),
                     ),
                   ),
                 ),
@@ -581,47 +589,53 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               const SizedBox(height: 24),
               SizedBox(
                 width: 260,
-                child: TextField(
-                  key: const ValueKey('pf-warranty-months'),
-                  controller: _warrantyMonths,
-                  enabled: !_saving,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (_) => _touch(),
-                  decoration: InputDecoration(
-                    labelText: l.warrantyMonthsLabel,
-                    errorText: _fieldText('warranty_months'),
+                child: LabeledField(
+                  label: l.warrantyMonthsLabel,
+                  child: TextField(
+                    key: const ValueKey('pf-warranty-months'),
+                    controller: _warrantyMonths,
+                    enabled: !_saving,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onChanged: (_) => _touch(),
+                    decoration: InputDecoration(
+                      errorText: _fieldText('warranty_months'),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
-                key: const ValueKey('pf-warranty-terms'),
-                controller: _warrantyTerms,
-                enabled: !_saving,
-                minLines: 2,
-                maxLines: 5,
-                onChanged: (_) => _touch(),
-                decoration: InputDecoration(
-                  labelText: l.warrantyTermsLabel,
-                  errorText: _fieldText('warranty_terms'),
+              LabeledField(
+                label: l.warrantyTermsLabel,
+                child: TextField(
+                  key: const ValueKey('pf-warranty-terms'),
+                  controller: _warrantyTerms,
+                  enabled: !_saving,
+                  minLines: 2,
+                  maxLines: 5,
+                  onChanged: (_) => _touch(),
+                  decoration: InputDecoration(
+                    errorText: _fieldText('warranty_terms'),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               SizedBox(
                 width: 260,
-                child: TextField(
-                  key: const ValueKey('pf-return-days'),
-                  controller: _returnDays,
-                  enabled: !_saving,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (_) => _touch(),
-                  decoration: InputDecoration(
-                    labelText: l.productReturnDays,
-                    helperText: l.productReturnDaysHint,
-                    helperMaxLines: 3,
-                    errorText: _fieldText('return_days'),
+                child: LabeledField(
+                  label: l.productReturnDays,
+                  child: TextField(
+                    key: const ValueKey('pf-return-days'),
+                    controller: _returnDays,
+                    enabled: !_saving,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onChanged: (_) => _touch(),
+                    decoration: InputDecoration(
+                      helperText: l.productReturnDaysHint,
+                      helperMaxLines: 3,
+                      errorText: _fieldText('return_days'),
+                    ),
                   ),
                 ),
               ),

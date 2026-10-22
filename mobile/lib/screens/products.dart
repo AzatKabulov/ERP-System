@@ -53,20 +53,22 @@ class _ProductsScreenState extends State<ProductsScreen> {
           children: [
             SizedBox(
               width: 340,
-              child: TextField(
-                key: const ValueKey('product-search'),
-                controller: _search,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: l.searchProducts,
-                  prefixIcon: const AppIcon(AppIcons.search),
-                  suffixIcon: _search.text.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: l.clearSearch,
-                          icon: const AppIcon(AppIcons.close),
-                          onPressed: () => setState(_search.clear),
-                        ),
+              child: LabeledField(
+                label: l.searchProducts,
+                child: TextField(
+                  key: const ValueKey('product-search'),
+                  controller: _search,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    prefixIcon: const AppIcon(AppIcons.search),
+                    suffixIcon: _search.text.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: l.clearSearch,
+                            icon: const AppIcon(AppIcons.close),
+                            onPressed: () => setState(_search.clear),
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -248,12 +250,16 @@ Future<String?> barcodeDialog(BuildContext context) async {
               children: [
                 Text(l.scanHint),
                 const SizedBox(height: 20),
-                TextField(
-                  key: const ValueKey('barcode-input'),
-                  autofocus: true,
-                  controller: controller,
-                  decoration: InputDecoration(labelText: l.barcode),
-                  onSubmitted: (value) => Navigator.pop(context, value.trim()),
+                LabeledField(
+                  label: l.barcode,
+                  child: TextField(
+                    key: const ValueKey('barcode-input'),
+                    autofocus: true,
+                    controller: controller,
+                    decoration: InputDecoration(),
+                    onSubmitted: (value) =>
+                        Navigator.pop(context, value.trim()),
+                  ),
                 ),
               ],
             ),
@@ -358,41 +364,45 @@ Future<void> stockDialog(
                     const SizedBox(height: 8),
                     Text('${l.currentQuantity}: ${store.stock(p)}'),
                     const SizedBox(height: 20),
-                    TextFormField(
-                      key: const ValueKey('stock-quantity'),
-                      controller: controller,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: action == StockAction.count
-                            ? l.actualQuantity
-                            : l.quantity,
+                    LabeledField(
+                      label: action == StockAction.count
+                          ? l.actualQuantity
+                          : l.quantity,
+                      child: TextFormField(
+                        key: const ValueKey('stock-quantity'),
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(),
+                        validator: (value) {
+                          final number = int.tryParse(value?.trim() ?? '');
+                          return number == null ||
+                                  number <
+                                      (action == StockAction.count ? 0 : 1) ||
+                                  number > 999999
+                              ? l.validQuantity
+                              : null;
+                        },
                       ),
-                      validator: (value) {
-                        final number = int.tryParse(value?.trim() ?? '');
-                        return number == null ||
-                                number <
-                                    (action == StockAction.count ? 0 : 1) ||
-                                number > 999999
-                            ? l.validQuantity
-                            : null;
-                      },
                     ),
                     if (action == StockAction.transfer) ...[
                       const SizedBox(height: 20),
-                      DropdownButtonFormField<String>(
-                        initialValue: destination,
-                        isExpanded: true,
-                        decoration: InputDecoration(labelText: l.destination),
-                        items: DemoStore.locationIds
-                            .where((id) => id != store.location)
-                            .map(
-                              (id) => DropdownMenuItem(
-                                value: id,
-                                child: Text(locationLabel(l, id)),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (id) => setState(() => destination = id!),
+                      LabeledField(
+                        label: l.destination,
+                        child: DropdownButtonFormField<String>(
+                          initialValue: destination,
+                          isExpanded: true,
+                          decoration: InputDecoration(),
+                          items: DemoStore.locationIds
+                              .where((id) => id != store.location)
+                              .map(
+                                (id) => DropdownMenuItem(
+                                  value: id,
+                                  child: Text(locationLabel(l, id)),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (id) => setState(() => destination = id!),
+                        ),
                       ),
                     ],
                     const SizedBox(height: 20),

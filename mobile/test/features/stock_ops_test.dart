@@ -49,13 +49,13 @@ Future<void> openStock(WidgetTester tester, RealRig rig) async {
 
 Future<void> openTransfers(WidgetTester tester, RealRig rig) async {
   await openStock(tester, rig);
-  await tapKey(tester, 'stock-transfers');
+  await tapKey(tester, 'stock-tab-transfers');
   await settle(tester);
 }
 
 Future<void> openCounts(WidgetTester tester, RealRig rig) async {
   await openStock(tester, rig);
-  await tapKey(tester, 'stock-counts');
+  await tapKey(tester, 'stock-tab-counts');
   await settle(tester);
 }
 
@@ -69,7 +69,7 @@ Future<void> fillTransfer(WidgetTester tester, {String quantity = '4'}) async {
   await settle(tester, ms: 400);
   await tapKey(tester, 'transfer-add-line');
   await settle(tester, ms: 600);
-  await tester.tap(key('picker-BP-1'));
+  await tapKey(tester, 'picker-BP-1');
   await settle(tester, ms: 400);
   await tester.enterText(key('transfer-qty-0'), quantity);
   await tester.pump();
@@ -121,7 +121,7 @@ void main() {
       expect(t.rig.server.ledger.transfersDispatched, 0);
       await tapKey(tester, 'transfer-add-line');
       await settle(tester, ms: 600);
-      await tester.tap(key('picker-BP-1'));
+      await tapKey(tester, 'picker-BP-1');
       await settle(tester, ms: 400);
       await tester.enterText(key('transfer-qty-0'), '1,5'); // pieces are whole
       await tester.pump();
@@ -312,8 +312,8 @@ void main() {
         'sales.create',
       ];
       await openStock(tester, t.rig);
-      expect(key('stock-transfers'), findsNothing);
-      expect(key('stock-counts'), findsNothing);
+      expect(key('stock-tab-transfers'), findsNothing);
+      expect(key('stock-tab-counts'), findsNothing);
     });
   });
 
@@ -570,7 +570,7 @@ void main() {
       }
       await tapKey(tester, 'nav-inventory');
       await settle(tester);
-      await tapKey(tester, 'stock-transfers');
+      await tapKey(tester, 'stock-tab-transfers');
       await settle(tester);
       expect(tester.takeException(), isNull);
       await fillTransfer(tester);
@@ -587,8 +587,7 @@ void main() {
       expect(tester.takeException(), isNull);
       await goBack(tester);
       await goBack(tester);
-      await goBack(tester);
-      await tapKey(tester, 'stock-counts');
+      await tapKey(tester, 'stock-tab-counts');
       await settle(tester);
       await tapKey(tester, 'count-new');
       await settle(tester);

@@ -136,18 +136,20 @@ class _ActivityViewState extends State<ActivityView> {
               child: Semantics(
                 container: true,
                 explicitChildNodes: true,
-                child: TextField(
-                  key: const ValueKey('activity-search'),
-                  controller: _search,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _submit(),
-                  decoration: InputDecoration(
-                    labelText: l.activitySearchHint,
-                    suffixIcon: IconButton(
-                      key: const ValueKey('activity-search-go'),
-                      tooltip: l.activitySearchHint,
-                      icon: const AppIcon(AppIcons.search),
-                      onPressed: _submit,
+                child: LabeledField(
+                  label: l.activitySearchHint,
+                  child: TextField(
+                    key: const ValueKey('activity-search'),
+                    controller: _search,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (_) => _submit(),
+                    decoration: InputDecoration(
+                      suffixIcon: IconButton(
+                        key: const ValueKey('activity-search-go'),
+                        tooltip: l.activitySearchHint,
+                        icon: const AppIcon(AppIcons.search),
+                        onPressed: _submit,
+                      ),
                     ),
                   ),
                 ),

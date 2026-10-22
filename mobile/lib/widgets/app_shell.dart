@@ -4,6 +4,7 @@ import 'app_icons.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import 'common.dart';
+import 'motion.dart';
 
 enum AppPage {
   dashboard,
@@ -137,65 +138,85 @@ class _AppShellState extends State<AppShell> {
 
   Widget _navItem(AppLocalizations l, AppPage page) {
     final selected = widget.page == page;
+    final duration = AppMotion.of(context, AppMotion.base);
+    final color = selected ? AppColors.blue : AppColors.muted;
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Material(
-        color: selected ? AppColors.surfaceMuted : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
+        type: MaterialType.transparency,
         child: InkWell(
           key: ValueKey('nav-${page.name}'),
           onTap: () => _navigate(page),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           hoverColor: AppColors.surfaceSoft,
-          child: Stack(
-            children: [
-              if (selected)
+          child: AnimatedContainer(
+            duration: duration,
+            curve: AppMotion.arrive,
+            decoration: BoxDecoration(
+              color: selected ? AppColors.tint : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Stack(
+              children: [
                 Positioned(
                   left: 0,
-                  top: 13,
-                  bottom: 13,
-                  child: ExcludeSemantics(
-                    child: Container(
-                      width: 2,
-                      decoration: BoxDecoration(
-                        color: AppColors.brass,
-                        borderRadius: BorderRadius.circular(2),
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: ExcludeSemantics(
+                      child: AnimatedContainer(
+                        duration: duration,
+                        curve: AppMotion.arrive,
+                        width: 3,
+                        height: selected ? 22 : 0,
+                        decoration: const BoxDecoration(
+                          color: AppColors.blue,
+                          borderRadius: BorderRadius.horizontal(
+                            right: Radius.circular(3),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 48),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    children: [
-                      AppIcon(
-                        pageIcon(page),
-                        size: 20,
-                        color: selected ? AppColors.ink : AppColors.muted,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          pageLabel(l, page),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: selected
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                            color: selected ? AppColors.ink : AppColors.muted,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        TweenAnimationBuilder<Color?>(
+                          tween: ColorTween(end: color),
+                          duration: duration,
+                          builder: (context, c, _) =>
+                              AppIcon(pageIcon(page), size: 20, color: c),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AnimatedDefaultTextStyle(
+                            duration: duration,
+                            style: TextStyle(
+                              fontFamily: AppFonts.ui,
+                              fontSize: 15,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: selected
+                                  ? AppColors.blue
+                                  : AppColors.muted,
+                            ),
+                            child: Text(pageLabel(l, page)),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -219,7 +240,7 @@ class _AppShellState extends State<AppShell> {
                 height: 36,
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
-                  color: AppColors.ink,
+                  gradient: AppGradients.brand,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
@@ -448,7 +469,7 @@ class _AppShellState extends State<AppShell> {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: 72,
           child: Row(
             children: [
               for (final page in tabs)
@@ -457,31 +478,51 @@ class _AppShellState extends State<AppShell> {
                     button: true,
                     selected: widget.page == page,
                     child: Material(
-                      color: widget.page == page
-                          ? AppColors.tint
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(10),
+                      type: MaterialType.transparency,
                       child: InkWell(
                         key: ValueKey('tab-${page.name}'),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         onTap: () => widget.onNavigate(page),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            AppIcon(
-                              pageIcon(page),
-                              size: 22,
-                              color: widget.page == page
-                                  ? AppColors.blue
-                                  : AppColors.muted,
+                            AnimatedContainer(
+                              duration: AppMotion.of(context, AppMotion.base),
+                              curve: AppMotion.arrive,
+                              width: widget.page == page ? 56 : 36,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: widget.page == page
+                                    ? AppColors.tint
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Center(
+                                child: TweenAnimationBuilder<Color?>(
+                                  tween: ColorTween(
+                                    end: widget.page == page
+                                        ? AppColors.blue
+                                        : AppColors.muted,
+                                  ),
+                                  duration: AppMotion.of(
+                                    context,
+                                    AppMotion.base,
+                                  ),
+                                  builder: (context, c, _) => AppIcon(
+                                    pageIcon(page),
+                                    size: 22,
+                                    color: c,
+                                  ),
+                                ),
+                              ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 3),
                             Text(
                               pageLabel(l, page),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color: widget.page == page
                                     ? AppColors.blue
@@ -540,7 +581,10 @@ class _AppShellState extends State<AppShell> {
                         alignment: Alignment.topCenter,
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 1500),
-                          child: widget.body,
+                          child: KeyedSubtree(
+                            key: ValueKey(widget.page),
+                            child: _PageEnter(child: widget.body),
+                          ),
                         ),
                       ),
                     ),
@@ -552,5 +596,58 @@ class _AppShellState extends State<AppShell> {
         ),
       );
     },
+  );
+}
+
+/// A page arriving: a fade and a short rise, played when the page is first built. Only the new
+/// page animates (the old one is gone at once), so nothing waits and nothing overlaps.
+class _PageEnter extends StatefulWidget {
+  const _PageEnter({required this.child});
+  final Widget child;
+
+  @override
+  State<_PageEnter> createState() => _PageEnterState();
+}
+
+class _PageEnterState extends State<_PageEnter>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: AppMotion.slow,
+  );
+  late final Animation<double> _curve = CurvedAnimation(
+    parent: _controller,
+    curve: AppMotion.arrive,
+  );
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (AppMotion.reduced(context)) {
+      _controller.value = 1;
+    } else {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: Tween<double>(begin: 0.0, end: 1).animate(_curve),
+    child: SlideTransition(
+      position: Tween(
+        begin: const Offset(0, 0.015),
+        end: Offset.zero,
+      ).animate(_curve),
+      child: widget.child,
+    ),
   );
 }

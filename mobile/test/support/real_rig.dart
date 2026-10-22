@@ -59,9 +59,20 @@ class RealRig {
     WidgetTester tester, {
     Size size = const Size(1440, 1000),
     Map<String, Object> prefsValues = const {},
+    bool reduceMotion = true,
   }) async {
     await tester.binding.setSurfaceSize(size);
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    // Most tests run with the system's "remove animations" setting on, so a screen is in its final
+    // state as soon as it is built (and the reduced-motion path of every widget is exercised).
+    // The animated path has its own tests (motion_test.dart), which pass `reduceMotion: false`.
+    if (reduceMotion) {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+    }
     SharedPreferences.setMockInitialValues(prefsValues);
     prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(

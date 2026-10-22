@@ -631,8 +631,23 @@ class FakeServer {
     return found == null ? null : {'id': found['id'], 'name': found['name']};
   }
 
-  Map<String, dynamic> _present(Map<String, dynamic> raw) {
+  /// A product as the server sends it. In the list ([withStock]) the people who may see stock
+  /// also get what is on the shelves, everywhere or at one location ([stockAt]), unless the test
+  /// seeded its own `stock` on the product.
+  Map<String, dynamic> _present(
+    Map<String, dynamic> raw, {
+    String? stockAt,
+    bool withStock = false,
+  }) {
     final out = Map<String, dynamic>.from(raw);
+    if (withStock &&
+        !raw.containsKey('stock') &&
+        permissions.contains('stock.view')) {
+      final milli = ledger.sellableMilli('${raw['id']}', stockAt);
+      final whole = milli ~/ 1000;
+      final part = (milli % 1000).toString().padLeft(3, '0');
+      out['stock'] = {'on_hand': '$whole.$part', 'minimum': '0.000'};
+    }
     final currency = raw['price_currency'];
     final amount = '${raw['price_amount']}';
     out['price'] = {'amount': amount, 'currency': currency};
@@ -804,7 +819,8 @@ class FakeServer {
         return true;
       }).toList();
       return page([
-        for (final p in paged(items)) _present(p),
+        for (final p in paged(items))
+          _present(p, stockAt: q['location'], withStock: true),
       ], count: items.length);
     }
     if (rest == 'products/' && method == 'POST') {

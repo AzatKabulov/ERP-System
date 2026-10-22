@@ -43,16 +43,15 @@ void main() {
       // stock list, history, and both entry forms
       await navigate(tester, 'nav-inventory', size);
       expect(tester.takeException(), isNull);
-      await tapKey(tester, 'stock-history');
+      await tapKey(tester, 'stock-tab-movements');
       await settle(tester);
       expect(tester.takeException(), isNull);
-      await goBack(tester);
       await tapKey(tester, 'stock-adjust');
       await settle(tester);
       await tapKey(tester, 'entry-add-line');
       await settle(tester, ms: 600);
       expect(tester.takeException(), isNull);
-      await tester.tap(key('picker-BP-1'));
+      await tapKey(tester, 'picker-BP-1');
       await settle(tester, ms: 400);
       expect(tester.takeException(), isNull);
       await goBack(tester);

@@ -45,7 +45,15 @@
   "attention": "Üns gerek",
   "healthy": "Elýeterli",
   "emptyStock": "Elýeterli däl",
-  "searchProducts": "Ady, artikuly ýa-da ştrih-kody",
+  "searchProducts": "Ady, artikuly ýa-da ştrih-kody boýunça gözleg",
+  "inStockHere": "Bu ýerde bar: {quantity}",
+  "@inStockHere": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
   "allCategories": "Ähli kategoriýalar",
   "filters": "Süzgüçler",
   "brakes": "Tormoz ulgamy",
@@ -252,6 +260,7 @@
   "retry": "Täzeden synanyşmak",
   "checkingSession": "Sessiýa barlanýar…",
   "errorInvalidCredentials": "Login ýa-da parol nädogry.",
+  "errorSessionStorage": "Giriş sessiýasyny ýatda saklap bolmady. Brauzerde sahypany goragly HTTPS salgysy bilen açyň we täzeden giriň.",
   "errorRateLimited": "Synanyşyk gaty köp. Birneme garaşyp, täzeden synanyşyň.",
   "errorNetwork": "Serwer bilen aragatnaşyk ýok.",
   "errorTimeout": "Serwer wagtynda jogap bermedi.",
@@ -502,6 +511,14 @@
   "salesStartHint": "Harydy ady ýa-da artikuly boýunça tapyň ýa-da ştrih-kody skanerläp sebede goşuň.",
   "salesNoMatch": "Hiç zat tapylmady. Ýazylyşyny ýa-da kody barlaň.",
   "cartTitle": "Sebet",
+  "cartBadge": "{count} haryt",
+  "@cartBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cartEmpty": "Sebet boş",
   "cartScannedNotFound": "{code} kodly haryt tapylmady.",
   "cartAdded": "Goşuldy: {name}",
@@ -513,7 +530,7 @@
   "customerNew": "Täze alyjy",
   "customerNameLabel": "Alyjynyň ady",
   "customersEmpty": "Alyjylar tapylmady",
-  "toPayment": "Töleg etmäge",
+  "toPayment": "Satuwy tamamlamak",
   "paymentTitle": "Töleg",
   "payCash": "Nagt",
   "payCard": "Kart",
@@ -968,6 +985,15 @@
   "dashLowStock": "Minimumdan aşakda",
   "dashOpenClaims": "Açyk kepillikler",
   "dashRecent": "Soňky hereketler",
+  "dashLast14": "Soňky 14 gün",
+  "dashShareOfSales": "satuwyň {percent}%",
+  "@dashShareOfSales": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "dashOpenReports": "Hasabatlary açmak",
   "dashNothing": "Roluňyz üçin bu ýerde heniz görkezer ýaly zat ýok.",
   "activitySearchHint": "Hereket ýa-da obýekt",
@@ -1130,5 +1156,13 @@
   "salesCashDesk": "Satuw nokady",
   "cartTotalLabel": "Jemi",
   "expenseOperationsCount": "Amallar: {count}",
-  "reportDynamics": "Satuwlaryň depgini"
+  "reportDynamics": "Satuwlaryň depgini",
+  "stockColumnValue": "Bahasy",
+  "warrantyCaseTitle": "Kepillik ýagdaýy",
+  "warrantyProductAndBuyer": "Haryt we alyjy",
+  "productInStock": "Bar",
+  "productLow": "Az",
+  "productOut": "Ýok",
+  "productColumnStock": "Galyndy",
+  "productColumnStatus": "Ýagdaýy"
 }

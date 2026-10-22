@@ -130,14 +130,16 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      TextField(
-                        key: const ValueKey('reset-identifier'),
-                        controller: _identifier,
-                        enabled: !_busy,
-                        autocorrect: false,
-                        decoration: InputDecoration(
-                          labelText: l.identifierLabel,
-                          prefixIcon: const AppIcon(AppIcons.mail),
+                      LabeledField(
+                        label: l.identifierLabel,
+                        child: TextField(
+                          key: const ValueKey('reset-identifier'),
+                          controller: _identifier,
+                          enabled: !_busy,
+                          autocorrect: false,
+                          decoration: InputDecoration(
+                            prefixIcon: const AppIcon(AppIcons.mail),
+                          ),
                         ),
                       ),
                       if (_step == _Step.confirm) ...[
@@ -153,28 +155,32 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                           ),
                         ],
                         const SizedBox(height: 16),
-                        TextField(
-                          key: const ValueKey('reset-code'),
-                          controller: _code,
-                          enabled: !_busy,
-                          autocorrect: false,
-                          textCapitalization: TextCapitalization.characters,
-                          decoration: InputDecoration(
-                            labelText: l.codeLabel,
-                            prefixIcon: const AppIcon(AppIcons.tag),
+                        LabeledField(
+                          label: l.codeLabel,
+                          child: TextField(
+                            key: const ValueKey('reset-code'),
+                            controller: _code,
+                            enabled: !_busy,
+                            autocorrect: false,
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: InputDecoration(
+                              prefixIcon: const AppIcon(AppIcons.tag),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        TextField(
-                          key: const ValueKey('reset-new-password'),
-                          controller: _password,
-                          enabled: !_busy,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: l.newPassword,
-                            prefixIcon: const AppIcon(AppIcons.lock),
-                            errorText: fieldError(l, _error, 'new_password'),
-                            errorMaxLines: 3,
+                        LabeledField(
+                          label: l.newPassword,
+                          child: TextField(
+                            key: const ValueKey('reset-new-password'),
+                            controller: _password,
+                            enabled: !_busy,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              prefixIcon: const AppIcon(AppIcons.lock),
+                              errorText: fieldError(l, _error, 'new_password'),
+                              errorMaxLines: 3,
+                            ),
                           ),
                         ),
                       ],

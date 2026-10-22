@@ -33,7 +33,7 @@ void main() {
       expect(find.text('Остатков пока нет'), findsOneWidget);
       expect(key('stock-opening'), findsOneWidget);
       expect(key('stock-adjust'), findsOneWidget);
-      expect(key('stock-history'), findsOneWidget);
+      expect(key('stock-tab-movements'), findsOneWidget);
     });
 
     testWidgets('shows quantity with its unit, and the value for cost roles', (
@@ -61,7 +61,13 @@ void main() {
       // 10 x 50 + 10 x 60 = 1 100,00
       expect(find.text(formatMoney(110000, 'TMT')), findsOneWidget);
       expect(find.text('3 шт'), findsOneWidget);
-      expect(find.text('Повреждённый'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: key('stock-table'),
+          matching: find.text('Повреждённый'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('filters by location and by search', (tester) async {
@@ -115,8 +121,8 @@ void main() {
         expect(find.textContaining('Стоимость'), findsNothing);
         expect(key('stock-opening'), findsNothing);
         expect(key('stock-adjust'), findsNothing);
-        expect(key('stock-history'), findsOneWidget);
-        await tapKey(tester, 'stock-history');
+        expect(key('stock-tab-movements'), findsOneWidget);
+        await tapKey(tester, 'stock-tab-movements');
         await settle(tester);
         expect(
           find.textContaining('@'),
@@ -136,7 +142,7 @@ void main() {
       rig.server.ledger.seedStock(pad['id'] as String, store, '4', '50');
       await openStock(tester, rig);
       expect(find.text('4 шт'), findsOneWidget);
-      expect(key('stock-history'), findsNothing);
+      expect(key('stock-tab-movements'), findsNothing);
     });
 
     testWidgets(
@@ -148,7 +154,7 @@ void main() {
           ..seedStock(pad['id'] as String, store, '10', '50.00')
           ..seedStock(pad['id'] as String, store, '10', '60.00');
         await openStock(tester, rig);
-        await tapKey(tester, 'stock-history');
+        await tapKey(tester, 'stock-tab-movements');
         await settle(tester);
         expect(
           find.text('Корректировка (приход)'),

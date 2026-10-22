@@ -62,6 +62,8 @@ class Product {
     this.category,
     this.brand,
     this.photoVersion,
+    this.onHandMilli,
+    this.minimumMilli,
   });
 
   final String id;
@@ -93,6 +95,11 @@ class Product {
   /// version, which is how a downloaded one is known to be out of date.
   final String? photoVersion;
 
+  /// The sellable quantity in this person's places and the sum of their minimum levels, in
+  /// thousandths. Null when the role may not see stock.
+  final int? onHandMilli;
+  final int? minimumMilli;
+
   factory Product.fromJson(Map<String, dynamic> json) {
     final price = (json['price'] as Map).cast<String, dynamic>();
     return Product(
@@ -122,6 +129,14 @@ class Product {
       barcodes: [for (final b in json['barcodes'] as List) b as String],
       isActive: json['is_active'] as bool,
       photoVersion: (json['photo'] as Map?)?['version'] as String?,
+      onHandMilli: parseServerDecimal(
+        (json['stock'] as Map?)?['on_hand'] as String?,
+        3,
+      ),
+      minimumMilli: parseServerDecimal(
+        (json['stock'] as Map?)?['minimum'] as String?,
+        3,
+      ),
     );
   }
 }

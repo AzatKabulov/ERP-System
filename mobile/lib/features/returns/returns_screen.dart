@@ -118,19 +118,21 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                TextField(
-                  key: const ValueKey('returns-search'),
-                  controller: _search,
-                  onChanged: (_) {
-                    _debounce?.cancel();
-                    _debounce = Timer(
-                      const Duration(milliseconds: 350),
-                      () => _load(reset: true),
-                    );
-                  },
-                  decoration: InputDecoration(
-                    labelText: l.returnSearchHint,
-                    prefixIcon: const AppIcon(AppIcons.search),
+                LabeledField(
+                  label: l.returnSearchHint,
+                  child: TextField(
+                    key: const ValueKey('returns-search'),
+                    controller: _search,
+                    onChanged: (_) {
+                      _debounce?.cancel();
+                      _debounce = Timer(
+                        const Duration(milliseconds: 350),
+                        () => _load(reset: true),
+                      );
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: const AppIcon(AppIcons.search),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

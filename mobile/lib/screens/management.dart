@@ -332,23 +332,29 @@ class _ExpenseDialogState extends State<ExpenseDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextFormField(
-                  key: const ValueKey('expense-description'),
-                  controller: _label,
-                  decoration: InputDecoration(labelText: l.expenseDescription),
-                  validator: (s) =>
-                      s == null || s.trim().isEmpty ? l.requiredField : null,
+                LabeledField(
+                  label: l.expenseDescription,
+                  child: TextFormField(
+                    key: const ValueKey('expense-description'),
+                    controller: _label,
+                    decoration: InputDecoration(),
+                    validator: (s) =>
+                        s == null || s.trim().isEmpty ? l.requiredField : null,
+                  ),
                 ),
                 const SizedBox(height: 20),
-                TextFormField(
-                  key: const ValueKey('expense-amount'),
-                  controller: _amount,
-                  decoration: InputDecoration(labelText: '${l.amount} · TMT'),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+                LabeledField(
+                  label: '${l.amount} · TMT',
+                  child: TextFormField(
+                    key: const ValueKey('expense-amount'),
+                    controller: _amount,
+                    decoration: InputDecoration(),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: (s) =>
+                        (parseMinor(s ?? '') ?? 0) <= 0 ? l.validAmount : null,
                   ),
-                  validator: (s) =>
-                      (parseMinor(s ?? '') ?? 0) <= 0 ? l.validAmount : null,
                 ),
               ],
             ),

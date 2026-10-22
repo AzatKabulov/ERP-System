@@ -340,22 +340,23 @@ class _CountStartScreenState extends State<CountStartScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  DropdownButtonFormField<String>(
-                    key: const ValueKey('count-location'),
-                    isExpanded: true,
-                    initialValue: mine.any((x) => x.id == _locationId)
-                        ? _locationId
-                        : null,
-                    decoration: InputDecoration(
-                      labelText: l.locationFieldLabel,
+                  LabeledField(
+                    label: l.locationFieldLabel,
+                    child: DropdownButtonFormField<String>(
+                      key: const ValueKey('count-location'),
+                      isExpanded: true,
+                      initialValue: mine.any((x) => x.id == _locationId)
+                          ? _locationId
+                          : null,
+                      decoration: InputDecoration(),
+                      items: [
+                        for (final x in mine)
+                          DropdownMenuItem(value: x.id, child: Text(x.name)),
+                      ],
+                      onChanged: _busy
+                          ? null
+                          : (v) => setState(() => _locationId = v),
                     ),
-                    items: [
-                      for (final x in mine)
-                        DropdownMenuItem(value: x.id, child: Text(x.name)),
-                    ],
-                    onChanged: _busy
-                        ? null
-                        : (v) => setState(() => _locationId = v),
                   ),
                   const SizedBox(height: 16),
                   Wrap(

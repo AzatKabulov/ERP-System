@@ -216,31 +216,33 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    DropdownButtonFormField<String>(
-                      key: const ValueKey('entry-location'),
-                      isExpanded: true,
-                      initialValue: locations.any((x) => x.id == _locationId)
-                          ? _locationId
-                          : null,
-                      decoration: InputDecoration(
-                        labelText: l.locationFieldLabel,
-                        errorText: _submitted && _locationId == null
-                            ? l.fieldRequired
+                    LabeledField(
+                      label: l.locationFieldLabel,
+                      child: DropdownButtonFormField<String>(
+                        key: const ValueKey('entry-location'),
+                        isExpanded: true,
+                        initialValue: locations.any((x) => x.id == _locationId)
+                            ? _locationId
                             : null,
+                        decoration: InputDecoration(
+                          errorText: _submitted && _locationId == null
+                              ? l.fieldRequired
+                              : null,
+                        ),
+                        items: [
+                          for (final location in locations)
+                            DropdownMenuItem(
+                              value: location.id,
+                              child: Text(location.name),
+                            ),
+                        ],
+                        onChanged: _busy
+                            ? null
+                            : (v) {
+                                _locationId = v;
+                                _touch();
+                              },
                       ),
-                      items: [
-                        for (final location in locations)
-                          DropdownMenuItem(
-                            value: location.id,
-                            child: Text(location.name),
-                          ),
-                      ],
-                      onChanged: _busy
-                          ? null
-                          : (v) {
-                              _locationId = v;
-                              _touch();
-                            },
                     ),
                     const SizedBox(height: 20),
                     for (var i = 0; i < _lines.length; i++)
@@ -282,19 +284,21 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    TextField(
-                      key: const ValueKey('entry-reason'),
-                      controller: _text,
-                      enabled: !_busy,
-                      onChanged: (_) => _touch(),
-                      decoration: InputDecoration(
-                        labelText: _isOpening ? l.noteLabel : l.reasonLabel,
-                        errorText:
-                            _submitted &&
-                                !_isOpening &&
-                                _text.text.trim().isEmpty
-                            ? l.fieldRequired
-                            : null,
+                    LabeledField(
+                      label: _isOpening ? l.noteLabel : l.reasonLabel,
+                      child: TextField(
+                        key: const ValueKey('entry-reason'),
+                        controller: _text,
+                        enabled: !_busy,
+                        onChanged: (_) => _touch(),
+                        decoration: InputDecoration(
+                          errorText:
+                              _submitted &&
+                                  !_isOpening &&
+                                  _text.text.trim().isEmpty
+                              ? l.fieldRequired
+                              : null,
+                        ),
                       ),
                     ),
                     if (_error != null) ...[
@@ -460,70 +464,77 @@ class _EntryLineEditorState extends State<_EntryLineEditor> {
                 ),
               SizedBox(
                 width: 180,
-                child: TextField(
-                  key: ValueKey('entry-qty-${widget.index}'),
-                  controller: _quantity,
-                  enabled: widget.enabled,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  onChanged: (v) {
-                    line.quantityText = v;
-                    widget.onChanged();
-                  },
-                  decoration: InputDecoration(
-                    labelText: l.quantity,
-                    errorText: widget.quantityError,
-                    errorMaxLines: 3,
+                child: LabeledField(
+                  label: l.quantity,
+                  child: TextField(
+                    key: ValueKey('entry-qty-${widget.index}'),
+                    controller: _quantity,
+                    enabled: widget.enabled,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (v) {
+                      line.quantityText = v;
+                      widget.onChanged();
+                    },
+                    decoration: InputDecoration(
+                      errorText: widget.quantityError,
+                      errorMaxLines: 3,
+                    ),
                   ),
                 ),
               ),
               if (needsCost)
                 SizedBox(
                   width: 220,
-                  child: TextField(
-                    key: ValueKey('entry-cost-${widget.index}'),
-                    controller: _cost,
-                    enabled: widget.enabled,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onChanged: (v) {
-                      line.costText = v;
-                      widget.onChanged();
-                    },
-                    decoration: InputDecoration(
-                      labelText: l.unitCostLabel,
-                      errorText: widget.costError,
-                      errorMaxLines: 3,
+                  child: LabeledField(
+                    label: l.unitCostLabel,
+                    child: TextField(
+                      key: ValueKey('entry-cost-${widget.index}'),
+                      controller: _cost,
+                      enabled: widget.enabled,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      onChanged: (v) {
+                        line.costText = v;
+                        widget.onChanged();
+                      },
+                      decoration: InputDecoration(
+                        errorText: widget.costError,
+                        errorMaxLines: 3,
+                      ),
                     ),
                   ),
                 ),
               if (!widget.opening)
                 SizedBox(
                   width: 220,
-                  child: DropdownButtonFormField<String>(
-                    key: ValueKey('entry-condition-${widget.index}'),
-                    isExpanded: true,
-                    initialValue: line.condition,
-                    decoration: InputDecoration(labelText: l.conditionLabel),
-                    items: [
-                      for (final c in const [
-                        'sellable',
-                        'damaged',
-                        'inspection',
-                      ])
-                        DropdownMenuItem(
-                          value: c,
-                          child: Text(conditionLabel(l, c)),
-                        ),
-                    ],
-                    onChanged: widget.enabled
-                        ? (v) {
-                            line.condition = v ?? 'sellable';
-                            widget.onChanged();
-                          }
-                        : null,
+                  child: LabeledField(
+                    label: l.conditionLabel,
+                    child: DropdownButtonFormField<String>(
+                      key: ValueKey('entry-condition-${widget.index}'),
+                      isExpanded: true,
+                      initialValue: line.condition,
+                      decoration: InputDecoration(),
+                      items: [
+                        for (final c in const [
+                          'sellable',
+                          'damaged',
+                          'inspection',
+                        ])
+                          DropdownMenuItem(
+                            value: c,
+                            child: Text(conditionLabel(l, c)),
+                          ),
+                      ],
+                      onChanged: widget.enabled
+                          ? (v) {
+                              line.condition = v ?? 'sellable';
+                              widget.onChanged();
+                            }
+                          : null,
+                    ),
                   ),
                 ),
             ],

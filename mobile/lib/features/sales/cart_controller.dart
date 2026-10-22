@@ -36,6 +36,7 @@ class CartLine {
 class CartController extends ChangeNotifier {
   final List<CartLine> _lines = [];
   Customer? _customer;
+  String _paymentMethod = 'cash';
 
   List<CartLine> get lines => List.unmodifiable(_lines);
   Customer? get customer => _customer;
@@ -43,6 +44,15 @@ class CartController extends ChangeNotifier {
 
   set customer(Customer? value) {
     _customer = value;
+    notifyListeners();
+  }
+
+  /// How the customer pays ('cash' or 'card'), chosen in the cart and confirmed at checkout.
+  String get paymentMethod => _paymentMethod;
+
+  set paymentMethod(String value) {
+    if (value == _paymentMethod) return;
+    _paymentMethod = value;
     notifyListeners();
   }
 
@@ -72,6 +82,7 @@ class CartController extends ChangeNotifier {
   void clear() {
     _lines.clear();
     _customer = null;
+    _paymentMethod = 'cash';
     notifyListeners();
   }
 

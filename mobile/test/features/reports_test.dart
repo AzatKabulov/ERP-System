@@ -38,7 +38,10 @@ void main() {
         expect(key('welcome'), findsOneWidget);
         expect(find.text(tm(30000)), findsOneWidget); // today
         expect(find.text('Продажи сегодня (2)'), findsOneWidget);
-        expect(find.text(tm(54000)), findsOneWidget); // the month
+        // the month: the card, and the same sales again in the charts of the two weeks
+        expect(find.text(tm(54000)), findsWidgets);
+        expect(key('dash-top-products'), findsOneWidget);
+        expect(key('dash-payments'), findsOneWidget);
         expect(find.text(tm(17000)), findsOneWidget); // gross profit
         expect(find.text(tm(15000)), findsOneWidget); // expenses
         expect(find.text(tm(133000)), findsOneWidget); // inventory value

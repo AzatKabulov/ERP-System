@@ -296,12 +296,15 @@ Future<String?> showReasonDialog(
       return StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: Text(title),
-          content: TextField(
-            key: const ValueKey('reason-field'),
-            controller: controller,
-            autofocus: true,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(labelText: label),
+          content: LabeledField(
+            label: label,
+            child: TextField(
+              key: const ValueKey('reason-field'),
+              controller: controller,
+              autofocus: true,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(),
+            ),
           ),
           actions: [
             TextButton(
@@ -480,21 +483,23 @@ class _ReceiveTransferScreenState extends State<ReceiveTransferScreen> {
                               explicitChildNodes: true,
                               child: SizedBox(
                                 width: 190,
-                                child: TextField(
-                                  key: ValueKey('receive-qty-${line.id}'),
-                                  controller: _controllers[line.id],
-                                  enabled: !_busy,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  onChanged: (_) => setState(() {}),
-                                  decoration: InputDecoration(
-                                    labelText: l.transferArrivedLabel,
-                                    suffixText: line.product.unit.symbol,
-                                    errorText: _arrived(line) == null
-                                        ? l.fieldInvalid
-                                        : null,
+                                child: LabeledField(
+                                  label: l.transferArrivedLabel,
+                                  child: TextField(
+                                    key: ValueKey('receive-qty-${line.id}'),
+                                    controller: _controllers[line.id],
+                                    enabled: !_busy,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
+                                    onChanged: (_) => setState(() {}),
+                                    decoration: InputDecoration(
+                                      suffixText: line.product.unit.symbol,
+                                      errorText: _arrived(line) == null
+                                          ? l.fieldInvalid
+                                          : null,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -509,13 +514,14 @@ class _ReceiveTransferScreenState extends State<ReceiveTransferScreen> {
                       style: const TextStyle(color: AppColors.warning),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
-                      key: const ValueKey('receive-reason'),
-                      controller: _reason,
-                      enabled: !_busy,
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        labelText: l.transferShortReasonLabel,
+                    LabeledField(
+                      label: l.transferShortReasonLabel,
+                      child: TextField(
+                        key: const ValueKey('receive-reason'),
+                        controller: _reason,
+                        enabled: !_busy,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(),
                       ),
                     ),
                   ],

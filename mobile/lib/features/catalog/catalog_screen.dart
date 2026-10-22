@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
+import '../inventory/quantity_input.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
@@ -398,14 +399,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
           )
         else ...[
           if (_gallery)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _ProductGallery(
-                products: _items,
-                onOpen: _open,
-                repository: widget.repository,
-              ),
-            )
+            ..._galleryRows(width - (compact ? 32 : 64))
           else if (compact)
             for (final product in _items)
               Padding(
@@ -437,6 +431,24 @@ class _CatalogScreenState extends State<CatalogScreen> {
         ],
       ],
     );
+  }
+
+  // Each row is a separate lazy ListView child. One giant gallery child builds,
+  // intrinsically lays out and downloads pictures for every offscreen product.
+  Iterable<Widget> _galleryRows(double contentWidth) sync* {
+    final columns = ((contentWidth + 16) / 186).floor().clamp(2, 5);
+    for (var start = 0; start < _items.length; start += columns) {
+      yield Padding(
+        key: start == 0 ? const ValueKey('catalog-gallery') : null,
+        padding: const EdgeInsets.only(bottom: 16),
+        child: _ProductGalleryRow(
+          products: _items.skip(start).take(columns).toList(),
+          columns: columns,
+          onOpen: _open,
+          repository: widget.repository,
+        ),
+      );
+    }
   }
 }
 
@@ -574,60 +586,38 @@ class _PriceInfo extends StatelessWidget {
 }
 
 /// Products as cards, several across (four or five on a tablet), instead of one long list.
-class _ProductGallery extends StatelessWidget {
-  const _ProductGallery({
+class _ProductGalleryRow extends StatelessWidget {
+  const _ProductGalleryRow({
     required this.products,
+    required this.columns,
     required this.onOpen,
     required this.repository,
   });
   final List<Product> products;
+  final int columns;
   final void Function(Product) onOpen;
   final CatalogRepository repository;
 
-  static const _gap = 16.0;
-  static const _minCard = 170.0;
-
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = ((constraints.maxWidth + _gap) / (_minCard + _gap))
-            .floor()
-            .clamp(2, 5);
-        // One row at a time, so the cards of a row are as tall as the tallest one.
-        return Column(
-          key: const ValueKey('catalog-gallery'),
-          children: [
-            for (var i = 0; i < products.length; i += columns)
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: i + columns < products.length ? _gap : 0,
-                ),
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var j = 0; j < columns; j++) ...[
-                        if (j > 0) const SizedBox(width: _gap),
-                        Expanded(
-                          child: i + j < products.length
-                              ? _ProductCard(
-                                  product: products[i + j],
-                                  repository: repository,
-                                  onTap: () => onOpen(products[i + j]),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => IntrinsicHeight(
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var j = 0; j < columns; j++) ...[
+          if (j > 0) const SizedBox(width: 16),
+          Expanded(
+            child: j < products.length
+                ? _ProductCard(
+                    product: products[j],
+                    repository: repository,
+                    onTap: () => onOpen(products[j]),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ],
+    ),
+  );
 }
 
 class _ProductCard extends StatelessWidget {
@@ -714,6 +704,7 @@ class _ProductTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
+    final showStock = products.any((p) => p.onHandMilli != null);
     Widget cell(
       int flex,
       Widget child, {
@@ -734,14 +725,31 @@ class _ProductTable extends StatelessWidget {
             color: AppColors.surfaceSoft,
             child: Row(
               children: [
-                cell(2, Text(l.sku.toUpperCase(), style: _header)),
-                cell(6, Text(l.productName.toUpperCase(), style: _header)),
-                cell(3, Text(l.category.toUpperCase(), style: _header)),
+                cell(60, Text(l.sku.toUpperCase(), style: _header)),
+                cell(128, Text(l.productName.toUpperCase(), style: _header)),
+                cell(53, Text(l.category.toUpperCase(), style: _header)),
                 cell(
-                  2,
+                  53,
                   Text(l.price.toUpperCase(), style: _header),
                   align: Alignment.centerRight,
                 ),
+                if (showStock) ...[
+                  cell(
+                    53,
+                    Text(l.productColumnStock.toUpperCase(), style: _header),
+                    align: Alignment.centerRight,
+                  ),
+                  cell(
+                    53,
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16),
+                      child: Text(
+                        l.productColumnStatus.toUpperCase(),
+                        style: _header,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -762,7 +770,7 @@ class _ProductTable extends StatelessWidget {
                 child: Row(
                   children: [
                     cell(
-                      2,
+                      60,
                       Text(
                         p.sku,
                         style: const TextStyle(
@@ -773,7 +781,7 @@ class _ProductTable extends StatelessWidget {
                       ),
                     ),
                     Expanded(
-                      flex: 6,
+                      flex: 128,
                       child: Row(
                         children: [
                           ProductPhoto(
@@ -812,23 +820,74 @@ class _ProductTable extends StatelessWidget {
                       ),
                     ),
                     cell(
-                      3,
+                      53,
                       Text(
                         [?p.category?.name, ?p.brand?.name].join(' · '),
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
                     cell(
-                      2,
+                      53,
                       _PriceInfo(product: p, align: CrossAxisAlignment.end),
                       align: Alignment.centerRight,
                     ),
+                    if (showStock) ...[
+                      cell(
+                        53,
+                        Text(
+                          p.onHandMilli == null
+                              ? ''
+                              : quantityWithUnit(p.onHandMilli!, p.unit),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        align: Alignment.centerRight,
+                      ),
+                      cell(
+                        53,
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: _StockBadge(product: p),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
         ],
       ),
+    );
+  }
+}
+
+/// In stock, low (under the minimum) or out of stock, with an icon and a word.
+class _StockBadge extends StatelessWidget {
+  const _StockBadge({required this.product});
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    final onHand = product.onHandMilli;
+    if (onHand == null) return const SizedBox.shrink();
+    if (onHand <= 0) {
+      return StatusPill(
+        label: l.productOut,
+        tone: StatusTone.danger,
+        icon: AppIcons.warning,
+      );
+    }
+    if ((product.minimumMilli ?? 0) > 0 && onHand < product.minimumMilli!) {
+      return StatusPill(
+        label: l.productLow,
+        tone: StatusTone.warning,
+        icon: AppIcons.warning,
+      );
+    }
+    return StatusPill(
+      label: l.productInStock,
+      tone: StatusTone.success,
+      icon: AppIcons.check,
     );
   }
 }

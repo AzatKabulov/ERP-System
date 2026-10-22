@@ -412,14 +412,16 @@ class _Charts extends StatelessWidget {
             ],
           );
         }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (line != null) Expanded(flex: 3, child: line),
-            if (line != null && bars != null) const SizedBox(width: 16),
-            if (bars != null) Expanded(flex: 2, child: bars),
-            if (line == null && bars != null) const Spacer(flex: 3),
-          ],
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (line != null) Expanded(flex: 3, child: line),
+              if (line != null && bars != null) const SizedBox(width: 16),
+              if (bars != null) Expanded(flex: 2, child: bars),
+              if (line == null && bars != null) const Spacer(flex: 3),
+            ],
+          ),
         );
       },
     );

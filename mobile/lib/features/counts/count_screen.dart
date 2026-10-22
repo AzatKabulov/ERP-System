@@ -434,12 +434,15 @@ class _CountScreenState extends State<CountScreen> {
           ),
           const SizedBox(height: 8),
           if (needsReason)
-            TextField(
-              key: const ValueKey('count-reason'),
-              controller: _reason,
-              enabled: !_busy,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(labelText: l.countExplainLabel),
+            LabeledField(
+              label: l.countExplainLabel,
+              child: TextField(
+                key: const ValueKey('count-reason'),
+                controller: _reason,
+                enabled: !_busy,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(),
+              ),
             ),
           const SizedBox(height: 12),
           ListenableBuilder(
@@ -515,20 +518,22 @@ class _CountScreenState extends State<CountScreen> {
                 explicitChildNodes: true,
                 child: SizedBox(
                   width: 200,
-                  child: TextField(
-                    key: ValueKey('count-counted-${row.product.sku}'),
-                    controller: row.controller,
-                    enabled: !_busy,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onChanged: (_) => _touch(),
-                    decoration: InputDecoration(
-                      labelText: l.countCountedLabel,
-                      suffixText: row.product.unit.symbol,
-                      errorText: parsed.counted && parsed.milli == null
-                          ? l.fieldQuantityPrecision
-                          : null,
+                  child: LabeledField(
+                    label: l.countCountedLabel,
+                    child: TextField(
+                      key: ValueKey('count-counted-${row.product.sku}'),
+                      controller: row.controller,
+                      enabled: !_busy,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      onChanged: (_) => _touch(),
+                      decoration: InputDecoration(
+                        suffixText: row.product.unit.symbol,
+                        errorText: parsed.counted && parsed.milli == null
+                            ? l.fieldQuantityPrecision
+                            : null,
+                      ),
                     ),
                   ),
                 ),

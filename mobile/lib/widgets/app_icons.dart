@@ -100,6 +100,8 @@ abstract final class AppIcons {
     circles: [(12, 12, 9)],
   );
   static const arrow = AppIconData(paths: ['M5 12h14m-5-5 5 5-5 5']);
+  static const trendUp = AppIconData(paths: ['M3 17l6-6 4 4 8-8M15 7h6v6']);
+  static const trendDown = AppIconData(paths: ['M3 7l6 6 4-4 8 8M15 17h6v-6']);
   static const download = AppIconData(paths: ['M12 3v12m-4-4 4 4 4-4M4 20h16']);
   static const upload = AppIconData(paths: ['M12 16V4m-4 4 4-4 4 4M4 20h16']);
   static const camera = AppIconData(

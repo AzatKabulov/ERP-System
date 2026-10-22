@@ -43,6 +43,45 @@ void main() {
   setUp(() => PhotoCache.instance.clear());
 
   group('pictures in the catalog', () {
+    testWidgets('a phone gallery only downloads pictures near the viewport', (
+      tester,
+    ) async {
+      final rig = RealRig();
+      for (var i = 0; i < 30; i++) {
+        hasPicture(
+          rig,
+          seedProduct(rig.server, sku: 'LAZY-$i', name: 'Товар $i'),
+        );
+      }
+      await rig.launch(tester, size: const Size(390, 844));
+      await rig.signIn(tester);
+      await tapKey(tester, 'tab-products');
+      await settle(tester);
+      final initiallyDownloaded = rig.server.photoDownloads.length;
+      expect(initiallyDownloaded, greaterThan(0));
+      expect(initiallyDownloaded, lessThan(15));
+      expect(key('product-LAZY-29'), findsNothing);
+      final scrollable = find
+          .descendant(
+            of: find.byType(ListView).last,
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.scrollUntilVisible(
+        key('product-LAZY-29'),
+        600,
+        scrollable: scrollable,
+        maxScrolls: 30,
+      );
+      await settle(tester);
+      expect(
+        rig.server.photoDownloads.length,
+        greaterThan(initiallyDownloaded),
+      );
+      expect(key('product-LAZY-29'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets(
       'the gallery shows a product\'s picture, and a plain tile when it has none',
       (tester) async {

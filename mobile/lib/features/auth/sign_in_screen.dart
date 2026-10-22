@@ -79,7 +79,8 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  Widget _languageSwitch() => AppSegmented<String>(
+  Widget _languageSwitch({bool expand = false}) => AppSegmented<String>(
+    expand: expand,
     key: const ValueKey('language-selector'),
     keyPrefix: 'language',
     options: const [('ru', 'RU'), ('tk', 'TM')],
@@ -93,7 +94,7 @@ class _SignInScreenState extends State<SignInScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Align(alignment: Alignment.centerLeft, child: _languageSwitch()),
+          _languageSwitch(expand: true),
           const SizedBox(height: 18),
           Text(l.signInTitle, style: Theme.of(context).textTheme.headlineLarge),
           const SizedBox(height: 8),
@@ -126,30 +127,42 @@ class _SignInScreenState extends State<SignInScreen> {
               text: l.serverNotConfigured,
               key: const ValueKey('notice-unconfigured'),
             ),
-          TextField(
-            key: const ValueKey('sign-in-username'),
-            controller: _username,
-            enabled: !_busy,
-            autofillHints: const [AutofillHints.username],
-            textInputAction: TextInputAction.next,
-            autocorrect: false,
-            enableSuggestions: false,
-            decoration: InputDecoration(
-              labelText: l.username,
-              prefixIcon: const AppIcon(AppIcons.user),
+          LabeledField(
+            label: l.username,
+            child: TextField(
+              key: const ValueKey('sign-in-username'),
+              controller: _username,
+              enabled: !_busy,
+              autofillHints: const [AutofillHints.username],
+              textInputAction: TextInputAction.next,
+              autocorrect: false,
+              enableSuggestions: false,
+              decoration: InputDecoration(
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14),
+                  child: AppIcon(AppIcons.user, size: 20),
+                ),
+                prefixIconConstraints: const BoxConstraints(minWidth: 48),
+              ),
             ),
           ),
           const SizedBox(height: 18),
-          TextField(
-            key: const ValueKey('sign-in-password'),
-            controller: _password,
-            enabled: !_busy,
-            obscureText: true,
-            autofillHints: const [AutofillHints.password],
-            onSubmitted: (_) => _submit(),
-            decoration: InputDecoration(
-              labelText: l.password,
-              prefixIcon: const AppIcon(AppIcons.lock),
+          LabeledField(
+            label: l.password,
+            child: TextField(
+              key: const ValueKey('sign-in-password'),
+              controller: _password,
+              enabled: !_busy,
+              obscureText: true,
+              autofillHints: const [AutofillHints.password],
+              onSubmitted: (_) => _submit(),
+              decoration: InputDecoration(
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14),
+                  child: AppIcon(AppIcons.lock, size: 20),
+                ),
+                prefixIconConstraints: const BoxConstraints(minWidth: 48),
+              ),
             ),
           ),
           if (_error != null) ...[
@@ -246,8 +259,8 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 }
 
-/// The ink side of the sign-in page: the wordmark, one serif line and a short caption, with a
-/// thin brass hairline near the top right corner.
+/// The deep side of the sign-in page: the wordmark, one large line and a short caption on the
+/// navy-to-cobalt gradient, lit by two soft glows.
 class _BrandPanel extends StatelessWidget {
   const _BrandPanel({required this.l, required this.compact});
   final AppLocalizations l;
@@ -261,7 +274,10 @@ class _BrandPanel extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) => Container(
         constraints: BoxConstraints(minHeight: compact ? 220 : 0),
-        decoration: BoxDecoration(color: AppColors.ink, borderRadius: radius),
+        decoration: BoxDecoration(
+          gradient: AppGradients.spotlight,
+          borderRadius: radius,
+        ),
         child: ClipRRect(
           borderRadius: radius,
           child: compact
@@ -279,15 +295,27 @@ class _BrandPanel extends StatelessWidget {
     );
   }
 
+  static Widget _glow(double size, int argb) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: RadialGradient(colors: [Color(argb), Color(argb & 0x00FFFFFF)]),
+    ),
+  );
+
   Widget _content() {
     return Stack(
       children: [
         Positioned(
-          top: 0,
-          right: 40,
-          child: ExcludeSemantics(
-            child: Container(width: 72, height: 2, color: AppColors.brass),
-          ),
+          top: -120,
+          right: -80,
+          child: ExcludeSemantics(child: _glow(380, 0x663D63FF)),
+        ),
+        Positioned(
+          bottom: -170,
+          left: -90,
+          child: ExcludeSemantics(child: _glow(420, 0x446A4DFF)),
         ),
         Padding(
           padding: EdgeInsets.all(compact ? 24 : 40),
@@ -320,10 +348,10 @@ class _BrandPanel extends StatelessWidget {
                   l.brandTagline,
                   style: TextStyle(
                     fontFamily: AppFonts.display,
-                    fontWeight: FontWeight.w600,
-                    fontSize: compact ? 28 : 44,
-                    height: 1.08,
-                    letterSpacing: compact ? -1 : -1.6,
+                    fontWeight: FontWeight.w700,
+                    fontSize: compact ? 30 : 52,
+                    height: 1.1,
+                    letterSpacing: compact ? -0.9 : -1.6,
                     color: AppColors.onInverse,
                   ),
                 ),
@@ -331,7 +359,10 @@ class _BrandPanel extends StatelessWidget {
               SizedBox(height: compact ? 20 : 48),
               Text(
                 l.brandFoot,
-                style: const TextStyle(color: Color(0xFFAAB2AE), fontSize: 12),
+                style: const TextStyle(
+                  color: AppColors.onInverseMuted,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -453,18 +484,20 @@ class _ServerDialogState extends State<ServerDialog> {
               Semantics(
                 container: true,
                 explicitChildNodes: true,
-                child: TextField(
-                  key: const ValueKey('server-url'),
-                  controller: _url,
-                  enabled: !_busy,
-                  autofocus: true,
-                  keyboardType: TextInputType.url,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  onSubmitted: (_) => _save(),
-                  decoration: InputDecoration(
-                    labelText: l.serverUrlLabel,
-                    hintText: 'https://shop.example.com',
+                child: LabeledField(
+                  label: l.serverUrlLabel,
+                  child: TextField(
+                    key: const ValueKey('server-url'),
+                    controller: _url,
+                    enabled: !_busy,
+                    autofocus: true,
+                    keyboardType: TextInputType.url,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    onSubmitted: (_) => _save(),
+                    decoration: InputDecoration(
+                      hintText: 'https://shop.example.com',
+                    ),
                   ),
                 ),
               ),

@@ -63,7 +63,10 @@ void main() {
       expect(stored['attachment'], isNotNull);
       expect(find.text('Расход сохранён.'), findsOneWidget);
       expect(
-        find.text('Всего за период: ${formatMoney(150050, 'TMT')}'),
+        find.descendant(
+          of: key('expense-total'),
+          matching: find.text(formatMoney(150050, 'TMT')),
+        ),
         findsOneWidget,
       );
       await tapKey(tester, 'expense-${stored['id']}');
@@ -180,7 +183,10 @@ void main() {
       );
       await openExpenses(tester, rig);
       expect(
-        find.text('Всего за период: ${formatMoney(100000, 'TMT')}'),
+        find.descendant(
+          of: key('expense-total'),
+          matching: find.text(formatMoney(100000, 'TMT')),
+        ),
         findsOneWidget,
       );
       await tapKey(tester, 'expense-${seeded['id']}');
@@ -205,7 +211,10 @@ void main() {
       await goBack(tester);
       await settle(tester);
       expect(
-        find.text('Всего за период: ${formatMoney(0, 'TMT')}'),
+        find.descendant(
+          of: key('expense-total'),
+          matching: find.text(formatMoney(0, 'TMT')),
+        ),
         findsOneWidget,
       );
     });
@@ -235,7 +244,10 @@ void main() {
       await settle(tester);
       expect(find.text('Старая зарплата'), findsOneWidget);
       expect(
-        find.text('Всего за период: ${formatMoney(70000, 'TMT')}'),
+        find.descendant(
+          of: key('expense-total'),
+          matching: find.text(formatMoney(70000, 'TMT')),
+        ),
         findsOneWidget,
       );
       await tapKey(tester, 'expense-category-filter');
@@ -244,7 +256,10 @@ void main() {
       await settle(tester);
       expect(find.text('Аренда сейчас'), findsNothing);
       expect(
-        find.text('Всего за период: ${formatMoney(50000, 'TMT')}'),
+        find.descendant(
+          of: key('expense-total'),
+          matching: find.text(formatMoney(50000, 'TMT')),
+        ),
         findsOneWidget,
       );
     });

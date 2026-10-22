@@ -73,12 +73,15 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
         builder: (context, controller) => StatefulBuilder(
           builder: (context, setState) => AlertDialog(
             title: Text(l.expenseVoidTitle),
-            content: TextField(
-              key: const ValueKey('ed-void-reason'),
-              controller: controller,
-              autofocus: true,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(labelText: l.expenseVoidReason),
+            content: LabeledField(
+              label: l.expenseVoidReason,
+              child: TextField(
+                key: const ValueKey('ed-void-reason'),
+                controller: controller,
+                autofocus: true,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(),
+              ),
             ),
             actions: [
               TextButton(

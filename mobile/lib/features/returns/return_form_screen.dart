@@ -221,13 +221,14 @@ class _ReturnFormScreenState extends State<ReturnFormScreen> {
                       ),
                     ),
                   if (_lines.isNotEmpty) ...[
-                    TextField(
-                      key: const ValueKey('return-reason'),
-                      controller: _reason,
-                      enabled: !_busy,
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        labelText: l.returnReasonLabel,
+                    LabeledField(
+                      label: l.returnReasonLabel,
+                      child: TextField(
+                        key: const ValueKey('return-reason'),
+                        controller: _reason,
+                        enabled: !_busy,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -314,18 +315,20 @@ class _ReturnFormScreenState extends State<ReturnFormScreen> {
           explicitChildNodes: true,
           child: SizedBox(
             width: 190,
-            child: TextField(
-              key: ValueKey('return-qty-${line.id}'),
-              controller: _qty[line.id],
-              enabled: !_busy && !blocked,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: l.returnQtyLabel,
-                suffixText: line.unitSymbol,
-                errorText: _milli(line) == null ? l.fieldInvalid : null,
+            child: LabeledField(
+              label: l.returnQtyLabel,
+              child: TextField(
+                key: ValueKey('return-qty-${line.id}'),
+                controller: _qty[line.id],
+                enabled: !_busy && !blocked,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  suffixText: line.unitSymbol,
+                  errorText: _milli(line) == null ? l.fieldInvalid : null,
+                ),
               ),
             ),
           ),

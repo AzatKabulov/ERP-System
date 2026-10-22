@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../widgets/app_icons.dart';
 
 /// The palette of the "Premium Minimalist ERP" design (docs/DESIGN_SYSTEM.md): a warm ivory
-/// canvas, ink, one flat cobalt accent and a thin brass detail. Widgets use these names, not
-/// literal colors.
+/// canvas, ink, cobalt for action and selection, and a small set of accents with one job each
+/// (violet, emerald, amber, rose). Widgets use these names, not literal colors.
 abstract final class AppColors {
   static const canvas = Color(0xFFF5F2EC);
   static const surface = Colors.white;
@@ -24,8 +24,27 @@ abstract final class AppColors {
   static const blueDark = Color(0xFF1234D6);
   static const tint = Color(0xFFEAEEFF);
 
-  /// Decoration only (hairlines and dots), never text or a main action.
-  static const brass = Color(0xFFB08D57);
+  /// The second voice of the palette: every colour has one job, so a screen can be read by colour
+  /// as well as by words (never by colour alone: each use also carries a label or an icon).
+  ///   blue   action, selection, sales
+  ///   violet customers, warranties, profit
+  ///   emerald money in, in stock
+  ///   amber  attention, low stock
+  ///   rose   money out, returns, out of stock
+  /// The strong shade is for icons, chart marks and tiles; text uses the darker status colours.
+  static const violet = Color(0xFF6A4DFF);
+  static const violetTint = Color(0xFFEEEAFF);
+  static const violetText = Color(0xFF4A32C9);
+  static const emerald = Color(0xFF0FA36B);
+  static const emeraldTint = Color(0xFFE0F5EC);
+  static const amber = Color(0xFFF5A300);
+  static const amberTint = Color(0xFFFFF0CC);
+  static const rose = Color(0xFFE5484D);
+  static const roseTint = Color(0xFFFFE8E8);
+
+  /// The deep surface of the one figure that matters most, and the end of the brand gradient.
+  static const navy = Color(0xFF0A1030);
+  static const navyMid = Color(0xFF14226B);
 
   static const success = Color(0xFF14703B);
   static const successTint = Color(0xFFE8F4EC);
@@ -55,52 +74,54 @@ abstract final class AppShadows {
     BoxShadow(color: Color(0x0A0D1311), offset: Offset(0, 1), blurRadius: 2),
     BoxShadow(color: Color(0x0D0D1311), offset: Offset(0, 8), blurRadius: 24),
   ];
+
+  /// A card that can be pressed, lifted under the pointer.
+  static const cardHover = [
+    BoxShadow(color: Color(0x0F0D1311), offset: Offset(0, 2), blurRadius: 4),
+    BoxShadow(color: Color(0x1F14226B), offset: Offset(0, 16), blurRadius: 36),
+  ];
   static const overlay = [
     BoxShadow(color: Color(0x2E0D1311), offset: Offset(0, 24), blurRadius: 80),
   ];
 }
 
+/// Gradients are used on three things only: the brand mark, the primary button and the spotlight.
+abstract final class AppGradients {
+  static const brand = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF2B55FF), Color(0xFF5B3DF5)],
+  );
+  static const button = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFF3560FF), Color(0xFF1740FF)],
+  );
+  static const buttonDeep = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFF2A52F0), Color(0xFF1234D6)],
+  );
+  static const spotlight = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [AppColors.navy, AppColors.navyMid, Color(0xFF2A2BA8)],
+    stops: [0, 0.62, 1],
+  );
+}
+
+/// One family for the whole interface: Onest reads clearly at small sizes in Russian and
+/// Turkmen (checked for the letters ä ç ň ö ş ü ý ž), has figures that line up in columns, and a
+/// full range of weights for headings. Titles are set in the same family, heavier and tighter.
 abstract final class AppFonts {
-  static const ui = 'Inter';
-  static const display = 'NotoSerifDisplay';
-  static const mono = 'JetBrainsMono';
+  static const ui = 'Onest';
+  static const display = ui;
+
+  /// SKUs, barcodes and document numbers: the same family, with aligned figures.
+  static const mono = ui;
 
   /// Aligned digits for money and quantities.
   static const tabular = [FontFeature.tabularFigures()];
-}
-
-/// The chip of the design: a pill with a hairline; the selected one gets an ink outline and a
-/// brass line along its bottom edge.
-class _ChipShape extends StadiumBorder implements WidgetStateOutlinedBorder {
-  const _ChipShape();
-
-  @override
-  OutlinedBorder? resolve(Set<WidgetState> states) =>
-      states.contains(WidgetState.selected)
-      ? const _SelectedChipShape()
-      : const StadiumBorder();
-}
-
-class _SelectedChipShape extends StadiumBorder {
-  const _SelectedChipShape({super.side});
-
-  @override
-  StadiumBorder copyWith({BorderSide? side}) =>
-      _SelectedChipShape(side: side ?? this.side);
-
-  @override
-  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
-    final inner = rect.deflate(side.width);
-    canvas
-      ..save()
-      ..clipPath(getInnerPath(inner, textDirection: textDirection))
-      ..drawRect(
-        Rect.fromLTRB(inner.left, inner.bottom - 2, inner.right, inner.bottom),
-        Paint()..color = AppColors.brass,
-      )
-      ..restore();
-    super.paint(canvas, rect, textDirection: textDirection);
-  }
 }
 
 abstract final class AppTheme {
@@ -151,9 +172,9 @@ abstract final class AppTheme {
     TextStyle display(double size, {double height = 1.15}) => TextStyle(
       fontFamily: AppFonts.display,
       fontSize: size,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
       height: height,
-      letterSpacing: size * -0.025,
+      letterSpacing: size * -0.022,
       color: AppColors.ink,
       fontFeatures: AppFonts.tabular,
     );
@@ -168,9 +189,9 @@ abstract final class AppTheme {
       titleLarge: ui(20, FontWeight.w600, height: 1.3, spacing: -0.2),
       titleMedium: ui(16, FontWeight.w600, height: 1.35),
       titleSmall: ui(14, FontWeight.w600, height: 1.4),
-      bodyLarge: ui(14, FontWeight.w400, height: 1.4),
-      bodyMedium: ui(14, FontWeight.w400, height: 1.45),
-      bodySmall: ui(12, FontWeight.w400, height: 1.45, color: AppColors.muted),
+      bodyLarge: ui(15, FontWeight.w400, height: 1.4),
+      bodyMedium: ui(15, FontWeight.w400, height: 1.45),
+      bodySmall: ui(13, FontWeight.w400, height: 1.45, color: AppColors.muted),
       labelLarge: ui(14, FontWeight.w600, height: 1.2),
       labelMedium: ui(13, FontWeight.w600, height: 1.35),
       labelSmall: const TextStyle(
@@ -346,18 +367,25 @@ abstract final class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: Colors.white,
-        selectedColor: Colors.white,
+        selectedColor: AppColors.tint,
         disabledColor: AppColors.surfaceMuted,
-        checkmarkColor: AppColors.ink,
+        checkmarkColor: AppColors.blue,
         showCheckmark: false,
-        side: const BorderSide(color: AppColors.line),
-        shape: const _ChipShape(),
+        side: WidgetStateBorderSide.resolveWith(
+          (states) => BorderSide(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.blue
+                : AppColors.line,
+          ),
+        ),
+        shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        labelStyle: ui(
-          13,
-          FontWeight.w600,
-          height: 1.2,
-          color: AppColors.muted,
+        labelStyle: ui(13, FontWeight.w600, height: 1.2).copyWith(
+          color: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.blue
+                : AppColors.neutral,
+          ),
         ),
         secondaryLabelStyle: ui(13, FontWeight.w600, height: 1.2),
         iconTheme: const IconThemeData(size: 16),
@@ -371,6 +399,7 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.dialog),
           side: const BorderSide(color: AppColors.line),
         ),
+        barrierColor: const Color(0x6B0D1311),
         titleTextStyle: display(24, height: 1.25),
         contentTextStyle: ui(
           14,

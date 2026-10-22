@@ -177,16 +177,18 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 12),
-        TextField(
-          key: const ValueKey('wn-search'),
-          controller: _search,
-          onChanged: (_) {
-            _debounce?.cancel();
-            _debounce = Timer(const Duration(milliseconds: 350), _find);
-          },
-          decoration: InputDecoration(
-            labelText: l.saleSearchHint,
-            prefixIcon: const AppIcon(AppIcons.search),
+        LabeledField(
+          label: l.saleSearchHint,
+          child: TextField(
+            key: const ValueKey('wn-search'),
+            controller: _search,
+            onChanged: (_) {
+              _debounce?.cancel();
+              _debounce = Timer(const Duration(milliseconds: 350), _find);
+            },
+            decoration: InputDecoration(
+              prefixIcon: const AppIcon(AppIcons.search),
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -337,16 +339,20 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
         explicitChildNodes: true,
         child: SizedBox(
           width: 190,
-          child: TextField(
-            key: const ValueKey('wn-qty'),
-            controller: _qty,
-            enabled: !_busy,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              labelText: l.quantity,
-              suffixText: line.unitSymbol,
-              errorText: _quantity == null ? l.fieldInvalid : null,
+          child: LabeledField(
+            label: l.quantity,
+            child: TextField(
+              key: const ValueKey('wn-qty'),
+              controller: _qty,
+              enabled: !_busy,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                suffixText: line.unitSymbol,
+                errorText: _quantity == null ? l.fieldInvalid : null,
+              ),
             ),
           ),
         ),
@@ -355,14 +361,17 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
       Semantics(
         container: true,
         explicitChildNodes: true,
-        child: TextField(
-          key: const ValueKey('wn-problem'),
-          controller: _problem,
-          enabled: !_busy,
-          minLines: 2,
-          maxLines: 4,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(labelText: l.warrantyProblemLabel),
+        child: LabeledField(
+          label: l.warrantyProblemLabel,
+          child: TextField(
+            key: const ValueKey('wn-problem'),
+            controller: _problem,
+            enabled: !_busy,
+            minLines: 2,
+            maxLines: 4,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(),
+          ),
         ),
       ),
       if (_overriding) ...[
@@ -377,12 +386,15 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
           Semantics(
             container: true,
             explicitChildNodes: true,
-            child: TextField(
-              key: const ValueKey('wn-override-note'),
-              controller: _overrideNote,
-              enabled: !_busy,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(labelText: l.warrantyOverrideNote),
+            child: LabeledField(
+              label: l.warrantyOverrideNote,
+              child: TextField(
+                key: const ValueKey('wn-override-note'),
+                controller: _overrideNote,
+                enabled: !_busy,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(),
+              ),
             ),
           ),
         ] else

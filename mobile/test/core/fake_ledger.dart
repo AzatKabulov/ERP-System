@@ -138,6 +138,16 @@ class FakeLedger {
     String condition = 'sellable',
   ]) => _buckets['$productId|$locationId|$condition']?.quantity ?? 0;
 
+  /// The sellable quantity of a product in thousandths, at one location or everywhere.
+  int sellableMilli(String productId, [String? locationId]) => _buckets.values
+      .where(
+        (b) =>
+            b.productId == productId &&
+            b.condition == 'sellable' &&
+            (locationId == null || b.locationId == locationId),
+      )
+      .fold(0, (a, b) => a + b.quantity);
+
   Map<String, dynamic> seedSupplier(String name) {
     final supplier = {
       'id': _id('s'),

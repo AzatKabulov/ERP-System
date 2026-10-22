@@ -242,19 +242,23 @@ class _ReorderLevelsScreenState extends State<ReorderLevelsScreen> {
                                     explicitChildNodes: true,
                                     child: SizedBox(
                                       width: 170,
-                                      child: TextField(
-                                        key: ValueKey('rl-${entry.$3}-${p.id}'),
-                                        controller: entry.$1,
-                                        enabled: !_saving,
-                                        keyboardType:
-                                            const TextInputType.numberWithOptions(
-                                              decimal: true,
-                                            ),
-                                        onChanged: (_) => setState(() {}),
-                                        decoration: InputDecoration(
-                                          labelText: entry.$2,
-                                          suffixText:
-                                              widget.product.unit.symbol,
+                                      child: LabeledField(
+                                        label: entry.$2,
+                                        child: TextField(
+                                          key: ValueKey(
+                                            'rl-${entry.$3}-${p.id}',
+                                          ),
+                                          controller: entry.$1,
+                                          enabled: !_saving,
+                                          keyboardType:
+                                              const TextInputType.numberWithOptions(
+                                                decimal: true,
+                                              ),
+                                          onChanged: (_) => setState(() {}),
+                                          decoration: InputDecoration(
+                                            suffixText:
+                                                widget.product.unit.symbol,
+                                          ),
                                         ),
                                       ),
                                     ),

@@ -11,6 +11,7 @@ it to start from nothing. For testing only: it is a development server, not a pl
 
 import argparse
 import atexit
+import gzip
 import os
 import secrets
 import shutil
@@ -94,6 +95,38 @@ def extract_build(data: Path, web: Path | None, apk: Path | None) -> tuple[bool,
         got_apk = True
     shutil.rmtree(work, ignore_errors=True)
     return got_web, got_apk
+
+
+def compress_web_assets(web: Path) -> int:
+    """Prepare public build assets once, not on every phone request. API responses,
+    private photos and APK downloads never pass through this compressor."""
+    saved = 0
+    for asset in web.rglob("*"):
+        if not asset.is_file() or asset.suffix not in {
+            ".js",
+            ".wasm",
+            ".json",
+            ".css",
+            ".svg",
+            ".ttf",
+            ".otf",
+            ".html",
+        }:
+            continue
+        raw = asset.read_bytes()
+        if len(raw) < 512:
+            continue
+        encoded = gzip.compress(raw, compresslevel=6, mtime=0)
+        if len(encoded) >= len(raw):
+            continue
+        target = asset.with_name(asset.name + ".gz")
+        temporary = target.with_name(target.name + ".tmp")
+        temporary.write_bytes(encoded)
+        timestamp = asset.stat()
+        os.utime(temporary, ns=(timestamp.st_atime_ns, timestamp.st_mtime_ns))
+        temporary.replace(target)
+        saved += len(raw) - len(encoded)
+    return saved
 
 
 def find_windows_runtime() -> None:
@@ -246,6 +279,9 @@ def main() -> None:
 
     say("3/4  The web app and the Android app")
     got_web, got_apk = extract_build(data, args.web, args.apk)
+    saved = compress_web_assets(data / "public" / "web")
+    if saved:
+        say(f"   Compressed web assets: {saved / 1_000_000:.1f} MB less to download.")
     if not got_web and not (data / "public" / "web" / "index.html").is_file():
         say("   No web app found: the server runs, but its pages need the test build.")
         say("   Download  erp-system-test-build  from GitHub (Actions > the latest green run,")

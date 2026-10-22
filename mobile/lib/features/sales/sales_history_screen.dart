@@ -111,19 +111,21 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                TextField(
-                  key: const ValueKey('history-search'),
-                  controller: _search,
-                  onChanged: (_) {
-                    _debounce?.cancel();
-                    _debounce = Timer(
-                      const Duration(milliseconds: 350),
-                      () => _load(reset: true),
-                    );
-                  },
-                  decoration: InputDecoration(
-                    labelText: l.saleSearchHint,
-                    prefixIcon: const AppIcon(AppIcons.search),
+                LabeledField(
+                  label: l.saleSearchHint,
+                  child: TextField(
+                    key: const ValueKey('history-search'),
+                    controller: _search,
+                    onChanged: (_) {
+                      _debounce?.cancel();
+                      _debounce = Timer(
+                        const Duration(milliseconds: 350),
+                        () => _load(reset: true),
+                      );
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: const AppIcon(AppIcons.search),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

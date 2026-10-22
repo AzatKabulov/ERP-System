@@ -391,36 +391,42 @@ class _BusinessFormState extends State<_BusinessForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          key: const ValueKey('business-name'),
-          controller: _name,
-          enabled: enabled,
-          decoration: InputDecoration(
-            labelText: l.businessName,
-            errorText: fieldError(l, _error, 'name'),
+        LabeledField(
+          label: l.businessName,
+          child: TextField(
+            key: const ValueKey('business-name'),
+            controller: _name,
+            enabled: enabled,
+            decoration: InputDecoration(
+              errorText: fieldError(l, _error, 'name'),
+            ),
           ),
         ),
         const SizedBox(height: 16),
-        TextField(
-          key: const ValueKey('business-address'),
-          controller: _address,
-          enabled: enabled,
-          decoration: InputDecoration(
-            labelText: l.businessAddress,
-            errorText: fieldError(l, _error, 'address'),
+        LabeledField(
+          label: l.businessAddress,
+          child: TextField(
+            key: const ValueKey('business-address'),
+            controller: _address,
+            enabled: enabled,
+            decoration: InputDecoration(
+              errorText: fieldError(l, _error, 'address'),
+            ),
           ),
         ),
         const SizedBox(height: 16),
-        TextField(
-          key: const ValueKey('business-phone'),
-          controller: _phone,
-          enabled: enabled,
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            labelText: l.businessPhone,
-            helperText: l.businessDocumentNote,
-            helperMaxLines: 2,
-            errorText: fieldError(l, _error, 'phone'),
+        LabeledField(
+          label: l.businessPhone,
+          child: TextField(
+            key: const ValueKey('business-phone'),
+            controller: _phone,
+            enabled: enabled,
+            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(
+              helperText: l.businessDocumentNote,
+              helperMaxLines: 2,
+              errorText: fieldError(l, _error, 'phone'),
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -504,16 +510,19 @@ class _LanguageDropdown extends StatelessWidget {
     final l = strings(context);
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 160, maxWidth: 240),
-      child: DropdownButtonFormField<String>(
-        key: fieldKey,
-        isExpanded: true,
-        initialValue: value,
-        decoration: InputDecoration(labelText: label),
-        items: [
-          DropdownMenuItem(value: 'ru', child: Text(l.languageRussian)),
-          DropdownMenuItem(value: 'tk', child: Text(l.languageTurkmen)),
-        ],
-        onChanged: enabled ? (v) => onChanged(v ?? value) : null,
+      child: LabeledField(
+        label: label,
+        child: DropdownButtonFormField<String>(
+          key: fieldKey,
+          isExpanded: true,
+          initialValue: value,
+          decoration: InputDecoration(),
+          items: [
+            DropdownMenuItem(value: 'ru', child: Text(l.languageRussian)),
+            DropdownMenuItem(value: 'tk', child: Text(l.languageTurkmen)),
+          ],
+          onChanged: enabled ? (v) => onChanged(v ?? value) : null,
+        ),
       ),
     );
   }
@@ -591,30 +600,35 @@ class _LocationDialogState extends State<_LocationDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                key: const ValueKey('location-name'),
-                controller: _name,
-                enabled: !_busy,
-                decoration: InputDecoration(
-                  labelText: l.locationName,
-                  errorText: fieldError(l, _error, 'name'),
+              LabeledField(
+                label: l.locationName,
+                child: TextField(
+                  key: const ValueKey('location-name'),
+                  controller: _name,
+                  enabled: !_busy,
+                  decoration: InputDecoration(
+                    errorText: fieldError(l, _error, 'name'),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                key: const ValueKey('location-kind'),
-                initialValue: _kind,
-                decoration: InputDecoration(labelText: l.locationKind),
-                items: [
-                  DropdownMenuItem(value: 'store', child: Text(l.kindStore)),
-                  DropdownMenuItem(
-                    value: 'warehouse',
-                    child: Text(l.kindWarehouse),
-                  ),
-                ],
-                onChanged: _busy
-                    ? null
-                    : (v) => setState(() => _kind = v ?? _kind),
+              LabeledField(
+                label: l.locationKind,
+                child: DropdownButtonFormField<String>(
+                  key: const ValueKey('location-kind'),
+                  initialValue: _kind,
+                  decoration: InputDecoration(),
+                  items: [
+                    DropdownMenuItem(value: 'store', child: Text(l.kindStore)),
+                    DropdownMenuItem(
+                      value: 'warehouse',
+                      child: Text(l.kindWarehouse),
+                    ),
+                  ],
+                  onChanged: _busy
+                      ? null
+                      : (v) => setState(() => _kind = v ?? _kind),
+                ),
               ),
               if (widget.existing != null)
                 SwitchListTile(
@@ -775,75 +789,88 @@ class _StaffDialogState extends State<_StaffDialog> {
                   ),
                 )
               else ...[
-                TextField(
-                  key: const ValueKey('staff-username'),
-                  controller: _username,
-                  enabled: !_busy,
-                  autocorrect: false,
-                  decoration: InputDecoration(
-                    labelText: l.username,
-                    errorText: fieldError(l, _error, 'username'),
-                    errorMaxLines: 3,
+                LabeledField(
+                  label: l.username,
+                  child: TextField(
+                    key: const ValueKey('staff-username'),
+                    controller: _username,
+                    enabled: !_busy,
+                    autocorrect: false,
+                    decoration: InputDecoration(
+                      errorText: fieldError(l, _error, 'username'),
+                      errorMaxLines: 3,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  key: const ValueKey('staff-email'),
-                  controller: _email,
-                  enabled: !_busy,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: l.emailLabel,
-                    errorText: fieldError(l, _error, 'email'),
+                LabeledField(
+                  label: l.emailLabel,
+                  child: TextField(
+                    key: const ValueKey('staff-email'),
+                    controller: _email,
+                    enabled: !_busy,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      errorText: fieldError(l, _error, 'email'),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  key: const ValueKey('staff-full-name'),
-                  controller: _fullName,
-                  enabled: !_busy,
-                  decoration: InputDecoration(labelText: l.fullNameLabel),
+                LabeledField(
+                  label: l.fullNameLabel,
+                  child: TextField(
+                    key: const ValueKey('staff-full-name'),
+                    controller: _fullName,
+                    enabled: !_busy,
+                    decoration: InputDecoration(),
+                  ),
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  key: const ValueKey('staff-language'),
-                  initialValue: _language,
-                  decoration: InputDecoration(labelText: l.language),
-                  items: [
-                    DropdownMenuItem(
-                      value: 'ru',
-                      child: Text(l.languageRussian),
-                    ),
-                    DropdownMenuItem(
-                      value: 'tk',
-                      child: Text(l.languageTurkmen),
-                    ),
-                  ],
-                  onChanged: _busy
-                      ? null
-                      : (v) => setState(() => _language = v ?? _language),
+                LabeledField(
+                  label: l.language,
+                  child: DropdownButtonFormField<String>(
+                    key: const ValueKey('staff-language'),
+                    initialValue: _language,
+                    decoration: InputDecoration(),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'ru',
+                        child: Text(l.languageRussian),
+                      ),
+                      DropdownMenuItem(
+                        value: 'tk',
+                        child: Text(l.languageTurkmen),
+                      ),
+                    ],
+                    onChanged: _busy
+                        ? null
+                        : (v) => setState(() => _language = v ?? _language),
+                  ),
                 ),
                 const SizedBox(height: 12),
               ],
-              DropdownButtonFormField<String>(
-                key: const ValueKey('staff-role'),
-                initialValue: _role,
-                decoration: InputDecoration(labelText: l.roleLabel),
-                items: [
-                  for (final role in const [
-                    'owner',
-                    'manager',
-                    'sales',
-                    'warehouse',
-                  ])
-                    DropdownMenuItem(
-                      value: role,
-                      child: Text(roleLabel(l, role)),
-                    ),
-                ],
-                onChanged: _busy
-                    ? null
-                    : (v) => setState(() => _role = v ?? _role),
+              LabeledField(
+                label: l.roleLabel,
+                child: DropdownButtonFormField<String>(
+                  key: const ValueKey('staff-role'),
+                  initialValue: _role,
+                  decoration: InputDecoration(),
+                  items: [
+                    for (final role in const [
+                      'owner',
+                      'manager',
+                      'sales',
+                      'warehouse',
+                    ])
+                      DropdownMenuItem(
+                        value: role,
+                        child: Text(roleLabel(l, role)),
+                      ),
+                  ],
+                  onChanged: _busy
+                      ? null
+                      : (v) => setState(() => _role = v ?? _role),
+                ),
               ),
               if (_restricted) ...[
                 SwitchListTile(
@@ -895,17 +922,19 @@ class _StaffDialogState extends State<_StaffDialog> {
                 )
               else ...[
                 const SizedBox(height: 12),
-                TextField(
-                  key: const ValueKey('staff-password'),
-                  controller: _password,
-                  enabled: !_busy,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: l.initialPasswordLabel,
-                    helperText: l.initialPasswordHint,
-                    helperMaxLines: 3,
-                    errorText: fieldError(l, _error, 'password'),
-                    errorMaxLines: 3,
+                LabeledField(
+                  label: l.initialPasswordLabel,
+                  child: TextField(
+                    key: const ValueKey('staff-password'),
+                    controller: _password,
+                    enabled: !_busy,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      helperText: l.initialPasswordHint,
+                      helperMaxLines: 3,
+                      errorText: fieldError(l, _error, 'password'),
+                      errorMaxLines: 3,
+                    ),
                   ),
                 ),
               ],

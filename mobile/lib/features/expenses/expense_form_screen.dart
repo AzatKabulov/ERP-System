@@ -102,11 +102,14 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
       builder: (_) => DialogInput(
         builder: (context, controller) => AlertDialog(
           title: Text(l.expenseNewCategoryTitle),
-          content: TextField(
-            key: const ValueKey('ef-new-category-name'),
-            controller: controller,
-            autofocus: true,
-            decoration: InputDecoration(labelText: l.expenseCategoryName),
+          content: LabeledField(
+            label: l.expenseCategoryName,
+            child: TextField(
+              key: const ValueKey('ef-new-category-name'),
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(),
+            ),
           ),
           actions: [
             TextButton(
@@ -258,65 +261,70 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                         KeyedSubtree(
                           // a category added on the spot must show in the box
                           key: ValueKey('ef-category-$_categoryId'),
-                          child: DropdownButtonFormField<String>(
-                            key: const ValueKey('ef-category'),
-                            isExpanded: true,
-                            initialValue:
-                                _categories.any((c) => c.id == _categoryId)
-                                ? _categoryId
-                                : null,
-                            decoration: InputDecoration(
-                              labelText: l.expenseCategoryLabel,
-                              errorText: _submitted && _categoryId == null
-                                  ? l.fieldRequired
+                          child: LabeledField(
+                            label: l.expenseCategoryLabel,
+                            child: DropdownButtonFormField<String>(
+                              key: const ValueKey('ef-category'),
+                              isExpanded: true,
+                              initialValue:
+                                  _categories.any((c) => c.id == _categoryId)
+                                  ? _categoryId
                                   : null,
-                            ),
-                            items: [
-                              for (final c in _categories)
-                                if (c.isActive || c.id == _categoryId)
-                                  DropdownMenuItem<String>(
-                                    value: c.id,
-                                    child: Text(c.name),
-                                  ),
-                              DropdownMenuItem<String>(
-                                value: _newCategoryValue,
-                                child: Text(l.expenseNewCategory),
+                              decoration: InputDecoration(
+                                errorText: _submitted && _categoryId == null
+                                    ? l.fieldRequired
+                                    : null,
                               ),
-                            ],
-                            onChanged: _saving
-                                ? null
-                                : (v) {
-                                    if (v == _newCategoryValue) {
-                                      _addCategory();
-                                    } else {
-                                      _categoryId = v;
-                                      _touch();
-                                    }
-                                  },
+                              items: [
+                                for (final c in _categories)
+                                  if (c.isActive || c.id == _categoryId)
+                                    DropdownMenuItem<String>(
+                                      value: c.id,
+                                      child: Text(c.name),
+                                    ),
+                                DropdownMenuItem<String>(
+                                  value: _newCategoryValue,
+                                  child: Text(l.expenseNewCategory),
+                                ),
+                              ],
+                              onChanged: _saving
+                                  ? null
+                                  : (v) {
+                                      if (v == _newCategoryValue) {
+                                        _addCategory();
+                                      } else {
+                                        _categoryId = v;
+                                        _touch();
+                                      }
+                                    },
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
                         Semantics(
                           container: true,
                           explicitChildNodes: true,
-                          child: TextField(
-                            key: const ValueKey('ef-amount'),
-                            controller: _amount,
-                            enabled: !_saving,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9 .,]'),
+                          child: LabeledField(
+                            label: l.expenseAmountLabel,
+                            child: TextField(
+                              key: const ValueKey('ef-amount'),
+                              controller: _amount,
+                              enabled: !_saving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-9 .,]'),
+                                ),
+                              ],
+                              onChanged: (_) => _touch(),
+                              decoration: InputDecoration(
+                                errorText: _submitted && _amountMinor == null
+                                    ? l.fieldInvalid
+                                    : fieldError(l, _error, 'amount'),
                               ),
-                            ],
-                            onChanged: (_) => _touch(),
-                            decoration: InputDecoration(
-                              labelText: l.expenseAmountLabel,
-                              errorText: _submitted && _amountMinor == null
-                                  ? l.fieldInvalid
-                                  : fieldError(l, _error, 'amount'),
                             ),
                           ),
                         ),
@@ -339,43 +347,45 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          key: const ValueKey('ef-location'),
-                          isExpanded: true,
-                          initialValue:
-                              locations.any((x) => x.id == _locationId)
-                              ? _locationId
-                              : null,
-                          decoration: InputDecoration(
-                            labelText: l.expenseLocationLabel,
+                        LabeledField(
+                          label: l.expenseLocationLabel,
+                          child: DropdownButtonFormField<String>(
+                            key: const ValueKey('ef-location'),
+                            isExpanded: true,
+                            initialValue:
+                                locations.any((x) => x.id == _locationId)
+                                ? _locationId
+                                : null,
+                            decoration: InputDecoration(),
+                            items: [
+                              for (final x in locations)
+                                DropdownMenuItem<String>(
+                                  value: x.id,
+                                  child: Text(x.name),
+                                ),
+                            ],
+                            onChanged: _saving
+                                ? null
+                                : (v) {
+                                    _locationId = v;
+                                    _touch();
+                                  },
                           ),
-                          items: [
-                            for (final x in locations)
-                              DropdownMenuItem<String>(
-                                value: x.id,
-                                child: Text(x.name),
-                              ),
-                          ],
-                          onChanged: _saving
-                              ? null
-                              : (v) {
-                                  _locationId = v;
-                                  _touch();
-                                },
                         ),
                         const SizedBox(height: 16),
                         Semantics(
                           container: true,
                           explicitChildNodes: true,
-                          child: TextField(
-                            key: const ValueKey('ef-description'),
-                            controller: _description,
-                            enabled: !_saving,
-                            minLines: 1,
-                            maxLines: 3,
-                            onChanged: (_) => _touch(),
-                            decoration: InputDecoration(
-                              labelText: l.expenseDescriptionLabel,
+                          child: LabeledField(
+                            label: l.expenseDescriptionLabel,
+                            child: TextField(
+                              key: const ValueKey('ef-description'),
+                              controller: _description,
+                              enabled: !_saving,
+                              minLines: 1,
+                              maxLines: 3,
+                              onChanged: (_) => _touch(),
+                              decoration: InputDecoration(),
                             ),
                           ),
                         ),

@@ -45,7 +45,15 @@
   "attention": "Нуждается во внимании",
   "healthy": "В наличии",
   "emptyStock": "Нет в наличии",
-  "searchProducts": "Название, артикул или штрихкод",
+  "searchProducts": "Поиск по названию, артикулу или штрихкоду",
+  "inStockHere": "В наличии здесь: {quantity}",
+  "@inStockHere": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
   "allCategories": "Все категории",
   "filters": "Фильтры",
   "brakes": "Тормозная система",
@@ -252,6 +260,7 @@
   "retry": "Повторить",
   "checkingSession": "Проверяем сеанс…",
   "errorInvalidCredentials": "Неверный логин или пароль.",
+  "errorSessionStorage": "Не удалось сохранить сеанс входа. В браузере откройте сайт по защищённому адресу HTTPS и повторите вход.",
   "errorRateLimited": "Слишком много попыток. Подождите немного и повторите.",
   "errorNetwork": "Нет связи с сервером.",
   "errorTimeout": "Сервер не ответил вовремя.",
@@ -571,6 +580,14 @@
   "salesStartHint": "Найдите товар по названию или артикулу либо отсканируйте штрихкод, чтобы добавить его в корзину.",
   "salesNoMatch": "Ничего не найдено. Проверьте написание или код.",
   "cartTitle": "Корзина",
+  "cartBadge": "{count} поз.",
+  "@cartBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cartEmpty": "Корзина пуста",
   "cartScannedNotFound": "Товар с кодом {code} не найден.",
   "@cartScannedNotFound": {
@@ -617,7 +634,7 @@
   "customerNew": "Новый покупатель",
   "customerNameLabel": "Имя покупателя",
   "customersEmpty": "Покупатели не найдены",
-  "toPayment": "К оплате",
+  "toPayment": "Завершить продажу",
   "paymentTitle": "Оплата",
   "payCash": "Наличные",
   "payCard": "Карта",
@@ -1427,6 +1444,15 @@
   "dashLowStock": "Ниже минимума",
   "dashOpenClaims": "Открытые гарантии",
   "dashRecent": "Недавние действия",
+  "dashLast14": "Последние 14 дней",
+  "dashShareOfSales": "{percent}% продаж",
+  "@dashShareOfSales": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "dashOpenReports": "Открыть отчёты",
   "dashNothing": "Для вашей роли здесь пока нечего показать.",
   "activitySearchHint": "Действие или объект",
@@ -1647,5 +1673,13 @@
       }
     }
   },
-  "reportDynamics": "Динамика продаж"
+  "reportDynamics": "Динамика продаж",
+  "stockColumnValue": "Стоимость",
+  "warrantyCaseTitle": "Гарантийный случай",
+  "warrantyProductAndBuyer": "Товар и покупатель",
+  "productInStock": "В наличии",
+  "productLow": "Мало",
+  "productOut": "Нет в наличии",
+  "productColumnStock": "Остаток",
+  "productColumnStatus": "Статус"
 }

@@ -131,18 +131,20 @@ class _ExchangeRateSectionState extends State<ExchangeRateSection> {
               children: [
                 SizedBox(
                   width: 260,
-                  child: TextField(
-                    key: const ValueKey('rate-input'),
-                    controller: _input,
-                    enabled: !_busy,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onSubmitted: (_) => _save(),
-                    decoration: InputDecoration(
-                      labelText: l.newRateLabel,
-                      errorText: fieldText,
-                      errorMaxLines: 3,
+                  child: LabeledField(
+                    label: l.newRateLabel,
+                    child: TextField(
+                      key: const ValueKey('rate-input'),
+                      controller: _input,
+                      enabled: !_busy,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      onSubmitted: (_) => _save(),
+                      decoration: InputDecoration(
+                        errorText: fieldText,
+                        errorMaxLines: 3,
+                      ),
                     ),
                   ),
                 ),

@@ -46,7 +46,17 @@ The web app is the same app, built for browsers. With Flutter installed you can 
 
 Or build it once and let the server show it on port 8000: `cd mobile && flutter build web --no-web-resources-cdn`, then start the server with `--web mobile/build/web`.
 
+### Sign in from an iPhone or another browser on the same Wi-Fi
+
+The normal web build needs HTTPS for its secure session storage. `http://localhost` works on the computer, but `http://192.168.x.x:8000` on a phone is not a secure browser origin: the server can accept the password while the app fails to save the session.
+
+For this local test server only, build with `cd mobile && flutter build web --no-web-resources-cdn --dart-define=LOCAL_HTTP_TESTING=true`, then start with `--web mobile/build/web`. On a private IPv4 address (`10.x.x.x`, `172.16.x.x` through `172.31.x.x`, or `192.168.x.x`) the web app then keeps its session in the tab's memory, without saving tokens to browser storage. Refreshing or closing the page requires signing in again; saved pending operations are recovered after signing in. Open the phone's local address again after replacing an older build.
+
+The option defaults to false and does not affect native apps, HTTPS or public hosts. Do not use it for a public or production deployment: use HTTPS there. The local HTTP test server is only for test data on a trusted Wi-Fi network.
+
 ## Good to know
+
+- The local launcher prepares gzip versions of public web resources once at startup, reducing the data downloaded over Wi-Fi. Browsers negotiate compression automatically; build files still revalidate after updates. Private API files and APK downloads are not compressed by this helper. If replacing the web build manually, restart the launcher so it prepares the new compressed resources; stale compressed files are never served in place of newer originals.
 
 - The browser version has no camera button (browsers only allow the camera on `https`); a USB hand scanner works in it. The camera is tested on the tablet with the installed app.
 - Windows may ask whether the program may accept connections: allow it on private networks (the tablet needs that).

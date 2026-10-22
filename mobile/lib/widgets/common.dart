@@ -4,6 +4,7 @@ import 'app_icons.dart';
 import '../demo/demo_store.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import 'motion.dart';
 
 AppLocalizations strings(BuildContext context) => AppLocalizations.of(context);
 
@@ -52,8 +53,8 @@ AppIconData categoryIcon(ProductCategory category) => switch (category) {
   ProductCategory.electrical => AppIcons.flash,
 };
 
-//// A white card: hairline border and the two-layer low-spread shadow. With [onTap] it is a
-/// button (ink ripple on the card, a stronger border on hover).
+/// A white card: hairline border and the two-layer low-spread shadow. With [onTap] it is a
+/// button: it rises a little and takes a cobalt-tinted edge on hover, and sinks when pressed.
 class SurfaceCard extends StatefulWidget {
   const SurfaceCard({
     super.key,
@@ -84,6 +85,7 @@ class _SurfaceCardState extends State<SurfaceCard> {
   Widget build(BuildContext context) {
     final interactive = widget.onTap != null;
     final radius = BorderRadius.circular(AppRadius.card);
+    final lifted = interactive && _hover;
     Widget body = Padding(
       padding: EdgeInsets.all(widget.padding),
       child: widget.child,
@@ -91,25 +93,31 @@ class _SurfaceCardState extends State<SurfaceCard> {
     if (interactive) {
       body = InkWell(onTap: widget.onTap, borderRadius: radius, child: body);
     }
-    final card = DecoratedBox(
+    final card = AnimatedContainer(
+      duration: AppMotion.of(context, AppMotion.base),
+      curve: AppMotion.arrive,
+      transform: Matrix4.translationValues(0, lifted ? -2 : 0, 0),
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: radius,
-        boxShadow: widget.flat ? null : AppShadows.card,
+        border: Border.all(
+          color: widget.featured
+              ? AppColors.blue
+              : lifted
+              ? AppColors.blue.withValues(alpha: 0.38)
+              : AppColors.line,
+          width: widget.featured ? 1.5 : 1,
+        ),
+        boxShadow: widget.flat
+            ? null
+            : lifted
+            ? AppShadows.cardHover
+            : AppShadows.card,
       ),
       child: Material(
-        color: Colors.white,
+        type: MaterialType.transparency,
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: radius,
-          side: BorderSide(
-            color: widget.featured
-                ? AppColors.blue
-                : interactive && _hover
-                ? AppColors.lineStrong
-                : AppColors.line,
-            width: widget.featured ? 1.5 : 1,
-          ),
-        ),
+        borderRadius: radius,
         child: body,
       ),
     );
@@ -117,13 +125,13 @@ class _SurfaceCardState extends State<SurfaceCard> {
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
-      child: card,
+      child: PressScale(child: card),
     );
   }
 }
 
-/// The main action: flat cobalt, darker on hover (the label never loses contrast), a press
-/// scale of 0.98 and a separated focus ring.
+/// The main action: cobalt with a soft glow beneath it, a little deeper on hover, a press scale
+/// of 0.98 and a separated focus ring.
 class PrimaryButton extends StatefulWidget {
   const PrimaryButton({
     super.key,
@@ -145,6 +153,7 @@ class PrimaryButton extends StatefulWidget {
 
 class _PrimaryButtonState extends State<PrimaryButton> {
   bool _pressed = false;
+  bool _hover = false;
   bool _focused = false;
 
   void _setPressed(bool value) {
@@ -154,65 +163,77 @@ class _PrimaryButtonState extends State<PrimaryButton> {
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null;
-    return Listener(
-      onPointerDown: (_) => _setPressed(true),
-      onPointerUp: (_) => _setPressed(false),
-      onPointerCancel: (_) => _setPressed(false),
-      child: AnimatedScale(
-        scale: enabled && _pressed ? 0.98 : 1,
-        duration: const Duration(milliseconds: 120),
-        child: Focus(
-          canRequestFocus: false,
-          skipTraversal: true,
-          onFocusChange: (value) => setState(() => _focused = value),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.control),
-              boxShadow: _focused && enabled
-                  ? [
-                      const BoxShadow(color: AppColors.canvas, spreadRadius: 2),
-                      BoxShadow(
-                        color: AppColors.blue.withValues(alpha: 0.4),
-                        spreadRadius: 5,
+    final deep = enabled && (_pressed || _hover);
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: Listener(
+        onPointerDown: (_) => _setPressed(true),
+        onPointerUp: (_) => _setPressed(false),
+        onPointerCancel: (_) => _setPressed(false),
+        child: AnimatedScale(
+          scale: enabled && _pressed ? 0.98 : 1,
+          duration: AppMotion.of(context, AppMotion.fast),
+          child: Focus(
+            canRequestFocus: false,
+            skipTraversal: true,
+            onFocusChange: (value) => setState(() => _focused = value),
+            child: AnimatedContainer(
+              duration: AppMotion.of(context, AppMotion.base),
+              curve: Curves.easeOut,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.control),
+                color: enabled ? null : AppColors.blue.withValues(alpha: 0.42),
+                gradient: enabled
+                    ? (deep ? AppGradients.buttonDeep : AppGradients.button)
+                    : null,
+                boxShadow: [
+                  if (_focused && enabled) ...[
+                    const BoxShadow(color: AppColors.canvas, spreadRadius: 2),
+                    BoxShadow(
+                      color: AppColors.blue.withValues(alpha: 0.4),
+                      spreadRadius: 5,
+                    ),
+                  ],
+                  if (enabled)
+                    BoxShadow(
+                      color: AppColors.blue.withValues(
+                        alpha: _pressed ? 0.12 : 0.28,
                       ),
-                    ]
-                  : null,
-            ),
-            child: FilledButton(
-              style:
-                  FilledButton.styleFrom(
-                    disabledBackgroundColor: AppColors.blue.withValues(
-                      alpha: 0.42,
+                      offset: Offset(0, _pressed ? 2 : 6),
+                      blurRadius: _pressed ? 6 : 16,
                     ),
-                    disabledForegroundColor: Colors.white,
-                  ).copyWith(
-                    backgroundColor: WidgetStateProperty.resolveWith(
-                      (states) =>
-                          states.contains(WidgetState.pressed) ||
-                              states.contains(WidgetState.hovered)
-                          ? AppColors.blueDark
-                          : AppColors.blue,
-                    ),
-                    overlayColor: const WidgetStatePropertyAll(
-                      Colors.transparent,
-                    ),
-                  ),
-              onPressed: widget.onPressed,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (widget.icon != null) ...[
-                    AppIcon(widget.icon!, size: 20),
-                    const SizedBox(width: 8),
-                  ],
-                  Flexible(
-                    child: Text(widget.label, textAlign: TextAlign.center),
-                  ),
-                  if (widget.trailingIcon != null) ...[
-                    const SizedBox(width: 8),
-                    AppIcon(widget.trailingIcon!, size: 20),
-                  ],
                 ],
+              ),
+              child: FilledButton(
+                style:
+                    FilledButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      disabledBackgroundColor: Colors.transparent,
+                      disabledForegroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                    ).copyWith(
+                      overlayColor: const WidgetStatePropertyAll(
+                        Colors.transparent,
+                      ),
+                    ),
+                onPressed: widget.onPressed,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.icon != null) ...[
+                      AppIcon(widget.icon!, size: 20),
+                      const SizedBox(width: 8),
+                    ],
+                    Flexible(
+                      child: Text(widget.label, textAlign: TextAlign.center),
+                    ),
+                    if (widget.trailingIcon != null) ...[
+                      const SizedBox(width: 8),
+                      AppIcon(widget.trailingIcon!, size: 20),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -399,13 +420,13 @@ class Glyph extends StatelessWidget {
   );
 }
 
-/// The brand square: one serif letter on ink.
+/// The brand square: one letter, white on the brand gradient.
 class BrandMark extends StatelessWidget {
   const BrandMark(this.letter, {super.key, this.size = 28, this.light = false});
   final String letter;
   final double size;
 
-  /// On an ink surface the square turns white with an ink letter.
+  /// On a dark surface the square turns white with a cobalt letter.
   final bool light;
 
   @override
@@ -414,48 +435,86 @@ class BrandMark extends StatelessWidget {
     height: size,
     alignment: Alignment.center,
     decoration: BoxDecoration(
-      color: light ? Colors.white : AppColors.ink,
+      color: light ? Colors.white : null,
+      gradient: light ? null : AppGradients.brand,
       borderRadius: BorderRadius.circular(size * 0.32),
+      boxShadow: light
+          ? null
+          : [
+              BoxShadow(
+                color: AppColors.blue.withValues(alpha: 0.32),
+                offset: const Offset(0, 4),
+                blurRadius: 10,
+              ),
+            ],
     ),
     child: Text(
       letter,
       style: TextStyle(
         fontFamily: AppFonts.display,
-        fontWeight: FontWeight.w600,
-        fontSize: 16,
+        fontWeight: FontWeight.w800,
+        fontSize: size * 0.56,
         height: 1,
-        color: light ? AppColors.ink : Colors.white,
+        color: light ? AppColors.blue : Colors.white,
       ),
     ),
   );
 }
 
-/// The ink "inverted" surface of the one figure that matters most, with a thin brass hairline
-/// near the top right corner.
+/// The deep surface of the one figure that matters most: navy running into cobalt, with two soft
+/// glows of light in its corners.
 class SpotlightCard extends StatelessWidget {
   const SpotlightCard({super.key, required this.child, this.padding = 28});
   final Widget child;
   final double padding;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: AppColors.ink,
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      border: Border.all(color: AppColors.ink),
-      boxShadow: AppShadows.card,
-    ),
-    child: Stack(
-      children: [
-        Positioned(
-          top: 0,
-          right: 32,
-          child: ExcludeSemantics(
-            child: Container(width: 56, height: 1, color: AppColors.brass),
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AppRadius.card);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: AppGradients.spotlight,
+        borderRadius: radius,
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x290A1030),
+            offset: Offset(0, 4),
+            blurRadius: 8,
           ),
+          BoxShadow(
+            color: Color(0x330A1030),
+            offset: Offset(0, 20),
+            blurRadius: 44,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Stack(
+          children: [
+            Positioned(
+              top: -110,
+              right: -70,
+              child: ExcludeSemantics(child: _glow(300, 0x663D63FF)),
+            ),
+            Positioned(
+              bottom: -150,
+              left: -60,
+              child: ExcludeSemantics(child: _glow(320, 0x446A4DFF)),
+            ),
+            Padding(padding: EdgeInsets.all(padding), child: child),
+          ],
         ),
-        Padding(padding: EdgeInsets.all(padding), child: child),
-      ],
+      ),
+    );
+  }
+
+  static Widget _glow(double size, int argb) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: RadialGradient(colors: [Color(argb), Color(argb & 0x00FFFFFF)]),
     ),
   );
 }
@@ -516,7 +575,11 @@ class FilterSelect<T> extends StatelessWidget {
     required this.onChanged,
     this.hint,
     this.leading,
+    this.width = 200,
   });
+
+  /// The control's width: long values are cut with an ellipsis, never overflow.
+  final double width;
 
   /// A small icon before the value (a building for a place).
   final AppIconData? leading;
@@ -530,7 +593,8 @@ class FilterSelect<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 48),
+    width: width,
+    constraints: const BoxConstraints(minHeight: 40),
     padding: const EdgeInsets.symmetric(horizontal: 12),
     decoration: BoxDecoration(
       color: Colors.white,
@@ -572,8 +636,37 @@ class FilterSelect<T> extends StatelessWidget {
   );
 }
 
-/// The segmented switch of the design (RU | TM, Cash | Card): a soft track, the chosen segment
-/// raised in white.
+/// A form field with its label above it (13 px, semibold), as in the design. The field keeps its
+/// own label for screen readers; the visible one here is not read twice.
+class LabeledField extends StatelessWidget {
+  const LabeledField({super.key, required this.label, required this.child});
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      ExcludeSemantics(
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.ink,
+            height: 1.3,
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+      Semantics(label: label, child: child),
+    ],
+  );
+}
+
+/// A switch between a few options (the language, cash or card, list or gallery): a white thumb
+/// glides to the chosen one and its label turns cobalt.
 class AppSegmented<T> extends StatelessWidget {
   const AppSegmented({
     super.key,
@@ -582,7 +675,12 @@ class AppSegmented<T> extends StatelessWidget {
     required this.onChanged,
     this.keyPrefix,
     this.keyName,
+    this.expand = false,
   });
+
+  /// The segments share the whole width (the sign-in page); otherwise the switch is as wide as
+  /// its widest label, every segment the same.
+  final bool expand;
 
   /// (value, label) pairs.
   final List<(T, String)> options;
@@ -595,33 +693,74 @@ class AppSegmented<T> extends StatelessWidget {
   final String Function(T)? keyName;
 
   @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 48),
-    padding: const EdgeInsets.all(4),
-    decoration: BoxDecoration(
-      color: AppColors.surfaceSoft,
-      borderRadius: BorderRadius.circular(AppRadius.control),
-      border: Border.all(color: AppColors.line),
-    ),
-    child: IntrinsicHeight(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final (v, label) in options)
-            Flexible(
-              child: _Segment(
-                key: keyPrefix == null
-                    ? null
-                    : ValueKey('$keyPrefix-${keyName?.call(v) ?? v}'),
-                label: label,
-                selected: v == value,
-                onTap: () => onChanged(v),
+  Widget build(BuildContext context) {
+    final count = options.length;
+    final index = options.indexWhere((o) => o.$1 == value);
+    final inner = Stack(
+      children: [
+        if (index >= 0)
+          Positioned.fill(
+            child: AnimatedAlign(
+              duration: AppMotion.of(context, AppMotion.base),
+              curve: AppMotion.arrive,
+              alignment: Alignment(
+                count == 1 ? 0 : -1 + 2 * index / (count - 1),
+                0,
+              ),
+              child: FractionallySizedBox(
+                widthFactor: 1 / count,
+                heightFactor: 1,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(9),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1A0D1311),
+                        offset: Offset(0, 1),
+                        blurRadius: 4,
+                      ),
+                      BoxShadow(
+                        color: Color(0x0F1740FF),
+                        offset: Offset(0, 4),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-        ],
+          ),
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              for (final (v, label) in options)
+                Expanded(
+                  child: _Segment(
+                    key: keyPrefix == null
+                        ? null
+                        : ValueKey('$keyPrefix-${keyName?.call(v) ?? v}'),
+                    label: label,
+                    selected: v == value,
+                    onTap: () => onChanged(v),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+    return Container(
+      constraints: const BoxConstraints(minHeight: 48),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSoft,
+        borderRadius: BorderRadius.circular(AppRadius.control),
+        border: Border.all(color: AppColors.line),
       ),
-    ),
-  );
+      child: expand ? inner : IntrinsicWidth(child: inner),
+    );
+  }
 }
 
 class _Segment extends StatelessWidget {
@@ -642,36 +781,21 @@ class _Segment extends StatelessWidget {
     child: InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(9),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
+      child: Container(
         constraints: const BoxConstraints(minWidth: 76, minHeight: 40),
         padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
-          boxShadow: selected
-              ? const [
-                  BoxShadow(
-                    color: Color(0x1A0D1311),
-                    offset: Offset(0, 1),
-                    blurRadius: 4,
-                  ),
-                ]
-              : null,
-        ),
-        child: Center(
-          widthFactor: 1,
-          heightFactor: 1,
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: selected ? AppColors.ink : AppColors.muted,
-            ),
+        alignment: Alignment.center,
+        child: AnimatedDefaultTextStyle(
+          duration: AppMotion.of(context, AppMotion.base),
+          curve: Curves.easeOut,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: AppFonts.ui,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: selected ? AppColors.blue : AppColors.muted,
           ),
+          child: Text(label, textAlign: TextAlign.center),
         ),
       ),
     ),
@@ -787,7 +911,9 @@ class AppTabs<T> extends StatelessWidget {
                     ? null
                     : ValueKey('$keyPrefix-${keyName?.call(v) ?? v}'),
                 onTap: () => onChanged(v),
-                child: Container(
+                child: AnimatedContainer(
+                  duration: AppMotion.of(context, AppMotion.base),
+                  curve: AppMotion.arrive,
                   constraints: const BoxConstraints(minHeight: 48),
                   margin: const EdgeInsets.only(right: 24),
                   alignment: Alignment.center,
@@ -795,17 +921,19 @@ class AppTabs<T> extends StatelessWidget {
                     border: Border(
                       bottom: BorderSide(
                         color: v == value ? AppColors.blue : Colors.transparent,
-                        width: 2,
+                        width: 3,
                       ),
                     ),
                   ),
-                  child: Text(
-                    label,
+                  child: AnimatedDefaultTextStyle(
+                    duration: AppMotion.of(context, AppMotion.base),
                     style: TextStyle(
-                      fontSize: 13,
+                      fontFamily: AppFonts.ui,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: v == value ? AppColors.ink : AppColors.muted,
+                      color: v == value ? AppColors.blue : AppColors.muted,
                     ),
+                    child: Text(label),
                   ),
                 ),
               ),
@@ -816,32 +944,25 @@ class AppTabs<T> extends StatelessWidget {
   );
 }
 
-/// A page's content arriving: a short fade with a 4 px rise. Skipped when the platform asks
-/// for reduced motion.
+/// A page's content arriving: a fade and a short rise (see [Reveal]). Skipped when the platform
+/// asks for reduced motion.
 class FadeUp extends StatelessWidget {
-  const FadeUp({super.key, required this.child});
+  const FadeUp({super.key, required this.child, this.index = 0});
   final Widget child;
+  final int index;
 
   @override
-  Widget build(BuildContext context) {
-    if (MediaQuery.disableAnimationsOf(context)) return child;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
-      child: child,
-      builder: (context, t, child) => t >= 1
-          ? child!
-          : Opacity(
-              opacity: t,
-              child: Transform.translate(
-                offset: Offset(0, (1 - t) * 4),
-                child: child,
-              ),
-            ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      Reveal(index: index, distance: 10, child: child);
 }
+
+/// The colours of a product category: a tint for the tile and a strong shade for its icon.
+(Color, Color) categoryColors(ProductCategory category) => switch (category) {
+  ProductCategory.filters => (AppColors.tint, AppColors.blue),
+  ProductCategory.brakes => (AppColors.roseTint, AppColors.danger),
+  ProductCategory.oils => (AppColors.amberTint, AppColors.warning),
+  ProductCategory.electrical => (AppColors.violetTint, AppColors.violetText),
+};
 
 class ProductMark extends StatelessWidget {
   const ProductMark({super.key, required this.product, this.size = 48});
@@ -849,12 +970,15 @@ class ProductMark extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) => Glyph(
-    categoryIcon(product.category),
-    size: size,
-    background: AppColors.surfaceMuted,
-    color: AppColors.neutral,
-  );
+  Widget build(BuildContext context) {
+    final (tint, strong) = categoryColors(product.category);
+    return Glyph(
+      categoryIcon(product.category),
+      size: size,
+      background: tint,
+      color: strong,
+    );
+  }
 }
 
 /// Nothing here yet: a calm line icon in a circle, one sentence, an optional hint.
@@ -874,15 +998,23 @@ class EmptyState extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
     child: Column(
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceSoft,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.line),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: AppMotion.reduced(context) ? 1 : 0.6, end: 1),
+          duration: AppMotion.of(context, AppMotion.slow),
+          curve: Curves.easeOutBack,
+          builder: (context, scale, child) =>
+              Transform.scale(scale: scale, child: child),
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: const BoxDecoration(
+              color: AppColors.tint,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: AppIcon(icon, size: 26, color: AppColors.blue),
+            ),
           ),
-          child: Center(child: AppIcon(icon, size: 24, color: AppColors.muted)),
         ),
         const SizedBox(height: 16),
         Text(
@@ -910,7 +1042,9 @@ class EmptyState extends StatelessWidget {
   );
 }
 
-/// One figure: the label on top, the figure (tabular digits) and a short note at the bottom.
+/// One figure: a coloured icon tile and the label on top, the figure (tabular digits) and a short
+/// note at the bottom. The colour says what kind of figure it is (see [AppColors]); the label and
+/// the icon say it too. A changed figure glides in from below.
 class MetricCard extends StatelessWidget {
   const MetricCard({
     super.key,
@@ -919,12 +1053,18 @@ class MetricCard extends StatelessWidget {
     this.meta,
     this.onTap,
     this.featured = false,
+    this.icon,
+    this.accent = AppColors.blue,
+    this.accentTint = AppColors.tint,
   });
   final String label;
   final String value;
   final String? meta;
   final VoidCallback? onTap;
   final bool featured;
+  final AppIconData? icon;
+  final Color accent;
+  final Color accentTint;
 
   @override
   Widget build(BuildContext context) => SurfaceCard(
@@ -936,29 +1076,67 @@ class MetricCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.muted,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              height: 1.35,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              if (icon != null) ...[
+                const SizedBox(width: 10),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: accentTint,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Center(child: AppIcon(icon!, size: 18, color: accent)),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 16),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              softWrap: false,
-              style: const TextStyle(
-                fontSize: 24,
-                fontVariations: [FontVariation.weight(650)],
-                height: 1.2,
-                letterSpacing: -0.96,
-                color: AppColors.ink,
-                fontFeatures: AppFonts.tabular,
+          AnimatedSwitcher(
+            duration: AppMotion.of(context, AppMotion.base),
+            switchInCurve: AppMotion.arrive,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, 0.25),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.centerLeft,
+              children: [...previous, ?current],
+            ),
+            child: FittedBox(
+              key: ValueKey(value),
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                softWrap: false,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                  letterSpacing: -0.5,
+                  color: AppColors.ink,
+                  fontFeatures: AppFonts.tabular,
+                ),
               ),
             ),
           ),
@@ -966,7 +1144,7 @@ class MetricCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               meta!,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: const TextStyle(color: AppColors.muted, fontSize: 13),
             ),
           ],
         ],
@@ -1032,6 +1210,90 @@ void showFeedback(BuildContext context, String message) {
     ..showSnackBar(SnackBar(content: Text(message)));
 }
 
+/// The dialog of the design: an icon tile, a serif title, a sentence, optional content and the
+/// actions on the right (stacked on a narrow screen).
+class AppDialog extends StatelessWidget {
+  const AppDialog({
+    super.key,
+    required this.title,
+    this.icon = AppIcons.info,
+    this.message,
+    this.content,
+    this.actions = const [],
+  });
+  final String title;
+  final AppIconData icon;
+  final String? message;
+  final Widget? content;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    tween: Tween(begin: AppMotion.reduced(context) ? 1 : 0.94, end: 1),
+    duration: AppMotion.of(context, AppMotion.base),
+    curve: AppMotion.arrive,
+    builder: (context, scale, child) =>
+        Transform.scale(scale: scale, child: child),
+    child: _dialog(context),
+  );
+
+  Widget _dialog(BuildContext context) => Dialog(
+    backgroundColor: Colors.white,
+    surfaceTintColor: Colors.transparent,
+    insetPadding: const EdgeInsets.all(16),
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppRadius.dialog),
+      side: const BorderSide(color: AppColors.line),
+    ),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 440),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.tint,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: AppIcon(icon, size: 20, color: AppColors.blue),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(title, style: Theme.of(context).dialogTheme.titleTextStyle),
+            if (message != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                message!,
+                style: Theme.of(context).dialogTheme.contentTextStyle,
+              ),
+            ],
+            if (content != null) ...[const SizedBox(height: 20), content!],
+            if (actions.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: actions,
+              ),
+            ],
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 Future<bool> confirmAction(
   BuildContext context,
   String title,
@@ -1040,11 +1302,11 @@ Future<bool> confirmAction(
   final l = strings(context);
   return await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text(title),
-          content: SingleChildScrollView(child: Text(message)),
+        builder: (context) => AppDialog(
+          title: title,
+          message: message,
           actions: [
-            TextButton(
+            OutlinedButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(l.cancel),
             ),

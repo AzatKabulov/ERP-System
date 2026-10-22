@@ -209,50 +209,53 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    DropdownButtonFormField<String>(
-                      key: const ValueKey('transfer-from'),
-                      isExpanded: true,
-                      initialValue: mine.any((x) => x.id == _fromId)
-                          ? _fromId
-                          : null,
-                      decoration: InputDecoration(
-                        labelText: l.transferFromLabel,
+                    LabeledField(
+                      label: l.transferFromLabel,
+                      child: DropdownButtonFormField<String>(
+                        key: const ValueKey('transfer-from'),
+                        isExpanded: true,
+                        initialValue: mine.any((x) => x.id == _fromId)
+                            ? _fromId
+                            : null,
+                        decoration: InputDecoration(),
+                        items: [
+                          for (final x in mine)
+                            DropdownMenuItem(value: x.id, child: Text(x.name)),
+                        ],
+                        onChanged: _busy
+                            ? null
+                            : (v) {
+                                _fromId = v;
+                                if (_toId == v) _toId = null;
+                                _touch();
+                              },
                       ),
-                      items: [
-                        for (final x in mine)
-                          DropdownMenuItem(value: x.id, child: Text(x.name)),
-                      ],
-                      onChanged: _busy
-                          ? null
-                          : (v) {
-                              _fromId = v;
-                              if (_toId == v) _toId = null;
-                              _touch();
-                            },
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      key: const ValueKey('transfer-to'),
-                      isExpanded: true,
-                      initialValue: destinations.any((x) => x.id == _toId)
-                          ? _toId
-                          : null,
-                      decoration: InputDecoration(
-                        labelText: l.transferToLabel,
-                        errorText: _submitted && _toId == null
-                            ? l.fieldRequired
+                    LabeledField(
+                      label: l.transferToLabel,
+                      child: DropdownButtonFormField<String>(
+                        key: const ValueKey('transfer-to'),
+                        isExpanded: true,
+                        initialValue: destinations.any((x) => x.id == _toId)
+                            ? _toId
                             : null,
+                        decoration: InputDecoration(
+                          errorText: _submitted && _toId == null
+                              ? l.fieldRequired
+                              : null,
+                        ),
+                        items: [
+                          for (final x in destinations)
+                            DropdownMenuItem(value: x.id, child: Text(x.name)),
+                        ],
+                        onChanged: _busy
+                            ? null
+                            : (v) {
+                                _toId = v;
+                                _touch();
+                              },
                       ),
-                      items: [
-                        for (final x in destinations)
-                          DropdownMenuItem(value: x.id, child: Text(x.name)),
-                      ],
-                      onChanged: _busy
-                          ? null
-                          : (v) {
-                              _toId = v;
-                              _touch();
-                            },
                     ),
                     const SizedBox(height: 20),
                     for (var i = 0; i < _lines.length; i++)
@@ -276,25 +279,27 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
                                 children: [
                                   SizedBox(
                                     width: 160,
-                                    child: TextField(
-                                      key: ValueKey('transfer-qty-$i'),
-                                      controller: _lines[i].controller,
-                                      enabled: !_busy,
-                                      keyboardType:
-                                          const TextInputType.numberWithOptions(
-                                            decimal: true,
-                                          ),
-                                      onChanged: (_) => _touch(),
-                                      decoration: InputDecoration(
-                                        labelText: l.quantity,
-                                        suffixText:
-                                            _lines[i].product.unit.symbol,
-                                        errorText:
-                                            _submitted &&
-                                                _milli(_lines[i]) == null
-                                            ? l.fieldQuantityPrecision
-                                            : null,
-                                        errorMaxLines: 3,
+                                    child: LabeledField(
+                                      label: l.quantity,
+                                      child: TextField(
+                                        key: ValueKey('transfer-qty-$i'),
+                                        controller: _lines[i].controller,
+                                        enabled: !_busy,
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                              decimal: true,
+                                            ),
+                                        onChanged: (_) => _touch(),
+                                        decoration: InputDecoration(
+                                          suffixText:
+                                              _lines[i].product.unit.symbol,
+                                          errorText:
+                                              _submitted &&
+                                                  _milli(_lines[i]) == null
+                                              ? l.fieldQuantityPrecision
+                                              : null,
+                                          errorMaxLines: 3,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -337,12 +342,15 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    TextField(
-                      key: const ValueKey('transfer-note'),
-                      controller: _note,
-                      enabled: !_busy,
-                      onChanged: (_) => _touch(),
-                      decoration: InputDecoration(labelText: l.noteLabel),
+                    LabeledField(
+                      label: l.noteLabel,
+                      child: TextField(
+                        key: const ValueKey('transfer-note'),
+                        controller: _note,
+                        enabled: !_busy,
+                        onChanged: (_) => _touch(),
+                        decoration: InputDecoration(),
+                      ),
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 16),

@@ -23,12 +23,14 @@ class CatalogRepository {
     bool archived = false,
     int offset = 0,
     int limit = 30,
+    String? locationId,
   }) async {
     final response = (await api.get(
       '$_base/products/',
       query: {
         if (query.trim().isNotEmpty) 'q': query.trim(),
         'category': ?categoryId,
+        'location': ?locationId,
         'active': archived ? '0' : '1',
         'limit': '$limit',
         'offset': '$offset',

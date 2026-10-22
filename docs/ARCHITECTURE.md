@@ -64,7 +64,7 @@ Which pages are connected to the API is tracked in `PLAN.md` and `HANDOFF.md`. A
 | Client toolchain | Flutter 3.47.6, pinned in `.flutter-version`; dependencies in `mobile/pubspec.lock` | Implemented |
 | State and UI updates | `ChangeNotifier` / `ListenableBuilder`, with shared theme/widgets (`AppShell` frames both demo and real workspaces) | Implemented |
 | HTTP client | `package:http` behind `ApiClient`; the only code that talks to the server | Implemented (Phase 2) |
-| Localization | Flutter-generated ARB strings for `ru` and `tk`, custom Turkmen toolkit delegates, bundled Inter and Noto Serif | Implemented for current screens; terminology review pending |
+| Localization | Flutter-generated ARB strings for `ru` and `tk`, custom Turkmen toolkit delegates, bundled Onest | Implemented for current screens; terminology review pending |
 | Local preferences | `SharedPreferences` for interface language, the last business/location ids, and pending-operation retry records | Implemented; never a stock database or token store. The legacy API is used on purpose: on Android it writes with `commit()`, so an awaited write is durable (the newer async API uses `apply()`); re-check before changing it |
 | Backend | Python 3.13, Django 5.2 LTS (supported to April 2028), Django REST Framework 3.18; pinned in `backend/uv.lock`, managed with `uv`; lint/format with `ruff` | Foundation implemented (Phase 1) |
 | Database | PostgreSQL 16 (tests and CI run against it; SQLite is unsupported) | Implemented |
@@ -332,6 +332,8 @@ CSV imports first stage and validate data, preview duplicates/errors, then apply
 
 ## Authentication and Permissions
 
+**Local HTTP web testing (2026-10-22).** The explicit `LOCAL_HTTP_TESTING=true` web build option uses an in-memory, tab-only token store when the page is served over HTTP from a private IPv4 address. It is off by default; native applications, HTTPS and public hosts retain secure storage. Reloading the local test page requires signing in again, after which pending operations can be recovered. This is a local development override, not a production authentication mode. A failure to save a newly issued session now produces a localized sign-in error instead of an unhandled exception; the access token is adopted only after the refresh token is saved. See [LOCAL_TEST.md](LOCAL_TEST.md).
+
 Server-managed accounts and memberships, with owner, manager, sales, and warehouse roles. The API checks both the action and the allowed locations for every request. Django administration is a separate restricted operator tool (`is_staff` users only).
 
 **Implemented session design (Phase 1).** Sign-in with username and password returns a 15-minute access token and a 14-day refresh token (`djangorestframework-simplejwt`). Refreshing rotates the token and blacklists the old one, and two simultaneous uses of one token cannot both succeed. A password change or reset bumps the user's `session_version`; every token carries the version it was issued with, so all earlier sessions stop working immediately instead of at expiry. A refresh token that is presented twice is refused (401); the whole account is deliberately **not** signed out in that case, because a lost response on a slow mobile network would otherwise log people out. Deactivating a user or a membership takes effect on the next request. Login and recovery are rate limited per client address and per claimed identity, using a database-backed cache so limits hold across workers; `X-Forwarded-For` is ignored unless `DJANGO_NUM_PROXIES` says how many proxies are really in front of the app.
@@ -426,6 +428,8 @@ Provider availability and API connectivity must be tested from the pilot's netwo
 ## Deployment
 
 ### Development Today
+
+The local launcher prepares gzip sidecars for public web resources once at startup and serves them only when the client accepts gzip and the sidecar is at least as new as the original. Content types and conditional revalidation are retained; private API files and APKs are excluded. The client keeps animation child trees stable and renders catalog gallery rows lazily. Measurements and regression checks are recorded in [PERFORMANCE.md](PERFORMANCE.md).
 
 The Codex and Claude Code cloud environments run the Flutter development workflow, the backend tests and an internal web smoke server. They are not the production hosting environment. Setup/run commands are in [README.md](../README.md) and `AGENTS.md`. Pull requests and pushes run CI (`.github/workflows/ci.yml`): the Flutter checks and a debug APK build (the only place Android compiles when the cloud VM cannot download the Android SDK), the backend checks against a PostgreSQL service, and a container image build. `backend/Dockerfile`, `infra/docker-compose.yml` and `infra/README.md` describe how to run the API; they do not deploy anything by themselves.
 

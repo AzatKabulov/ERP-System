@@ -160,19 +160,21 @@ class _CompleteRowState extends State<_CompleteRow> {
     String? error,
   }) => SizedBox(
     width: 220,
-    child: TextField(
-      key: key,
-      controller: controller,
-      enabled: !_saving,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,  ]')),
-      ],
-      decoration: InputDecoration(
-        labelText: label,
-        suffixText: suffix,
-        errorText: error,
-        errorMaxLines: 3,
+    child: LabeledField(
+      label: label,
+      child: TextField(
+        key: key,
+        controller: controller,
+        enabled: !_saving,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,  ]')),
+        ],
+        decoration: InputDecoration(
+          suffixText: suffix,
+          errorText: error,
+          errorMaxLines: 3,
+        ),
       ),
     ),
   );

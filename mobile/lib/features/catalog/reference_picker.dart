@@ -38,44 +38,44 @@ class NamedRefPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
-    return DropdownButtonFormField<String>(
-      isExpanded: true,
-      initialValue: items.any((i) => i.id == value) ? value : null,
-      decoration: InputDecoration(
-        labelText: label,
-        errorText: errorText,
-        errorMaxLines: 3,
-      ),
-      items: [
-        if (allowNone) DropdownMenuItem(value: null, child: Text(l.noneOption)),
-        for (final item in items)
+    return LabeledField(
+      label: label,
+      child: DropdownButtonFormField<String>(
+        isExpanded: true,
+        initialValue: items.any((i) => i.id == value) ? value : null,
+        decoration: InputDecoration(errorText: errorText, errorMaxLines: 3),
+        items: [
+          if (allowNone)
+            DropdownMenuItem(value: null, child: Text(l.noneOption)),
+          for (final item in items)
+            DropdownMenuItem(
+              value: item.id,
+              child: Text(item.name, overflow: TextOverflow.ellipsis),
+            ),
           DropdownMenuItem(
-            value: item.id,
-            child: Text(item.name, overflow: TextOverflow.ellipsis),
-          ),
-        DropdownMenuItem(
-          value: _addNew,
-          child: Row(
-            children: [
-              const AppIcon(AppIcons.plus, size: 18, color: AppColors.blue),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  l.addNewOption,
-                  style: const TextStyle(color: AppColors.blue),
+            value: _addNew,
+            child: Row(
+              children: [
+                const AppIcon(AppIcons.plus, size: 18, color: AppColors.blue),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    l.addNewOption,
+                    style: const TextStyle(color: AppColors.blue),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
-      onChanged: !enabled
-          ? null
-          : (id) async {
-              if (id != _addNew) return onChanged(id);
-              final created = await onAddNew();
-              if (created != null) onChanged(created.id);
-            },
+        ],
+        onChanged: !enabled
+            ? null
+            : (id) async {
+                if (id != _addNew) return onChanged(id);
+                final created = await onAddNew();
+                if (created != null) onChanged(created.id);
+              },
+      ),
     );
   }
 }
@@ -169,42 +169,48 @@ class _NameDialogState<T> extends State<_NameDialog<T>> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                key: const ValueKey('reference-name'),
-                controller: _name,
-                enabled: !_busy,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: l.businessName,
-                  errorText: fieldError(l, _error, 'name'),
+              LabeledField(
+                label: l.businessName,
+                child: TextField(
+                  key: const ValueKey('reference-name'),
+                  controller: _name,
+                  enabled: !_busy,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    errorText: fieldError(l, _error, 'name'),
+                  ),
                 ),
               ),
               if (widget.withUnitFields) ...[
                 const SizedBox(height: 12),
-                TextField(
-                  key: const ValueKey('reference-symbol'),
-                  controller: _symbol,
-                  enabled: !_busy,
-                  decoration: InputDecoration(
-                    labelText: l.unitSymbol,
-                    errorText: fieldError(l, _error, 'symbol'),
+                LabeledField(
+                  label: l.unitSymbol,
+                  child: TextField(
+                    key: const ValueKey('reference-symbol'),
+                    controller: _symbol,
+                    enabled: !_busy,
+                    decoration: InputDecoration(
+                      errorText: fieldError(l, _error, 'symbol'),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  key: const ValueKey('reference-decimals'),
-                  initialValue: _decimals,
-                  decoration: InputDecoration(
-                    labelText: l.unitDecimals,
-                    errorText: fieldError(l, _error, 'decimal_places'),
+                LabeledField(
+                  label: l.unitDecimals,
+                  child: DropdownButtonFormField<int>(
+                    key: const ValueKey('reference-decimals'),
+                    initialValue: _decimals,
+                    decoration: InputDecoration(
+                      errorText: fieldError(l, _error, 'decimal_places'),
+                    ),
+                    items: [
+                      for (var i = 0; i <= 3; i++)
+                        DropdownMenuItem(value: i, child: Text('$i')),
+                    ],
+                    onChanged: _busy
+                        ? null
+                        : (v) => setState(() => _decimals = v ?? 0),
                   ),
-                  items: [
-                    for (var i = 0; i <= 3; i++)
-                      DropdownMenuItem(value: i, child: Text('$i')),
-                  ],
-                  onChanged: _busy
-                      ? null
-                      : (v) => setState(() => _decimals = v ?? 0),
                 ),
               ],
               if (_error != null && _error!.fields.isEmpty) ...[

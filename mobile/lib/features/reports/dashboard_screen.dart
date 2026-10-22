@@ -5,8 +5,9 @@ import '../../core/money/decimal_math.dart';
 import '../../core/session/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_icons.dart';
+import '../../widgets/charts.dart';
 import '../../widgets/common.dart';
-import '../../l10n/app_localizations.dart';
+import '../../widgets/motion.dart';
 import '../shared/async_section.dart';
 import 'audit_labels.dart';
 import 'reports_models.dart';
@@ -136,109 +137,217 @@ class _Figures extends StatelessWidget {
   final VoidCallback? onOpenReports;
   final VoidCallback? onOpenToComplete;
 
-  Widget _card(String key, String label, String value, {String? meta}) =>
-      KeyedSubtree(
-        key: ValueKey(key),
-        child: Semantics(
-          container: true,
-          child: MetricCard(label: label, value: value, meta: meta),
+  /// A figure with its coloured icon. The colour is the kind of figure: blue sales, violet profit
+  /// and claims, emerald stock, amber attention, rose money out.
+  Widget _card(
+    String key,
+    String label,
+    String value, {
+    String? meta,
+    required AppIconData icon,
+    required Color accent,
+    required Color tint,
+    int index = 0,
+  }) => KeyedSubtree(
+    key: ValueKey(key),
+    child: Semantics(
+      container: true,
+      child: FadeUp(
+        index: index,
+        child: MetricCard(
+          label: label,
+          value: value,
+          meta: meta,
+          icon: icon,
+          accent: accent,
+          accentTint: tint,
         ),
-      );
+      ),
+    ),
+  );
 
-  /// Revenue of each of the last 14 days (days with no sale are zero), oldest first.
-  List<int> _series() {
+  /// The last 14 days, oldest first: the date and the revenue of each (a day with no sale is zero).
+  List<(DateTime, int)> _days() {
     final report = trend;
     if (report == null) return const [];
     final byDate = {for (final d in report.byDay) d.date: d.revenue};
     final today = DateTime.now();
     return [
       for (var back = 13; back >= 0; back--)
-        byDate[reportDay(
-              DateTime(today.year, today.month, today.day - back),
-            )] ??
-            0,
+        () {
+          final day = DateTime(today.year, today.month, today.day - back);
+          return (day, byDate[reportDay(day)] ?? 0);
+        }(),
     ];
   }
 
-  /// "+12% ко вчера", or null when there is nothing to compare with.
-  String? _versusYesterday(AppLocalizations l, List<int> series) {
+  static String _dayLabel(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}';
+
+  /// Today against yesterday in whole percent, or null when there is nothing to compare with.
+  int? _percentVersusYesterday(List<int> series) {
     if (series.length < 2) return null;
     final yesterday = series[series.length - 2];
     final today = dashboard.salesTodayTotal ?? series.last;
     if (yesterday <= 0) return null;
-    final percent = ((today - yesterday) * 100 / yesterday).round();
-    return l.dashVersusYesterday(percent > 0 ? '+$percent%' : '$percent%');
+    return ((today - yesterday) * 100 / yesterday).round();
   }
 
-  /// The one figure that gets the ink treatment, with the line of recent days beside it.
+  /// The one figure that gets the deep treatment: the amount counting up, today against
+  /// yesterday, and the line of the last two weeks, which names a day when touched.
   Widget _spotlight(
+    BuildContext context,
     String key,
     String label,
-    String value,
+    int total,
     String? note,
-    List<int> series,
+    List<(DateTime, int)> days,
+    int? percent,
   ) {
-    final showLine = !compact && series.where((v) => v > 0).length >= 2;
+    final l = strings(context);
+    final series = [for (final d in days) d.$2];
+    final showLine = series.where((v) => v > 0).length >= 2;
+    final up = (percent ?? 0) >= 0;
+    final figure = Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.onInverseMuted,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 10),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: CountUp(
+            value: total,
+            format: (n) => _tm(n.round()),
+            style: TextStyle(
+              fontFamily: AppFonts.display,
+              fontWeight: FontWeight.w700,
+              fontSize: compact ? 36 : 50,
+              height: 1.1,
+              letterSpacing: compact ? -1.1 : -1.6,
+              color: AppColors.onInverse,
+              fontFeatures: AppFonts.tabular,
+            ),
+          ),
+        ),
+        if (percent != null) ...[
+          const SizedBox(height: 14),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 5, 12, 5),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppIcon(
+                    up ? AppIcons.trendUp : AppIcons.trendDown,
+                    size: 16,
+                    color: up
+                        ? const Color(0xFF7CF0B5)
+                        : const Color(0xFFFFA3A8),
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      l.dashVersusYesterday(
+                        percent > 0 ? '+$percent%' : '$percent%',
+                      ),
+                      style: TextStyle(
+                        color: up
+                            ? const Color(0xFF7CF0B5)
+                            : const Color(0xFFFFA3A8),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ] else if (note != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            note,
+            style: const TextStyle(
+              color: AppColors.onInverseMuted,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ],
+    );
+    final chart = showLine
+        ? Semantics(
+            label: '${l.dashLast14}: ${_tm(series.fold(0, (a, b) => a + b))}',
+            child: AreaChart(
+              onDark: true,
+              height: compact ? 96 : 132,
+              values: series,
+              labelFor: (i) => _dayLabel(days[i].$1),
+              valueText: (i) => _tm(series[i]),
+            ),
+          )
+        : null;
     return KeyedSubtree(
       key: ValueKey(key),
       child: Semantics(
         container: true,
-        child: SpotlightCard(
-          padding: compact ? 24 : 28,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: compact ? 164 : 172),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          color: AppColors.onInverseMuted,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        value,
-                        style: TextStyle(
-                          fontFamily: AppFonts.display,
-                          fontWeight: FontWeight.w600,
-                          fontSize: compact ? 34 : 52,
-                          height: 1.1,
-                          letterSpacing: compact ? -1.4 : -2.1,
-                          color: AppColors.onInverse,
-                          fontFeatures: AppFonts.tabular,
-                        ),
-                      ),
-                      if (note != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          note,
-                          style: const TextStyle(
-                            color: AppColors.onInverseMuted,
-                            fontSize: 13,
+        child: FadeUp(
+          child: SpotlightCard(
+            padding: compact ? 22 : 30,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: compact ? 164 : 172),
+              child: compact || chart == null
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        figure,
+                        if (chart != null) ...[
+                          const SizedBox(height: 20),
+                          chart,
+                        ],
+                      ],
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(flex: 5, child: figure),
+                        const SizedBox(width: 32),
+                        Expanded(
+                          flex: 6,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  l.dashLast14,
+                                  style: const TextStyle(
+                                    color: AppColors.onInverseMuted,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              chart,
+                            ],
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                ),
-                if (showLine) ...[
-                  const SizedBox(width: 24),
-                  SizedBox(
-                    width: 260,
-                    height: 100,
-                    child: ExcludeSemantics(
-                      child: CustomPaint(painter: _SparklinePainter(series)),
                     ),
-                  ),
-                ],
-              ],
             ),
           ),
         ),
@@ -246,17 +355,180 @@ class _Figures extends StatelessWidget {
     );
   }
 
-  AppIconData _activityIcon(String action) {
-    if (action.startsWith('sale')) return AppIcons.check;
+  (AppIconData, Color, Color) _activityLook(String action) {
+    if (action.startsWith('sale')) {
+      return (AppIcons.check, AppColors.success, AppColors.emeraldTint);
+    }
     if (action.startsWith('stock') || action.startsWith('transfer')) {
-      return AppIcons.truck;
+      return (AppIcons.truck, AppColors.blue, AppColors.tint);
     }
-    if (action.startsWith('warranty')) return AppIcons.shield;
+    if (action.startsWith('warranty')) {
+      return (AppIcons.shield, AppColors.violetText, AppColors.violetTint);
+    }
     if (action.startsWith('product') || action.startsWith('catalog')) {
-      return AppIcons.box;
+      return (AppIcons.box, AppColors.warning, AppColors.amberTint);
     }
-    if (action.startsWith('expense')) return AppIcons.receipt;
-    return AppIcons.clock;
+    if (action.startsWith('expense')) {
+      return (AppIcons.receipt, AppColors.danger, AppColors.roseTint);
+    }
+    return (AppIcons.clock, AppColors.neutral, AppColors.surfaceMuted);
+  }
+
+  /// The best sellers of the two weeks as bars, and how they were paid for as a ring.
+  Widget _charts(BuildContext context, SalesReport report) {
+    final l = strings(context);
+    final tops = report.topProducts.take(5).toList();
+    final pay = report.byPayment.where((p) => p.total > 0).toList();
+    final paid = pay.fold<int>(0, (a, p) => a + p.total);
+    if (tops.isEmpty && pay.isEmpty) return const SizedBox.shrink();
+    Widget cardOf(String key, String title, Widget child) => KeyedSubtree(
+      key: ValueKey(key),
+      child: SurfaceCard(
+        padding: 22,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 20),
+            child,
+          ],
+        ),
+      ),
+    );
+    final best = tops.isEmpty
+        ? null
+        : cardOf(
+            'dash-top-products',
+            l.reportTopProducts,
+            BarList(
+              items: [
+                for (final t in tops)
+                  BarItem(
+                    label: t.name,
+                    value: t.revenue,
+                    text: _tm(t.revenue),
+                  ),
+              ],
+            ),
+          );
+    final colors = [AppColors.blue, AppColors.violet];
+    final ring = pay.isEmpty
+        ? null
+        : cardOf(
+            'dash-payments',
+            l.reportByPayment,
+            Column(
+              children: [
+                Center(
+                  child: DonutChart(
+                    slices: [
+                      for (var i = 0; i < pay.length; i++)
+                        DonutSlice(pay[i].total, colors[i % colors.length]),
+                    ],
+                    center: FittedBox(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${pay.fold<int>(0, (a, p) => a + p.count)}',
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              height: 1.1,
+                            ),
+                          ),
+                          Text(
+                            l.sales,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                for (var i = 0; i < pay.length; i++)
+                  Padding(
+                    padding: EdgeInsets.only(top: i == 0 ? 0 : 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 5),
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: colors[i % colors.length],
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 12,
+                            runSpacing: 2,
+                            children: [
+                              Text(
+                                pay[i].method == 'cash' ? l.payCash : l.payCard,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                '${l.dashShareOfSales(paid == 0 ? 0 : (pay[i].total * 100 / paid).round())} · ${_tm(pay[i].total)}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.muted,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          );
+    return FadeUp(
+      index: 3,
+      child: LayoutBuilder(
+        builder: (context, box) {
+          if (best != null && ring != null && box.maxWidth >= 760) {
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(flex: 3, child: best),
+                  const SizedBox(width: 16),
+                  Expanded(flex: 2, child: ring),
+                ],
+              ),
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ?best,
+              if (best != null && ring != null) const SizedBox(height: 16),
+              ?ring,
+            ],
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -266,7 +538,8 @@ class _Figures extends StatelessWidget {
     final recent = d.recentActivity;
     final salesHero = d.salesTodayTotal != null;
     final inventoryHero = !salesHero && d.inventoryValue != null;
-    final series = _series();
+    final days = _days();
+    final series = [for (final day in days) day.$2];
     final margin = d.grossProfitMonth != null && (d.salesMonthTotal ?? 0) > 0
         ? '${(d.grossProfitMonth! * 1000 / d.salesMonthTotal!).round() / 10}%'
               .replaceAll('.', ',')
@@ -283,30 +556,39 @@ class _Figures extends StatelessWidget {
           ),
         if (salesHero) ...[
           _spotlight(
+            context,
             'dash-sales-today',
             l.dashSalesToday(d.salesTodayCount ?? 0),
-            _tm(d.salesTodayTotal!),
-            _versusYesterday(l, series) ?? locationName,
-            series,
+            d.salesTodayTotal!,
+            locationName,
+            days,
+            _percentVersusYesterday(series),
           ),
           const SizedBox(height: 16),
         ] else if (inventoryHero) ...[
           _spotlight(
+            context,
             'dash-inventory',
             l.dashInventoryValue,
-            _tm(d.inventoryValue!),
+            d.inventoryValue!,
             locationName,
             const [],
+            null,
           ),
           const SizedBox(height: 16),
         ],
         AdaptiveGrid(
+          minimumWidth: compact ? 150 : 220,
           children: [
             if (d.salesMonthTotal != null)
               _card(
                 'dash-sales-month',
                 l.dashSalesMonth(d.salesMonthCount ?? 0),
                 _tm(d.salesMonthTotal!),
+                icon: AppIcons.sale,
+                accent: AppColors.blue,
+                tint: AppColors.tint,
+                index: 1,
               ),
             if (d.grossProfitMonth != null)
               _card(
@@ -314,32 +596,56 @@ class _Figures extends StatelessWidget {
                 l.dashProfitMonth,
                 _tm(d.grossProfitMonth!),
                 meta: margin,
+                icon: AppIcons.trendUp,
+                accent: AppColors.violet,
+                tint: AppColors.violetTint,
+                index: 2,
               ),
             if (d.expensesMonth != null)
               _card(
                 'dash-expenses-month',
                 l.dashExpensesMonth,
                 _tm(d.expensesMonth!),
+                icon: AppIcons.expense,
+                accent: AppColors.rose,
+                tint: AppColors.roseTint,
+                index: 3,
               ),
             if (salesHero && d.inventoryValue != null)
               _card(
                 'dash-inventory',
                 l.dashInventoryValue,
                 _tm(d.inventoryValue!),
+                icon: AppIcons.stock,
+                accent: AppColors.emerald,
+                tint: AppColors.emeraldTint,
+                index: 4,
               ),
             if (d.lowStockCount != null)
-              _card('dash-low-stock', l.dashLowStock, '${d.lowStockCount}'),
+              _card(
+                'dash-low-stock',
+                l.dashLowStock,
+                '${d.lowStockCount}',
+                icon: AppIcons.warning,
+                accent: AppColors.amber,
+                tint: AppColors.amberTint,
+                index: 5,
+              ),
             if ((d.toCompleteCount ?? 0) > 0)
               KeyedSubtree(
                 key: const ValueKey('dash-to-complete'),
                 child: Semantics(
                   container: true,
                   button: true,
-                  child: MetricCard(
-                    label: l.dashToComplete,
-                    value: '${d.toCompleteCount}',
-                    featured: true,
-                    onTap: onOpenToComplete,
+                  child: FadeUp(
+                    index: 6,
+                    child: MetricCard(
+                      label: l.dashToComplete,
+                      value: '${d.toCompleteCount}',
+                      featured: true,
+                      icon: AppIcons.checklist,
+                      onTap: onOpenToComplete,
+                    ),
                   ),
                 ),
               ),
@@ -348,6 +654,10 @@ class _Figures extends StatelessWidget {
                 'dash-open-claims',
                 l.dashOpenClaims,
                 '${d.openClaimsCount}',
+                icon: AppIcons.shield,
+                accent: AppColors.violet,
+                tint: AppColors.violetTint,
+                index: 7,
               ),
           ],
         ),
@@ -358,111 +668,128 @@ class _Figures extends StatelessWidget {
             text: l.dashWithoutCostNote(_tm(d.withoutCostMonth!)),
           ),
         ],
+        if (trend != null) ...[
+          const SizedBox(height: 16),
+          _charts(context, trend!),
+        ],
         if (recent != null && recent.isNotEmpty) ...[
           const SizedBox(height: 16),
-          SurfaceCard(
-            padding: 0,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 56),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              l.dashRecent,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontVariations: [FontVariation.weight(650)],
-                              ),
-                            ),
-                          ),
-                          if (onOpenReports != null)
-                            Flexible(
-                              flex: 2,
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  key: const ValueKey('dash-open-reports'),
-                                  style: TextButton.styleFrom(
-                                    minimumSize: const Size(48, 40),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    textStyle: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  onPressed: onOpenReports,
-                                  child: Text(l.dashOpenReports),
+          FadeUp(
+            index: 4,
+            child: SurfaceCard(
+              padding: 0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 56),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                l.dashRecent,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  for (final e in recent)
-                    Semantics(
-                      container: true,
-                      child: Container(
-                        key: ValueKey('dash-activity-${e.id}'),
-                        constraints: const BoxConstraints(minHeight: 68),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            top: BorderSide(color: AppColors.line),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            ExcludeSemantics(
-                              child: Glyph(_activityIcon(e.action)),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    auditActionLabel(l, e.action),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
+                            if (onOpenReports != null)
+                              Flexible(
+                                flex: 2,
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
+                                    key: const ValueKey('dash-open-reports'),
+                                    style: TextButton.styleFrom(
+                                      minimumSize: const Size(48, 40),
+                                      foregroundColor: AppColors.blue,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      textStyle: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
+                                    onPressed: onOpenReports,
+                                    child: Text(l.dashOpenReports),
                                   ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    l.activityLine(
-                                      e.actorName.isEmpty
-                                          ? l.activitySystem
-                                          : e.actorName,
-                                      formatStamp(e.createdAt),
-                                    ),
-                                    style: const TextStyle(
-                                      color: AppColors.muted,
-                                      fontSize: 12,
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ),
                     ),
-                ],
+                    for (final e in recent)
+                      Semantics(
+                        container: true,
+                        child: Container(
+                          key: ValueKey('dash-activity-${e.id}'),
+                          constraints: const BoxConstraints(minHeight: 68),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: AppColors.line),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              ExcludeSemantics(
+                                child: () {
+                                  final (icon, strong, tint) = _activityLook(
+                                    e.action,
+                                  );
+                                  return Glyph(
+                                    icon,
+                                    background: tint,
+                                    color: strong,
+                                  );
+                                }(),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      auditActionLabel(l, e.action),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      l.activityLine(
+                                        e.actorName.isEmpty
+                                            ? l.activitySystem
+                                            : e.actorName,
+                                        formatStamp(e.createdAt),
+                                      ),
+                                      style: const TextStyle(
+                                        color: AppColors.muted,
+                                        fontSize: 13,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -470,56 +797,4 @@ class _Figures extends StatelessWidget {
       ],
     );
   }
-}
-
-/// The thin cobalt line of the last days, with a brass dot on the latest one.
-class _SparklinePainter extends CustomPainter {
-  _SparklinePainter(this.values);
-  final List<int> values;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (values.length < 2) return;
-    final sx = size.width / 260;
-    final sy = size.height / 100;
-    final maxV = values.reduce((a, b) => a > b ? a : b);
-    final minV = values.reduce((a, b) => a < b ? a : b);
-    final span = (maxV - minV) == 0 ? 1 : (maxV - minV);
-    Offset point(int i) => Offset(
-      (4 + 252 * i / (values.length - 1)) * sx,
-      (84 - 56 * (values[i] - minV) / span) * sy,
-    );
-    final path = Path()..moveTo(point(0).dx, point(0).dy);
-    for (var i = 1; i < values.length; i++) {
-      final a = point(i - 1);
-      final b = point(i);
-      final mid = (a.dx + b.dx) / 2;
-      path.cubicTo(mid, a.dy, mid, b.dy, b.dx, b.dy);
-    }
-    canvas
-      ..drawPath(
-        path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
-          ..strokeCap = StrokeCap.round
-          ..color = AppColors.blue,
-      )
-      ..drawPath(
-        path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..strokeCap = StrokeCap.round
-          ..color = Colors.white.withValues(alpha: 0.22),
-      )
-      ..drawCircle(
-        point(values.length - 1),
-        3.5,
-        Paint()..color = AppColors.brass,
-      );
-  }
-
-  @override
-  bool shouldRepaint(_SparklinePainter old) => old.values != values;
 }

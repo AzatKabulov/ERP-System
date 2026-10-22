@@ -7,6 +7,8 @@ String apiErrorText(AppLocalizations l, ApiException e) {
   switch (e.code) {
     case 'invalid_credentials':
       return l.errorInvalidCredentials;
+    case 'session_storage_unavailable':
+      return l.errorSessionStorage;
     case 'rate_limited':
       return l.errorRateLimited;
     case 'permission_denied':

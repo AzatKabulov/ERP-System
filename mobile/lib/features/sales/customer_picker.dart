@@ -137,25 +137,30 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
               ),
               const SizedBox(height: 12),
               if (_creating) ...[
-                TextField(
-                  key: const ValueKey('customer-name'),
-                  controller: _name,
-                  enabled: !_busy,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    labelText: l.customerNameLabel,
-                    errorText: _missingName && _name.text.trim().isEmpty
-                        ? l.fieldRequired
-                        : fieldError(l, _createError, 'name'),
+                LabeledField(
+                  label: l.customerNameLabel,
+                  child: TextField(
+                    key: const ValueKey('customer-name'),
+                    controller: _name,
+                    enabled: !_busy,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      errorText: _missingName && _name.text.trim().isEmpty
+                          ? l.fieldRequired
+                          : fieldError(l, _createError, 'name'),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  key: const ValueKey('customer-phone'),
-                  controller: _phone,
-                  enabled: !_busy,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(labelText: l.phoneLabel),
+                LabeledField(
+                  label: l.phoneLabel,
+                  child: TextField(
+                    key: const ValueKey('customer-phone'),
+                    controller: _phone,
+                    enabled: !_busy,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(),
+                  ),
                 ),
                 if (_createError != null && _createError!.fields.isEmpty)
                   Padding(
@@ -184,16 +189,21 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
                   ],
                 ),
               ] else ...[
-                TextField(
-                  key: const ValueKey('customer-search'),
-                  controller: _search,
-                  onChanged: (_) {
-                    _debounce?.cancel();
-                    _debounce = Timer(const Duration(milliseconds: 300), _run);
-                  },
-                  decoration: InputDecoration(
-                    labelText: l.customerNameLabel,
-                    prefixIcon: const AppIcon(AppIcons.search),
+                LabeledField(
+                  label: l.customerNameLabel,
+                  child: TextField(
+                    key: const ValueKey('customer-search'),
+                    controller: _search,
+                    onChanged: (_) {
+                      _debounce?.cancel();
+                      _debounce = Timer(
+                        const Duration(milliseconds: 300),
+                        _run,
+                      );
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: const AppIcon(AppIcons.search),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),

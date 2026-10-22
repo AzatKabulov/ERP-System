@@ -302,20 +302,21 @@ class _IntakeScreenState extends State<IntakeScreen> {
                 padding: const EdgeInsets.all(20),
                 children: [
                   if (mine.length > 1) ...[
-                    DropdownButtonFormField<String>(
-                      key: const ValueKey('intake-location'),
-                      isExpanded: true,
-                      initialValue: mine.any((x) => x.id == _ctl.locationId)
-                          ? _ctl.locationId
-                          : null,
-                      decoration: InputDecoration(
-                        labelText: l.intakeLocationLabel,
+                    LabeledField(
+                      label: l.intakeLocationLabel,
+                      child: DropdownButtonFormField<String>(
+                        key: const ValueKey('intake-location'),
+                        isExpanded: true,
+                        initialValue: mine.any((x) => x.id == _ctl.locationId)
+                            ? _ctl.locationId
+                            : null,
+                        decoration: InputDecoration(),
+                        items: [
+                          for (final x in mine)
+                            DropdownMenuItem(value: x.id, child: Text(x.name)),
+                        ],
+                        onChanged: _busy ? null : (v) => _ctl.setLocation(v),
                       ),
-                      items: [
-                        for (final x in mine)
-                          DropdownMenuItem(value: x.id, child: Text(x.name)),
-                      ],
-                      onChanged: _busy ? null : (v) => _ctl.setLocation(v),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -424,11 +425,14 @@ class _IntakeScreenState extends State<IntakeScreen> {
                     ),
                   if (!_ctl.isEmpty) ...[
                     const SizedBox(height: 10),
-                    TextField(
-                      key: const ValueKey('intake-note'),
-                      controller: _note,
-                      enabled: !_busy,
-                      decoration: InputDecoration(labelText: l.noteLabel),
+                    LabeledField(
+                      label: l.noteLabel,
+                      child: TextField(
+                        key: const ValueKey('intake-note'),
+                        controller: _note,
+                        enabled: !_busy,
+                        decoration: InputDecoration(),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -737,42 +741,46 @@ class _EditDialogState extends State<_EditDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              key: const ValueKey('intake-edit-qty'),
-              controller: _quantity,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9., ]')),
-              ],
-              onSubmitted: (_) => _save(),
-              decoration: InputDecoration(
-                labelText: l.quantity,
-                suffixText: _unit.symbol,
-                errorText: _submitted && _qty == null
-                    ? l.fieldQuantityPrecision
-                    : null,
-                errorMaxLines: 3,
-              ),
-            ),
-            if (widget.canCost && widget.entry.product != null) ...[
-              const SizedBox(height: 16),
-              TextField(
-                key: const ValueKey('intake-edit-cost'),
-                controller: _cost,
+            LabeledField(
+              label: l.quantity,
+              child: TextField(
+                key: const ValueKey('intake-edit-qty'),
+                controller: _quantity,
+                autofocus: true,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9., ]')),
                 ],
+                onSubmitted: (_) => _save(),
                 decoration: InputDecoration(
-                  labelText: l.intakeCostLabel,
-                  helperText: l.intakeCostHelp,
-                  helperMaxLines: 3,
-                  errorText: _submitted && !_costValid ? l.validAmount : null,
+                  suffixText: _unit.symbol,
+                  errorText: _submitted && _qty == null
+                      ? l.fieldQuantityPrecision
+                      : null,
+                  errorMaxLines: 3,
+                ),
+              ),
+            ),
+            if (widget.canCost && widget.entry.product != null) ...[
+              const SizedBox(height: 16),
+              LabeledField(
+                label: l.intakeCostLabel,
+                child: TextField(
+                  key: const ValueKey('intake-edit-cost'),
+                  controller: _cost,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9., ]')),
+                  ],
+                  decoration: InputDecoration(
+                    helperText: l.intakeCostHelp,
+                    helperMaxLines: 3,
+                    errorText: _submitted && !_costValid ? l.validAmount : null,
+                  ),
                 ),
               ),
             ],
@@ -929,57 +937,64 @@ class _NewProductDialogState extends State<_NewProductDialog> {
               style: const TextStyle(color: AppColors.muted),
             ),
             const SizedBox(height: 12),
-            TextField(
-              key: const ValueKey('intake-new-name'),
-              controller: _name,
-              autofocus: true,
-              enabled: !_busy,
-              textCapitalization: TextCapitalization.sentences,
-              onSubmitted: (_) => _save(),
-              decoration: InputDecoration(
-                labelText: l.productName,
-                errorText: _submitted && _name.text.trim().isEmpty
-                    ? l.fieldRequired
-                    : _fieldError(l, 'name'),
+            LabeledField(
+              label: l.productName,
+              child: TextField(
+                key: const ValueKey('intake-new-name'),
+                controller: _name,
+                autofocus: true,
+                enabled: !_busy,
+                textCapitalization: TextCapitalization.sentences,
+                onSubmitted: (_) => _save(),
+                decoration: InputDecoration(
+                  errorText: _submitted && _name.text.trim().isEmpty
+                      ? l.fieldRequired
+                      : _fieldError(l, 'name'),
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              key: const ValueKey('intake-new-sku'),
-              controller: _sku,
-              enabled: !_busy,
-              autocorrect: false,
-              decoration: InputDecoration(
-                labelText: l.productSku,
-                helperText: codeFitsAsArticle(widget.entry.code)
-                    ? null
-                    : l.intakeCodeTooLong,
-                helperMaxLines: 3,
-                errorText: _submitted && _sku.text.trim().isEmpty
-                    ? l.fieldRequired
-                    : _fieldError(l, 'sku') ?? _fieldError(l, 'barcodes'),
-                errorMaxLines: 3,
+            LabeledField(
+              label: l.productSku,
+              child: TextField(
+                key: const ValueKey('intake-new-sku'),
+                controller: _sku,
+                enabled: !_busy,
+                autocorrect: false,
+                decoration: InputDecoration(
+                  helperText: codeFitsAsArticle(widget.entry.code)
+                      ? null
+                      : l.intakeCodeTooLong,
+                  helperMaxLines: 3,
+                  errorText: _submitted && _sku.text.trim().isEmpty
+                      ? l.fieldRequired
+                      : _fieldError(l, 'sku') ?? _fieldError(l, 'barcodes'),
+                  errorMaxLines: 3,
+                ),
               ),
             ),
             if (_units.length > 1) ...[
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                key: const ValueKey('intake-new-unit'),
-                isExpanded: true,
-                initialValue: _unit?.id,
-                decoration: InputDecoration(labelText: l.unitLabel),
-                items: [
-                  for (final u in _units)
-                    DropdownMenuItem(
-                      value: u.id,
-                      child: Text('${u.name} (${u.symbol})'),
-                    ),
-                ],
-                onChanged: _busy
-                    ? null
-                    : (id) => setState(
-                        () => _unit = _units.firstWhere((u) => u.id == id),
+              LabeledField(
+                label: l.unitLabel,
+                child: DropdownButtonFormField<String>(
+                  key: const ValueKey('intake-new-unit'),
+                  isExpanded: true,
+                  initialValue: _unit?.id,
+                  decoration: InputDecoration(),
+                  items: [
+                    for (final u in _units)
+                      DropdownMenuItem(
+                        value: u.id,
+                        child: Text('${u.name} (${u.symbol})'),
                       ),
+                  ],
+                  onChanged: _busy
+                      ? null
+                      : (id) => setState(
+                          () => _unit = _units.firstWhere((u) => u.id == id),
+                        ),
+                ),
               ),
             ],
             const SizedBox(height: 12),

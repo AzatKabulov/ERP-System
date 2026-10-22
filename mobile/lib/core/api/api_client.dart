@@ -180,8 +180,16 @@ class ApiClient {
       _adopt(access, refresh);
 
   Future<void> _adopt(String access, String refresh) async {
+    try {
+      await tokens.writeRefreshToken(refresh);
+    } catch (_) {
+      _access = null;
+      throw const ApiException(
+        kind: ApiErrorKind.client,
+        code: 'session_storage_unavailable',
+      );
+    }
     _access = access;
-    await tokens.writeRefreshToken(refresh);
   }
 
   Future<ApiResponse> send(

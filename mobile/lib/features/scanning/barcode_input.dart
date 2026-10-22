@@ -57,28 +57,40 @@ class BarcodeInput extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: TextField(
-              key: fieldKey,
-              controller: controller,
-              focusNode: focusNode,
-              enabled: enabled,
-              autocorrect: false,
-              enableSuggestions: false,
-              onSubmitted: onSubmitted,
-              onEditingComplete: keepFocusOnSubmit && !kIsWeb ? () {} : null,
-              onChanged: onChanged,
-              decoration: InputDecoration(
-                labelText: label,
-                // The label acts as the placeholder: it is shown while the field is empty and
-                // is not repeated above the text (the design's search field).
-                floatingLabelBehavior: FloatingLabelBehavior.never,
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14),
-                  child: AppIcon(AppIcons.search, size: 20),
+            child: Semantics(
+              label: label,
+              child: TextField(
+                key: fieldKey,
+                controller: controller,
+                focusNode: focusNode,
+                enabled: enabled,
+                autocorrect: false,
+                enableSuggestions: false,
+                onSubmitted: onSubmitted,
+                onEditingComplete: keepFocusOnSubmit && !kIsWeb ? () {} : null,
+                onChanged: onChanged,
+                decoration: InputDecoration(
+                  // The label is the placeholder (the design's search field) and, through the
+                  // Semantics wrapper, the field's accessible name.
+                  hint: ExcludeSemantics(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                  ),
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 14),
+                    child: AppIcon(AppIcons.search, size: 20),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 48),
+                  errorText: errorText,
+                  errorMaxLines: 3,
                 ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 48),
-                errorText: errorText,
-                errorMaxLines: 3,
               ),
             ),
           ),

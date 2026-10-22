@@ -44,14 +44,14 @@ class ProductPhoto extends StatelessWidget {
 
   Widget _tile(Widget? child) => DecoratedBox(
     decoration: BoxDecoration(
-      color: AppColors.surfaceMuted,
+      color: AppColors.tint,
       borderRadius: BorderRadius.circular(radius),
     ),
     child: child ?? Center(child: _icon()),
   );
 
   Widget _icon() =>
-      AppIcon(AppIcons.box, size: iconSize, color: AppColors.neutral);
+      AppIcon(AppIcons.box, size: iconSize, color: AppColors.blue);
 
   @override
   Widget build(BuildContext context) {

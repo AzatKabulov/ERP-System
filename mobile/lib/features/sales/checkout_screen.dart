@@ -64,7 +64,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   late final int _total = widget.cart.totalMinor;
-  String _method = 'cash';
+  late String _method = widget.cart.paymentMethod;
   bool _busy = false;
   ApiException? _error;
   String? _named; // a translated, product-specific refusal
@@ -230,7 +230,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   selected: _method == m,
                                   onSelected: _busy
                                       ? null
-                                      : (_) => setState(() => _method = m),
+                                      : (_) {
+                                          widget.cart.paymentMethod = m;
+                                          setState(() => _method = m);
+                                        },
                                 ),
                             ],
                           ),

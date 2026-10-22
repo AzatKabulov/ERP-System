@@ -108,10 +108,10 @@ void main() {
       final handle = tester.ensureSemantics();
       final t = deskRig();
       await openSales(tester, t.rig);
-      expect(fieldNames(tester), ['Название, артикул или штрихкод']);
+      expect(fieldNames(tester), ['Поиск по названию, артикулу или штрихкоду']);
       await addToCart(tester);
       expect(fieldNames(tester), [
-        'Название, артикул или штрихкод',
+        'Поиск по названию, артикулу или штрихкоду',
         'Количество',
         'Цена за единицу, TMT',
       ]);
@@ -120,10 +120,15 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('starts empty, with a hint and no demo data', (tester) async {
+    testWidgets('starts with the catalog and an empty cart, no demo data', (
+      tester,
+    ) async {
       final t = deskRig();
       await openSales(tester, t.rig);
-      expect(key('sales-start'), findsOneWidget);
+      // the finder lists the products at once, each with what is in stock here
+      expect(key('sell-BP-1'), findsOneWidget);
+      expect(find.textContaining('В наличии здесь: 10 шт'), findsOneWidget);
+      expect(key('sales-start'), findsNothing);
       expect(key('cart-empty'), findsOneWidget);
       expect(find.text('Завершить демо-продажу'), findsNothing);
       expect(key('cart-checkout'), findsNothing);
@@ -141,12 +146,13 @@ void main() {
           typed(tester, 'cart-price-0'),
           '100,00',
         ); // the catalog price, editable
-        expect(find.textContaining('В наличии здесь: 10 шт'), findsOneWidget);
+        // on the product in the list and again on its line in the cart
+        expect(find.textContaining('В наличии здесь: 10 шт'), findsNWidgets(2));
         expect(
           find.textContaining('В каталоге: ${tmt(10000)}'),
           findsOneWidget,
         );
-        expect(find.text('Итого: ${tmt(10000)}'), findsOneWidget);
+        expect(tester.widget<Text>(key('cart-total')).data, tmt(10000));
         expect(find.text('Добавлено: Тормозные колодки'), findsOneWidget);
         expect(t.rig.server.ledger.salesRecorded, 0); // adding sells nothing
         await tester.enterText(key('sales-search'), 'ничего подобного');
@@ -163,9 +169,9 @@ void main() {
         await addToCart(tester);
         await tapKey(tester, 'cart-plus-0');
         await tapKey(tester, 'cart-plus-0');
-        expect(find.text('Итого: ${tmt(30000)}'), findsOneWidget);
+        expect(tester.widget<Text>(key('cart-total')).data, tmt(30000));
         await tapKey(tester, 'cart-minus-0');
-        expect(find.text('Итого: ${tmt(20000)}'), findsOneWidget);
+        expect(tester.widget<Text>(key('cart-total')).data, tmt(20000));
         await setQuantity(tester, '1,5'); // pieces are whole
         expect(key('cart-problem-0'), findsOneWidget);
         expect(
@@ -198,11 +204,11 @@ void main() {
       await addToCart(tester);
       await setQuantity(tester, '3');
       await setPrice(tester, '60');
-      expect(find.text('Итого: ${tmt(18000)}'), findsOneWidget);
+      expect(tester.widget<Text>(key('cart-total')).data, tmt(18000));
       await setPrice(tester, '150,50');
-      expect(find.text('Итого: ${tmt(45150)}'), findsOneWidget);
+      expect(tester.widget<Text>(key('cart-total')).data, tmt(45150));
       await setPrice(tester, '0');
-      expect(find.text('Итого: ${tmt(0)}'), findsOneWidget);
+      expect(tester.widget<Text>(key('cart-total')).data, tmt(0));
       expect(
         canPress(tester, 'cart-checkout'),
         isTrue,
@@ -227,7 +233,7 @@ void main() {
       await addToCart(tester); // the same product once more
       expect(typed(tester, 'cart-qty-0'), '2');
       expect(typed(tester, 'cart-price-0'), '80'); // the seller's price is kept
-      expect(find.text('Итого: ${tmt(16000)}'), findsOneWidget);
+      expect(tester.widget<Text>(key('cart-total')).data, tmt(16000));
     });
 
     testWidgets('scanning puts the product in the cart and sells nothing', (
@@ -239,7 +245,7 @@ void main() {
       await tapKey(tester, 'scan-button');
       await settle(tester);
       expect(key('cart-qty-0'), findsOneWidget);
-      expect(find.text('Итого: ${tmt(10000)}'), findsOneWidget);
+      expect(tester.widget<Text>(key('cart-total')).data, tmt(10000));
       await tapKey(tester, 'scan-button'); // a code nobody has
       await settle(tester);
       expect(
@@ -265,7 +271,7 @@ void main() {
         expect(typed(tester, 'cart-qty-0'), '1');
         await scan('bp-1'); // the article number, any letter case
         expect(typed(tester, 'cart-qty-0'), '2');
-        expect(find.text('Итого: ${tmt(20000)}'), findsOneWidget);
+        expect(tester.widget<Text>(key('cart-total')).data, tmt(20000));
         expect(typed(tester, 'sales-search'), ''); // ready for the next item
         await scan('колодки'); // a name is an ordinary search, nothing is added
         expect(typed(tester, 'cart-qty-0'), '2');
@@ -331,7 +337,7 @@ void main() {
         find.text('Sebet'),
         findsOneWidget,
       ); // the cart title, now in Turkmen
-      expect(find.text('Jemi: ${tmt(9000)}'), findsOneWidget);
+      expect(tester.widget<Text>(key('cart-total')).data, tmt(9000));
     });
 
     testWidgets('leaving with a cart asks before switching location', (

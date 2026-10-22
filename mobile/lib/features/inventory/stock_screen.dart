@@ -225,72 +225,77 @@ class _StockScreenState extends State<StockScreen> {
           label: Text(l.adjustStock),
         ),
     ];
-    return ListView(
+    // A plain scrolling column, not a lazy list: the tabs and the actions must exist for
+    // accessibility tools however large the text is.
+    return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         compact ? 16 : 32,
         compact ? 20 : 32,
         compact ? 16 : 32,
         40,
       ),
-      children: [
-        PageHead(
-          title: l.inventory,
-          subtitle: _locationId == null
-              ? session.location?.name
-              : locations
-                    .where((x) => x.id == _locationId)
-                    .map((x) => x.name)
-                    .firstOrNull,
-          actions: [...others, ?intake],
-        ),
-        const SizedBox(height: 24),
-        if (tabs.length > 1) ...[
-          AppTabs<_StockTab>(
-            keyPrefix: 'stock-tab',
-            keyName: (t) => t.name,
-            tabs: tabs,
-            value: tab,
-            onChanged: (t) => setState(() => _tab = t),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PageHead(
+            title: l.inventory,
+            subtitle: _locationId == null
+                ? session.location?.name
+                : locations
+                      .where((x) => x.id == _locationId)
+                      .map((x) => x.name)
+                      .firstOrNull,
+            actions: [...others, ?intake],
           ),
           const SizedBox(height: 24),
+          if (tabs.length > 1) ...[
+            AppTabs<_StockTab>(
+              keyPrefix: 'stock-tab',
+              keyName: (t) => t.name,
+              tabs: tabs,
+              value: tab,
+              onChanged: (t) => setState(() => _tab = t),
+            ),
+            const SizedBox(height: 24),
+          ],
+          switch (tab) {
+            _StockTab.location => _locationTab(context, compact),
+            _StockTab.movements => MovementsScreen(
+              embedded: true,
+              repository: widget.repository,
+              canSeeCost: session.can('stock.cost.view'),
+            ),
+            _StockTab.transfers => TransfersScreen(
+              embedded: true,
+              session: session,
+              repository: TransfersRepository(
+                widget.repository.api,
+                widget.repository.businessId,
+              ),
+              admin: AdminRepository(
+                widget.repository.api,
+                widget.repository.businessId,
+              ),
+              catalog: widget.catalog,
+              runner: widget.runner,
+              monitor: widget.monitor,
+              unsaved: widget.unsaved,
+            ),
+            _StockTab.counts => CountsScreen(
+              embedded: true,
+              session: session,
+              repository: CountsRepository(
+                widget.repository.api,
+                widget.repository.businessId,
+              ),
+              catalog: widget.catalog,
+              runner: widget.runner,
+              monitor: widget.monitor,
+              unsaved: widget.unsaved,
+            ),
+          },
         ],
-        switch (tab) {
-          _StockTab.location => _locationTab(context, compact),
-          _StockTab.movements => MovementsScreen(
-            embedded: true,
-            repository: widget.repository,
-            canSeeCost: session.can('stock.cost.view'),
-          ),
-          _StockTab.transfers => TransfersScreen(
-            embedded: true,
-            session: session,
-            repository: TransfersRepository(
-              widget.repository.api,
-              widget.repository.businessId,
-            ),
-            admin: AdminRepository(
-              widget.repository.api,
-              widget.repository.businessId,
-            ),
-            catalog: widget.catalog,
-            runner: widget.runner,
-            monitor: widget.monitor,
-            unsaved: widget.unsaved,
-          ),
-          _StockTab.counts => CountsScreen(
-            embedded: true,
-            session: session,
-            repository: CountsRepository(
-              widget.repository.api,
-              widget.repository.businessId,
-            ),
-            catalog: widget.catalog,
-            runner: widget.runner,
-            monitor: widget.monitor,
-            unsaved: widget.unsaved,
-          ),
-        },
-      ],
+      ),
     );
   }
 
@@ -496,7 +501,7 @@ class _StockTable extends StatelessWidget {
                   if (showValue)
                     cell(
                       2,
-                      Text(l.stockValue.toUpperCase(), style: _header),
+                      Text(l.stockColumnValue.toUpperCase(), style: _header),
                       align: Alignment.centerRight,
                     ),
                 ],

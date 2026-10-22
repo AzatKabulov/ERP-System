@@ -40,6 +40,44 @@ def _product_context(request):
     }
 
 
+def _stock_summary(request, product_ids, location_id=None):
+    """What the product list shows next to each product: the sellable quantity in the caller's
+    locations and the sum of the minimum levels set for those locations. With `location_id` the
+    summary is for that one place (the cash desk's "in stock here"); a place the caller may not
+    see simply gives zeros. Read only."""
+    from django.db.models import Sum
+
+    from apps.inventory.models import StockBalance
+
+    balances = restrict_to_locations(
+        StockBalance.objects.filter(
+            business=request.business, product_id__in=product_ids, condition="sellable"
+        ),
+        request.membership,
+    )
+    levels = restrict_to_locations(
+        ReorderSetting.objects.filter(business=request.business, product_id__in=product_ids),
+        request.membership,
+    )
+    if location_id is not None:
+        balances = balances.filter(location_id=location_id)
+        levels = levels.filter(location_id=location_id)
+    on_hand = dict(balances.values_list("product_id").annotate(total=Sum("quantity")))
+    minimum = dict(levels.values_list("product_id").annotate(total=Sum("minimum")))
+    return {pk: (on_hand.get(pk, 0), minimum.get(pk, 0)) for pk in product_ids}
+
+
+def _location_param(request):
+    """The optional `?location=<id>` of the product list; anything that is not an id is ignored."""
+    import uuid
+
+    raw = request.query_params.get("location")
+    try:
+        return uuid.UUID(raw) if raw else None
+    except ValueError:
+        return None
+
+
 def _products(business):
     return (
         Product.objects.filter(business=business)
@@ -72,7 +110,12 @@ class ProductListCreateView(BusinessScopedMixin, generics.GenericAPIView):
 
     def get(self, request, business_id):
         page = self.paginate_queryset(self.get_queryset())
-        serializer = ProductSerializer(page, many=True, context=_product_context(request))
+        context = _product_context(request)
+        if has_permission(request.membership.role, "stock.view"):
+            context["stock"] = _stock_summary(
+                request, [p.pk for p in page], _location_param(request)
+            )
+        serializer = ProductSerializer(page, many=True, context=context)
         return self.get_paginated_response(serializer.data)
 
     def post(self, request, business_id):
