@@ -2,6 +2,14 @@
 
 Last updated 2026-10-26. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
 
+## Phone scan button and HTTP photo capture (2026-10-26)
+
+- Root cause: scanner availability was equated with a secure origin for live video, so ordinary HTTP Wi-Fi pages hid the scan action entirely. The real scanner now always offers a workflow: HTTPS/loopback/native retains live capture; insecure web origins open explicit photo capture/gallery and decode locally with the already bundled WASM reader. The shared search camera button also has its own accessible button semantics.
+- Photo capture uses the existing image_picker interface (`image/*`, `capture=environment`), with no new dependency. No image is uploaded. Unreadable/invalid/oversized images offer retry/manual entry; multiple distinct codes require explicit selection; cancellation or a late result after leaving changes nothing. Existing stock confirmation and explicit sales cart selection are retained.
+- Live-camera error panels also offer the photo route. Switching closes the camera session and suppresses late video detections. The web stream adapter now uses a native JavaScript promise continuation so permission rejections retain their `NotAllowedError` identity instead of being wrapped by a Dart Future round-trip. The browser regression verifies denied permission, successful photo fallback, ended tracks and an unchanged cart, as well as ordinary live scanning and early exits.
+- The running local web build was replaced with existing records and APK downloads preserved. The public test certificate was restored after the web-folder replacement. HTTP photo scanning needs no custom certificate; a live iPhone camera view still needs trusted HTTPS and browser permission.
+- **451 Flutter tests pass**, including seven focused photo-scanner tests in Russian/Turkmen covering cancellation, duplicate submission, retry, multiple codes, oversized input and route disposal. Flutter analysis and full formatting pass; the release web build succeeds. The real private-IP HTTP browser check passed photo/gallery capture, an unreadable image then retry, catalog/sales search and the receiving quantity form, with no stock/sale posted or image uploaded. It asserts the page really is insecure and blocks third-party origins. Chromium's existing COOP-header warning on HTTP is explicitly recorded; other application errors still fail the run. Physical iPhone photo-picker behavior remains unverified.
+
 ## Manual receiving, stock visibility, expiry and local role login (2026-10-26)
 
 - Receiving offers manual name entry without inventing a barcode; a stable internal SKU satisfies the existing catalog API. Optional warranty months and a batch expiry date are editable and persisted in unfinished drafts. Catalog creation remains owner/manager only; warehouse staff can pick existing products by name. Prices remain manual.

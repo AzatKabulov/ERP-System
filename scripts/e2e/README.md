@@ -1,5 +1,23 @@
 # Real-stack browser run
 
+## Phone photo scanning on HTTP
+
+`phone_photo_scan.js` must use a disposable local shop and a real private-IP HTTP
+origin, such as `E2E_WEB_URL=http://192.168.x.x:8001/`. It asserts the origin is
+insecure (no localhost or browser security bypass), decodes a synthetic EAN-13
+photo, verifies `capture=environment` and gallery selection, checks an unreadable
+photo/retry, then catalog/sales results and receiving quantity entry. No photo,
+stock receipt or sale is posted. Third-party requests are blocked. The existing
+insecure-origin COOP warning is recorded separately from application failures.
+
+Set `ERP_E2E_DISPOSABLE=true`, `E2E_PHOTO_FIXTURE` (PNG with 4006381333931),
+`E2E_BLANK_PHOTO_FIXTURE`, `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH`. Use synthetic
+images only. The script does not establish physical iPhone capture compatibility.
+
+For `scanner_lifecycle.js`, optionally add `E2E_PHOTO_FIXTURE` to test a rejected
+getUserMedia permission request on a secure origin, the photo fallback, preserved
+permission-error classification, camera cleanup and an unchanged sales cart.
+
 ## Current focused receiving and camera checks
 
 Use a fresh disposable local sample server (`run_local.py --data <temporary-folder> --web mobile/build/web --port 8001`). Never point these scripts at the owner's ordinary database. Both require `ERP_E2E_DISPOSABLE=true`, `E2E_WEB_URL`, `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH`.

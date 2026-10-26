@@ -25,7 +25,7 @@ void main() {
     'http://127.0.0.999',
     'ftp://localhost',
   ]) {
-    test('insecure origin $address keeps manual entry only', () {
+    test('insecure origin $address cannot request live video', () {
       expect(
         cameraScanningAvailable(isWeb: true, origin: Uri.parse(address)),
         isFalse,

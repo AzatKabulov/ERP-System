@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 
 import 'continuous_scan_screen.dart';
 import 'scan_screen.dart';
+import 'photo_scan_screen.dart';
 
 /// Reads a barcode with the device camera. A scan only ever **returns a code**:
 /// it never submits a form, completes a sale or moves stock. The screen that asked
 /// decides what to do with the code (fill a field, look a product up).
 abstract class BarcodeScanner {
-  /// False on browser origins that cannot request camera access.
+  /// Whether a scanning workflow can be offered (live camera or browser photo).
   /// Permission denial and missing hardware are handled by the scan screen.
   bool get isAvailable;
 
@@ -52,14 +53,16 @@ class CameraBarcodeScanner implements BarcodeScanner {
   const CameraBarcodeScanner();
 
   @override
-  bool get isAvailable => cameraScanningAvailable();
+  bool get isAvailable => true;
 
   @override
   Future<String?> scan(BuildContext context) =>
       Navigator.of(context).push<String>(
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => const ScanScreen(),
+          builder: (_) => kIsWeb && !cameraScanningAvailable()
+              ? const PhotoScanScreen()
+              : const ScanScreen(),
         ),
       );
 
@@ -72,11 +75,13 @@ class CameraBarcodeScanner implements BarcodeScanner {
   }) => Navigator.of(context).push<void>(
     MaterialPageRoute(
       fullscreenDialog: true,
-      builder: (_) => ContinuousScanScreen(
-        onCode: onCode,
-        changes: changes,
-        status: status,
-      ),
+      builder: (_) => kIsWeb && !cameraScanningAvailable()
+          ? PhotoScanScreen(onCode: onCode, changes: changes, status: status)
+          : ContinuousScanScreen(
+              onCode: onCode,
+              changes: changes,
+              status: status,
+            ),
     ),
   );
 }

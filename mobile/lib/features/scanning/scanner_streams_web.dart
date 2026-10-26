@@ -16,6 +16,10 @@ extension type _Track(JSObject _) implements JSObject {
   external void stop();
 }
 
+extension type _MediaPromise(JSObject _) implements JSObject {
+  external JSPromise<JSObject> then(JSFunction onFulfilled);
+}
+
 /// mobile_scanner 7.4.2's polling web readers drop their MediaStream reference
 /// without stopping its tracks. Retain ONLY streams requested during this
 /// serialized scanner startup; detached video nodes are not a cleanup boundary.
@@ -31,10 +35,14 @@ class ScannerStreams {
     devices.getUserMedia = ((JSObject constraints) {
       final result =
           original.callAsFunction(devices, constraints) as JSPromise<JSObject>;
-      return result.toDart.then((stream) {
-        _streams.add(_Stream(stream));
-        return stream;
-      }).toJS;
+      // Keep rejection in JavaScript: a Future round-trip wraps DOMException
+      // and hides its NotAllowedError name from the scanner's permission mapper.
+      return _MediaPromise(result).then(
+        ((JSObject stream) {
+          _streams.add(_Stream(stream));
+          return stream;
+        }).toJS,
+      );
     }).toJS;
     try {
       await start();

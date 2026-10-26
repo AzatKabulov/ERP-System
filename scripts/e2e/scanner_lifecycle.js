@@ -23,10 +23,15 @@ if (process.env.ERP_E2E_DISPOSABLE !== 'true' || !process.env.E2E_CAMERA_VIDEO) 
     await page.addInitScript(() => {
       window.scannerStreams = [];
       window.scannerStartDelay = 0;
+      window.scannerDenyNext = false;
       // Exercise the same WASM fallback used by browsers without BarcodeDetector.
       delete window.BarcodeDetector;
       const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
       navigator.mediaDevices.getUserMedia = async (...args) => {
+        if (window.scannerDenyNext) {
+          window.scannerDenyNext = false;
+          throw new DOMException('Denied for the synthetic test','NotAllowedError');
+        }
         if (window.scannerStartDelay) await new Promise(resolve => setTimeout(resolve, window.scannerStartDelay));
         const stream = await original(...args); window.scannerStreams.push(stream); return stream;
       };
@@ -81,7 +86,7 @@ if (process.env.ERP_E2E_DISPOSABLE !== 'true' || !process.env.E2E_CAMERA_VIDEO) 
     await L.clickLabel(page,'Назад');
     for (const destination of ['Товары','Продажи']) {
       await L.clickLabel(page,destination,{role:'button'});
-      await L.clickLabel(page,'Сканировать камерой',{wait:100});
+      await L.clickLabel(page,'Сканировать камерой',{wait:100,role:'button'});
       assert.equal((await L.waitText(page,new RegExp(product.name),15000)).ok,true);
       await page.waitForFunction(() => window.scannerStreams.every(s =>
         s.getTracks().every(t=>t.readyState==='ended')));
@@ -90,6 +95,22 @@ if (process.env.ERP_E2E_DISPOSABLE !== 'true' || !process.env.E2E_CAMERA_VIDEO) 
     const sales=await (await page.request.get(url('/sales/'),{headers})).json();
     assert.equal(sales.count,0);
     console.log('PASS: camera finds catalog and sales results; cart stays empty and no sale is created.');
+    if (process.env.E2E_PHOTO_FIXTURE) {
+      await page.evaluate(()=>{window.scannerDenyNext=true;});
+      await L.clickLabel(page,'Сканировать камерой',{role:'button'});
+      assert.equal((await L.waitText(page,/Нет доступа к камере/,15000)).ok,true);
+      await L.clickLabel(page,'Выбрать фото штрихкода');
+      const [chooser]=await Promise.all([
+        page.waitForEvent('filechooser'),
+        L.clickLabel(page,'Выбрать фото штрихкода',{wait:0}),
+      ]);
+      await chooser.setFiles(process.env.E2E_PHOTO_FIXTURE);
+      assert.equal((await L.waitText(page,new RegExp(product.name),15000)).ok,true);
+      assert.match(await L.text(page),/Корзина пуста/);
+      await page.waitForFunction(()=>window.scannerStreams.every(s=>
+        s.getTracks().every(t=>t.readyState==='ended')));
+      console.log('PASS: denied live camera offers local photo decoding; no stale camera tracks or cart additions.');
+    }
     assert.deepEqual(foreignRequests, [], 'scanner tried to fetch a third-party resource');
     console.log('PASS: camera decoder works with all third-party resources blocked.');
   } finally { await browser.close(); }

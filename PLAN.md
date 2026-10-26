@@ -2,6 +2,8 @@
 
 ## Phone web parity and receiving follow-up (owner, 2026-10-26)
 
+- [x] Keep scanning available on insecure phone web origins using local photo decoding; retain live video on trusted origins and existing receiving/sales confirmation behavior.
+
 - [x] Manual name-only receiving without a barcode; optional warranty and batch expiry; permitted stock totals on product search/detail; soon/expired catalog filters.
 - [x] Serialized camera cleanup with actual browser track-state verification, including late startup after closing.
 - [x] Guarded sample-role login only in the standalone local testing configuration.

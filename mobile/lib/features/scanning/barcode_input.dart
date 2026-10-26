@@ -98,32 +98,39 @@ class BarcodeInput extends StatelessWidget {
             const SizedBox(width: 8),
             Padding(
               padding: const EdgeInsets.only(top: 0),
-              child: Tooltip(
-                message: l.scanWithCamera,
-                child: Material(
-                  color: AppColors.blue,
-                  borderRadius: BorderRadius.circular(AppRadius.control),
-                  child: InkWell(
-                    key: const ValueKey('scan-button'),
+              child: Semantics(
+                container: true,
+                button: true,
+                enabled: enabled,
+                label: l.scanWithCamera,
+                child: Tooltip(
+                  message: l.scanWithCamera,
+                  excludeFromSemantics: true,
+                  child: Material(
+                    color: AppColors.blue,
                     borderRadius: BorderRadius.circular(AppRadius.control),
-                    hoverColor: AppColors.blueDark,
-                    onTap: enabled
-                        ? () async {
-                            final code = await scanner.scan(context);
-                            if (code == null || !context.mounted) return;
-                            controller.text = code;
-                            onChanged?.call(code);
-                            onScanned?.call(code);
-                          }
-                        : null,
-                    child: const SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: Center(
-                        child: AppIcon(
-                          AppIcons.scan,
-                          size: 20,
-                          color: Colors.white,
+                    child: InkWell(
+                      key: const ValueKey('scan-button'),
+                      borderRadius: BorderRadius.circular(AppRadius.control),
+                      hoverColor: AppColors.blueDark,
+                      onTap: enabled
+                          ? () async {
+                              final code = await scanner.scan(context);
+                              if (code == null || !context.mounted) return;
+                              controller.text = code;
+                              onChanged?.call(code);
+                              onScanned?.call(code);
+                            }
+                          : null,
+                      child: const SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: Center(
+                          child: AppIcon(
+                            AppIcons.scan,
+                            size: 20,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),

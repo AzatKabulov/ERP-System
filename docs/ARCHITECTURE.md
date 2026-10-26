@@ -1,5 +1,26 @@
 # Architecture
 
+## Phone HTTP photo scanning — 2026-10-26
+
+`CameraBarcodeScanner.isAvailable` represents an offered scan workflow, rather
+than permission to stream video. `cameraScanningAvailable` still guards live
+capture: insecure web origins route to `PhotoScanScreen`, while HTTPS/loopback
+and native builds retain their camera route.
+Browser camera error panels also offer photo decoding; switching modes closes
+the camera session and ignores late video results before mounting the photo UI.
+The existing image_picker-backed
+`FilePicking` requests an `image/*` input with `capture=environment` for a rear
+photo, or a normal image chooser. Browser support determines the presented picker.
+
+The conditional photo decoder lazily loads `scanner/photo_reader.js` and the
+existing pinned, same-origin zxing-wasm reader. Bytes stay in the browser; no
+photo API upload or server lookup is needed to decode. Empty/oversized images
+are rejected before decoder allocation; failures are retryable. Duplicate codes
+are collapsed and multiple distinct codes require selection. A result returns
+through the ordinary scan callback, preserving receipt confirmation and explicit
+sales cart selection. Closing the route ignores a late decoder result. No new
+package, server endpoint, schema or camera security bypass was added.
+
 ## Receiving usability and dated batches — 2026-10-26
 
 - Manual draft entries have a persisted internal identity and bypass barcode/online lookup. A missing article number becomes a stable generated SKU on save, with an empty barcode list. Existing products use the shared name picker. Draft input, optional warranty months and receipt expiry survive restart; catalog writes retain the existing permission checks.

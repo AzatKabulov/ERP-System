@@ -1,5 +1,15 @@
 # Product Requirements Document
 
+## Phone browser scanning fallback (owner, 2026-10-26)
+
+Scanning remains discoverable on phone browsers opened through a plain HTTP
+Wi-Fi address. HTTPS/loopback uses the live camera; insecure browser origins use
+an explicit take-photo or choose-photo workflow, decoded locally without image
+upload. One code is returned to the existing receiving/search workflow. Several
+distinct codes require explicit selection; unreadable images offer retry/manual
+entry. Scanning alone never adds a sales cart line or posts stock. Live camera
+on iPhone still requires a trusted HTTPS origin and browser permission.
+
 ## Manual receiving, stock visibility and expiry (owner request, 2026-10-26)
 
 Receiving also offers **Add manually** for a product without a barcode: enter its name and quantity, with other fields optional. An internal article identifier is generated when none is entered; no barcode is invented. Existing products can be selected by name without scanning. Existing catalog-management permissions still apply to creating or editing products.
