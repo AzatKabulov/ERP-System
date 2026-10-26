@@ -1,5 +1,14 @@
 # Delivery Plan
 
+## Production preparation review (owner, 2026-10-27)
+
+Android tablets remain the primary device; model and shop size are unknown. See
+[production readiness](docs/PRODUCTION_READINESS.md) for confirmed fixes, automated
+store/load/recovery evidence and release blockers. A disposable restore drill is
+complete; production hosting, off-machine recovery, physical tablet acceptance,
+release signing and language review remain open. Do not mark Phase 10 complete
+from synthetic tests or a local web build.
+
 ## Phone web parity and receiving follow-up (owner, 2026-10-26)
 
 - [x] Keep scanning available on insecure phone web origins using local photo decoding; retain live video on trusted origins and existing receiving/sales confirmation behavior.

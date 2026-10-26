@@ -55,6 +55,14 @@ Keep other builds, tests and heavy applications idle during measurement. Use `--
 for a separately labeled instrumentation-overhead control, never mix it into traced runs.
 Stop the sample server with Ctrl+C when finished.
 
+For the small warm-navigation control, `phone_benchmark.js` also accepts
+`PERF_WIDTH` and `PERF_HEIGHT` (defaults 390 × 844). Use the same marked 300-product
+fixture, set `ERP_E2E_DISPOSABLE=true`, `E2E_WEB_URL` and a separate `PERF_OUT` JSON
+path for each build/viewport, then run it with Node. It reports three warm rounds,
+four-times CPU slowdown, bundle hash and callback/CPU metrics. Keep builds and
+other test suites idle. These controls do not establish device FPS or cold-load
+performance.
+
 The benchmark records destination semantics and an actual search-field focus probe.
 These are operational readiness boundaries, not pixel presentation or universal TTI.
 The fixed two-second observation window is not navigation latency. `callbackWorkMs500`

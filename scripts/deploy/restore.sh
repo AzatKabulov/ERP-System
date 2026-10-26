@@ -12,7 +12,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 DB_DUMP="${1:-}"; FILES="${2:-}"
 [ -f "$DB_DUMP" ] || fail "Usage: restore.sh <db-....sql.gz> [files-....tar.gz]"
 [ -z "$FILES" ] || [ -f "$FILES" ] || fail "File not found: $FILES"
+# Detect a truncated archive before stopping the API or replacing the database.
+gzip -t "$DB_DUMP" || fail "Database backup is corrupt. Restore has not started."
+if [ -n "$FILES" ]; then
+  tar -tzf "$FILES" >/dev/null || fail "Files backup is corrupt. Restore has not started."
+fi
 DB_USER="$(env_value POSTGRES_USER)"; DB_NAME="$(env_value POSTGRES_DB)"
+VOLUME=""
+if [ -n "$FILES" ]; then
+  VOLUME="$(private_files_volume)" || fail "This project's private files volume was not found. Restore has not started."
+fi
 
 say "This REPLACES all data on this server with the backup."
 read -r -p "   Type 'restore' to go on: " answer
@@ -25,8 +34,6 @@ compose exec -T db psql -U "${DB_USER:-erp}" -d postgres -c "DROP DATABASE IF EX
 gunzip -c "$DB_DUMP" | compose exec -T db psql -U "${DB_USER:-erp}" -d "${DB_NAME:-erp}" -v ON_ERROR_STOP=1 >/dev/null
 if [ -n "$FILES" ]; then
   say "Restoring the uploaded files"
-  VOLUME="$($(docker_cmd) volume ls -q | grep -E '(^|_)privatefiles$' | head -1)"
-  [ -n "$VOLUME" ] || fail "The files volume was not found."
   $(docker_cmd) run --rm -v "$VOLUME":/data -v "$(cd "$(dirname "$FILES")" && pwd)":/backup:ro alpine \
     sh -c "rm -rf /data/* && tar xzf /backup/$(basename "$FILES") -C /data && chown -R 10001 /data"
 fi

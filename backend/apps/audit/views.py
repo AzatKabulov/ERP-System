@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from apps.businesses.access import BusinessAPIView, BusinessScopedMixin
 from apps.common.errors import ApiError
 from apps.common.pagination import StandardPagination
-from apps.common.params import date_param, local_day_bounds, uuid_param
+from apps.common.params import local_day_bounds, period_dates, uuid_param
 
 from .models import AuditEvent, IdempotencyRecord
 from .serializers import AuditEventSerializer
@@ -60,9 +60,8 @@ class AuditListView(BusinessScopedMixin, generics.GenericAPIView):
     def get_queryset(self):
         params = self.request.query_params
         events = AuditEvent.objects.filter(business=self.request.business)
-        start, end = local_day_bounds(
-            self.request.business, date_param(params, "date_from"), date_param(params, "date_to")
-        )
+        first, last = period_dates(params, self.request.business)
+        start, end = local_day_bounds(self.request.business, first, last)
         if start is not None:
             events = events.filter(created_at__gte=start)
         if end is not None:

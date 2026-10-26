@@ -1,6 +1,70 @@
 # Handoff
 
-Last updated 2026-10-26. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+Last updated 2026-10-27. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+
+## Production preparation and store acceptance (2026-10-27)
+
+The owner requested whole-store testing and smoother, understandable laptop,
+phone and especially Android tablet workflows. The tablet model and catalogue/
+staff size are unknown. The website remains the local test service; this is not
+a production deployment. The authoritative current findings and remaining release
+gates are in [PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).
+
+- Fixed sales barcode quantities showing all permitted locations as “here,” and
+  delayed cart additions surviving a location switch. Regression tests cover both.
+  Cart quantity actions now have actual 48 × 48 touch targets and localized button
+  labels; search results have a button role.
+- Compact layouts below 1000 pixels use immediate data/chart display while keeping
+  press feedback. The retained 820 × 1180 control measured 30.56% less median CPU
+  work (1451.71 → 1008.10 ms across five warm visits); longest task 211 → 55 ms.
+  Wide/landscape results varied, so their entrance behavior is retained. This is
+  synthetic local evidence, not tablet FPS. [Protocol](docs/performance/2026-10-27/README.md).
+- Fixed business-day report/dashboard comparisons when a device is on a different
+  date. Presets resolve on the server in the business timezone, including exports
+  and activity; charts use the returned period. Dashboard trend and headline cover
+  the same permitted locations and label all-locations totals accordingly.
+- Updated only security-affected DRF 3.18.1 → 3.18.3 and Pillow 12.3.0 → 13.0.0,
+  retaining the lockfile. Image opening explicitly allows JPEG/PNG/WebP. The
+  production dependency audit reports no known vulnerabilities after the updates;
+  this does not constitute a penetration test.
+- Backup/restore resolves this project's API files mount instead of the first
+  similarly named Docker volume. Backups use private permissions, serialize jobs,
+  pause a running API across both snapshots, validate temporary archives and
+  restart the API even on failure. Restore preflights archive integrity and the
+  mount before replacing records. Deployment health retains verified TLS.
+- **785 backend tests pass** on isolated PostgreSQL 18.4, **458 Flutter tests pass**,
+  analysis/formatting and the release web build pass. **11 fake-Docker safety tests**
+  and ShellCheck pass. CI retains PostgreSQL 16 and now also runs the disposable
+  HTTP store/load/restore check and deployment safety regressions.
+- Current UI acceptance passes in **Chromium and WebKit**, each at 390 × 844,
+  768 × 1024, 1024 × 768 and 1440 × 900. Each case completes a real sale and checks
+  stock, forces a read failure then retries, visits current modules and switches
+  Russian/Turkmen. Final cases deliberately use Pacific/Kiritimati device time
+  against the Ashgabat business. WebKit's exact polygon-mode extension warning is
+  recorded separately; unexpected browser errors still fail.
+- `scripts/qa/store_readiness.py` creates only a fresh disposable shop. Receiving,
+  sales at manual prices, returns, transfers, counts, warranty repair, private
+  expense files, report arithmetic and invalid/unauthorized operations pass over
+  real HTTP. Forty competing sales take exactly 37 available units (three stock
+  conflicts); eight simultaneous retries create one sale. All 120 mixed concurrent
+  reads succeed. Stock reconciliation passes before and after browser actions.
+- A dump restores to a second disposable database with all **57** table content
+  digests/counts equal. The private receipt file's hash matches after file restore;
+  the restored stock ledger reconciles. This proves local data recovery, not the
+  actual Docker/remote-storage recovery schedule, hardware compatibility or a
+  production capacity/SLA. The existing local shop also passed read-only ledger
+  reconciliation without changing its business records.
+- The running port-8000 website was updated with the final bundle and dependency
+  fixes; original product/sale/receipt/return/expense counts are unchanged and the
+  ledger still reconciles. Laptop, Wi-Fi HTTP and certificate-verified HTTPS health
+  and website requests return 200. Existing downloads and the public phone test CA
+  were preserved. The disposable performance server was stopped.
+
+Local evidence: `/tmp/erp-readiness-backend-final.log`,
+`/tmp/erp-readiness-flutter-final.log`, `/tmp/erp-readiness-deploy-final.log`,
+`/tmp/erp-readiness-chromium-final.log`, `/tmp/erp-readiness-webkit-final.log`.
+These files contain synthetic test evidence and are not committed. Older branch
+and prototype descriptions below are historical; current publication is on `main`.
 
 ## Phone scan button and HTTP photo capture (2026-10-26)
 

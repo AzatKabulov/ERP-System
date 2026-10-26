@@ -24,7 +24,7 @@ from apps.businesses.access import require_location, restrict_to_locations
 from apps.businesses.models import Location
 from apps.businesses.permissions import has_permission
 from apps.common.errors import ApiError
-from apps.common.params import date_param, invalid, local_day_bounds, uuid_param
+from apps.common.params import invalid, local_day_bounds, period_dates, uuid_param
 
 ZERO = Decimal("0")
 CENT = Decimal("0.01")
@@ -80,7 +80,7 @@ class Period:
 
 def parse_period(request, business) -> Period:
     params = request.query_params
-    first, last = date_param(params, "date_from"), date_param(params, "date_to")
+    first, last = period_dates(params, business)
     if last is None:
         last = business.local_today()
     if first is None:

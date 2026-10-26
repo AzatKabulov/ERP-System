@@ -6,11 +6,11 @@ This project is an inventory-focused ERP for shops and wholesalers, with car par
 
 - Confirmed client: Flutter and Dart, with Android tablets first, followed by iPad and iPhone.
 - Confirmed launch market and languages: Turkmenistan; complete Russian (`ru`) and Turkmen (`tk`, modern Latin script) interfaces are required from the first Android release.
-- Confirmed backend (2026-10-06): Python, Django, and Django REST Framework; not yet implemented.
-- Confirmed database (2026-10-06): PostgreSQL; not yet implemented.
+- Backend: Python, Django, and Django REST Framework; implemented through Phase 9.
+- Database: PostgreSQL; implemented, with PostgreSQL 16 in deployment and CI.
 - Initial operating model: internet access is required for stock-changing actions; business records are isolated by business and location permissions.
 
-The repository contains a Flutter interface prototype under `mobile/`, using in-memory demonstration operations and persistent language selection. Android and web hosts are present. Flutter 3.47.6 is pinned in `.flutter-version`; cloud activation and setup helpers are under `scripts/`. Analysis, 12 tests, web and debug APK builds, and interactive browser checks passed. Physical Android hardware and iOS remain untested. The backend under `backend/` is being built phase by phase (see `PLAN.md` and `HANDOFF.md` for what exists); the Flutter app still shows demonstration data unless a phase says it is connected. Do not describe demonstration operations as production functionality.
+The Flutter app under `mobile/` uses the real backend by default; the in-memory demonstration is an explicitly separate mode. Android and web hosts are present. Flutter 3.47.6 is pinned in `.flutter-version`; cloud activation and setup helpers are under `scripts/`. See `HANDOFF.md` for current test evidence and `docs/PRODUCTION_READINESS.md` for release blockers. Physical Android tablets and iOS remain unverified. Do not describe demonstration operations or synthetic browser checks as production or hardware acceptance.
 
 ## Before You Start
 

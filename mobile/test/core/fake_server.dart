@@ -35,6 +35,7 @@ class FakeServer {
   bool refreshRejected = false;
   bool reachable = true;
   Future<void>? externalWait;
+  Future<void>? stockWait;
 
   /// The next N operation POSTs are performed, then the answer is lost.
   int dropResponseAfterCommit = 0;
@@ -360,6 +361,7 @@ class FakeServer {
   Future<http.Response> _handle(http.Request request) async {
     if (!reachable) throw http.ClientException('offline');
     if (request.url.path.endsWith('/barcodes/info/')) await externalWait;
+    if (request.url.path.endsWith('/stock/')) await stockWait;
     final host = request.url.origin;
     hosts.add(host);
     if (deadHosts.contains(host)) {
@@ -816,7 +818,14 @@ class FakeServer {
               .where((p) => '${p['sku']}'.toLowerCase() == code.toLowerCase())
               .firstOrNull;
       if (found == null) return _error(404, 'barcode_not_found');
-      return _json(200, _present(found, withStock: true));
+      return _json(
+        200,
+        _present(
+          found,
+          stockAt: request.url.queryParameters['location'],
+          withStock: true,
+        ),
+      );
     }
 
     if (rest == 'products/' && method == 'GET') {

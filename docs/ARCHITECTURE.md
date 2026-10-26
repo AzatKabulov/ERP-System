@@ -1,5 +1,16 @@
 # Architecture
 
+## Business-day reports (2026-10-27)
+
+Report, export and activity-history presets use `period=today|week|fortnight|month|last_month`.
+The server resolves them from the business's local date; mixing a preset with
+explicit `date_from`/`date_to` is refused. Existing explicit-date requests keep
+their behavior. The dashboard builds its trend dates from the report's returned
+period and compares the same permitted-location aggregate as its headline total.
+An owner with multiple locations sees the all-locations label. This prevents a
+staff device on tomorrow's date from calling today's sales “yesterday,” or a
+single-location trend from being compared with an all-location total.
+
 ## Phone HTTP photo scanning — 2026-10-26
 
 `CameraBarcodeScanner.isAvailable` represents an offered scan workflow, rather
@@ -39,7 +50,7 @@ Product edits use a narrow PATCH that leaves unrelated fields and blank prices u
 
 The primary intake camera action now uses the single-code scanner, followed by the existing quantity dialog. Unknown products retain the scanned code as a catalog barcode (subject to existing code validation) and offer a name and optional TMT selling price. Catalog details can be edited later. Keyboard/manual entry and row quantity editing remain available. Existing draft persistence, permission checks and idempotent stock posting are reused; no API or schema change. Sales camera lookup displays the exact product in search, with request ordering guards; Enter searches without adding to the cart. A separate result tap adds it. Browser camera scanning is available on HTTPS or localhost/loopback; plain HTTP LAN addresses keep manual entry only. The continuous-camera class is retained but is no longer the primary intake action.
 
-Status: The Flutter interface prototype is implemented. Analysis, 12 unit/widget tests, web and debug Android builds, APK signature verification, and interactive browser checks passed during prototype development. Physical Android hardware and iOS remain untested. Django REST Framework and PostgreSQL were confirmed as the backend and database on 2026-10-06. They, the authentication, and the deployment described below have not been implemented yet; [PLAN.md](../PLAN.md) sets the delivery order.
+Status (2026-10-27): Flutter's real mode connects to the Django REST API and PostgreSQL; Phases 1–9 are implemented. The demonstration mode remains separate. The deployment tooling is prepared; production hosting and physical Android/Apple acceptance remain open. See [production readiness](PRODUCTION_READINESS.md) for current evidence, limits and release blockers; [PLAN.md](../PLAN.md) sets the delivery order. Older prototype and phase descriptions below are historical context.
 
 Product requirements live in [PRD.md](PRD.md), visual rules in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), and development rules in [AGENTS.md](../AGENTS.md). This document describes how the agreed inventory ERP should fit together.
 

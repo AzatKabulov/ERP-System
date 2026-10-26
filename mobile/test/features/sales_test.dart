@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:erp_system/core/money/decimal_math.dart';
 import 'package:erp_system/widgets/common.dart';
 import 'package:flutter/material.dart';
@@ -102,6 +104,46 @@ Future<void> confirm(WidgetTester tester) async {
 
 void main() {
   group('the cart', () {
+    testWidgets('a camera result shows stock only at the selected location', (
+      tester,
+    ) async {
+      final t = deskRig(
+        rig: RealRig(scanner: FakeScanner(results: ['4006381333931'])),
+      );
+      t.rig.server.ledger.seedStock(
+        t.pad['id'] as String,
+        'l-2',
+        '90',
+        '50.00',
+      );
+      await openSales(tester, t.rig);
+      await tapKey(tester, 'scan-button');
+      await settle(tester);
+      expect(find.textContaining('В наличии здесь: 10 шт'), findsOneWidget);
+      expect(find.textContaining('В наличии здесь: 100 шт'), findsNothing);
+      expect(key('cart-empty'), findsOneWidget);
+    });
+
+    testWidgets(
+      'a late add cannot repopulate the cart after changing location',
+      (tester) async {
+        final t = deskRig();
+        await openSales(tester, t.rig);
+        final wait = Completer<void>();
+        t.rig.server.stockWait = wait.future;
+        await tapKey(tester, 'sell-BP-1');
+        await tapKey(tester, 'location-selector');
+        await settle(tester, ms: 400);
+        await tester.tap(find.text('Ammar').last);
+        await settle(tester);
+        wait.complete();
+        await settle(tester);
+        expect(key('cart-empty'), findsOneWidget);
+        expect(key('cart-qty-0'), findsNothing);
+        expect(t.rig.server.ledger.salesRecorded, 0);
+      },
+    );
+
     testWidgets('every text field keeps its own name for a screen reader', (
       tester,
     ) async {
@@ -167,6 +209,8 @@ void main() {
         final t = deskRig();
         await openSales(tester, t.rig);
         await addToCart(tester);
+        expect(tester.getSize(key('cart-plus-0')), const Size(48, 48));
+        expect(tester.getSize(key('cart-minus-0')), const Size(48, 48));
         await tapKey(tester, 'cart-plus-0');
         await tapKey(tester, 'cart-plus-0');
         expect(tester.widget<Text>(key('cart-total')).data, tmt(30000));
@@ -789,7 +833,12 @@ void main() {
     });
   });
 
-  for (final size in [const Size(360, 800), const Size(800, 1100)]) {
+  for (final size in [
+    const Size(360, 800),
+    const Size(768, 1024),
+    const Size(800, 1100),
+    const Size(1024, 600),
+  ]) {
     testWidgets('selling fits at $size with doubled text', (tester) async {
       tester.platformDispatcher.textScaleFactorTestValue = 2;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);

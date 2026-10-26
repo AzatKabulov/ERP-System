@@ -54,7 +54,7 @@ def make_versions(data: bytes) -> tuple[bytes, bytes]:
     if detect_content_type(data[:16]) not in ALLOWED:
         raise _invalid()
     try:
-        image = Image.open(BytesIO(data))
+        image = Image.open(BytesIO(data), formats=("JPEG", "PNG", "WEBP"))
         if image.width * image.height > MAX_PIXELS:
             raise _invalid()
         image = ImageOps.exif_transpose(image)  # the camera's "rotated" flag becomes real pixels

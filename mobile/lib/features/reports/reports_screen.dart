@@ -86,9 +86,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
     try {
       final bytes = await widget.repository.export(slug, q);
       if (!mounted) return;
-      await FilesScope.sharingOf(
-        context,
-      ).share(bytes, '$slug-${q.from}-${q.to}.csv', 'text/csv');
+      await FilesScope.sharingOf(context).share(
+        bytes,
+        '$slug-${q.preset ?? '${q.from}-${q.to}'}.csv',
+        'text/csv',
+      );
       if (mounted) showFeedback(context, l.reportExported);
     } on ApiException catch (e) {
       if (mounted) showFeedback(context, apiErrorText(l, e));

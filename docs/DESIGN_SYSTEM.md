@@ -4,9 +4,11 @@ Status: Implemented in the Flutter app from the owner's **"Premium Minimalist ER
 
 ## Direction
 
-Phone performance update (owner, 2026-10-26): below a 768-pixel viewport, data and
+Phone/tablet performance update (2026-10-27): below a 1000-pixel viewport, data and
 charts appear immediately. Skip decorative page fades, staggered card arrivals,
-counting figures and chart draw-in; keep short press/selection feedback. Palette,
+counting figures and chart draw-in; keep short press/selection feedback. The
+compact-tablet path showed lower navigation work in the local CPU-throttled
+control; wider layouts retain their entrance behavior. Palette,
 typography, layout and available features stay consistent with the wide interface.
 
 Calm, precise and expensive-looking, with life in it: a warm ivory canvas, white surfaces with hairlines and a soft two-layer shadow, ink-black text, **cobalt** for action and selection, and a small set of accents that each have one job (see the tokens). The one deep surface (the spotlight and the sign-in panel) runs navy into cobalt with two soft glows. Motion explains state: things arrive, switches glide, figures count up.

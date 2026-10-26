@@ -1,5 +1,24 @@
 # Real-stack browser run
 
+## Current store acceptance (2026-10-27)
+
+`store_day.js` covers the current app without removed Purchasing screens. Run
+through `scripts/qa/store_readiness.py --browser-script scripts/e2e/store_day.js
+--node /path/to/node`, with `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH` set. The runner
+creates a disposable PostgreSQL shop, exercises the API store/load/restore checks,
+and serves the built `mobile/build/web` on a free loopback port.
+
+The browser completes a real sale and checks stock at phone, tablet portrait,
+tablet landscape and laptop sizes; it checks read failure/retry, current module
+navigation and Russian/Turkmen. `E2E_TIMEZONE=Pacific/Kiritimati` deliberately
+puts the device on a different calendar date from the Ashgabat shop. Preset dates
+must still come from the shop. `E2E_BROWSER=webkit` selects installed Playwright
+WebKit; otherwise Chromium is used. Exact WebKit polygon-mode renderer warnings
+are recorded, while unexpected errors fail. This is not physical-device testing.
+
+The original `real_stack.js` below is a historical workflow: it still uses removed
+Purchasing UI and is not the acceptance entrypoint for the current application.
+
 ## Phone photo scanning on HTTP
 
 `phone_photo_scan.js` must use a disposable local shop and a real private-IP HTTP

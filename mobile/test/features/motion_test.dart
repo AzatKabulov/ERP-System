@@ -31,30 +31,41 @@ Widget host(
 /// run with it off and check that things arrive, settle on the right values, and never overlap.
 void main() {
   group('motion', () {
-    testWidgets(
-      'phone data is visible immediately without staggered arrivals',
-      (tester) async {
-        var loads = 0;
-        await tester.pumpWidget(
-          host(
-            Reveal(
-              index: 8,
-              child: AsyncSection<int>(
-                load: () async => ++loads,
-                builder: (_, _) =>
-                    CountUp(value: 30000, format: (n) => '${n.round()}'),
+    for (final size in const [Size(390, 844), Size(820, 1180)]) {
+      testWidgets(
+        '$size data is visible immediately without staggered arrivals',
+        (tester) async {
+          var loads = 0;
+          await tester.pumpWidget(
+            host(
+              Reveal(
+                index: 8,
+                child: AsyncSection<int>(
+                  load: () async => ++loads,
+                  builder: (_, _) =>
+                      CountUp(value: 30000, format: (n) => '${n.round()}'),
+                ),
               ),
+              size: size,
             ),
-            size: const Size(390, 844),
-          ),
-        );
-        await tester.pump();
-        expect(find.text('30000'), findsOneWidget);
-        expect(tester.widget<Opacity>(find.byType(Opacity)).opacity, 1);
-        await tester.pump(const Duration(seconds: 1));
-        expect(loads, 1);
-      },
-    );
+          );
+          await tester.pump();
+          expect(find.text('30000'), findsOneWidget);
+          expect(tester.widget<Opacity>(find.byType(Opacity)).opacity, 1);
+          await tester.pump(const Duration(seconds: 1));
+          expect(loads, 1);
+        },
+      );
+    }
+
+    testWidgets('wide tablet retains its entrance animation', (tester) async {
+      await tester.pumpWidget(
+        host(const Reveal(child: Text('data')), size: const Size(1180, 820)),
+      );
+      expect(tester.widget<Opacity>(find.byType(Opacity)).opacity, 0);
+      await tester.pump(const Duration(seconds: 1));
+      expect(tester.widget<Opacity>(find.byType(Opacity)).opacity, 1);
+    });
 
     testWidgets('revealing loaded content never reloads it at the end', (
       tester,

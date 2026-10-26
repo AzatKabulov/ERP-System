@@ -51,7 +51,7 @@ On the tablet: open the printed `.../install/` address in its browser, install t
 
 **By hand** (what `try_it.sh` does, one piece at a time): `MODE=local bash scripts/deploy/bootstrap_vm.sh` (asks for a business name, an owner login and an email, starts the system and prints the owner password once), then `bash scripts/deploy/install_release.sh erp-system-test-web.zip erp-system-test-debug.apk` with the two files from the unzipped artifact (needs `unzip`: `sudo apt-get install -y unzip` on Ubuntu or WSL). A private repository asks for a GitHub username and a token instead of a password when cloning.
 
-Good to know: the computer must stay on and awake; Windows may ask whether Docker may accept connections (allow it for private networks only; a Wi-Fi that keeps devices from seeing each other, such as a guest network, also blocks the tablet); browsers allow the camera only on `https` or on `localhost`, and the browser build has no camera button, so the camera is tested on the tablet with the installed app, while a USB hand scanner works in the browser on the computer; each CI run signs its test app with a new throwaway key, so installing a newer test build means removing the older one first (the data lives on the server, not on the tablet). Stop with `cd infra && docker compose stop`, start again with `docker compose up -d`, and erase everything to start over with `docker compose down -v`. If port 8080 is busy, change `HTTP_PORT` in `infra/.env` and run `docker compose up -d` again.
+Good to know: the computer must stay on and awake; Windows may ask whether Docker may accept connections (allow it for private networks only; a Wi-Fi that keeps devices from seeing each other, such as a guest network, also blocks the tablet). Browser scanning uses live video on trusted HTTPS or localhost; HTTP Wi-Fi pages offer photo capture/gallery decoding. The installed Android app has its own camera workflow. Physical scanner acceptance is still required. Each CI run signs its test app with a new throwaway key, so installing a newer test build means removing the older one first (the data lives on the server, not on the tablet). Stop with `cd infra && docker compose stop`, start again with `docker compose up -d`, and erase everything to start over with `docker compose down -v`. If port 8080 is busy, change `HTTP_PORT` in `infra/.env` and run `docker compose up -d` again.
 
 ## Option A, step by step (Oracle Cloud Always Free)
 
@@ -111,10 +111,18 @@ Two kinds of files come from GitHub. For **your own trying** (Option 0, or a qui
 | What | How |
 | --- | --- |
 | Update to the newest code | `bash scripts/deploy/update.sh` (it takes a backup first, then rebuilds and restarts) |
-| Backup now | `bash scripts/deploy/backup.sh`. Files go to `infra/backups/`, the nightly job does it by itself. **Copy them off the machine now and then** (a backup on the same disk does not survive losing the machine). |
+| Backup now | `bash scripts/deploy/backup.sh`. It briefly stops this project's running API for consistent database/file snapshots, then restarts it, including on failure. Files go to owner-only `infra/backups/`; the configured nightly job does the same. **Copy them to protected off-machine storage**. A same-disk backup does not survive machine loss. |
 | Restore, or move to another server | `bash scripts/deploy/restore.sh infra/backups/db-....sql.gz infra/backups/files-....tar.gz` (it asks you to type `restore`) |
 | See what is running or why it stopped | `cd infra && docker compose ps` and `docker compose logs --tail 80 api` |
 | Stop / start | `cd infra && docker compose stop` / `docker compose up -d` |
+
+Backup jobs are serialized with `infra/backups/.backup-in-progress`. If a machine
+crash leaves that lock, check that no backup is still running before removing it.
+Failed snapshots are temporary and are not published as complete database/files
+archives. Restore checks archive integrity and this project's files volume before
+stopping the API or replacing the database. The database and file backups from
+the same timestamp belong together. Test restoration on a separate deployment
+before trusting the schedule with real shop records.
 | Free machines can disappear | Oracle may reclaim an idle free machine or change the free allowance: keep your off-machine backups. |
 
 ## Moving a client to their own hosting later

@@ -146,6 +146,36 @@ class IsolationTests(ReportsCase):
 
 
 class ParameterTests(ReportsCase):
+    def test_presets_use_business_days_including_midnight_and_month_boundaries(self):
+        expected = {
+            "today": ("2026-10-02", "2026-10-02"),
+            "week": ("2026-09-26", "2026-10-02"),
+            "fortnight": ("2026-09-19", "2026-10-02"),
+            "month": ("2026-10-01", "2026-10-02"),
+            "last_month": ("2026-09-01", "2026-09-30"),
+        }
+        # UTC is still 1 October; the shop in Ashgabat is already on 2 October.
+        with at("2026-10-02", "00:30"):
+            for preset, (first, last) in expected.items():
+                for path in [*REPORTS, "audit/"]:
+                    with self.subTest(preset=preset, path=path):
+                        relative = self.ok(path, period=preset)
+                        explicit = self.ok(path, date_from=first, date_to=last)
+                        self.assertEqual(relative, explicit)
+                for path in EXPORTS:
+                    with self.subTest(preset=preset, export=path):
+                        relative = self.get(self.owner, path, period=preset)
+                        explicit = self.get(self.owner, path, date_from=first, date_to=last)
+                        self.assertEqual(relative.status_code, 200)
+                        self.assertEqual(relative.content, explicit.content)
+
+    def test_unknown_presets_and_mixed_date_ranges_are_refused(self):
+        for path in [*REPORTS, *EXPORTS, "audit/"]:
+            for query in ({"period": "bad"}, {"period": "today", "date_from": "2026-10-01"}):
+                with self.subTest(path=path, query=query):
+                    error = self.error(self.get(self.owner, path, **query), 400, "validation_error")
+                    self.assertIn("period", error["fields"])
+
     def test_malformed_dates_name_the_field(self):
         for path in [*REPORTS, *EXPORTS]:
             for name in ("date_from", "date_to"):
