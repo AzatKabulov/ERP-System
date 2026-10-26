@@ -8,6 +8,7 @@ keeps the balances and FIFO cost layers in step, and refuses to go below zero.
 
 import uuid
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 
 from django.db import connection, transaction
@@ -48,6 +49,7 @@ class Line:
     # False when `unit_cost` is only a placeholder. Goods that arrive from existing batches
     # (transfers, returns) pass on the flag of the batch they came from.
     cost_known: bool = True
+    expiry_date: date | None = None
 
 
 @dataclass
@@ -161,6 +163,7 @@ def post(
                     layer_no=balance.layer_seq,
                     unit_cost=line.unit_cost,
                     cost_known=line.cost_known,
+                    expiry_date=line.expiry_date,
                     quantity_initial=line.quantity,
                     quantity_remaining=line.quantity,
                 )

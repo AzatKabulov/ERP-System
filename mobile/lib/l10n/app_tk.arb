@@ -1093,15 +1093,36 @@
   "serverErrUnreachable": "Serwer jogap bermeýär. Salgyny we interneti barlaň.",
   "serverErrNotErp": "Bu salgyda bu ulgamyň serweri ýok.",
   "serverErrDatabase": "Serwer jogap berýär, ýöne maglumat bazasy häzir elýeterli däl.",
+  "intakePriceLabel": "Satuw bahasy, TMT (hökmany däl)",
+  "intakeFormTitle": "Haryt maglumatlary we kabul ediş",
+  "intakeOnlineLoading": "Internetden haryt maglumatlary gözlenýär… Formany dolduryp bilersiňiz.",
+  "intakeOnlineSource": "Maglumat çeşmesi: {source}. Barlap, gerek bolsa düzediň. Bahalar el bilen girizilýär.",
+  "intakeCatalogPermission": "Täze harydy eýesi ýa-da dolandyryjy goşup biler. Kod garalamada saklandy.",
+  "intakeSellingPrice": "Satuw bahasy, {currency} (hökmany däl)",
+  "intakeKeepPrice": "Boş goýulsa, häzirki satuw bahasy saklanýar.",
+  "@intakeOnlineSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "@intakeSellingPrice": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
   "intakeTitle": "Skanirläp kabul etmek",
   "intakeScanLabel": "Harydyň kody",
-  "intakeScanHelp": "Bu ýere basyp el skaneri bilen skanirläň ýa-da kody ýazyp Enter basyň. Ýa-da sagdaky kamerany açyň.",
-  "intakeCameraTooltip": "Kamera bilen skanirlemek (yzly-yzyna)",
+  "intakeScanHelp": "Bir harydy skanirläň ýa-da kody girizip Enter basyň. Haryt we mukdar formasy açylar.",
+  "intakeCameraTooltip": "Harydy skanirläň we mukdaryny giriziň",
   "intakeCameraTitle": "Harytlary yzly-yzyna skanirläň",
   "intakeCameraHint": "Ilkinji harydy kameranyň öňüne tutuň. Her haryt bir gezek sanalýar.",
   "intakeCameraDone": "Taýýar",
   "intakeLocationLabel": "Nirä kabul edilýär",
-  "intakeEmpty": "Gutyny açyp, her harydy skanirläň. Her skanirleme 1 sany goşýar, birmeňzeş harytlar bir setire birleşýär.",
+  "intakeEmpty": "Gutudan bir harydy skanirläň we umumy mukdaryny, mysal üçin 50, giriziň. Täze harydyň adyny we bahasyny dolduryň.",
   "intakeLookingUp": "Haryt katalogdan gözlenýär…",
   "intakeUnknown": "Bu haryt katalogda ýok: ony goşuň",
   "intakeFoundOnline": "Internetde tapyldy: {name}",
@@ -1164,5 +1185,58 @@
   "productLow": "Az",
   "productOut": "Ýok",
   "productColumnStock": "Galyndy",
-  "productColumnStatus": "Ýagdaýy"
+  "productColumnStatus": "Ýagdaýy",
+  "intakeAddManually": "El bilen goşmak",
+  "intakeNoBarcode": "Ştrih-kodsyz haryt",
+  "intakeArticleOptional": "Artikul (hökmany däl)",
+  "intakeWarrantyMonths": "Kepillik, aý (hökmany däl)",
+  "expiryDateOptional": "Toparyň ýaramlylyk möhleti (hökmany däl)",
+  "clearExpiryDate": "Ýaramlylyk senesini aýyrmak",
+  "expiryDateValue": "Ýaramlylyk senesi: {date}",
+  "@expiryDateValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "productStockQuantity": "Galyndy: {quantity}",
+  "@productStockQuantity": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "expiryBatch": "{date} çenli: {quantity}",
+  "@expiryBatch": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "expiredBatch": "{date} senesinden möhleti geçen: {quantity}",
+  "@expiredBatch": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "expirySoonFilter": "30 günde möhleti dolýan",
+  "expiryExpiredFilter": "Möhleti geçenler",
+  "expiryAttention": "Möhleti dolup barýan ýa-da geçen toparlary barlaň.",
+  "testLoginChooseRole": "Haýsy wezipede girmeli?",
+  "testLoginNotice": "Synag üçin «Girmek» basyň we wezipäni saýlaň.",
+  "expiryDateFormat": "GG.AA.ÝÝÝÝ",
+  "expiryDateInvalid": "Bar bolan senäni GG.AA.ÝÝÝÝ görnüşinde giriziň",
+  "testLoginUsePassword": "Ulanyjy ady we açar söz bilen girmek",
+  "testLoginUseRole": "Synag wezipesini saýlamak"
 }

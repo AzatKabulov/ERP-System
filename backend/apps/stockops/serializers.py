@@ -253,6 +253,7 @@ class CountSerializer(serializers.ModelSerializer):
 class IntakeLineInputSerializer(serializers.Serializer):
     product = BusinessScopedField(queryset=Product.objects.select_related("unit"))
     quantity = serializers.DecimalField(**QUANTITY)
+    expiry_date = serializers.DateField(required=False, allow_null=True, default=None)
     unit_cost = serializers.DecimalField(
         max_digits=14,
         decimal_places=2,
@@ -274,7 +275,7 @@ class IntakeLineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StockIntakeLine
-        fields = ["id", "product", "quantity", "unit_cost", "cost_known"]
+        fields = ["id", "product", "quantity", "unit_cost", "cost_known", "expiry_date"]
 
     def to_representation(self, line):
         data = super().to_representation(line)

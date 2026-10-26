@@ -12,6 +12,7 @@ import 'catalog_models.dart';
 import 'catalog_repository.dart';
 import 'product_form_screen.dart';
 import 'product_photo.dart';
+import 'product_stock_info.dart';
 import 'reorder_levels_screen.dart';
 
 /// One product, read-only, with edit and archive for those who may. Closes with
@@ -185,6 +186,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ),
                               ),
                           ],
+                          ProductStockInfo(product: p),
                           if (p.defaultCostMinor != null) ...[
                             const SizedBox(height: 12),
                             Text(

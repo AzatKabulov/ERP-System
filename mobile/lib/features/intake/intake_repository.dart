@@ -24,6 +24,7 @@ class IntakeRepository {
         {
           'product': e.product!.id,
           'quantity': toServerDecimal(e.quantityMilli, 3),
+          if (e.expiryDate != null) 'expiry_date': e.expiryDate,
           if (withCost && e.costMinor != null)
             'unit_cost': toServerDecimal(e.costMinor!, 2),
         },

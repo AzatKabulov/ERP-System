@@ -1552,15 +1552,36 @@
   "serverErrUnreachable": "Сервер не отвечает. Проверьте адрес и интернет.",
   "serverErrNotErp": "По этому адресу нет сервера этой системы.",
   "serverErrDatabase": "Сервер отвечает, но его база данных сейчас недоступна.",
+  "intakePriceLabel": "Цена продажи, TMT (необязательно)",
+  "intakeFormTitle": "Данные товара и приёмка",
+  "intakeOnlineLoading": "Ищу данные товара в интернете… Можно заполнять форму.",
+  "intakeOnlineSource": "Данные из {source}. Проверьте и исправьте при необходимости. Цены заполняются вручную.",
+  "intakeCatalogPermission": "Добавить новый товар может владелец или управляющий. Код сохранён в черновике.",
+  "intakeSellingPrice": "Цена продажи, {currency} (необязательно)",
+  "intakeKeepPrice": "Пусто — сохранить текущую цену продажи.",
+  "@intakeOnlineSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "@intakeSellingPrice": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
   "intakeTitle": "Приёмка сканированием",
   "intakeScanLabel": "Код товара",
-  "intakeScanHelp": "Нажмите сюда и сканируйте ручным сканером, либо введите код и нажмите Enter. Или откройте камеру справа.",
-  "intakeCameraTooltip": "Сканировать камерой (по очереди)",
+  "intakeScanHelp": "Сканируйте один товар или введите код и нажмите Enter. Откроется форма товара и количества.",
+  "intakeCameraTooltip": "Сканировать товар и указать количество",
   "intakeCameraTitle": "Сканируйте товары по очереди",
   "intakeCameraHint": "Поднесите первый товар к камере. Каждый товар считается один раз.",
   "intakeCameraDone": "Готово",
   "intakeLocationLabel": "Куда принимаем",
-  "intakeEmpty": "Откройте коробку и отсканируйте каждый товар. Каждое сканирование добавляет 1 штуку, одинаковые товары складываются в одну строку.",
+  "intakeEmpty": "Отсканируйте один товар из коробки и укажите общее количество, например 50. Для нового товара заполните название и цену.",
   "intakeLookingUp": "Ищу товар в каталоге…",
   "intakeUnknown": "Этого товара нет в каталоге: добавьте его",
   "intakeFoundOnline": "Нашли в интернете: {name}",
@@ -1681,5 +1702,58 @@
   "productLow": "Мало",
   "productOut": "Нет в наличии",
   "productColumnStock": "Остаток",
-  "productColumnStatus": "Статус"
+  "productColumnStatus": "Статус",
+  "intakeAddManually": "Добавить вручную",
+  "intakeNoBarcode": "Товар без штрих-кода",
+  "intakeArticleOptional": "Артикул (необязательно)",
+  "intakeWarrantyMonths": "Гарантия, месяцев (необязательно)",
+  "expiryDateOptional": "Срок годности партии (необязательно)",
+  "clearExpiryDate": "Убрать срок годности",
+  "expiryDateValue": "Годен до: {date}",
+  "@expiryDateValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "productStockQuantity": "Остаток: {quantity}",
+  "@productStockQuantity": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "expiryBatch": "До {date}: {quantity}",
+  "@expiryBatch": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "expiredBatch": "Просрочено с {date}: {quantity}",
+  "@expiredBatch": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "expirySoonFilter": "Истекают за 30 дней",
+  "expiryExpiredFilter": "Просроченные",
+  "expiryAttention": "Проверьте партии с истекающим или истёкшим сроком.",
+  "testLoginChooseRole": "Войти как кто?",
+  "testLoginNotice": "Тестовый вход: нажмите «Войти» и выберите роль.",
+  "expiryDateFormat": "ДД.ММ.ГГГГ",
+  "expiryDateInvalid": "Введите существующую дату в формате ДД.ММ.ГГГГ",
+  "testLoginUsePassword": "Войти по логину и паролю",
+  "testLoginUseRole": "Выбрать тестовую роль"
 }

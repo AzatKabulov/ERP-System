@@ -999,8 +999,11 @@ class EmptyState extends StatelessWidget {
     child: Column(
       children: [
         TweenAnimationBuilder<double>(
-          tween: Tween(begin: AppMotion.reduced(context) ? 1 : 0.6, end: 1),
-          duration: AppMotion.of(context, AppMotion.slow),
+          tween: Tween(
+            begin: AppMotion.skipEntrance(context) ? 1 : 0.6,
+            end: 1,
+          ),
+          duration: AppMotion.entrance(context, AppMotion.slow),
           curve: Curves.easeOutBack,
           builder: (context, scale, child) =>
               Transform.scale(scale: scale, child: child),
@@ -1229,8 +1232,8 @@ class AppDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TweenAnimationBuilder<double>(
-    tween: Tween(begin: AppMotion.reduced(context) ? 1 : 0.94, end: 1),
-    duration: AppMotion.of(context, AppMotion.base),
+    tween: Tween(begin: AppMotion.skipEntrance(context) ? 1 : 0.94, end: 1),
+    duration: AppMotion.entrance(context, AppMotion.base),
     curve: AppMotion.arrive,
     builder: (context, scale, child) =>
         Transform.scale(scale: scale, child: child),

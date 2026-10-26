@@ -25,10 +25,14 @@ class IntakeEntry {
     this.state = IntakeEntryState.lookingUp,
     this.quantityMilli = 1000,
     this.costMinor,
+    this.isManual = false,
+    this.expiryDate,
   });
 
   /// The text that was scanned or typed (trimmed).
   final String code;
+  final bool isManual;
+  String? expiryDate;
   ProductRef? product;
   IntakeEntryState state;
 
@@ -41,10 +45,17 @@ class IntakeEntry {
   /// A name the open databases know for an unknown code. Asked again when the draft is reopened,
   /// so it is not kept on the device.
   ExternalInfo? suggestion;
+  bool suggesting = false;
+
+  /// Unsaved form input, kept separately from confirmed quantities and prices.
+  final Map<String, String> form = {};
 
   Map<String, dynamic> toJson() => {
     'code': code,
+    if (isManual) 'manual': true,
+    if (expiryDate != null) 'expiry_date': expiryDate,
     'quantity': quantityMilli,
+    if (form.isNotEmpty) 'form': form,
     if (costMinor != null) 'cost': costMinor,
     if (product != null)
       'product': {
@@ -62,8 +73,10 @@ class IntakeEntry {
 
   factory IntakeEntry.fromJson(Map<String, dynamic> json) {
     final product = json['product'];
-    return IntakeEntry(
+    final entry = IntakeEntry(
       code: json['code'] as String,
+      isManual: json['manual'] == true,
+      expiryDate: json['expiry_date'] as String?,
       quantityMilli: json['quantity'] as int,
       costMinor: json['cost'] as int?,
       product: product is Map
@@ -72,8 +85,19 @@ class IntakeEntry {
       // Entries without a product are asked about again when the draft is reopened.
       state: product is Map
           ? IntakeEntryState.found
+          : json['manual'] == true
+          ? IntakeEntryState.notFound
           : IntakeEntryState.lookingUp,
     );
+    final fields = json['form'];
+    if (fields is Map) {
+      for (final item in fields.entries) {
+        if (item.key is String && item.value is String) {
+          entry.form[item.key as String] = item.value as String;
+        }
+      }
+    }
+    return entry;
   }
 }
 

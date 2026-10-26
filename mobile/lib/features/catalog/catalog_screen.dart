@@ -19,6 +19,7 @@ import 'catalog_repository.dart';
 import 'csv_import_screen.dart';
 import 'product_detail_screen.dart';
 import 'product_photo.dart';
+import 'product_stock_info.dart';
 import 'product_form_screen.dart';
 
 /// The product catalog: search by name, SKU, brand or barcode (typed or scanned),
@@ -53,6 +54,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
   bool _loading = true;
   Object? _error;
   bool _archived = false;
+  String? _expiryFilter;
   String? _categoryId;
   List<NamedRef> _categories = const [];
   int _requestId = 0; // answers to out-of-date searches are ignored
@@ -98,6 +100,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
         query: _search.text,
         categoryId: _categoryId,
         archived: _archived,
+        expiry: _expiryFilter,
         offset: reset ? 0 : _items.length,
         limit: _pageSize,
       );
@@ -201,7 +204,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
   Widget _page(BuildContext context, bool compact, double width) {
     final l = strings(context);
     final searching =
-        _search.text.trim().isNotEmpty || _categoryId != null || _archived;
+        _search.text.trim().isNotEmpty ||
+        _categoryId != null ||
+        _archived ||
+        _expiryFilter != null;
     final search = BarcodeInput(
       fieldKey: const ValueKey('catalog-search'),
       controller: _search,
@@ -285,6 +291,20 @@ class _CatalogScreenState extends State<CatalogScreen> {
       onChanged: _setGallery,
     );
     final chips = _chipRow([
+      if (widget.session.can('stock.view')) ...[
+        for (final mode in ['soon', 'expired'])
+          FilterChip(
+            key: ValueKey('catalog-expiry-$mode'),
+            label: Text(
+              mode == 'soon' ? l.expirySoonFilter : l.expiryExpiredFilter,
+            ),
+            selected: _expiryFilter == mode,
+            onSelected: (selected) {
+              _expiryFilter = selected ? mode : null;
+              _load(reset: true);
+            },
+          ),
+      ],
       ChoiceChip(
         label: Text(l.allCategories),
         selected: _categoryId == null,
@@ -363,6 +383,17 @@ class _CatalogScreenState extends State<CatalogScreen> {
           chips,
         ],
         const SizedBox(height: 20),
+        if (_items.any(
+          (p) => p.expiryStatus == 'soon' || p.expiryStatus == 'expired',
+        ))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              l.expiryAttention,
+              key: const ValueKey('catalog-expiry-alert'),
+              style: const TextStyle(color: AppColors.warning),
+            ),
+          ),
         if (_error != null)
           ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
         else if (_loading && _items.isEmpty)
@@ -555,6 +586,10 @@ class _PriceInfo extends StatelessWidget {
       crossAxisAlignment: align,
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (p.onHandMilli != null || p.expiryDate != null) ...[
+          const SizedBox(height: 6),
+          ProductStockInfo(product: p),
+        ],
         Text(
           formatMoney(p.priceMinor, p.priceCurrency),
           style: const TextStyle(
@@ -803,6 +838,10 @@ class _ProductTable extends StatelessWidget {
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
                                   ),
+                                ),
+                                ProductStockInfo(
+                                  product: p,
+                                  showQuantity: false,
                                 ),
                                 if (p.barcodes.isNotEmpty)
                                   Text(

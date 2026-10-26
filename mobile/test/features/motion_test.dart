@@ -16,9 +16,13 @@ String tm(int minor) {
   return '$whole,${(minor % 100).toString().padLeft(2, '0')} TMT';
 }
 
-Widget host(Widget child, {bool reduced = false}) => MaterialApp(
+Widget host(
+  Widget child, {
+  bool reduced = false,
+  Size size = const Size(1440, 1000),
+}) => MaterialApp(
   home: MediaQuery(
-    data: MediaQueryData(disableAnimations: reduced),
+    data: MediaQueryData(disableAnimations: reduced, size: size),
     child: Scaffold(body: Center(child: child)),
   ),
 );
@@ -27,6 +31,31 @@ Widget host(Widget child, {bool reduced = false}) => MaterialApp(
 /// run with it off and check that things arrive, settle on the right values, and never overlap.
 void main() {
   group('motion', () {
+    testWidgets(
+      'phone data is visible immediately without staggered arrivals',
+      (tester) async {
+        var loads = 0;
+        await tester.pumpWidget(
+          host(
+            Reveal(
+              index: 8,
+              child: AsyncSection<int>(
+                load: () async => ++loads,
+                builder: (_, _) =>
+                    CountUp(value: 30000, format: (n) => '${n.round()}'),
+              ),
+            ),
+            size: const Size(390, 844),
+          ),
+        );
+        await tester.pump();
+        expect(find.text('30000'), findsOneWidget);
+        expect(tester.widget<Opacity>(find.byType(Opacity)).opacity, 1);
+        await tester.pump(const Duration(seconds: 1));
+        expect(loads, 1);
+      },
+    );
+
     testWidgets('revealing loaded content never reloads it at the end', (
       tester,
     ) async {

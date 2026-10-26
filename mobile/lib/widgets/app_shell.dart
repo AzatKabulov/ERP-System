@@ -626,7 +626,7 @@ class _PageEnterState extends State<_PageEnter>
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    if (AppMotion.reduced(context)) {
+    if (AppMotion.skipEntrance(context)) {
       _controller.value = 1;
     } else {
       _controller.forward();

@@ -95,7 +95,7 @@ async function fill(page, labelRegex, value) {
     }
     await page.mouse.click(box.x, box.y);
     await page.waitForTimeout(450);
-    await page.keyboard.press('Control+A');
+    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
     await page.keyboard.type(value, { delay: 25 });
     await page.waitForTimeout(350);
     const typed = await page.evaluate(() => (document.activeElement && 'value' in document.activeElement) ? document.activeElement.value : null);

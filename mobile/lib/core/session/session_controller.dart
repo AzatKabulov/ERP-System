@@ -85,6 +85,21 @@ class SessionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Only the local sample server advertises this capability. Production has no route.
+  Future<void> signInAsTestRole(String role) async {
+    final data = (await api.post(
+      '/api/v1/local-test-login/',
+      body: {'role': role},
+      authenticated: false,
+    )).map;
+    await api.adoptTokens(data['access'] as String, data['refresh'] as String);
+    _expired = false;
+    _unreachable = false;
+    await _loadProfile();
+    _status = SessionStatus.signedIn;
+    notifyListeners();
+  }
+
   Future<void> signOut() async {
     await api.logout();
     _expired = false;

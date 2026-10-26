@@ -33,12 +33,46 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  void _serverChanged() => setState(() => _error = null);
+  List<String> _testRoles = const [];
+  int _probeId = 0;
+  bool _usePassword = false;
+  bool get _roleMode => _testRoles.isNotEmpty && !_usePassword;
+  void _serverChanged() {
+    setState(() {
+      _error = null;
+      _testRoles = const [];
+    });
+    _probeTestLogin();
+  }
+
+  Future<void> _probeTestLogin() async {
+    final id = ++_probeId;
+    if (!widget.server.configured) return;
+    try {
+      final data = (await widget.session.api.send(
+        'GET',
+        '/api/v1/health/',
+        authenticated: false,
+      )).map;
+      if (!mounted || id != _probeId) return;
+      const allowed = ['owner', 'manager', 'sales', 'warehouse'];
+      setState(
+        () => _testRoles = [
+          for (final role in allowed)
+            if ((data['test_login_roles'] as List?)?.contains(role) == true)
+              role,
+        ],
+      );
+    } catch (_) {
+      /* Ordinary sign-in remains usable when the optional probe fails. */
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     widget.server.addListener(_serverChanged);
+    _probeTestLogin();
   }
 
   final _username = TextEditingController();
@@ -57,6 +91,49 @@ class _SignInScreenState extends State<SignInScreen> {
   Future<void> _submit() async {
     if (_busy) return; // never two sign-in requests at once
     final username = _username.text.trim();
+    if (_roleMode) {
+      setState(() {
+        _busy = true;
+        _error = null;
+      });
+      try {
+        final l = strings(context);
+        final role = await showDialog<String>(
+          context: context,
+          builder: (context) => SimpleDialog(
+            title: Text(l.testLoginChooseRole),
+            children: [
+              for (final role in _testRoles)
+                SimpleDialogOption(
+                  key: ValueKey('test-login-$role'),
+                  onPressed: () => Navigator.of(context).pop(role),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(switch (role) {
+                      'owner' => l.roleOwner,
+                      'manager' => l.roleManager,
+                      'sales' => l.roleSales,
+                      _ => l.roleWarehouse,
+                    }),
+                  ),
+                ),
+              SimpleDialogOption(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l.cancel),
+              ),
+            ],
+          ),
+        );
+        if (mounted && role != null) {
+          await widget.session.signInAsTestRole(role);
+        }
+      } on ApiException catch (e) {
+        if (mounted) setState(() => _error = e);
+      } finally {
+        if (mounted) setState(() => _busy = false);
+      }
+      return;
+    }
     if (username.isEmpty || _password.text.isEmpty) {
       setState(
         () => _error = const ApiException(
@@ -107,6 +184,7 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ),
           const SizedBox(height: 32),
+          if (_testRoles.isNotEmpty) _Notice(text: l.testLoginNotice),
           if (session.sessionExpired)
             _Notice(
               text: l.sessionExpiredNotice,
@@ -127,44 +205,46 @@ class _SignInScreenState extends State<SignInScreen> {
               text: l.serverNotConfigured,
               key: const ValueKey('notice-unconfigured'),
             ),
-          LabeledField(
-            label: l.username,
-            child: TextField(
-              key: const ValueKey('sign-in-username'),
-              controller: _username,
-              enabled: !_busy,
-              autofillHints: const [AutofillHints.username],
-              textInputAction: TextInputAction.next,
-              autocorrect: false,
-              enableSuggestions: false,
-              decoration: InputDecoration(
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14),
-                  child: AppIcon(AppIcons.user, size: 20),
+          if (!_roleMode) ...[
+            LabeledField(
+              label: l.username,
+              child: TextField(
+                key: const ValueKey('sign-in-username'),
+                controller: _username,
+                enabled: !_busy,
+                autofillHints: const [AutofillHints.username],
+                textInputAction: TextInputAction.next,
+                autocorrect: false,
+                enableSuggestions: false,
+                decoration: InputDecoration(
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 14),
+                    child: AppIcon(AppIcons.user, size: 20),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 48),
                 ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 48),
               ),
             ),
-          ),
-          const SizedBox(height: 18),
-          LabeledField(
-            label: l.password,
-            child: TextField(
-              key: const ValueKey('sign-in-password'),
-              controller: _password,
-              enabled: !_busy,
-              obscureText: true,
-              autofillHints: const [AutofillHints.password],
-              onSubmitted: (_) => _submit(),
-              decoration: InputDecoration(
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14),
-                  child: AppIcon(AppIcons.lock, size: 20),
+            const SizedBox(height: 18),
+            LabeledField(
+              label: l.password,
+              child: TextField(
+                key: const ValueKey('sign-in-password'),
+                controller: _password,
+                enabled: !_busy,
+                obscureText: true,
+                autofillHints: const [AutofillHints.password],
+                onSubmitted: (_) => _submit(),
+                decoration: InputDecoration(
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 14),
+                    child: AppIcon(AppIcons.lock, size: 20),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 48),
                 ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 48),
               ),
             ),
-          ),
+          ],
           if (_error != null) ...[
             const SizedBox(height: 12),
             Semantics(
@@ -177,24 +257,38 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ],
           const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              key: const ValueKey('forgot-password'),
-              style: TextButton.styleFrom(padding: EdgeInsets.zero),
-              onPressed: _busy || !widget.server.configured
-                  ? null
-                  : () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => PasswordResetScreen(
-                          api: widget.session.api,
-                          initialIdentifier: _username.text.trim(),
+          if (!_roleMode)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                key: const ValueKey('forgot-password'),
+                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                onPressed: _busy || !widget.server.configured
+                    ? null
+                    : () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => PasswordResetScreen(
+                            api: widget.session.api,
+                            initialIdentifier: _username.text.trim(),
+                          ),
                         ),
                       ),
-                    ),
-              child: Text(l.forgotPassword),
+                child: Text(l.forgotPassword),
+              ),
             ),
-          ),
+          if (_testRoles.isNotEmpty)
+            TextButton(
+              key: const ValueKey('test-login-toggle'),
+              onPressed: _busy
+                  ? null
+                  : () => setState(() {
+                      _usePassword = !_usePassword;
+                      _error = null;
+                    }),
+              child: Text(
+                _roleMode ? l.testLoginUsePassword : l.testLoginUseRole,
+              ),
+            ),
           const SizedBox(height: 10),
           PrimaryButton(
             key: const ValueKey('sign-in-submit'),

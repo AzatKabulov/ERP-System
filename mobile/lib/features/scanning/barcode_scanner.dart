@@ -8,8 +8,8 @@ import 'scan_screen.dart';
 /// it never submits a form, completes a sale or moves stock. The screen that asked
 /// decides what to do with the code (fill a field, look a product up).
 abstract class BarcodeScanner {
-  /// False where the camera cannot be used (the browser build, which is a
-  /// development preview). Manual entry always remains available.
+  /// False on browser origins that cannot request camera access.
+  /// Permission denial and missing hardware are handled by the scan screen.
   bool get isAvailable;
 
   /// Opens the camera and returns the first code read, or null when the person
@@ -28,12 +28,31 @@ abstract class BarcodeScanner {
   });
 }
 
-/// The first supported scanning method (decision D9): the tablet camera.
+/// Browsers require HTTPS or a loopback origin for camera access. This only
+/// checks the origin; the camera screen handles permission and hardware errors.
+bool cameraScanningAvailable({bool isWeb = kIsWeb, Uri? origin}) {
+  if (!isWeb) return true;
+  final address = origin ?? Uri.base;
+  if (address.scheme == 'https') return true;
+  if (address.scheme != 'http') return false;
+  final host = address.host;
+  final octets = host.split('.').map(int.tryParse).toList();
+  final loopbackIpv4 =
+      octets.length == 4 &&
+      octets.every((n) => n != null && n >= 0 && n <= 255) &&
+      octets.first == 127;
+  return host == 'localhost' ||
+      host == '[::1]' ||
+      host == '::1' ||
+      loopbackIpv4;
+}
+
+/// Tablet cameras and browser webcams share the same scan screen.
 class CameraBarcodeScanner implements BarcodeScanner {
   const CameraBarcodeScanner();
 
   @override
-  bool get isAvailable => !kIsWeb;
+  bool get isAvailable => cameraScanningAvailable();
 
   @override
   Future<String?> scan(BuildContext context) =>

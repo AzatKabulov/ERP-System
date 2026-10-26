@@ -88,6 +88,7 @@ class CostLayer(UUIDModel):
     # product's default cost or zero) until somebody enters the real cost. The flag follows the
     # goods through transfers and returns, and profit leaves such sales out (reports).
     cost_known = models.BooleanField(default=True)
+    expiry_date = models.DateField(null=True, blank=True)
     quantity_initial = models.DecimalField(max_digits=14, decimal_places=3)
     quantity_remaining = models.DecimalField(max_digits=14, decimal_places=3)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -110,6 +111,11 @@ class CostLayer(UUIDModel):
         ]
         indexes = [
             models.Index(fields=["balance", "layer_no"]),
+            models.Index(
+                fields=["business", "expiry_date"],
+                condition=models.Q(quantity_remaining__gt=0, expiry_date__isnull=False),
+                name="inventory_live_expiry",
+            ),
             # The inventory value only reads layers with something left; consumed layers pile
             # up over the years, so the report reads a small index instead of the whole table.
             models.Index(

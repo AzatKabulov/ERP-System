@@ -1,0 +1,193 @@
+{
+  "browser": "155.0.8059.86",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "cpuRate": 4,
+  "scenario": "Warm phone navigation: Products, Sales, Stock, Overview, Products; 300 synthetic products; 1200ms per visit; semantics enabled",
+  "bundleSha256": "aa568766e1864c6dffc466cc13adbd9448abe2abae72d06af8b288d5d1ef317d",
+  "samples": [
+    {
+      "round": 0,
+      "visits": [
+        {
+          "label": "Товары",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.80000000000109,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 190.19999999999993,
+          "layoutWorkMs": 2.787999999999999,
+          "scriptWorkMs": 169.51000000000005
+        },
+        {
+          "label": "Продажи",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 186.9289999999999,
+          "layoutWorkMs": 2.680000000000002,
+          "scriptWorkMs": 169.27899999999997
+        },
+        {
+          "label": "Склад",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 191.11800000000034,
+          "layoutWorkMs": 1.1629999999999974,
+          "scriptWorkMs": 170.37900000000005
+        },
+        {
+          "label": "Обзор",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.700000000000728,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 315.3259999999998,
+          "layoutWorkMs": 6.843000000000002,
+          "scriptWorkMs": 277.33499999999987
+        },
+        {
+          "label": "Товары",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 185.44800000000006,
+          "layoutWorkMs": 1.5189999999999995,
+          "scriptWorkMs": 162.5770000000002
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "visits": [
+        {
+          "label": "Товары",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.700000000000728,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 167.713,
+          "layoutWorkMs": 2.271000000000002,
+          "scriptWorkMs": 147.59800000000035
+        },
+        {
+          "label": "Продажи",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 1,
+          "taskWorkMs": 179.13899999999973,
+          "layoutWorkMs": 3.159000000000002,
+          "scriptWorkMs": 152.9259999999999
+        },
+        {
+          "label": "Склад",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 186.01200000000028,
+          "layoutWorkMs": 2.2609999999999992,
+          "scriptWorkMs": 161.45100000000002
+        },
+        {
+          "label": "Обзор",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.700000000000728,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 302.1240000000001,
+          "layoutWorkMs": 3.8930000000000007,
+          "scriptWorkMs": 266.146
+        },
+        {
+          "label": "Товары",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 173.12300000000036,
+          "layoutWorkMs": 1.2139999999999997,
+          "scriptWorkMs": 152.06699999999972
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "visits": [
+        {
+          "label": "Товары",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 190.93999999999943,
+          "layoutWorkMs": 1.8339999999999885,
+          "scriptWorkMs": 167.6979999999997
+        },
+        {
+          "label": "Продажи",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 157.62099999999978,
+          "layoutWorkMs": 2.1150000000000055,
+          "scriptWorkMs": 141.0330000000002
+        },
+        {
+          "label": "Склад",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 1,
+          "taskWorkMs": 166.8510000000003,
+          "layoutWorkMs": 2.728999999999995,
+          "scriptWorkMs": 146.75300000000036
+        },
+        {
+          "label": "Обзор",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.700000000000728,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 313.555,
+          "layoutWorkMs": 6.871000000000002,
+          "scriptWorkMs": 255.92199999999997
+        },
+        {
+          "label": "Товары",
+          "longTasks": 0,
+          "longTaskMs": 0,
+          "maxTaskMs": 0,
+          "callbackGapP95Ms": 16.799999999999272,
+          "callbacksOver33Ms": 0,
+          "taskWorkMs": 166.21100000000055,
+          "layoutWorkMs": 1.5140000000000016,
+          "scriptWorkMs": 147.87699999999938
+        }
+      ]
+    }
+  ],
+  "problems": []
+}

@@ -38,10 +38,18 @@ Future<void> openIntake(WidgetTester tester, RealRig rig) async {
 }
 
 /// Types a code and presses Enter, as a hand scanner does for every item it reads.
-Future<void> scanByKeyboard(WidgetTester tester, String code) async {
+Future<void> scanByKeyboard(
+  WidgetTester tester,
+  String code, {
+  bool review = false,
+}) async {
   await tester.enterText(key('intake-input'), code);
   await tester.testTextInput.receiveAction(TextInputAction.done);
   await settle(tester, ms: 400);
+  if (!review) {
+    await tester.tap(find.text('Отмена'));
+    await settle(tester, ms: 400);
+  }
 }
 
 Future<void> sendIntake(WidgetTester tester) async {
@@ -88,18 +96,61 @@ void main() {
       );
     });
 
-    testWidgets('the camera stays open and counts item after item', (
-      tester,
-    ) async {
-      final t = intakeRig();
-      await openIntake(tester, t.rig);
-      t.scanner.continuous.addAll(['MB-025153', 'MB-025153', '444083']);
-      await tapKey(tester, 'intake-camera');
-      await settle(tester);
-      expect(t.scanner.opened, 1);
-      expect(find.text('2 шт'), findsOneWidget);
-      expect(find.text('1 шт'), findsOneWidget);
-    });
+    for (final language in ['ru', 'tk']) {
+      testWidgets(
+        'scan one item and receive 50 with its saved barcode and price ($language)',
+        (tester) async {
+          final t = intakeRig();
+          await t.rig.launch(tester, prefsValues: {'language': language});
+          await t.rig.signIn(tester);
+          if (language == 'tk') {
+            await tapKey(tester, 'language-tk');
+            await settle(tester);
+          }
+          await tapKey(tester, 'nav-inventory');
+          await settle(tester);
+          await tapKey(tester, 'stock-intake');
+          await settle(tester);
+          t.scanner.queue('NEW-BOX-50');
+          await tapKey(tester, 'intake-camera');
+          await settle(tester);
+          expect(t.scanner.opened, 1);
+          await tester.enterText(key('intake-edit-qty'), '0');
+          await tapKey(tester, 'intake-new-save');
+          await settle(tester);
+          expect(key('intake-edit-qty'), findsOneWidget);
+          await tester.enterText(key('intake-edit-qty'), '50');
+          await tester.enterText(key('intake-new-name'), 'Подшипник ÄŇŞ');
+          await tester.enterText(key('intake-new-price'), '125,50');
+          await tester.enterText(key('intake-edit-cost'), '60');
+          await tapKey(tester, 'intake-new-save');
+          await settle(tester);
+          final product = t.rig.server.productsData.last;
+          expect(product['barcodes'], ['NEW-BOX-50']);
+          expect(product['price_amount'], '125.50');
+          expect(t.rig.server.ledger.quantityOf(idOf(product), store), 0);
+          await tapKey(tester, 'intake-submit');
+          await settle(tester);
+          await tester.tap(
+            find.text(language == 'ru' ? 'Подтвердить' : 'Tassyklamak'),
+          );
+          await settle(tester);
+          expect(t.rig.server.ledger.quantityOf(idOf(product), store), 50000);
+          t.scanner.queue('NEW-BOX-50');
+          await tapKey(tester, 'nav-sales');
+          await settle(tester);
+          await tapKey(tester, 'scan-button');
+          await settle(tester);
+          expect(key('sell-NEW-BOX-50'), findsOneWidget);
+          expect(key('cart-qty-0'), findsNothing);
+          await tapKey(tester, 'sell-NEW-BOX-50');
+          await settle(tester);
+          expect(key('cart-qty-0'), findsOneWidget);
+          expect(t.rig.server.ledger.salesRecorded, 0);
+          expect(t.rig.server.ledger.quantityOf(idOf(product), store), 50000);
+        },
+      );
+    }
 
     testWidgets('two codes of one product end up on one line', (tester) async {
       final t = intakeRig();

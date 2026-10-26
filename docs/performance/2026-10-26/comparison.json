@@ -1,0 +1,16 @@
+{
+  "metric": "CDP TaskDuration delta, summed across five 1200ms phone navigation windows; main-thread work, not FPS or readiness",
+  "baselineMs": {
+    "median": 1001.6445000000003,
+    "min": 973.6059999999999,
+    "max": 1075.4939999999995,
+    "n": 6
+  },
+  "finalMs": {
+    "median": 871.0109999999999,
+    "min": 779.8429999999996,
+    "max": 874.3080000000001,
+    "n": 3
+  },
+  "medianReductionPercent": 13.041902591188837
+}

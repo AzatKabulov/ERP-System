@@ -1,0 +1,182 @@
+{
+  "version": "155.0.8059.85",
+  "platform": "darwin",
+  "arch": "arm64",
+  "cpus": "Apple M5",
+  "viewport": {
+    "width": 820,
+    "height": 1000
+  },
+  "cpuRate": 4,
+  "tracing": true,
+  "scenario": "Overview to Products, 300 products, 30 per page, no photos; accessibility enabled",
+  "samples": [
+    {
+      "i": 0,
+      "cache": "first-route",
+      "start": 10100.700000047684,
+      "timeOrigin": 1792741727513.3,
+      "feedbackMs": 135.39999997615814,
+      "usefulMs": 249.89999997615814,
+      "readyMs": 450.89999997615814,
+      "tasks": [
+        {
+          "startMs": 24.599999964237213,
+          "durationMs": 70
+        },
+        {
+          "startMs": 160.0999999642372,
+          "durationMs": 92
+        }
+      ],
+      "requests": [
+        {
+          "endpoint": "categories/",
+          "startMs": 1792741737704.998,
+          "endMs": 7.626
+        },
+        {
+          "endpoint": "products/",
+          "startMs": 1792741737704.438,
+          "endMs": 9.649
+        }
+      ]
+    },
+    {
+      "i": 1,
+      "cache": "warm",
+      "start": 14820.700000047684,
+      "timeOrigin": 1792741727513.3,
+      "feedbackMs": 86.39999997615814,
+      "usefulMs": 170.69999998807907,
+      "readyMs": 314.19999998807907,
+      "tasks": [
+        {
+          "startMs": 105,
+          "durationMs": 66
+        }
+      ],
+      "requests": [
+        {
+          "endpoint": "categories/",
+          "startMs": 1792741742397.9458,
+          "endMs": 3.987
+        },
+        {
+          "endpoint": "products/",
+          "startMs": 1792741742397.486,
+          "endMs": 8.25
+        }
+      ]
+    },
+    {
+      "i": 2,
+      "cache": "warm",
+      "start": 19305.100000023842,
+      "timeOrigin": 1792741727513.3,
+      "feedbackMs": 85.39999997615814,
+      "usefulMs": 172.80000001192093,
+      "readyMs": 301.89999997615814,
+      "tasks": [
+        {
+          "startMs": 103,
+          "durationMs": 71
+        }
+      ],
+      "requests": [
+        {
+          "endpoint": "categories/",
+          "startMs": 1792741746881.474,
+          "endMs": 5.22
+        },
+        {
+          "endpoint": "products/",
+          "startMs": 1792741746881.4258,
+          "endMs": 8.874
+        }
+      ]
+    },
+    {
+      "i": 3,
+      "cache": "warm",
+      "start": 23834.900000035763,
+      "timeOrigin": 1792741727513.3,
+      "feedbackMs": 83.80000001192093,
+      "usefulMs": 203.0999999642372,
+      "readyMs": 317.80000001192093,
+      "tasks": [
+        {
+          "startMs": 124.59999996423721,
+          "durationMs": 80
+        }
+      ],
+      "requests": [
+        {
+          "endpoint": "categories/",
+          "startMs": 1792741751412.017,
+          "endMs": 3.81
+        },
+        {
+          "endpoint": "products/",
+          "startMs": 1792741751411.555,
+          "endMs": 8.131
+        }
+      ]
+    },
+    {
+      "i": 4,
+      "cache": "warm",
+      "start": 28349.700000047684,
+      "timeOrigin": 1792741727513.3,
+      "feedbackMs": 84.29999995231628,
+      "usefulMs": 165.69999998807907,
+      "readyMs": 287.5999999642372,
+      "tasks": [
+        {
+          "startMs": 109.59999996423721,
+          "durationMs": 57
+        }
+      ],
+      "requests": [
+        {
+          "endpoint": "categories/",
+          "startMs": 1792741755928.1033,
+          "endMs": 4.145
+        },
+        {
+          "endpoint": "products/",
+          "startMs": 1792741755927.241,
+          "endMs": 8.136
+        }
+      ]
+    },
+    {
+      "i": 5,
+      "cache": "warm",
+      "start": 32851.200000047684,
+      "timeOrigin": 1792741727513.3,
+      "feedbackMs": 79.5,
+      "usefulMs": 183.19999998807907,
+      "readyMs": 287.89999997615814,
+      "tasks": [
+        {
+          "startMs": 108.59999996423721,
+          "durationMs": 76
+        }
+      ],
+      "requests": [
+        {
+          "endpoint": "categories/",
+          "startMs": 1792741760423.8801,
+          "endMs": 4.798
+        },
+        {
+          "endpoint": "products/",
+          "startMs": 1792741760423.8179,
+          "endMs": 9.006
+        }
+      ]
+    }
+  ],
+  "bundleSha256": "37d17eb0e61319767875187af2ec731206ae5a1dc2a16211defa5dc36f68e053"
+}

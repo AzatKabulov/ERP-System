@@ -1,20 +1,17 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
-import 'package:flutter/services.dart';
 
 import '../../core/api/api_error_text.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/connectivity/connection_monitor.dart';
-import '../../core/files/file_services.dart';
-import '../../l10n/app_localizations.dart';
 import '../../core/money/decimal_math.dart';
 import '../../core/operations/operation_runner.dart';
 import '../../core/session/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
-import '../catalog/catalog_models.dart';
 import '../catalog/catalog_repository.dart';
+import '../catalog/product_picker.dart';
 import '../inventory/quantity_input.dart';
 import '../inventory/stock_entry_screen.dart' show EntryResult;
 import '../scanning/barcode_scanner.dart';
@@ -22,9 +19,10 @@ import 'intake_controller.dart';
 import 'intake_draft_store.dart';
 import 'intake_models.dart';
 import 'intake_repository.dart';
+import 'intake_product_form.dart';
 
-/// Receiving goods by scanning: open a box, scan every item (camera, a hand scanner that types
-/// the code and presses Enter, or by typing) and each scan adds one to that product's line.
+/// Receiving goods: scan one item, then type the total quantity in the box.
+/// Keyboard entry and quantity editing remain available as a fallback.
 /// A code the catalog does not know is added with just a name. Then one tap puts everything on
 /// the shelf. The list is kept on the device while it is built, and the final posting goes
 /// through the [OperationRunner], so a lost answer, a crash or a restart can never receive
@@ -102,56 +100,36 @@ class _IntakeScreenState extends State<IntakeScreen> {
     _wasOnline = online;
   }
 
-  void _onCode(String code) {
-    if (_ctl.scan(code) == null) return;
-    setState(() {
-      _blocked = null;
-      _error = null;
-    });
+  Future<void> _typed(String text) async {
+    if (_busy || _formOpen) return;
+    final entry = _ctl.scan(text);
+    if (entry == null) return;
+    _input.clear();
+    await _edit(entry);
   }
 
-  void _typed(String text) {
-    _onCode(text);
-    _input.clear();
-  }
+  bool _formOpen = false;
 
   Future<void> _camera() async {
-    final scanner = ScannerScope.of(context);
-    await scanner.scanContinuously(
-      context,
-      onCode: _onCode,
-      changes: _ctl,
-      status: _cameraStatus,
-    );
-    if (mounted) setState(() {});
+    if (_busy || _formOpen) return;
+    final code = await ScannerScope.of(context).scan(context);
+    if (!mounted || code == null || _busy) return;
+    final entry = _ctl.scan(code);
+    if (entry != null) await _edit(entry);
   }
 
-  Widget _cameraStatus(BuildContext context) {
-    final l = strings(context);
-    final last = _ctl.lastScanned;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          last == null
-              ? l.intakeCameraHint
-              : '${last.product?.name ?? last.code} · ${quantityWithUnit(last.quantityMilli, last.product?.unit ?? _pieces)}',
-          key: const ValueKey('intake-last'),
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 4),
-        Text(l.intakeSummary(_ctl.lineCount, _unitsText())),
-      ],
-    );
+  Future<void> _manual() async {
+    if (_busy || _formOpen) return;
+    await _edit(_ctl.addManual());
   }
 
-  static const _pieces = UnitRef(
-    id: '',
-    name: '',
-    symbol: '',
-    decimalPlaces: 0,
-  );
+  Future<void> _pickExisting() async {
+    if (_busy || _formOpen) return;
+    final product = await showProductPicker(context, widget.catalog);
+    if (mounted && product != null) {
+      await _edit(_ctl.addManual(product: product));
+    }
+  }
 
   String _unitsText() {
     final decimals = _ctl.entries.fold<int>(
@@ -183,56 +161,27 @@ class _IntakeScreenState extends State<IntakeScreen> {
   }
 
   Future<void> _edit(IntakeEntry entry) async {
-    final result = await showDialog<_Edit>(
-      context: context,
-      builder: (_) => _EditDialog(entry: entry, canCost: _canCost),
-    );
-    if (result == null) return;
-    _ctl.setQuantity(entry, result.quantityMilli);
-    if (_canCost) _ctl.setCost(entry, result.costMinor);
-  }
-
-  Future<void> _addProduct(IntakeEntry entry) async {
-    final added = await showDialog<bool>(
-      context: context,
-      builder: (_) => _NewProductDialog(
-        entry: entry,
-        controller: _ctl,
-        catalog: widget.catalog,
-      ),
-    );
-    if (added == true && mounted) {
-      showFeedback(context, strings(context).intakeProductAdded);
-    }
-  }
-
-  /// Adds the product under the name the open databases suggested, in one tap: the unit is the
-  /// piece unit and the article number the code. The name can be changed in the catalog later.
-  Future<void> _addFound(IntakeEntry entry) async {
-    final info = entry.suggestion;
-    if (info == null || _busy) return;
-    final l = strings(context);
+    if (_formOpen || _busy) return;
+    _formOpen = true;
     try {
-      final unit = defaultPieceUnit(await widget.catalog.units());
-      if (unit == null) {
-        if (mounted) showFeedback(context, l.loadFailed);
-        return;
-      }
-      await _ctl.addProduct(
-        entry,
-        name: info.displayName,
-        sku: codeFitsAsArticle(entry.code) ? entry.code : '',
-        unit: unit,
+      await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => IntakeProductForm(
+          entry: entry,
+          controller: _ctl,
+          catalog: widget.catalog,
+          canCost: _canCost,
+          canManage: session.can('catalog.manage'),
+        ),
       );
-      if (mounted) showFeedback(context, l.intakeProductAdded);
-    } on ApiException catch (e) {
-      // e.g. a taken article number: the dialog shows what is wrong and lets the person fix it
-      if (mounted) {
-        showFeedback(context, apiErrorText(l, e));
-        _addProduct(entry);
-      }
+    } finally {
+      _formOpen = false;
     }
   }
+
+  Future<void> _addProduct(IntakeEntry entry) => _edit(entry);
+  Future<void> _addFound(IntakeEntry entry) => _edit(entry);
 
   Future<void> _submit() async {
     if (_busy || _ctl.isEmpty) return;
@@ -364,6 +313,26 @@ class _IntakeScreenState extends State<IntakeScreen> {
                           ),
                         ),
                       ],
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      if (session.can('catalog.manage'))
+                        OutlinedButton.icon(
+                          key: const ValueKey('intake-manual'),
+                          onPressed: _busy ? null : _manual,
+                          icon: const AppIcon(AppIcons.plus),
+                          label: Text(l.intakeAddManually),
+                        ),
+                      TextButton.icon(
+                        key: const ValueKey('intake-pick-existing'),
+                        onPressed: _busy ? null : _pickExisting,
+                        icon: const AppIcon(AppIcons.search),
+                        label: Text(l.pickProductTitle),
+                      ),
                     ],
                   ),
                   if (_resumed && !_ctl.isEmpty) ...[
@@ -555,7 +524,10 @@ class _EntryCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        product?.name ?? entry.code,
+                        product?.name ??
+                            (entry.isManual
+                                ? entry.form['name'] ?? l.intakeAddManually
+                                : entry.code),
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -574,6 +546,8 @@ class _EntryCard extends StatelessWidget {
                                         ),
                                 _ => l.intakeLookupFailed,
                               }
+                            : entry.isManual
+                            ? product.sku
                             : '${product.sku}${product.sku == entry.code ? '' : ' · ${entry.code}'}',
                         style: TextStyle(
                           color: unknown ? AppColors.warning : AppColors.muted,
@@ -603,22 +577,27 @@ class _EntryCard extends StatelessWidget {
                   onPressed: busy ? null : onMinus,
                   icon: const AppIcon(AppIcons.minus),
                 ),
-                InkWell(
-                  key: ValueKey('intake-qty-${entry.code}'),
-                  onTap: busy ? null : onEdit,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Text(
-                      unit == null
-                          ? formatQuantity(entry.quantityMilli, 0)
-                          : quantityWithUnit(entry.quantityMilli, unit),
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
+                Semantics(
+                  container: true,
+                  button: true,
+                  label: l.quantity,
+                  child: InkWell(
+                    key: ValueKey('intake-qty-${entry.code}'),
+                    onTap: busy ? null : onEdit,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        unit == null
+                            ? formatQuantity(entry.quantityMilli, 0)
+                            : quantityWithUnit(entry.quantityMilli, unit),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -629,6 +608,8 @@ class _EntryCard extends StatelessWidget {
                   onPressed: busy ? null : onPlus,
                   icon: const AppIcon(AppIcons.plus),
                 ),
+                if (entry.expiryDate != null)
+                  Text(l.expiryDateValue(entry.expiryDate!)),
                 if (canCost && entry.costMinor != null)
                   Text(
                     l.intakeCostShown(formatMoney(entry.costMinor!, 'TMT')),
@@ -676,389 +657,6 @@ class _EntryCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _Edit {
-  const _Edit(this.quantityMilli, this.costMinor);
-  final int quantityMilli;
-  final int? costMinor;
-}
-
-/// Types in an exact quantity (and, for roles that may see costs, an optional cost per unit).
-class _EditDialog extends StatefulWidget {
-  const _EditDialog({required this.entry, required this.canCost});
-  final IntakeEntry entry;
-  final bool canCost;
-
-  @override
-  State<_EditDialog> createState() => _EditDialogState();
-}
-
-class _EditDialogState extends State<_EditDialog> {
-  late final _quantity = TextEditingController(
-    text: formatQuantity(
-      widget.entry.quantityMilli,
-      widget.entry.product?.unit.decimalPlaces ?? 0,
-    ).replaceAll(' ', ''),
-  );
-  late final _cost = TextEditingController(
-    text: widget.entry.costMinor == null
-        ? ''
-        : formatQuantity(widget.entry.costMinor! * 10, 2).replaceAll(' ', ''),
-  );
-  bool _submitted = false;
-
-  @override
-  void dispose() {
-    _quantity.dispose();
-    _cost.dispose();
-    super.dispose();
-  }
-
-  UnitRef get _unit =>
-      widget.entry.product?.unit ??
-      const UnitRef(id: '', name: '', symbol: '', decimalPlaces: 0);
-
-  int? get _qty => parseQuantity(_quantity.text, _unit);
-  int? get _costMinor =>
-      _cost.text.trim().isEmpty ? null : parseScaled(_cost.text, 2);
-  bool get _costValid => _cost.text.trim().isEmpty || _costMinor != null;
-
-  void _save() {
-    setState(() => _submitted = true);
-    if (_qty == null || !_costValid) return;
-    Navigator.of(context).pop(_Edit(_qty!, _costMinor));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = strings(context);
-    return AlertDialog(
-      title: Text(widget.entry.product?.name ?? widget.entry.code),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            LabeledField(
-              label: l.quantity,
-              child: TextField(
-                key: const ValueKey('intake-edit-qty'),
-                controller: _quantity,
-                autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9., ]')),
-                ],
-                onSubmitted: (_) => _save(),
-                decoration: InputDecoration(
-                  suffixText: _unit.symbol,
-                  errorText: _submitted && _qty == null
-                      ? l.fieldQuantityPrecision
-                      : null,
-                  errorMaxLines: 3,
-                ),
-              ),
-            ),
-            if (widget.canCost && widget.entry.product != null) ...[
-              const SizedBox(height: 16),
-              LabeledField(
-                label: l.intakeCostLabel,
-                child: TextField(
-                  key: const ValueKey('intake-edit-cost'),
-                  controller: _cost,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9., ]')),
-                  ],
-                  decoration: InputDecoration(
-                    helperText: l.intakeCostHelp,
-                    helperMaxLines: 3,
-                    errorText: _submitted && !_costValid ? l.validAmount : null,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l.cancel),
-        ),
-        FilledButton(
-          key: const ValueKey('intake-edit-save'),
-          onPressed: _save,
-          child: Text(l.save),
-        ),
-      ],
-    );
-  }
-}
-
-/// A code the catalog does not know: the minimum to add it (a name, and the article number when
-/// the code cannot serve as one), so the box does not have to be interrupted. Everything else
-/// (price, brand, warranty) can be filled in later in the catalog.
-class _NewProductDialog extends StatefulWidget {
-  const _NewProductDialog({
-    required this.entry,
-    required this.controller,
-    required this.catalog,
-  });
-
-  final IntakeEntry entry;
-  final IntakeController controller;
-  final CatalogRepository catalog;
-
-  @override
-  State<_NewProductDialog> createState() => _NewProductDialogState();
-}
-
-class _NewProductDialogState extends State<_NewProductDialog> {
-  late final _name = TextEditingController(
-    text: widget.entry.suggestion?.displayName ?? '',
-  );
-  late final _sku = TextEditingController(
-    text: codeFitsAsArticle(widget.entry.code) ? widget.entry.code : '',
-  );
-  List<UnitRef> _units = const [];
-  UnitRef? _unit;
-  bool _submitted = false;
-  bool _busy = false;
-  ApiException? _error;
-
-  /// A picture of the new product, taken or chosen here; sent once the product exists.
-  PickedFile? _photo;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.catalog
-        .units()
-        .then((units) {
-          if (!mounted) return;
-          setState(() {
-            _units = [
-              for (final u in units)
-                if (u.isActive) u,
-            ];
-            _unit = defaultPieceUnit(units);
-          });
-        })
-        .catchError((_) {
-          // without units the form says so and cannot be saved
-        });
-  }
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _sku.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickPhoto() async {
-    if (_busy) return;
-    final picking = FilesScope.pickingOf(context);
-    try {
-      final file = await picking.pickPhoto(camera: picking.hasCamera);
-      if (file != null && mounted) setState(() => _photo = file);
-    } catch (_) {
-      if (mounted) {
-        showFeedback(context, strings(context).productPhotoPickFailed);
-      }
-    }
-  }
-
-  Future<void> _save() async {
-    if (_busy) return;
-    setState(() {
-      _submitted = true;
-      _error = null;
-    });
-    if (_name.text.trim().isEmpty ||
-        _sku.text.trim().isEmpty ||
-        _unit == null) {
-      return;
-    }
-    setState(() => _busy = true);
-    try {
-      await widget.controller.addProduct(
-        widget.entry,
-        name: _name.text,
-        sku: _sku.text,
-        unit: _unit!,
-      );
-      // The product exists now. Its picture is a bonus: if it cannot be sent, say so and go on.
-      final photo = _photo;
-      final id = widget.entry.product?.id;
-      if (photo != null && id != null) {
-        try {
-          await widget.catalog.uploadPhoto(id, photo);
-        } on ApiException catch (e) {
-          if (mounted) showFeedback(context, apiErrorText(strings(context), e));
-        }
-      }
-      if (mounted) Navigator.of(context).pop(true);
-    } on ApiException catch (e) {
-      if (mounted) {
-        setState(() {
-          _busy = false;
-          _error = e;
-        });
-      }
-    }
-  }
-
-  /// What the server said about one field, in words (null when it said nothing).
-  String? _fieldError(AppLocalizations l, String field) {
-    final e = _error?.fields[field]?.firstOrNull;
-    return e == null ? null : fieldErrorText(l, e);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = strings(context);
-    return AlertDialog(
-      title: Text(l.intakeNewProductTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l.intakeCodeLine(widget.entry.code),
-              style: const TextStyle(color: AppColors.muted),
-            ),
-            const SizedBox(height: 12),
-            LabeledField(
-              label: l.productName,
-              child: TextField(
-                key: const ValueKey('intake-new-name'),
-                controller: _name,
-                autofocus: true,
-                enabled: !_busy,
-                textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (_) => _save(),
-                decoration: InputDecoration(
-                  errorText: _submitted && _name.text.trim().isEmpty
-                      ? l.fieldRequired
-                      : _fieldError(l, 'name'),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            LabeledField(
-              label: l.productSku,
-              child: TextField(
-                key: const ValueKey('intake-new-sku'),
-                controller: _sku,
-                enabled: !_busy,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  helperText: codeFitsAsArticle(widget.entry.code)
-                      ? null
-                      : l.intakeCodeTooLong,
-                  helperMaxLines: 3,
-                  errorText: _submitted && _sku.text.trim().isEmpty
-                      ? l.fieldRequired
-                      : _fieldError(l, 'sku') ?? _fieldError(l, 'barcodes'),
-                  errorMaxLines: 3,
-                ),
-              ),
-            ),
-            if (_units.length > 1) ...[
-              const SizedBox(height: 12),
-              LabeledField(
-                label: l.unitLabel,
-                child: DropdownButtonFormField<String>(
-                  key: const ValueKey('intake-new-unit'),
-                  isExpanded: true,
-                  initialValue: _unit?.id,
-                  decoration: InputDecoration(),
-                  items: [
-                    for (final u in _units)
-                      DropdownMenuItem(
-                        value: u.id,
-                        child: Text('${u.name} (${u.symbol})'),
-                      ),
-                  ],
-                  onChanged: _busy
-                      ? null
-                      : (id) => setState(
-                          () => _unit = _units.firstWhere((u) => u.id == id),
-                        ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                if (_photo != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.memory(
-                      _photo!.bytes,
-                      key: const ValueKey('intake-new-photo-preview'),
-                      width: 56,
-                      height: 56,
-                      fit: BoxFit.cover,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Flexible(
-                  child: OutlinedButton.icon(
-                    key: const ValueKey('intake-new-photo'),
-                    onPressed: _busy ? null : _pickPhoto,
-                    icon: AppIcon(
-                      FilesScope.pickingOf(context).hasCamera
-                          ? AppIcons.camera
-                          : AppIcons.image,
-                    ),
-                    label: Text(
-                      _photo != null
-                          ? l.productPhotoChange
-                          : FilesScope.pickingOf(context).hasCamera
-                          ? l.productPhotoTake
-                          : l.productPhotoChoose,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (_error != null && _error!.fields.isEmpty) ...[
-              const SizedBox(height: 12),
-              Semantics(
-                liveRegion: true,
-                child: Text(
-                  apiErrorText(l, _error!),
-                  key: const ValueKey('intake-new-error'),
-                  style: const TextStyle(color: AppColors.danger),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: Text(l.cancel),
-        ),
-        FilledButton(
-          key: const ValueKey('intake-new-save'),
-          onPressed: _busy ? null : _save,
-          child: Text(l.intakeSaveProduct),
-        ),
-      ],
     );
   }
 }

@@ -24,6 +24,7 @@ class CatalogRepository {
     int offset = 0,
     int limit = 30,
     String? locationId,
+    String? expiry,
   }) async {
     final response = (await api.get(
       '$_base/products/',
@@ -31,6 +32,7 @@ class CatalogRepository {
         if (query.trim().isNotEmpty) 'q': query.trim(),
         'category': ?categoryId,
         'location': ?locationId,
+        'expiry': ?expiry,
         'active': archived ? '0' : '1',
         'limit': '$limit',
         'offset': '$offset',
@@ -62,6 +64,33 @@ class CatalogRepository {
   Future<Product> createProduct(ProductDraft draft) async => Product.fromJson(
     (await api.post('$_base/products/', body: draft.toJson())).map,
   );
+
+  /// Patch only the receiving form's explicit edits, preserving other catalog fields.
+  Future<Product> updateReceivingDetails(
+    String id,
+    Map<String, dynamic> fields,
+  ) async => Product.fromJson(
+    (await api.patch('$_base/products/$id/', body: fields)).map,
+  );
+
+  Future<NamedRef?> resolveReference(String name, {required bool brand}) async {
+    final text = name.trim();
+    if (text.isEmpty) return null;
+    Future<List<NamedRef>> load() => brand ? brands() : categories();
+    NamedRef? match(List<NamedRef> items) => items
+        .where((item) => item.name.toLowerCase() == text.toLowerCase())
+        .firstOrNull;
+    final existing = match(await load());
+    if (existing != null) return existing;
+    try {
+      return await (brand ? createBrand(text) : createCategory(text));
+    } on ApiException catch (e) {
+      if (e.fields['name']?.any((f) => f.code == 'name_taken') != true) rethrow;
+      final concurrent = match(await load());
+      if (concurrent == null) rethrow;
+      return concurrent;
+    }
+  }
 
   Future<Product> updateProduct(String id, ProductDraft draft) async =>
       Product.fromJson(

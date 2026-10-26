@@ -1,8 +1,14 @@
 # Try the whole system on your own computer (no Docker)
 
+### Local test role login (2026-10-26)
+
+On the local sample server, press **Войти** and choose **Владелец**, **Менеджер**, **Продавец** or **Кладовщик**. No fields need filling. If already signed in, sign out first. **Войти по логину и паролю** retains the regular form; existing usernames are `owner`, `manager`, `sales`, `warehouse`, and existing passwords are unchanged. Role selection is unavailable on production deployments, public hosts, inactive sample accounts or a non-sample business.
+
+Receiving now includes **Добавить вручную** for a new product without a barcode and name search for an existing product. Warranty months and batch expiry (`ДД.ММ.ГГГГ`, or ISO `YYYY-MM-DD`) are optional. Stock appears on catalog cards; filters find expired batches or dates within 30 days. These are in-app warnings for dated remaining batches, not push notifications. Existing undated stock stays undated.
+
 For your own testing. One program starts everything: the database, the server, the web app, the install page and the Android app. Nothing to sign up for, nothing is opened to the internet.
 
-Status (2026-10-13): checked on Linux (all 682 backend tests on this database, and the full browser run of 216 checks against it). Tried on **Windows 11** from the source code (not the `ERP-Test.zip` download): the database, the server, the web app in a browser and the app on an Android emulator (`http://10.0.2.2:8000`) all work, once **Git for Windows** is installed (see "Good to know"). **Not tried on a Mac yet**: if something fails, send the last lines it printed.
+Status (2026-10-26): the source launcher runs on this Mac with existing data retained. A separate disposable Mac shop passed 783 backend tests on PostgreSQL and the focused receiving/camera browser checks; see HANDOFF.md for scope. Earlier Linux verification covered 682 backend tests and 216 browser checks. Tried on **Windows 11** from source (not the `ERP-Test.zip` download): the database, browser app and Android emulator (`http://10.0.2.2:8000`) work once **Git for Windows** is installed (see "Good to know"). Physical phone acceptance remains pending.
 
 ## The easiest way: one download
 
@@ -54,11 +60,17 @@ For this local test server only, build with `cd mobile && flutter build web --no
 
 The option defaults to false and does not affect native apps, HTTPS or public hosts. Do not use it for a public or production deployment: use HTTPS there. The local HTTP test server is only for test data on a trusted Wi-Fi network.
 
+### Test with the MacBook webcam
+
+Open `http://localhost:8000/` on the MacBook (rather than its Wi-Fi IP address). In Sales click the scan icon beside search; in receiving click the camera button. Receiving immediately opens a single form with product details, quantity and both manual prices. Available online name, brand, category and package size are suggested for review, without overwriting your edits. Allow the browser's camera request. If macOS blocks access, enable the browser in System Settings > Privacy & Security > Camera and reopen the scanner. The camera opens only after clicking Scan; closing the scanner stops it. A scanned sales item appears in search without being added to the cart. Show a clear barcode to the webcam; focus and lighting still need checking with the actual device.
+
+The pinned scanner plugin may download its pinned ZXing decoder from jsDelivr when the browser has no native barcode detector, so that first scan needs internet access. No new dependency was added. A webcam without a flashlight does not show the torch control. Denied access or a missing camera offers manual code entry.
+
 ## Good to know
 
 - The local launcher prepares gzip versions of public web resources once at startup, reducing the data downloaded over Wi-Fi. Browsers negotiate compression automatically; build files still revalidate after updates. Private API files and APK downloads are not compressed by this helper. If replacing the web build manually, restart the launcher so it prepares the new compressed resources; stale compressed files are never served in place of newer originals.
 
-- The browser version has no camera button (browsers only allow the camera on `https`); a USB hand scanner works in it. The camera is tested on the tablet with the installed app.
+- Browser camera scanning is available at `http://localhost:8000/` on this computer or on HTTPS. Click the scan icon and allow camera access. Plain HTTP LAN addresses such as `http://192.168.x.x:8000` cannot use the browser camera; use HTTPS or the installed Android app there. Manual entry and keyboard-style scanners remain available.
 - Windows may ask whether the program may accept connections: allow it on private networks (the tablet needs that).
 - If port 8000 is taken, add `--port 8001` to the command.
 - The database here is a PostgreSQL program carried by a Python package (`pixeltable-pgserver`, PostgreSQL 18); the real servers use PostgreSQL 16 in Docker. The server code is the same. It is a development server for testing: do not keep real shop data in it, and do not leave it open on an untrusted network.
@@ -66,3 +78,29 @@ The option defaults to false and does not affect native apps, HTTPS or public ho
 - **Windows needs Git for Windows** (free, https://git-scm.com/download/win). The Windows build of the database program leaves out one library (`libwinpthread-1.dll`) and Git carries it; `run_local.py` finds it by itself. Without it the start stops with a message saying so (the raw error is `0xC0000135`). The `ERP-Test.zip` start has the same need.
 - **Android emulator:** the app inside the emulator reaches this computer at `http://10.0.2.2:8000` (type it at Server > Change; `127.0.0.1` there means the emulator itself). A debug build allows plain `http`.
 - The test app is a debug build signed with a throwaway key. When a newer test build comes out, remove the old app from the tablet before installing the new one (the data lives on the computer, not on the tablet).
+
+## Phone camera over private Wi-Fi HTTPS (2026-10-26)
+
+Phone browsers require a [trusted secure origin for camera access](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia). Opening the
+laptop's `http://192.168...:8000` address cannot enable the camera. Keep the normal
+local launcher running, then from the repository root run:
+
+```sh
+python3 scripts/local/serve_https.py --address <laptop-private-Wi-Fi-IPv4>
+```
+
+Requires Python 3.13 and OpenSSL. It prints `https://<address>:8443/` and the path
+to `local-data/https/phone-test-ca.crt`. Transfer **only that public certificate**
+to the test phone and install/trust it using the phone's certificate settings.
+On iOS, a manually installed root also needs full trust under Settings → General
+→ About → Certificate Trust Settings ([Apple instructions](https://support.apple.com/en-us/102390)). The browser must show a trusted connection;
+accepting a warning is not sufficient. Then open the printed HTTPS address and
+allow camera permission. The laptop and phone must share the private Wi-Fi.
+
+The helper binds only the chosen private address, forwards only to the local
+launcher, and creates no public tunnel. Private keys stay outside the served web
+directory and must never be transferred or committed. The server certificate
+lasts seven days; restart the helper to issue another. The local CA lasts 30 days;
+use a new TLS data folder and trust its new public CA after expiration. Stop the
+helper with Ctrl+C. For ordinary hosted use, use the existing Caddy/domain HTTPS
+deployment instead; phones should not need a custom CA there.

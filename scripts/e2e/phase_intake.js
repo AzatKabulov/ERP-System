@@ -14,6 +14,7 @@ module.exports = async function phaseIntake(page, ctx) {
     await fill(page, '^Код товара', code);
     await page.keyboard.press('Enter');
     await page.waitForTimeout(1200);
+    await clickLabel(page, 'Отмена'); // inspect the saved draft line, without saving metadata
   };
 
   let facts = dbFacts();
@@ -22,7 +23,7 @@ module.exports = async function phaseIntake(page, ctx) {
 
   await nav(page, 'Склад');
   await clickLabel(page, 'Приёмка сканированием', { role: 'button', wait: 1800 });
-  await expectText(page, 'the intake screen explains what to do', /Откройте коробку и отсканируйте каждый товар/);
+  await expectText(page, 'the intake screen explains what to do', /Отсканируйте один товар из коробки/);
   await pickFromDropdown(page, 'Куда принимаем', 'Main store');
 
   // three pieces of a product the catalog knows (by its article number), written in two letter cases
@@ -38,7 +39,7 @@ module.exports = async function phaseIntake(page, ctx) {
   await clickLabel(page, 'Добавить товар', { role: 'button', wait: 1500 });
   await expectText(page, 'the new product form shows the scanned code', /Код: MH044089/);
   await fill(page, '^Название товара', 'Подшипник КПП Fuso');
-  await clickLabel(page, 'Добавить и учесть', { role: 'button', wait: 2500 });
+  await clickLabel(page, 'Сохранить', { role: 'button', wait: 2500 });
   await expectText(page, 'the product is added and the two scans are on its line', /Подшипник КПП Fuso[\s\S]*2 шт/);
   await expectText(page, 'the totals say 2 lines and 5 pieces', /Позиций: 2, всего: 5/);
   await page.screenshot({ path: path.join(OUT, 'e2e-25-intake-list.png') });
@@ -87,7 +88,7 @@ module.exports = async function phaseIntake(page, ctx) {
   // the list is empty again, the stock page shows the new product
   await nav(page, 'Склад');
   await clickLabel(page, 'Приёмка сканированием', { role: 'button', wait: 2500 });
-  await expectText(page, 'a new intake starts from an empty list', /Откройте коробку и отсканируйте каждый товар/);
+  await expectText(page, 'a new intake starts from an empty list', /Отсканируйте один товар из коробки/);
   await expectNoText(page, 'and no old list is offered', /Продолжаем незавершённую приёмку/);
   await clickLabel(page, 'Назад', { role: 'button', wait: 1500 });
   await expectText(page, 'the stock page lists the new product with its count', /Подшипник КПП Fuso[\s\S]*3 шт/);

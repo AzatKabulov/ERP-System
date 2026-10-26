@@ -5,11 +5,12 @@ import mimetypes
 import os
 from pathlib import Path
 
-from django.urls import re_path
+from django.urls import path, re_path
 from django.utils._os import safe_join
 from django.utils.cache import patch_vary_headers
 from django.views.static import serve
 
+from apps.common.local_test_login import LocalTestLogin, local_health
 from config.urls import handler404, handler500  # noqa: F401
 from config.urls import urlpatterns as api_urlpatterns
 
@@ -64,6 +65,8 @@ def _accepts_gzip(request):
 
 
 urlpatterns = [
+    path("api/v1/health/", local_health),
+    path("api/v1/local-test-login/", LocalTestLogin.as_view()),
     *api_urlpatterns,
     re_path(r"^install/(?P<path>.*)$", _site(INSTALL_PAGE)),
     re_path(r"^downloads/(?P<path>.*)$", _site(DOWNLOADS, apk=True)),

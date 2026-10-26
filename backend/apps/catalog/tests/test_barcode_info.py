@@ -56,6 +56,7 @@ class FindingTests(BarcodeInfoCase):
                 "found": True,
                 "name": "Cerave Moisturising Cream",
                 "brand": "Cerave",
+                "category": "",
                 "quantity": "454 g",
                 "source": "Open Beauty Facts",
                 "unavailable": False,
@@ -64,6 +65,23 @@ class FindingTests(BarcodeInfoCase):
         (url,) = [c.args[0] for c in fetch.call_args_list]
         self.assertTrue(url.startswith("https://world.openbeautyfacts.org/"), url)
         self.assertIn(CERAVE, url)
+
+    def test_category_is_suggested_but_prices_and_costs_never_leave_the_lookup(self):
+        data = answer()
+        data["product"].update(categories="Care, Creams", price="999", cost="1")
+        with self.patched([data]):
+            result = self.ask().json()
+        self.assertEqual(result["category"], "Creams")
+        for field in ("price", "cost", "price_amount", "default_purchase_cost"):
+            self.assertNotIn(field, result)
+
+    def test_malformed_optional_metadata_is_ignored(self):
+        data = answer()
+        data["product"].update(brands={"wrong": "shape"}, categories=["wrong"], quantity=None)
+        with self.patched([data]):
+            result = self.ask().json()
+        self.assertTrue(result["found"])
+        self.assertEqual((result["brand"], result["category"], result["quantity"]), ("", "", ""))
 
     def test_only_the_digits_leave_the_server(self):
         with self.patched([answer()]) as fetch:

@@ -48,7 +48,7 @@ class _AreaChartState extends State<AreaChart>
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    if (AppMotion.reduced(context)) {
+    if (AppMotion.skipEntrance(context)) {
       _draw.value = 1;
     } else {
       _draw.forward();
@@ -390,10 +390,10 @@ class _BarRow extends StatelessWidget {
               ),
               TweenAnimationBuilder<double>(
                 tween: Tween(
-                  begin: AppMotion.reduced(context) ? fraction : 0,
+                  begin: AppMotion.skipEntrance(context) ? fraction : 0,
                   end: fraction,
                 ),
-                duration: AppMotion.of(
+                duration: AppMotion.entrance(
                   context,
                   Duration(milliseconds: 700 + index * 120),
                 ),
@@ -449,8 +449,11 @@ class DonutChart extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         TweenAnimationBuilder<double>(
-          tween: Tween(begin: AppMotion.reduced(context) ? 1 : 0, end: 1),
-          duration: AppMotion.of(context, const Duration(milliseconds: 1000)),
+          tween: Tween(begin: AppMotion.skipEntrance(context) ? 1 : 0, end: 1),
+          duration: AppMotion.entrance(
+            context,
+            const Duration(milliseconds: 1000),
+          ),
           curve: AppMotion.arrive,
           builder: (context, t, _) => CustomPaint(
             size: Size.square(size),

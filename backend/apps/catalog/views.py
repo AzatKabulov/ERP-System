@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Exists, OuterRef
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
@@ -19,7 +20,7 @@ from apps.common.errors import ApiError
 from apps.common.negotiation import IgnoreClientContentNegotiation
 from apps.common.uploads import declared_size_exceeds
 
-from . import csvio, lookup, photos, services
+from . import csvio, expiry, lookup, photos, services
 from .models import Barcode, Brand, Category, Product, ReorderSetting, Unit
 from .serializers import (
     BrandSerializer,
@@ -31,13 +32,18 @@ from .serializers import (
 )
 
 
-def _product_context(request):
-    return {
+def _product_context(request, product_ids=None):
+    context = {
         "request": request,
         "business": request.business,
         "rate": current_rate(request.business),
         "can_view_cost": has_permission(request.membership.role, "catalog.cost.view"),
     }
+    if product_ids is not None and has_permission(request.membership.role, "stock.view"):
+        location_id = _location_param(request)
+        context["stock"] = _stock_summary(request, product_ids, location_id)
+        context["expiry"] = expiry.summary(request, product_ids, location_id)
+    return context
 
 
 def _stock_summary(request, product_ids, location_id=None):
@@ -106,15 +112,16 @@ class ProductListCreateView(BusinessScopedMixin, generics.GenericAPIView):
             qs = qs.filter(brand_id=params["brand"])
         for token in params.get("q", "").casefold().split():
             qs = qs.filter(search_key__contains=token)
+        if params.get("expiry"):
+            if not has_permission(self.request.membership.role, "stock.view"):
+                raise ApiError("permission_denied", "Stock permission required", status_code=403)
+            batches = expiry.layers(self.request, _location_param(self.request))
+            qs = qs.filter(Exists(batches.filter(balance__product_id=OuterRef("pk"))))
         return qs
 
     def get(self, request, business_id):
         page = self.paginate_queryset(self.get_queryset())
-        context = _product_context(request)
-        if has_permission(request.membership.role, "stock.view"):
-            context["stock"] = _stock_summary(
-                request, [p.pk for p in page], _location_param(request)
-            )
+        context = _product_context(request, [p.pk for p in page])
         serializer = ProductSerializer(page, many=True, context=context)
         return self.get_paginated_response(serializer.data)
 
@@ -124,7 +131,8 @@ class ProductListCreateView(BusinessScopedMixin, generics.GenericAPIView):
         product = services.create_product(request.business, request.user, write.validated_data)
         product = _products(request.business).get(pk=product.pk)
         return Response(
-            ProductSerializer(product, context=_product_context(request)).data, status=201
+            ProductSerializer(product, context=_product_context(request, [product.pk])).data,
+            status=201,
         )
 
 
@@ -136,7 +144,9 @@ class ProductDetailView(BusinessAPIView):
 
     def get(self, request, business_id, product_id):
         product = self._product(request, product_id)
-        return Response(ProductSerializer(product, context=_product_context(request)).data)
+        return Response(
+            ProductSerializer(product, context=_product_context(request, [product.pk])).data
+        )
 
     def patch(self, request, business_id, product_id):
         product = self._product(request, product_id)
@@ -148,7 +158,9 @@ class ProductDetailView(BusinessAPIView):
         write.is_valid(raise_exception=True)
         services.update_product(request.business, request.user, product, write.validated_data)
         product = self._product(request, product_id)
-        return Response(ProductSerializer(product, context=_product_context(request)).data)
+        return Response(
+            ProductSerializer(product, context=_product_context(request, [product.pk])).data
+        )
 
 
 class BarcodeLookupView(BusinessAPIView):
@@ -180,7 +192,9 @@ class BarcodeLookupView(BusinessAPIView):
             raise ApiError(
                 "barcode_not_found", "No active product has this barcode", status_code=404
             )
-        return Response(ProductSerializer(product, context=_product_context(request)).data)
+        return Response(
+            ProductSerializer(product, context=_product_context(request, [product.pk])).data
+        )
 
 
 class BarcodeInfoView(BusinessAPIView):
@@ -206,6 +220,7 @@ class BarcodeInfoView(BusinessAPIView):
                 "found": info.found,
                 "name": info.name,
                 "brand": info.brand,
+                "category": info.category,
                 "quantity": info.quantity,
                 "source": info.source,
                 "unavailable": info.unavailable,
@@ -233,7 +248,8 @@ class ProductPhotoView(BusinessAPIView):
     def _answer(self, request, product_id, status=200):
         product = self._product(request, product_id)
         return Response(
-            ProductSerializer(product, context=_product_context(request)).data, status=status
+            ProductSerializer(product, context=_product_context(request, [product.pk])).data,
+            status=status,
         )
 
     def get(self, request, business_id, product_id):

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../core/api/api_exception.dart';
 import '../catalog/catalog_models.dart';
@@ -47,7 +48,7 @@ class IntakeController extends ChangeNotifier {
       ..clear()
       ..addAll(draft.entries);
     for (final e in List.of(_entries)) {
-      if (e.state != IntakeEntryState.found) _lookup(e);
+      if (!e.isManual && e.state != IntakeEntryState.found) _lookup(e);
     }
     notifyListeners();
     return true;
@@ -73,6 +74,20 @@ class IntakeController extends ChangeNotifier {
     _changed();
     _lookup(entry);
     return entry;
+  }
+
+  IntakeEntry addManual({Product? product}) {
+    final entry = IntakeEntry(
+      code: 'manual-${const Uuid().v4()}',
+      isManual: true,
+      state: IntakeEntryState.notFound,
+    );
+    _entries.add(entry);
+    if (product != null) _attach(entry, product);
+    _changed();
+    return _entries.contains(entry)
+        ? entry
+        : _entries.firstWhere((e) => e.product?.id == product?.id);
   }
 
   void setLocation(String? id) {
@@ -112,6 +127,8 @@ class IntakeController extends ChangeNotifier {
   /// just leaves the person to type the name.
   Future<void> _suggest(IntakeEntry entry) async {
     if (!looksLikeGtin(entry.code) || entry.suggestion != null) return;
+    entry.suggesting = true;
+    _notify();
     try {
       final info = await catalog.externalInfo(entry.code);
       if (info == null || !_entries.contains(entry)) return;
@@ -119,6 +136,9 @@ class IntakeController extends ChangeNotifier {
       _notify();
     } catch (_) {
       // not found online, no connection or a refusal: the person types the name
+    } finally {
+      entry.suggesting = false;
+      _notify();
     }
   }
 
@@ -126,6 +146,7 @@ class IntakeController extends ChangeNotifier {
   /// one product), the counts are added up and one line remains.
   void _attach(IntakeEntry entry, Product product) {
     final ref = ProductRef.fromProduct(product);
+    entry.product = ref;
     final twin = _entries
         .where((x) => !identical(x, entry) && x.product?.id == ref.id)
         .firstOrNull;
@@ -141,23 +162,31 @@ class IntakeController extends ChangeNotifier {
   }
 
   /// Adds a new product to the catalog for an unknown code and ties the line to it. The price is
-  /// left at zero (prices are typed at the sale) and the article number is the code unless the
+  /// optional (defaults to zero) and the article number is the code unless the
   /// person typed another. Throws [ApiException] when the server refuses.
   Future<void> addProduct(
     IntakeEntry entry, {
     required String name,
     required String sku,
     required UnitRef unit,
+    int priceMinor = 0,
+    String? brandId,
+    String? categoryId,
+    int warrantyMonths = 0,
   }) async {
     final draft = ProductDraft(
       sku: sku.trim(),
       name: name.trim(),
       unitId: unit.id,
-      priceMinor: 0,
+      priceMinor: priceMinor,
+      brandId: brandId,
+      categoryId: categoryId,
       priceCurrency: 'TMT',
-      warrantyMonths: 0,
+      warrantyMonths: warrantyMonths,
       warrantyTerms: '',
-      barcodes: codeFitsAsArticle(entry.code) ? [entry.code] : const [],
+      barcodes: !entry.isManual && codeFitsAsArticle(entry.code)
+          ? [entry.code]
+          : const [],
     );
     Product product;
     try {
@@ -179,6 +208,27 @@ class IntakeController extends ChangeNotifier {
     }
     if (!_entries.contains(entry)) return;
     _attach(entry, product);
+    _changed();
+  }
+
+  void saveFormField(IntakeEntry entry, String field, String value) {
+    entry.form[field] = value;
+    _changed();
+  }
+
+  void finishForm(
+    IntakeEntry entry,
+    Product product,
+    int quantityMilli,
+    int? costMinor, {
+    String? expiryDate,
+  }) {
+    _attach(entry, product);
+    final target = _entries.firstWhere((e) => e.product?.id == product.id);
+    target.quantityMilli = quantityMilli;
+    target.costMinor = costMinor;
+    target.expiryDate = expiryDate;
+    target.form.clear();
     _changed();
   }
 

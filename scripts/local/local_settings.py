@@ -5,3 +5,6 @@ program is the whole system. Nothing here is used by a real server."""
 from config.settings import *  # noqa: F401,F403
 
 ROOT_URLCONF = "local_urls"
+
+# Local sample-shop testing only; never imported by production settings.
+LOCAL_TEST_LOGIN_ENABLED = True

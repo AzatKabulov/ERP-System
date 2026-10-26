@@ -427,6 +427,7 @@ let PAGE = null;
   await fill(w.page, '^Код товара', 'BP-100');
   await w.page.keyboard.press('Enter');
   await w.page.waitForTimeout(1500);
+  await clickLabel(w.page, 'Отмена');
   await expectText(w.page, 'the keeper scans a known article number and sees the product with one piece', /Тормозные колодки[\s\S]*1 шт/);
   const keeperIntake = await text(w.page);
   check('the keeper sees no cost note, no cost field and no money on the intake screen', !/Себестоимость/.test(keeperIntake) && !/TMT/.test(keeperIntake), (keeperIntake.match(/.{20}(Себестоимость|TMT).{10}/) || [''])[0]);

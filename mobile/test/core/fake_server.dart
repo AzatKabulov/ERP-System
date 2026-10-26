@@ -34,6 +34,7 @@ class FakeServer {
   int tokenCounter = 1;
   bool refreshRejected = false;
   bool reachable = true;
+  Future<void>? externalWait;
 
   /// The next N operation POSTs are performed, then the answer is lost.
   int dropResponseAfterCommit = 0;
@@ -201,6 +202,7 @@ class FakeServer {
   final List<Map<String, dynamic>> brandsData = [
     {'id': 'br-1', 'name': 'Brembo', 'is_active': true},
   ];
+  bool localTestLogin = false;
   final List<Map<String, dynamic>> productsData = [];
   final List<Map<String, dynamic>> ratesData = []; // newest last
   int productCounter = 0;
@@ -357,6 +359,7 @@ class FakeServer {
 
   Future<http.Response> _handle(http.Request request) async {
     if (!reachable) throw http.ClientException('offline');
+    if (request.url.path.endsWith('/barcodes/info/')) await externalWait;
     final host = request.url.origin;
     hosts.add(host);
     if (deadHosts.contains(host)) {
@@ -370,7 +373,11 @@ class FakeServer {
       if (databaseDownHosts.contains(host)) {
         return _json(503, {'status': 'unavailable'});
       }
-      return _json(200, {'status': 'ok'});
+      return _json(200, {
+        'status': 'ok',
+        if (localTestLogin)
+          'test_login_roles': ['owner', 'manager', 'sales', 'warehouse'],
+      });
     }
     requestHeaders.add(Map.of(request.headers));
     log.add('${request.method} $path');
@@ -383,6 +390,16 @@ class FakeServer {
         ? <String, dynamic>{}
         : jsonDecode(utf8.decode(request.bodyBytes)) as Map<String, dynamic>;
 
+    if (path == '/api/v1/local-test-login/') {
+      if (!localTestLogin) return _error(404, 'not_found');
+      final role = body['role'] as String;
+      if (!['owner', 'manager', 'sales', 'warehouse'].contains(role)) {
+        return _error(400, 'validation_error');
+      }
+      this.role = role;
+      (me['memberships'] as List).first['role'] = role;
+      return _json(200, {'access': accessToken, 'refresh': refreshToken});
+    }
     if (path == '/api/v1/auth/login/') {
       if (body['password'] != 'right-password') {
         return _error(401, 'invalid_credentials');
@@ -780,6 +797,7 @@ class FakeServer {
         'found': info != null,
         'name': info?['name'] ?? '',
         'brand': info?['brand'] ?? '',
+        'category': info?['category'] ?? '',
         'quantity': info?['quantity'] ?? '',
         'source': info == null ? '' : 'Open Beauty Facts',
         'unavailable': false,
@@ -798,7 +816,7 @@ class FakeServer {
               .where((p) => '${p['sku']}'.toLowerCase() == code.toLowerCase())
               .firstOrNull;
       if (found == null) return _error(404, 'barcode_not_found');
-      return _json(200, _present(found));
+      return _json(200, _present(found, withStock: true));
     }
 
     if (rest == 'products/' && method == 'GET') {
@@ -808,6 +826,10 @@ class FakeServer {
         if (active == '1' && p['is_active'] != true) return false;
         if (active == '0' && p['is_active'] == true) return false;
         if (q['category'] != null && p['category'] != q['category']) {
+          return false;
+        }
+        if (q['expiry'] != null &&
+            (p['expiry'] as Map?)?['status'] != q['expiry']) {
           return false;
         }
         final haystack =
@@ -916,7 +938,9 @@ class FakeServer {
           .where((p) => p['id'] == one.group(1))
           .firstOrNull;
       if (existing == null) return _error(404, 'not_found');
-      if (method == 'GET') return _json(200, _present(existing));
+      if (method == 'GET') {
+        return _json(200, _present(existing, withStock: true));
+      }
       if (method == 'PATCH') {
         productWrites++;
         final err = _validateProduct(body, existing);

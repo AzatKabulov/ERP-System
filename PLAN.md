@@ -1,5 +1,22 @@
 # Delivery Plan
 
+## Phone web parity and receiving follow-up (owner, 2026-10-26)
+
+- [x] Manual name-only receiving without a barcode; optional warranty and batch expiry; permitted stock totals on product search/detail; soon/expired catalog filters.
+- [x] Serialized camera cleanup with actual browser track-state verification, including late startup after closing.
+- [x] Guarded sample-role login only in the standalone local testing configuration.
+- [x] Remove overlapping decorative entrance animations on narrow screens and bundle the pinned web scanner fallback on the application origin.
+- [x] Prepare private-Wi-Fi HTTPS without exposing the local shop publicly or weakening production security.
+- [ ] Physical phone acceptance: record model/browser, trust local testing CA or use deployed trusted HTTPS, scan in receiving/catalog/sales, check camera release, touch/keyboard/forms/files and real scrolling/loading performance. Desktop phone emulation does not complete this step.
+
+## Receiving form refinement (owner, 2026-10-23)
+
+Scan/code entry opens one product-and-receipt form. Prefill available non-price metadata for review; keep purchase/selling prices manual, persist unsaved input, and preserve role checks. No automotive fitment/OEM source or new commercial lookup service has been selected. Physical tablet acceptance remains outstanding.
+
+## Owner workflow update (2026-10-23)
+
+Receiving: scan one item, type the box quantity, fill the name and optional price, then confirm receipt. Sales: scans show search results only; adding to the cart is explicit. This supersedes the earlier per-piece camera counting and scan-to-cart behavior in phases 3/5/9.6. Physical Android camera/scanner acceptance remains outstanding.
+
 Status: approved roadmap, 2026-10-06; revised the same day after Codex's review and the owner's answers (see "Revision history" at the end). Scope is defined in [docs/PRD.md](docs/PRD.md), the technical design in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), the visual rules in [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) and the development rules in [AGENTS.md](AGENTS.md). This plan only orders the work. When it conflicts with those documents, they win; update this plan.
 
 Starting point: a bilingual Flutter interface prototype that runs on demonstration data only (see [HANDOFF.md](HANDOFF.md)).

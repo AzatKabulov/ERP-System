@@ -1,0 +1,533 @@
+{
+  "warm": {
+    "feedbackMs": {
+      "baseline": {
+        "n": 10,
+        "median": 84.84999996423721,
+        "q1": 83.87500001490116,
+        "q3": 87.74999998509884,
+        "min": 79.5,
+        "max": 94.09999996423721
+      },
+      "candidate": {
+        "n": 10,
+        "median": 86.55000001192093,
+        "q1": 84.2250000089407,
+        "q3": 89.09999996423721,
+        "min": 76.29999995231628,
+        "max": 91
+      },
+      "medianReductionPercent": -2.0035357081912064
+    },
+    "usefulMs": {
+      "baseline": {
+        "n": 10,
+        "median": 173.80000001192093,
+        "q1": 171.1499999910593,
+        "q3": 178.4249999821186,
+        "min": 157.80000001192093,
+        "max": 203.0999999642372
+      },
+      "candidate": {
+        "n": 10,
+        "median": 165.69999998807907,
+        "q1": 161.9249999821186,
+        "q3": 183.5750000178814,
+        "min": 155,
+        "max": 206.30000001192093
+      },
+      "medianReductionPercent": 4.660529357471965
+    },
+    "readyMs": {
+      "baseline": {
+        "n": 10,
+        "median": 303.0,
+        "q1": 291.24999998509884,
+        "q3": 316.15000000596046,
+        "min": 259.69999998807907,
+        "max": 324.89999997615814
+      },
+      "candidate": {
+        "n": 10,
+        "median": 305.14999997615814,
+        "q1": 275.7249999791384,
+        "q3": 315.3749999701977,
+        "min": 260.4000000357628,
+        "max": 328.2000000476837
+      },
+      "medianReductionPercent": -0.7095709492271007
+    },
+    "callbackWorkMs500": {
+      "baseline": {
+        "n": 10,
+        "median": 305.16700000000003,
+        "q1": 300.3165,
+        "q3": 315.336,
+        "min": 277.869,
+        "max": 326.995
+      },
+      "candidate": {
+        "n": 10,
+        "median": 307.1395,
+        "q1": 293.29925,
+        "q3": 316.0175,
+        "min": 281.649,
+        "max": 352.753
+      },
+      "medianReductionPercent": -0.6463673988340801
+    },
+    "longestCallbackMs": {
+      "baseline": {
+        "n": 10,
+        "median": 60.19199999999999,
+        "q1": 53.114000000000004,
+        "q3": 68.82325,
+        "min": 47.457,
+        "max": 78.503
+      },
+      "candidate": {
+        "n": 10,
+        "median": 54.8285,
+        "q1": 53.02225,
+        "q3": 64.06400000000001,
+        "min": 49.738,
+        "max": 80.666
+      },
+      "medianReductionPercent": 8.910652578415734
+    }
+  },
+  "blocks": [
+    {
+      "folder": "0-baseline",
+      "bundleSha256": "37d17eb0e61319767875187af2ec731206ae5a1dc2a16211defa5dc36f68e053",
+      "samples": [
+        {
+          "i": 0,
+          "cache": "first-route",
+          "feedbackMs": 135.30000001192093,
+          "usefulMs": 253.80000001192093,
+          "readyMs": 421.69999998807907,
+          "callbackWorkMs500": 414.323,
+          "longestCallbackMs": 93.214,
+          "apiMs": [
+            7.665,
+            9.137
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 1,
+          "cache": "warm",
+          "feedbackMs": 94.09999996423721,
+          "usefulMs": 176.0999999642372,
+          "readyMs": 316.80000001192093,
+          "callbackWorkMs500": 326.995,
+          "longestCallbackMs": 64.35,
+          "apiMs": [
+            3.51,
+            8.74
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 2,
+          "cache": "warm",
+          "feedbackMs": 90.40000003576279,
+          "usefulMs": 172.5,
+          "readyMs": 301.30000001192093,
+          "callbackWorkMs500": 303.904,
+          "longestCallbackMs": 53.186,
+          "apiMs": [
+            3.636,
+            8.162
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 3,
+          "cache": "warm",
+          "feedbackMs": 84.10000002384186,
+          "usefulMs": 174.80000001192093,
+          "readyMs": 304.10000002384186,
+          "callbackWorkMs500": 301.665,
+          "longestCallbackMs": 52.178,
+          "apiMs": [
+            3.996,
+            9.521
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 4,
+          "cache": "warm",
+          "feedbackMs": 83,
+          "usefulMs": 157.80000001192093,
+          "readyMs": 259.69999998807907,
+          "callbackWorkMs500": 277.869,
+          "longestCallbackMs": 47.457,
+          "apiMs": [
+            4.177,
+            8.183
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 5,
+          "cache": "warm",
+          "feedbackMs": 88.19999998807907,
+          "usefulMs": 179.19999998807907,
+          "readyMs": 324.89999997615814,
+          "callbackWorkMs500": 306.43,
+          "longestCallbackMs": 53.09,
+          "apiMs": [
+            4.515,
+            8.135
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        }
+      ]
+    },
+    {
+      "folder": "1-candidate",
+      "bundleSha256": "2124be7d5f29c9f639f25b73e11b5111fcfbbc19f67ed38aa2de1f9c4d0c9dd6",
+      "samples": [
+        {
+          "i": 0,
+          "cache": "first-route",
+          "feedbackMs": 140.5,
+          "usefulMs": 253.69999998807907,
+          "readyMs": 408.0999999642372,
+          "callbackWorkMs500": 411.668,
+          "longestCallbackMs": 90.069,
+          "apiMs": [
+            8.022,
+            9.403
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 1,
+          "cache": "warm",
+          "feedbackMs": 88.5,
+          "usefulMs": 187.10000002384186,
+          "readyMs": 328.2000000476837,
+          "callbackWorkMs500": 352.753,
+          "longestCallbackMs": 65.668,
+          "apiMs": [
+            9.248,
+            10.664
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 2,
+          "cache": "warm",
+          "feedbackMs": 89.29999995231628,
+          "usefulMs": 173,
+          "readyMs": 304.2999999523163,
+          "callbackWorkMs500": 305.657,
+          "longestCallbackMs": 53.916,
+          "apiMs": [
+            4.01,
+            8.457
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 3,
+          "cache": "warm",
+          "feedbackMs": 76.29999995231628,
+          "usefulMs": 155,
+          "readyMs": 269.7999999523163,
+          "callbackWorkMs500": 292.813,
+          "longestCallbackMs": 51.218,
+          "apiMs": [
+            4.316,
+            8.798
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 4,
+          "cache": "warm",
+          "feedbackMs": 84.10000002384186,
+          "usefulMs": 163.5,
+          "readyMs": 291.69999998807907,
+          "callbackWorkMs500": 294.758,
+          "longestCallbackMs": 52.867,
+          "apiMs": [
+            4.541,
+            8.226
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 5,
+          "cache": "warm",
+          "feedbackMs": 84.59999996423721,
+          "usefulMs": 160.30000001192093,
+          "readyMs": 313.19999998807907,
+          "callbackWorkMs500": 317.343,
+          "longestCallbackMs": 55.741,
+          "apiMs": [
+            4.411,
+            8.33
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        }
+      ]
+    },
+    {
+      "folder": "2-baseline",
+      "bundleSha256": "37d17eb0e61319767875187af2ec731206ae5a1dc2a16211defa5dc36f68e053",
+      "samples": [
+        {
+          "i": 0,
+          "cache": "first-route",
+          "feedbackMs": 135.39999997615814,
+          "usefulMs": 249.89999997615814,
+          "readyMs": 450.89999997615814,
+          "callbackWorkMs500": 424.388,
+          "longestCallbackMs": 89.758,
+          "apiMs": [
+            7.626,
+            9.649
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 1,
+          "cache": "warm",
+          "feedbackMs": 86.39999997615814,
+          "usefulMs": 170.69999998807907,
+          "readyMs": 314.19999998807907,
+          "callbackWorkMs500": 317.658,
+          "longestCallbackMs": 65.737,
+          "apiMs": [
+            3.987,
+            8.25
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 2,
+          "cache": "warm",
+          "feedbackMs": 85.39999997615814,
+          "usefulMs": 172.80000001192093,
+          "readyMs": 301.89999997615814,
+          "callbackWorkMs500": 311.775,
+          "longestCallbackMs": 69.852,
+          "apiMs": [
+            5.22,
+            8.874
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 3,
+          "cache": "warm",
+          "feedbackMs": 83.80000001192093,
+          "usefulMs": 203.0999999642372,
+          "readyMs": 317.80000001192093,
+          "callbackWorkMs500": 316.523,
+          "longestCallbackMs": 78.503,
+          "apiMs": [
+            3.81,
+            8.131
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 4,
+          "cache": "warm",
+          "feedbackMs": 84.29999995231628,
+          "usefulMs": 165.69999998807907,
+          "readyMs": 287.5999999642372,
+          "callbackWorkMs500": 295.098,
+          "longestCallbackMs": 56.034,
+          "apiMs": [
+            4.145,
+            8.136
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 5,
+          "cache": "warm",
+          "feedbackMs": 79.5,
+          "usefulMs": 183.19999998807907,
+          "readyMs": 287.89999997615814,
+          "callbackWorkMs500": 299.867,
+          "longestCallbackMs": 74.928,
+          "apiMs": [
+            4.798,
+            9.006
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        }
+      ]
+    },
+    {
+      "folder": "3-candidate",
+      "bundleSha256": "2124be7d5f29c9f639f25b73e11b5111fcfbbc19f67ed38aa2de1f9c4d0c9dd6",
+      "samples": [
+        {
+          "i": 0,
+          "cache": "first-route",
+          "feedbackMs": 131.80000001192093,
+          "usefulMs": 248.5,
+          "readyMs": 420.10000002384186,
+          "callbackWorkMs500": 424.211,
+          "longestCallbackMs": 94.745,
+          "apiMs": [
+            7.998,
+            9.408
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 1,
+          "cache": "warm",
+          "feedbackMs": 91,
+          "usefulMs": 187.69999998807907,
+          "readyMs": 316.5999999642372,
+          "callbackWorkMs500": 324.945,
+          "longestCallbackMs": 67.739,
+          "apiMs": [
+            3.571,
+            8.44
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 2,
+          "cache": "warm",
+          "feedbackMs": 90.89999997615814,
+          "usefulMs": 166.89999997615814,
+          "readyMs": 316.0999999642372,
+          "callbackWorkMs500": 312.041,
+          "longestCallbackMs": 59.252,
+          "apiMs": [
+            4.037,
+            9.856
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 3,
+          "cache": "warm",
+          "feedbackMs": 85.40000003576279,
+          "usefulMs": 206.30000001192093,
+          "readyMs": 306,
+          "callbackWorkMs500": 308.622,
+          "longestCallbackMs": 80.666,
+          "apiMs": [
+            3.558,
+            8.479
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 4,
+          "cache": "warm",
+          "feedbackMs": 87.69999998807907,
+          "usefulMs": 164.5,
+          "readyMs": 260.4000000357628,
+          "callbackWorkMs500": 281.649,
+          "longestCallbackMs": 49.738,
+          "apiMs": [
+            4.886,
+            8.619
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        },
+        {
+          "i": 5,
+          "cache": "warm",
+          "feedbackMs": 83.10000002384186,
+          "usefulMs": 161.39999997615814,
+          "readyMs": 270.39999997615814,
+          "callbackWorkMs500": 289.959,
+          "longestCallbackMs": 53.488,
+          "apiMs": [
+            4.256,
+            8.675
+          ],
+          "endpoints": [
+            "categories/",
+            "products/"
+          ]
+        }
+      ]
+    }
+  ]
+}

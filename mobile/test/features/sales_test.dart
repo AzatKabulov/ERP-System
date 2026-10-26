@@ -236,53 +236,78 @@ void main() {
       expect(tester.widget<Text>(key('cart-total')).data, tmt(16000));
     });
 
-    testWidgets('scanning puts the product in the cart and sells nothing', (
-      tester,
-    ) async {
-      final scanner = FakeScanner(results: ['4006381333931', '0000000000000']);
-      final t = deskRig(rig: RealRig(scanner: scanner));
-      await openSales(tester, t.rig);
-      await tapKey(tester, 'scan-button');
-      await settle(tester);
-      expect(key('cart-qty-0'), findsOneWidget);
-      expect(tester.widget<Text>(key('cart-total')).data, tmt(10000));
-      await tapKey(tester, 'scan-button'); // a code nobody has
-      await settle(tester);
-      expect(
-        find.text('Товар с кодом 0000000000000 не найден.'),
-        findsOneWidget,
-      );
-      expect(key('cart-qty-1'), findsNothing);
-      expect(t.rig.server.ledger.salesRecorded, 0);
-    });
-
     testWidgets(
-      'a hand scanner that types the code and presses Enter fills the cart',
+      'camera shows the exact result and only an explicit tap adds it',
       (tester) async {
-        final t = deskRig();
+        final scanner = FakeScanner(
+          results: ['4006381333931', '0000000000000', null],
+        );
+        final t = deskRig(rig: RealRig(scanner: scanner));
         await openSales(tester, t.rig);
-        Future<void> scan(String code) async {
-          await tester.enterText(key('sales-search'), code);
-          await tester.testTextInput.receiveAction(TextInputAction.done);
-          await settle(tester, ms: 500);
-        }
-
-        await scan('4006381333931'); // the barcode
-        expect(typed(tester, 'cart-qty-0'), '1');
-        await scan('bp-1'); // the article number, any letter case
-        expect(typed(tester, 'cart-qty-0'), '2');
-        expect(tester.widget<Text>(key('cart-total')).data, tmt(20000));
-        expect(typed(tester, 'sales-search'), ''); // ready for the next item
-        await scan('колодки'); // a name is an ordinary search, nothing is added
-        expect(typed(tester, 'cart-qty-0'), '2');
+        await tapKey(tester, 'scan-button');
+        await settle(tester);
+        expect(typed(tester, 'sales-search'), '4006381333931');
         expect(key('sell-BP-1'), findsOneWidget);
-        await scan(
-          '0000000000000',
-        ); // a code nobody has: a search, no complaint, nothing added
-        expect(key('cart-qty-1'), findsNothing);
+        expect(key('cart-qty-0'), findsNothing);
+        await tapKey(tester, 'sell-BP-1');
+        await settle(tester);
+        expect(typed(tester, 'cart-qty-0'), '1');
+        await tapKey(tester, 'scan-button');
+        await settle(tester);
+        expect(
+          find.text('Товар с кодом 0000000000000 не найден.'),
+          findsOneWidget,
+        );
+        expect(key('sell-BP-1'), findsNothing);
+        expect(typed(tester, 'cart-qty-0'), '1');
+        await tapKey(
+          tester,
+          'scan-button',
+        ); // cancelled: preserve search and cart
+        await settle(tester);
+        expect(typed(tester, 'sales-search'), '0000000000000');
+        expect(typed(tester, 'cart-qty-0'), '1');
         expect(t.rig.server.ledger.salesRecorded, 0);
       },
     );
+
+    testWidgets('a failed scan keeps the cart and can be retried', (
+      tester,
+    ) async {
+      final scanner = FakeScanner(results: ['4006381333931', '4006381333931']);
+      final t = deskRig(rig: RealRig(scanner: scanner));
+      await openSales(tester, t.rig);
+      await tapKey(tester, 'sell-BP-1');
+      await settle(tester);
+      t.rig.server.reachable = false;
+      await tapKey(tester, 'scan-button');
+      await settle(tester);
+      expect(typed(tester, 'cart-qty-0'), '1');
+      expect(key('sell-BP-1'), findsNothing);
+      expect(typed(tester, 'sales-search'), '4006381333931');
+      t.rig.server.reachable = true;
+      await tapKey(tester, 'scan-button');
+      await settle(tester);
+      expect(key('sell-BP-1'), findsOneWidget);
+      expect(typed(tester, 'cart-qty-0'), '1');
+      expect(t.rig.server.ledger.salesRecorded, 0);
+    });
+
+    testWidgets('keyboard scanner searches without adding to the cart', (
+      tester,
+    ) async {
+      final t = deskRig();
+      await openSales(tester, t.rig);
+      for (final code in ['4006381333931', 'bp-1', 'колодки']) {
+        await tester.enterText(key('sales-search'), code);
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await settle(tester, ms: 500);
+        expect(key('sell-BP-1'), findsOneWidget);
+        expect(typed(tester, 'sales-search'), code);
+        expect(key('cart-qty-0'), findsNothing);
+      }
+      expect(t.rig.server.ledger.salesRecorded, 0);
+    });
 
     testWidgets(
       'a USD-priced product with no rate is sold at the price the seller types',

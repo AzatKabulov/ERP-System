@@ -74,6 +74,7 @@ def _carry(posted, location, condition) -> list[inventory.Line]:
             quantity=-m.quantity,
             unit_cost=m.unit_cost,
             cost_known=m.layer.cost_known,
+            expiry_date=m.layer.expiry_date,
             movement_type=MovementType.TRANSFER_IN,
             condition=condition,
         )
@@ -593,6 +594,7 @@ def receive_intake(business, actor, membership, data: dict) -> StockIntake:
                     quantity=row["quantity"],
                     unit_cost=cost,
                     cost_known=given is not None or default is not None,
+                    expiry_date=row.get("expiry_date"),
                 )
             )
         StockIntakeLine.objects.bulk_create(lines)
@@ -606,6 +608,7 @@ def receive_intake(business, actor, membership, data: dict) -> StockIntake:
                     quantity=line.quantity,
                     unit_cost=line.unit_cost,
                     cost_known=line.cost_known,
+                    expiry_date=line.expiry_date,
                     movement_type=MovementType.INTAKE,
                 )
                 for line in lines

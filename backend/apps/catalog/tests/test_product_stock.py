@@ -80,7 +80,7 @@ class ProductStockCase(APITestCase):
         from django.db import connection
         from django.test.utils import CaptureQueriesContext
 
-        for i in range(5):
+        for _ in range(5):
             self.w.stock(self.w.pad, self.w.store, 1, "10.00")
         with CaptureQueriesContext(connection) as few:
             self.w.api[Role.OWNER].get(f"{self.w.base}/products/")

@@ -118,6 +118,8 @@ class ProductSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         if not self.context.get("can_view_cost"):
             data.pop("default_purchase_cost", None)
+        if "expiry" in self.context:
+            data["expiry"] = self.context["expiry"].get(instance.pk)
         stock = self.context.get("stock")
         if stock is not None:
             on_hand, minimum = stock.get(instance.pk, (0, 0))

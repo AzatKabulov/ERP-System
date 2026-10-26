@@ -64,6 +64,9 @@ class Product {
     this.photoVersion,
     this.onHandMilli,
     this.minimumMilli,
+    this.expiryDate,
+    this.expiryQuantityMilli,
+    this.expiryStatus,
   });
 
   final String id;
@@ -99,6 +102,9 @@ class Product {
   /// thousandths. Null when the role may not see stock.
   final int? onHandMilli;
   final int? minimumMilli;
+  final String? expiryDate;
+  final int? expiryQuantityMilli;
+  final String? expiryStatus;
 
   factory Product.fromJson(Map<String, dynamic> json) {
     final price = (json['price'] as Map).cast<String, dynamic>();
@@ -129,6 +135,12 @@ class Product {
       barcodes: [for (final b in json['barcodes'] as List) b as String],
       isActive: json['is_active'] as bool,
       photoVersion: (json['photo'] as Map?)?['version'] as String?,
+      expiryDate: (json['expiry'] as Map?)?['date'] as String?,
+      expiryQuantityMilli: parseServerDecimal(
+        (json['expiry'] as Map?)?['quantity'] as String?,
+        3,
+      ),
+      expiryStatus: (json['expiry'] as Map?)?['status'] as String?,
       onHandMilli: parseServerDecimal(
         (json['stock'] as Map?)?['on_hand'] as String?,
         3,
@@ -241,11 +253,13 @@ class ExternalInfo {
     required this.brand,
     required this.quantity,
     required this.source,
+    this.category = '',
   });
   final String name;
   final String brand;
   final String quantity;
   final String source;
+  final String category;
 
   /// The name to offer: the product's own name, with the brand and the size added when the name
   /// does not already say them ("CeraVe Moisturising Cream 454 g").
@@ -269,6 +283,7 @@ class ExternalInfo {
       brand: ((json['brand'] as String?) ?? '').trim(),
       quantity: ((json['quantity'] as String?) ?? '').trim(),
       source: (json['source'] as String?) ?? '',
+      category: ((json['category'] as String?) ?? '').trim(),
     );
   }
 }

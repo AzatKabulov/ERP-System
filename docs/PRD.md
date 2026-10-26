@@ -1,5 +1,28 @@
 # Product Requirements Document
 
+## Manual receiving, stock visibility and expiry (owner request, 2026-10-26)
+
+Receiving also offers **Add manually** for a product without a barcode: enter its name and quantity, with other fields optional. An internal article identifier is generated when none is entered; no barcode is invented. Existing products can be selected by name without scanning. Existing catalog-management permissions still apply to creating or editing products.
+
+The receiving form includes optional warranty months, using the existing product warranty and sale snapshots, and an optional batch expiry date. Different receipts of the same product may have different expiry dates. A receipt still contains one line per product; dates apply to that line, not earlier stock. Blank dates remain unknown. Russian and Turkmen interfaces show remaining quantities in the gallery, list and product detail, including barcode search results.
+
+The catalog highlights dated batches and offers **expires within 30 days** and **expired** filters. Today is included in the 30-day window; a date is expired starting the following business-local day. Only remaining sellable quantities in permitted locations trigger warnings. The displayed date applies to its displayed batch quantity. These are in-app warnings, not scheduled push messages; existing FIFO accounting and sale rules remain unchanged.
+
+The camera must release its media tracks when a scan finishes, the scanner closes, or the application goes into the background, including startup that completes after an early exit.
+
+For the owner's local sample-shop testing only, sign-in offers a role picker without typing credentials. Real roles and backend permissions remain enforced. Normal deployments do not expose that endpoint; password sign-in remains available.
+
+## Unified receiving form (owner decision, 2026-10-23)
+
+After a camera scan or submitted code, receiving opens one form for the product and the box: name, quantity, purchase cost per unit, selling price, brand, category, article number and stock unit. Photo selection remains available. The form is prefilled from the existing catalog or, for an unknown GTIN, from available public lookup metadata (name, brand, category and package size within the name). The package size is never treated as the number of items received. Staff review/edit the suggestions before saving. Prices and costs are never imported from the internet or prefilled from catalog lookups; an empty selling price leaves an existing product's price unchanged, and a new product can still be completed later. Purchase cost applies to this receipt, without repricing old stock.
+
+The lookup still uses the existing open GTIN databases. Automotive part-number/OEM/vehicle-fitment coverage is not established; missing metadata is entered manually, and compatibility or warranty terms are never guessed. The existing permission model is retained: catalog changes/new products require owner/manager rights, purchase costs require stock-cost permission, and warehouse staff can count known products. Unsaved form fields survive restart; late lookup answers cannot overwrite edited or explicitly cleared fields. Saving the form does not post stock; the separate receiving confirmation does.
+
+
+## Barcode workflow — owner decision, 2026-10-23
+
+Receive a box by scanning one item and typing the total quantity (e.g. 50). A new catalog product keeps that barcode; staff enter its name and optional selling price, and can complete other details in the catalog. Confirming receipt adds the entered quantity once. In Sales, a camera scan or keyboard scanner only finds products in search; the worker explicitly adds a result to the cart. Scanning alone never posts a receipt or a sale. This supersedes older descriptions of scanning every piece and automatically adding scanned sales items to the cart. The owner also requested laptop webcam testing: browser scanning is enabled on HTTPS or localhost/loopback, with permission handling and manual fallback. Physical tablet acceptance is still required.
+
 Status: Initial draft based on the agreed product idea. Requirements describe intended behavior, not features already implemented.
 
 ## Product Overview
@@ -47,7 +70,7 @@ Show sales totals, inventory value, low-stock alerts, reorder suggestions, and r
 
 ### Products and Barcode Scanning
 
-> **Added 2026-10-14 (owner):** goods are received by scanning one item and typing the count; an unknown barcode gets a suggested name from public open databases (asked by the server, only the digits leave it); a price or a cost may be left empty and filled in later from a "to complete" list, and profit leaves out sales whose cost is not known yet instead of treating the goods as free. The products page has a gallery view as well as a list. Each product can have a picture, added by any worker with the camera or from the gallery, so goods can be found by sight (shown in the gallery, list, product page and sales search). The scanner's role is decided by the screen: a scan while receiving adds, a scan at the till sells.
+> **Added 2026-10-14 (owner):** goods are received by scanning one item and typing the count; an unknown barcode gets a suggested name from public open databases (asked by the server, only the digits leave it); a price or a cost may be left empty and filled in later from a "to complete" list, and profit leaves out sales whose cost is not known yet instead of treating the goods as free. The products page has a gallery view as well as a list. Each product can have a picture, added by any worker with the camera or from the gallery, so goods can be found by sight (shown in the gallery, list, product page and sales search). The scanner's role is decided by the screen: a scan while receiving identifies the product; a scan in Sales shows the product in search for explicit selection.
 
 Manage names, SKUs, barcodes, categories, brands, units, purchase costs, selling prices, and warranty terms. Support product lookup by text or barcode during sales, receiving, and stock counts.
 
@@ -59,7 +82,7 @@ Track stock separately for each location, with optional shelf or bin information
 
 Transfers distinguish goods dispatched, in transit, and received. Goods must not appear available at both locations during a transfer.
 
-Receiving by scanning: when a box arrives, staff scan every item with a hand scanner or the camera; each scan adds one to that product's line, identical items add up, and one tap puts the counted list on the shelf. A code the catalog does not know is added with just a name. The list survives a crash. The cost is optional, so the main purpose, knowing what is on the shelf, never waits for prices.
+Receiving by scanning: when a box arrives, staff scan one item with the camera and type the total quantity in the box; one confirmation puts the counted list on the shelf. A code the catalog does not know is added with just a name. The list survives a crash. The cost is optional, so the main purpose, knowing what is on the shelf, never waits for prices.
 
 ### Purchasing and Reordering
 
@@ -124,7 +147,7 @@ Restoration is a controlled administrator operation. CSV exports alone do not sa
 5. Stock count: staff record physical quantities, review discrepancies, and an authorized user approves explained adjustments.
 6. Return: staff find an original sale, record eligible returned items and their condition, and record the refund and appropriate stock changes.
 7. Warranty: staff find the original sale, check entitlement, open a claim, and record the resolution.
-9. Receiving by scanning: staff open a box, scan each item (hand scanner or camera), add any unknown product with a name, and put the counted list on the shelf; the same code scanned at the sale takes one piece off.
+9. Receiving by scanning: staff open a box, scan one item, type the box quantity, add any unknown product with its name and optional price, and confirm receipt. In Sales the same code shows the product in search; explicit selection adds it to the cart and completing the sale changes stock.
 8. Owner review: an owner filters reports to understand sales, expenses, stock value, and replenishment needs.
 
 ## Functional and Quality Requirements

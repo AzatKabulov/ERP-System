@@ -1,5 +1,17 @@
 # Performance improvements — 2026-10-22
 
+Phone web follow-up (2026-10-26): narrow screens now skip overlapping decorative
+entrance animation, and scanning loads its pinned fallback decoder from the app
+origin. The final release comparison measured **13.0% less main-thread navigation
+work** in a 390 × 844 desktop-browser control. This is not a phone FPS or cold-load
+claim; the reported 10-FPS symptom still needs the target device/browser.
+See [raw measurements, method and limits](performance/2026-10-26/README.md).
+
+For the later, narrower experiment with raw traces and a rejected optimization, see
+[Navigation experiment — 2026-10-23](performance/2026-10-23/README.md).
+The historical measurements below are a different workload and are not the baseline
+for that experiment.
+
 Measured against the local test server and its existing sample shop, using the pinned Flutter 3.47.6 release web build. No stock-changing workflow or database schema changed.
 
 ## What changed and why

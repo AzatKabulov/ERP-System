@@ -25,7 +25,7 @@ SOURCES = (
     ("Open Products Facts", "https://world.openproductsfacts.org/api/v2/product/{code}.json"),
     ("Open Food Facts", "https://world.openfoodfacts.org/api/v2/product/{code}.json"),
 )
-FIELDS = "product_name,generic_name,brands,quantity"
+FIELDS = "product_name,generic_name,brands,quantity,categories"
 USER_AGENT = "ERP-System/1.0 (inventory app; barcode lookup by the shop's own server)"
 MAX_BYTES = 1_000_000
 HIT_SECONDS = 30 * 24 * 3600
@@ -40,6 +40,7 @@ class Info:
     brand: str = ""
     quantity: str = ""
     source: str = ""
+    category: str = ""
     unavailable: bool = False
 
 
@@ -74,20 +75,21 @@ def _fetch(url: str) -> dict | None:
 
 
 def _clean(text) -> str:
-    return " ".join(str(text or "").split())
+    return " ".join(text.split()) if isinstance(text, str) else ""
 
 
 def _info(product: dict, source: str) -> Info | None:
     name = _clean(product.get("product_name")) or _clean(product.get("generic_name"))
     if not name:
         return None
-    brand = _clean((product.get("brands") or "").split(",")[0])
+    brand = _clean(product.get("brands")).split(",")[0].strip()
     return Info(
         found=True,
         name=name[:NAME_MAX],
         brand=brand[:100],
         quantity=_clean(product.get("quantity"))[:50],
         source=source,
+        category=_clean(product.get("categories")).split(",")[-1].strip()[:100],
     )
 
 
@@ -95,7 +97,7 @@ def lookup(code: str) -> Info:
     """What the open databases know about this (valid) barcode."""
     if not settings.BARCODE_LOOKUP_ENABLED:
         return Info(found=False, unavailable=True)
-    key = f"gtin:v1:{code}"
+    key = f"gtin:v2:{code}"
     cached = cache.get(key)
     if cached is not None:
         return Info(**cached)

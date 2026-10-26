@@ -21,6 +21,15 @@ abstract final class AppMotion {
   static bool reduced(BuildContext context) =>
       MediaQuery.disableAnimationsOf(context);
 
+  /// On narrow screens, show data immediately instead of simultaneously fading
+  /// the page, staggering cards, relaying out counting numbers and drawing charts.
+  /// Press/selection feedback keeps its normal short animation.
+  static bool skipEntrance(BuildContext context) =>
+      reduced(context) || MediaQuery.sizeOf(context).width < 768;
+
+  static Duration entrance(BuildContext context, Duration duration) =>
+      skipEntrance(context) ? Duration.zero : duration;
+
   /// [duration], or zero when motion is reduced.
   static Duration of(BuildContext context, Duration duration) =>
       reduced(context) ? Duration.zero : duration;
@@ -63,7 +72,7 @@ class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    if (AppMotion.reduced(context)) {
+    if (AppMotion.skipEntrance(context)) {
       _controller.value = 1;
       return;
     }
@@ -124,7 +133,7 @@ class CountUp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (AppMotion.reduced(context)) {
+    if (AppMotion.skipEntrance(context)) {
       return Text(format(value), style: style, textAlign: textAlign);
     }
     return TweenAnimationBuilder<double>(

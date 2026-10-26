@@ -168,6 +168,7 @@ class StockIntakeLine(UUIDModel, AppendOnlyModel):
     # placeholder.
     unit_cost = models.DecimalField(max_digits=14, decimal_places=2)
     cost_known = models.BooleanField(default=False)
+    expiry_date = models.DateField(null=True, blank=True)
 
     class Meta:
         ordering = ["position"]

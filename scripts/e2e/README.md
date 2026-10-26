@@ -1,5 +1,20 @@
 # Real-stack browser run
 
+## Current focused receiving and camera checks
+
+Use a fresh disposable local sample server (`run_local.py --data <temporary-folder> --web mobile/build/web --port 8001`). Never point these scripts at the owner's ordinary database. Both require `ERP_E2E_DISPOSABLE=true`, `E2E_WEB_URL`, `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH`.
+
+- `manual_expiry.js`: empty-field role login, a manually named product without a barcode, optional 12-month warranty and batch expiry, 50 units received with manual prices, real API stock checks, tablet/phone gallery quantities and the 30-day filter. Creates no sale.
+- `scanner_lifecycle.js`: simulated EAN-13 camera, successful scan plus early exits/reopen. Add `E2E_CAMERA_VIDEO` with a Y4M fixture for `4006381333931`. It records every acquired MediaStream and requires every track to end, including streams whose video element was removed. It does not use the physical webcam.
+
+These checks use the local sample-role endpoint and do not need a password in the environment.
+
+Set `E2E_PHONE=true` to run the complete receiving form or camera lifecycle flow
+at 390 × 844, rather than resizing only after receiving. The camera check forces
+the WASM fallback, blocks all requests to other origins and still requires a
+decoded barcode and ended MediaStream tracks. This establishes the bundled
+decoder path, not physical phone focus, permission behavior or scrolling FPS.
+
 One browser session that drives the **real** Flutter web build against the **real** Django API and PostgreSQL. It is not part of CI (it needs a browser, a database and both servers). It was run for Phases 1-9; the result is recorded in `HANDOFF.md`.
 
 What it covers (see HANDOFF for the count): sign-in as owner, exchange rate, products priced in TMT and USD, supplier, purchase order (draft, submit), a partial receipt, a receipt whose **answer is dropped after the server committed**, a page reload standing in for a tablet restart (exactly one delivery, no duplicate, nothing left pending), stock value (FIFO), history. **Sales (Phase 5):** a sale from the Warehouse at a price the seller types (100 instead of the catalog 120), paid in cash (total, price, payment method, FIFO cost and stock checked in the database), the Receipt button downloading a PDF, a second sale paid by card whose answer is dropped after commit followed by a reload (exactly two sales, numbers 1 and 2, stock exactly 5), the history, and the receipt fetched from the API in Russian and in Turkmen and read back with `pypdf` (`pdf_text.py`; the price charged, how it was paid, no cost, change, discount or invoice wording). **Transfers and counts (Phase 6):** the owner sends 2 pieces from the Warehouse to the shop (they wait in transit, the warehouse drops to 3), the shop receives only 1 with a reason while **the answer is dropped after commit**, then a reload (still one transfer, 1 piece at the shop, nothing pending, ledger consistent), and a stock count at the warehouse (3 in the system, 2 found, sent, explained and approved; the warehouse holds 2). **Returns and reordering (Phase 7, `phase78.js`):** a customer brings back 1 of the 3 pieces of S-000001 (refund 100,00, the price charged, back on the shelf), then the other 2 as damaged (refund 200,00, so the two refunds add up to the sale and the Return button disappears); a return on S-000002 (card) whose **answer is dropped after commit**, then a reload (exactly three returns, stock exactly 4); a damaged piece goes back to the supplier (credit 50,00 from the delivery price); a minimum and target for the shop gives a reorder suggestion of 19 and a draft purchase order PO-0002. **Expenses, warranty and CSV (Phase 8):** an expense with a receipt photo chosen through the browser's file dialog (Playwright answers the `filechooser` event), the private file served to a signed-in member byte for byte and refused without a sign-in, the receipt fetched through the app, the expense voided (not deleted) and out of the total; a warranty claim from S-000002 closed with a replacement (one sellable piece out, one damaged piece in); a CSV import whose file has an existing SKU and an unknown unit (the page names both, **nothing is created, not even the valid row**), then a fixed file (three products, one with Turkmen letters, no stock created) and the catalog export downloaded (`products.csv`, BOM, `;`). **Dashboard, reports and activity (Phase 9, `phase9.js`):** a second expense is added and then the owner's dashboard and every report tab are read back against figures worked out from the database itself (revenue, refunds, net sales, cost of goods, gross profit, expenses, result, stock value), the place filter, the sales CSV, and the activity history (search and the action menu). **Receiving by scanning (`phase_intake.js`):** the owner receives at the shop by typing codes and pressing Enter (a known article number in two letter cases, an unknown code added with a name, the unfinished list offered again after a reload), then puts the box on the shelf **with the answer dropped after commit** and reloads (exactly one document `IN-0001`, nothing pending, the right quantities, cost zero and marked unknown, ledger consistent); the warehouse keeper receives one piece too, seeing no money. Then Russian to Turkmen and back after a reload, sign-out, and the warehouse user seeing no costs, no credit on supplier returns, no Reports page and a dashboard without money; a manager (the same reports) and a seller (sales only, no costs) are checked too. It also checks the ledger, purchasing, sales, transfer and warranty `reconcile` consistency through the database.
@@ -20,3 +35,21 @@ The Russian labels in the script follow `mobile/lib/l10n/app_ru.arb`; if a label
 `clickLabel` scrolls a control into view first when it is below or above the visible part of a long page (the product form is taller than the browser window), as `fill` always did.
 
 A harness quirk worth knowing: an idle Flutter web page draws no frame, so right after a dialog closes the accessibility tree (which the script clicks and types through) can still describe the page as it was before, with the new line's field where the next button now is. The script moves the mouse after closing the product picker so a frame is drawn and the tree refreshes before the next click.
+
+## Focused barcode box workflow
+
+`scanner_box.js` exercises the current flow without the old Purchasing screens: enter one unknown code, review its form, set 50 units and manual purchase/selling prices, save its name/brand/category, confirm receiving, then search for the same code in Sales and check that the cart is empty. It verifies the saved barcode/price, 50 units and no sale through the real API. Browser input stands in for a keyboard scanner; the single-camera callback is tested in Flutter widget tests.
+
+Run only against a **fresh disposable sample shop** (the script writes one product and one receipt). Start `run_local.py` with a separate `--data` folder and port, using `ERP_SAMPLE_PASSWORD` from your local environment, then run:
+
+```sh
+ERP_E2E_DISPOSABLE=true E2E_WEB_URL=http://127.0.0.1:8001/ node scripts/e2e/scanner_box.js
+```
+
+Set `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH` for your machine as above. Keep `ERP_SAMPLE_PASSWORD` in the environment; never put a real account password in a command or commit it. No reset is performed and the script does not finalize a sale.
+
+## Browser webcam smoke check
+
+`webcam.js` opens the real scanner with Chromium's simulated camera, decodes EAN-13 `4006381333931`, verifies the quantity dialog and stopped camera tracks, and cancels without posting stock. Use a disposable local sample server as above. Set `E2E_CAMERA_VIDEO` to an absolute Y4M video path containing that barcode, along with `E2E_WEB_URL`, `ERP_SAMPLE_PASSWORD`, `ERP_E2E_DISPOSABLE=true`, `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH`, then run `node scripts/e2e/webcam.js`. This test does not open the physical webcam and does not establish real-device focus or lighting quality.
+
+For deterministic online-prefill verification, `scanner_box.js` accepts `E2E_BARCODE=3337875597470 E2E_EXPECT_PREFILL=true`. Use an isolated provider fixture returning name `Brake pad`, brand `Parts maker`, package size `1 pc` and category `Brake pads`. It checks that these metadata fields are prefilled while both money fields are empty, then saves manually chosen prices and checks the real product and stock movement. The fixture is not a claim about the real barcode or automotive database coverage.

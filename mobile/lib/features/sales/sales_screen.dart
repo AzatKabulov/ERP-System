@@ -175,54 +175,46 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   void _typed(String _) {
+    ++_request; // Ignore an earlier scan while a new search is being typed.
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), _runSearch);
   }
 
-  /// A scan finds the product for the code and puts it in the cart; it never completes a
-  /// sale. An unknown code says so and changes nothing.
-  Future<void> _scanned(String code) async {
+  /// A scan only selects a search result. Adding to the cart is a separate action.
+  Future<void> _scanned(String raw) async {
+    final code = raw.trim();
+    if (code.isEmpty) return;
     _debounce?.cancel();
-    final l = strings(context);
+    _search.text = code;
+    final request = ++_request;
+    setState(() {
+      _searching = true;
+      _searchError = null;
+      _results = const [];
+    });
     try {
       final product = await widget.catalog.lookup(code);
-      if (!mounted) return;
-      _search.clear();
-      _runSearch();
+      if (!mounted || request != _request) return;
+      setState(() {
+        _results = product == null ? const [] : [product];
+        _searching = false;
+      });
       if (product == null) {
-        showFeedback(context, l.cartScannedNotFound(code));
-        return;
+        showFeedback(context, strings(context).cartScannedNotFound(code));
       }
-      await _add(product);
-    } catch (_) {
-      if (mounted) showFeedback(context, l.loadFailed);
+    } catch (e) {
+      if (!mounted || request != _request) return;
+      setState(() {
+        _searchError = e;
+        _searching = false;
+      });
     }
   }
 
-  /// Enter in the search field. A hand scanner types the code of the item and presses Enter: when
-  /// the text is exactly a barcode or article number of a product, that product goes into the
-  /// cart (like a camera scan) and the field stays ready for the next item. Anything else is an
-  /// ordinary search, and a code nobody has also just searches (it says nothing, unlike a camera
-  /// scan, because the person may have been typing a name).
+  /// Keyboard scanners and typed searches also leave the cart unchanged.
   Future<void> _submitted(String text) async {
     _debounce?.cancel();
-    final code = text.trim();
-    if (code.isNotEmpty && !code.contains(RegExp(r'\s'))) {
-      try {
-        final product = await widget.catalog.lookup(code);
-        if (!mounted) return;
-        if (product != null) {
-          _search.clear();
-          _runSearch();
-          await _add(product);
-          if (mounted && !_searchFocus.hasFocus) _searchFocus.requestFocus();
-          return;
-        }
-      } catch (_) {
-        // no answer: fall through to the ordinary search, which reports the problem
-      }
-    }
-    if (mounted) _runSearch();
+    await _runSearch();
   }
 
   Future<void> _chooseCustomer() async {

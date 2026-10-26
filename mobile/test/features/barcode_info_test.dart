@@ -74,7 +74,7 @@ void main() {
   });
 
   group('receiving goods whose barcode is known online', () {
-    testWidgets('the name shows on the line and one tap adds the product', (
+    testWidgets('the online name and brand are reviewed before saving', (
       tester,
     ) async {
       final t = intakeRig();
@@ -90,6 +90,9 @@ void main() {
         cerave,
       ], reason: 'asked once, not per scan');
       await tapKey(tester, 'intake-add-found-$cerave');
+      await settle(tester);
+      expect(t.rig.server.productWrites, 0);
+      await tapKey(tester, 'intake-new-save');
       await settle(tester);
       final created = t.rig.server.productsData.last;
       expect(created['name'], 'Cerave Moisturising Cream 454 g');
