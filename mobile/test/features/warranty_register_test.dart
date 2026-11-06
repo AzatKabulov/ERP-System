@@ -208,18 +208,6 @@ void main() {
       final t = rigWithRegister();
       await t.rig.launch(tester, size: size);
       await t.rig.signIn(tester);
-      if (size.width < 600) {
-        await tester.tap(find.byTooltip('Меню'));
-        await settle(tester, ms: 400);
-        await tester.scrollUntilVisible(
-          key('nav-warranties'),
-          200,
-          scrollable: find.descendant(
-            of: find.byType(Drawer),
-            matching: find.byType(Scrollable),
-          ),
-        );
-      }
       await tapKey(tester, 'nav-warranties');
       await settle(tester);
       expect(tester.takeException(), isNull);

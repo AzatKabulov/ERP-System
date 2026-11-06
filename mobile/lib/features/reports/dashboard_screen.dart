@@ -9,7 +9,9 @@ import '../../widgets/charts.dart';
 import '../../widgets/common.dart';
 import '../../widgets/motion.dart';
 import '../shared/async_section.dart';
+import '../../widgets/app_shell.dart';
 import 'audit_labels.dart';
+import 'onboarding_card.dart';
 import 'reports_models.dart';
 import 'reports_repository.dart';
 
@@ -25,10 +27,14 @@ class DashboardScreen extends StatefulWidget {
     required this.repository,
     this.onOpenReports,
     this.onOpenToComplete,
+    this.onGo,
   });
 
   final SessionController session;
   final ReportsRepository repository;
+
+  /// Goes to a page (the first-run list's buttons).
+  final ValueChanged<AppPage>? onGo;
 
   /// Shown as the link of the recent-activity card for people who may open the reports page.
   final VoidCallback? onOpenReports;
@@ -71,12 +77,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 600;
         final l = strings(context);
-        final name = session.user?.displayName ?? '';
-        final membership = session.membership;
-        final place = [
-          ?membership?.businessName,
-          ?session.location?.name,
-        ].join(' · ');
+        final name = session.user?.fullName ?? '';
+        // The shop's name is in the top bar already: only a choice of places needs naming here.
+        final place = session.placeSubtitle ?? '';
         return ListView(
           padding: EdgeInsets.fromLTRB(
             compact ? 16 : 32,
@@ -90,7 +93,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   PageHead(
-                    title: l.welcomeUser(name),
+                    title: name.isEmpty
+                        ? l.greetingNoName
+                        : l.welcomeUser(name),
                     titleKey: const ValueKey('welcome'),
                     subtitle: place.isEmpty ? null : place,
                   ),
@@ -108,6 +113,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ? widget.onOpenReports
                               : null,
                           onOpenToComplete: widget.onOpenToComplete,
+                          session: session,
+                          onGo: widget.onGo,
                         ),
                       ),
                     ),
@@ -129,7 +136,11 @@ class _Figures extends StatelessWidget {
     this.locationName,
     this.onOpenReports,
     this.onOpenToComplete,
+    this.session,
+    this.onGo,
   });
+  final SessionController? session;
+  final ValueChanged<AppPage>? onGo;
   final Dashboard dashboard;
   final SalesReport? trend;
   final bool compact;
@@ -548,6 +559,12 @@ class _Figures extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 24),
+        if (d.onboarding != null && session != null && onGo != null)
+          OnboardingCard(
+            session: session!,
+            onboarding: d.onboarding!,
+            onGo: onGo!,
+          ),
         if (!d.hasAnything)
           Text(
             l.dashNothing,

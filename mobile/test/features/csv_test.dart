@@ -185,18 +185,6 @@ void main() {
       final rig = rigWithProduct();
       await rig.launch(tester, size: size);
       await rig.signIn(tester);
-      if (size.width < 600) {
-        await tester.tap(find.byTooltip('Меню'));
-        await settle(tester, ms: 400);
-        await tester.scrollUntilVisible(
-          key('nav-products'),
-          200,
-          scrollable: find.descendant(
-            of: find.byType(Drawer),
-            matching: find.byType(Scrollable),
-          ),
-        );
-      }
       await tapKey(tester, 'nav-products');
       await settle(tester);
       expect(tester.takeException(), isNull, reason: 'catalog');

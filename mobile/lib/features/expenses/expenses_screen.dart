@@ -161,7 +161,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       children: [
         PageHead(
           title: l.expenses,
-          subtitle: session.location?.name,
+          subtitle: session.placeSubtitle,
           actions: [
             if (session.can('expense.manage'))
               PrimaryButton(

@@ -30,6 +30,12 @@ class SessionController extends ChangeNotifier {
   LocationInfo? _location;
   bool _expired = false;
   bool _unreachable = false;
+  List<AnnouncementInfo> _announcements = const [];
+  PlatformInfo _platform = const PlatformInfo();
+
+  /// The password just typed to sign in. Kept in memory only (never stored), so the "choose
+  /// your own password" screen does not make someone retype what they typed a moment ago.
+  String? _enteredPassword;
 
   SessionStatus get status => _status;
 
@@ -46,7 +52,57 @@ class SessionController extends ChangeNotifier {
   /// Start-up could not reach the server to check the stored session.
   bool get serverUnreachable => _unreachable;
 
+  /// The password someone else chose must be replaced before anything else opens.
+  bool get mustChangePassword => _user?.mustChangePassword ?? false;
+  String? get enteredPassword => _enteredPassword;
+
+  /// Where the shop stands with its subscription (null: nothing to say).
+  SubscriptionInfo? get subscription => _membership?.subscription;
+  PlatformInfo get platform => _platform;
+
+  /// Notices from us to every shop that the person has not closed yet.
+  List<AnnouncementInfo> get announcements {
+    final closed = _prefs.getStringList('announcements.closed') ?? const [];
+    return [
+      for (final a in _announcements)
+        if (!closed.contains(a.id)) a,
+    ];
+  }
+
+  Future<void> dismissAnnouncement(String id) async {
+    final closed = {...?_prefs.getStringList('announcements.closed'), id};
+    // keep the list short: only ids that are still being announced matter
+    final live = {for (final a in _announcements) a.id};
+    await _prefs.setStringList('announcements.closed', [
+      for (final c in closed)
+        if (live.contains(c)) c,
+    ]);
+    notifyListeners();
+  }
+
+  /// The usernames that signed in on this device lately, newest first, so a returning person
+  /// taps their name instead of typing it. Names only, never passwords.
+  List<String> get recentUsernames =>
+      _prefs.getStringList('signin.recent') ?? const [];
+
+  Future<void> _rememberUsername(String username) async {
+    final name = username.trim().toLowerCase();
+    if (name.isEmpty) return;
+    final list = [
+      name,
+      for (final n in recentUsernames)
+        if (n != name) n,
+    ];
+    await _prefs.setStringList('signin.recent', list.take(5).toList());
+  }
+
   bool can(String permission) => _membership?.can(permission) ?? false;
+
+  /// The place a page is about, for its subtitle: the location's name, but only where there is
+  /// a choice of places. A business is one shop whose name is already in the top bar, so
+  /// repeating it under every page title would only be noise.
+  String? get placeSubtitle =>
+      (_membership?.locations.length ?? 0) > 1 ? _location?.name : null;
 
   /// Called by [ApiClient] when the server no longer accepts the refresh token.
   void handleSessionExpired() {
@@ -80,9 +136,36 @@ class SessionController extends ChangeNotifier {
     await api.login(username.trim(), password);
     _expired = false;
     _unreachable = false;
+    _enteredPassword = password;
     await _loadProfile();
+    await _rememberUsername(username);
     _status = SessionStatus.signedIn;
     notifyListeners();
+  }
+
+  /// Chooses a new password for the signed-in person. The server ends every other session and
+  /// answers with fresh tokens for this device. Throws [ApiException] (wrong current password,
+  /// too weak a new one...).
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    final data = (await api.post(
+      '/api/v1/auth/password/change/',
+      body: {'old_password': oldPassword, 'new_password': newPassword},
+    )).map;
+    await api.adoptTokens(data['access'] as String, data['refresh'] as String);
+    _enteredPassword = null;
+    await _loadProfile();
+    notifyListeners();
+  }
+
+  /// The server refused work because of the subscription (see ApiClient.onSubscriptionBlocked):
+  /// read the status again so the banners and the blocked screen match.
+  Future<void> handleSubscriptionBlocked() async {
+    if (_status != SessionStatus.signedIn) return;
+    try {
+      await refreshProfile();
+    } on ApiException {
+      // The next refresh will do; the refused action already told the person why.
+    }
   }
 
   /// Only the local sample server advertises this capability. Production has no route.
@@ -146,6 +229,20 @@ class SessionController extends ChangeNotifier {
   Future<void> _loadProfile() async {
     final data = (await api.get('/api/v1/me/')).map;
     _user = UserProfile.fromJson((data['user'] as Map).cast<String, dynamic>());
+    _announcements = [
+      for (final a in (data['announcements'] as List?) ?? const [])
+        AnnouncementInfo(
+          id: (a as Map)['id'] as String,
+          message: a['message'] as String,
+        ),
+    ];
+    final platform = data['platform'];
+    _platform = platform is Map
+        ? PlatformInfo(
+            supportPhone: (platform['support_phone'] as String?) ?? '',
+            supportNote: (platform['support_note'] as String?) ?? '',
+          )
+        : const PlatformInfo();
     _memberships = [
       for (final m in data['memberships'] as List)
         MembershipInfo.fromJson((m as Map).cast<String, dynamic>()),
@@ -180,5 +277,7 @@ class SessionController extends ChangeNotifier {
     _memberships = const [];
     _membership = null;
     _location = null;
+    _announcements = const [];
+    _enteredPassword = null;
   }
 }

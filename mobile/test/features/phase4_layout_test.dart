@@ -7,18 +7,6 @@ import 'catalog_test.dart' show seedProduct;
 const store = 'l-1';
 
 Future<void> navigate(WidgetTester tester, String navKey, Size size) async {
-  if (size.width < 600) {
-    await tester.tap(find.byTooltip('Меню'));
-    await settle(tester, ms: 400);
-    await tester.scrollUntilVisible(
-      key(navKey),
-      200,
-      scrollable: find.descendant(
-        of: find.byType(Drawer),
-        matching: find.byType(Scrollable),
-      ),
-    );
-  }
   await tapKey(tester, navKey);
   await settle(tester);
 }

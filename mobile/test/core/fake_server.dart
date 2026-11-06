@@ -127,8 +127,17 @@ class FakeServer {
     'report.view',
     'dashboard.view',
     'audit.view',
+    'support.view',
+    'support.write',
   ];
   String role = 'owner';
+
+  /// The current password of the signed-in person; the sign-in and the password change check it.
+  String userPassword = 'right-password';
+
+  /// Our conversations with the shop (the support desk), newest first.
+  final List<Map<String, dynamic>> supportRequests = [];
+  String? temporaryPasswordGiven;
 
   final Map<String, dynamic> businessData = {
     'id': 'b-1',
@@ -244,7 +253,7 @@ class FakeServer {
   String? passwordResetTo;
 
   Map<String, dynamic> me = {
-    'user': {
+    'user': <String, dynamic>{
       'id': 'u-1',
       'username': 'aman',
       'full_name': 'Aman Ataýew',
@@ -401,7 +410,7 @@ class FakeServer {
       return _json(200, {'access': accessToken, 'refresh': refreshToken});
     }
     if (path == '/api/v1/auth/login/') {
-      if (body['password'] != 'right-password') {
+      if (body['password'] != userPassword) {
         return _error(401, 'invalid_credentials');
       }
       return _json(200, {
@@ -451,6 +460,36 @@ class FakeServer {
     final auth = request.headers['Authorization'];
     if (expireAccess || auth != 'Bearer $accessToken') {
       return _error(401, 'invalid_token');
+    }
+    if (path == '/api/v1/auth/password/change/') {
+      if (body['old_password'] != userPassword) {
+        return _error(
+          400,
+          'invalid_old_password',
+          fields: {
+            'old_password': [
+              {'code': 'invalid_old_password', 'message': 'wrong'},
+            ],
+          },
+        );
+      }
+      if ('${body['new_password']}'.length < 10) {
+        return _error(
+          400,
+          'validation_error',
+          fields: {
+            'new_password': [
+              {'code': 'password_too_short', 'message': 'short'},
+            ],
+          },
+        );
+      }
+      userPassword = '${body['new_password']}';
+      (me['user'] as Map)['must_change_password'] = false;
+      tokenCounter++;
+      accessToken = 'access-$tokenCounter';
+      refreshToken = 'refresh-$tokenCounter';
+      return _json(200, {'access': accessToken, 'refresh': refreshToken});
     }
     if (path == '/api/v1/me/' && request.method == 'GET') {
       final memberships = me['memberships'] as List;
@@ -621,10 +660,60 @@ class FakeServer {
         return _json(201, created);
       }
     }
-    final staff = RegExp(r'^staff/([^/]+)/(send-code/)?$').firstMatch(rest);
+    final support = RegExp(
+      r'^support/(?:([^/]+)/messages/)?$',
+    ).firstMatch(rest);
+    if (support != null) {
+      if (!permissions.contains('support.write')) {
+        return _error(403, 'permission_denied');
+      }
+      final id = support.group(1);
+      if (id == null && method == 'GET') {
+        return _json(200, {'results': supportRequests});
+      }
+      final stamp = DateTime.utc(2026, 11, 6, 10).toIso8601String();
+      if (id == null && method == 'POST') {
+        final created = {
+          'id': 's-${supportRequests.length + 1}',
+          'subject': body['subject'],
+          'status': 'open',
+          'created_at': stamp,
+          'updated_at': stamp,
+          'messages': [
+            {
+              'id': 'sm-1',
+              'from_store': true,
+              'text': body['body'],
+              'created_at': stamp,
+            },
+          ],
+        };
+        supportRequests.insert(0, created);
+        return _json(201, created);
+      }
+      if (id != null && method == 'POST') {
+        final item = supportRequests.firstWhere((r) => r['id'] == id);
+        if (item['status'] == 'closed') return _error(409, 'support_closed');
+        (item['messages'] as List).add({
+          'id': 'sm-${(item['messages'] as List).length + 1}',
+          'from_store': true,
+          'text': body['body'],
+          'created_at': stamp,
+        });
+        item['status'] = 'open';
+        return _json(201, item);
+      }
+    }
+    final staff = RegExp(
+      r'^staff/([^/]+)/(send-code/|temporary-password/)?$',
+    ).firstMatch(rest);
     if (staff != null) {
       final item = staffData.firstWhere((m) => m['id'] == staff.group(1));
-      if (staff.group(2) != null && method == 'POST') {
+      if (staff.group(2) == 'temporary-password/' && method == 'POST') {
+        temporaryPasswordGiven = '${staff.group(1)}';
+        return _json(200, {'password': 'Kd7mQ-4xvWp-9TnzB'});
+      }
+      if (staff.group(2) == 'send-code/' && method == 'POST') {
         codesSent.add('${staff.group(1)}');
         return _json(202, {'status': 'accepted'});
       }

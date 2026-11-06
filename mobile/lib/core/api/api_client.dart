@@ -59,6 +59,7 @@ class ApiClient {
     this.longTimeout = const Duration(seconds: 60),
     this.monitor,
     this.onSessionExpired,
+    this.onSubscriptionBlocked,
     Uuid uuid = const Uuid(),
   }) : _base = Uri.parse(
          baseUrl.endsWith('/')
@@ -80,6 +81,10 @@ class ApiClient {
 
   /// Called when the refresh token is no longer accepted (the user must sign in again).
   final VoidCallback? onSessionExpired;
+
+  /// Called when the server refuses work because the shop's subscription ended or was
+  /// suspended (HTTP 402), so the app can re-read it and show what happened.
+  final VoidCallback? onSubscriptionBlocked;
 
   String? _access;
   Future<void>? _refreshing;
@@ -216,6 +221,9 @@ class ApiClient {
         upload,
       );
     } on ApiException catch (e) {
+      if (e.status == 402 && e.code.startsWith('subscription_')) {
+        onSubscriptionBlocked?.call();
+      }
       if (authenticated &&
           e.kind == ApiErrorKind.unauthorized &&
           await tokens.readRefreshToken() != null) {

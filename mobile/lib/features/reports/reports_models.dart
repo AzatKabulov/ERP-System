@@ -470,6 +470,31 @@ class AuditPage {
 
 /// The dashboard: every section is present only when the person's role may see it.
 @immutable
+/// What a new owner has not done yet (only sent to people who can do it).
+class Onboarding {
+  const Onboarding({
+    required this.hasProducts,
+    required this.hasStock,
+    required this.hasSales,
+    required this.hasDetails,
+    required this.hasTeam,
+  });
+
+  final bool hasProducts;
+  final bool hasStock;
+  final bool hasSales;
+  final bool hasDetails;
+  final bool hasTeam;
+
+  factory Onboarding.fromJson(Map<String, dynamic> j) => Onboarding(
+    hasProducts: j['has_products'] == true,
+    hasStock: j['has_stock'] == true,
+    hasSales: j['has_sales'] == true,
+    hasDetails: j['has_details'] == true,
+    hasTeam: j['has_team'] == true,
+  );
+}
+
 class Dashboard {
   const Dashboard({
     this.salesTodayCount,
@@ -484,8 +509,10 @@ class Dashboard {
     this.toCompleteCount,
     this.withoutCostMonth,
     this.recentActivity,
+    this.onboarding,
   });
 
+  final Onboarding? onboarding;
   final int? salesTodayCount;
   final int? salesTodayTotal;
   final int? salesMonthCount;
@@ -535,6 +562,9 @@ class Dashboard {
           ? null
           : _int(j['to_complete_count']),
       withoutCostMonth: _moneyOrNull(j['without_cost_month']),
+      onboarding: j['onboarding'] is Map
+          ? Onboarding.fromJson(_map(j['onboarding']))
+          : null,
       recentActivity: j['recent_activity'] == null
           ? null
           : [

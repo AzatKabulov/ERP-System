@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
@@ -9,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/motion.dart';
 import '../shared/async_section.dart';
+import '../auth/password_form.dart';
 import '../catalog/catalog_repository.dart';
 import 'admin_repository.dart';
 import 'exchange_rate_section.dart';
@@ -35,6 +37,8 @@ class RealAdministrationScreen extends StatefulWidget {
     required this.catalog,
     required this.languageCode,
     required this.onLanguageChanged,
+    this.onOpenHelp,
+    this.onOpenSupport,
   });
 
   final SessionController session;
@@ -42,6 +46,10 @@ class RealAdministrationScreen extends StatefulWidget {
   final CatalogRepository catalog;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
+
+  /// The how-to pages and the conversation with us (from the Account tab).
+  final VoidCallback? onOpenHelp;
+  final VoidCallback? onOpenSupport;
 
   @override
   State<RealAdministrationScreen> createState() =>
@@ -63,6 +71,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
   }
 
   _SettingsTab _tab = _SettingsTab.account;
+  bool _passwordOpen = false;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +149,117 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
     );
   }
 
+  /// Changing the password: closed until asked for (it is rare), a plain form when opened.
+  Widget _passwordCard(AppLocalizations l) => SurfaceCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          key: const ValueKey('password-toggle'),
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => setState(() => _passwordOpen = !_passwordOpen),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Row(
+              children: [
+                const AppIcon(AppIcons.lock, size: 20, color: AppColors.muted),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l.changePasswordTitle,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+                AppIcon(
+                  _passwordOpen ? AppIcons.chevronDown : AppIcons.chevron,
+                  size: 20,
+                  color: AppColors.muted,
+                ),
+              ],
+            ),
+          ),
+        ),
+        _gentle(
+          context,
+          _passwordOpen
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l.changePasswordIntro,
+                        style: const TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 13,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      PasswordChangeForm(
+                        session: session,
+                        onDone: () {
+                          setState(() => _passwordOpen = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l.passwordChangedDone)),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
+    ),
+  );
+
+  /// Opens and closes a section smoothly; with reduced motion it simply appears.
+  Widget _gentle(BuildContext context, Widget child) {
+    final duration = AppMotion.of(context, AppMotion.base);
+    if (duration == Duration.zero) return child;
+    return AnimatedSize(
+      duration: duration,
+      curve: AppMotion.arrive,
+      alignment: Alignment.topCenter,
+      child: child,
+    );
+  }
+
+  /// How it works, and how to reach us.
+  Widget _helpCard(AppLocalizations l) => SurfaceCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeading(l.helpAndContact),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            if (widget.onOpenHelp != null)
+              OutlinedButton.icon(
+                key: const ValueKey('settings-help'),
+                onPressed: widget.onOpenHelp,
+                icon: const AppIcon(AppIcons.help, size: 18),
+                label: Text(l.helpTitle),
+              ),
+            if (widget.onOpenSupport != null)
+              OutlinedButton.icon(
+                key: const ValueKey('settings-support'),
+                onPressed: widget.onOpenSupport,
+                icon: const AppIcon(AppIcons.chat, size: 18),
+                label: Text(l.supportTitle),
+              ),
+          ],
+        ),
+      ],
+    ),
+  );
+
   /// The person: who is signed in, the interface language, and signing out.
   Widget _account(BuildContext context) {
     final l = strings(context);
@@ -197,6 +317,8 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
           ),
         ),
         const SizedBox(height: 16),
+        _passwordCard(l),
+        const SizedBox(height: 16),
         SurfaceCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,6 +344,8 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        _helpCard(l),
         const SizedBox(height: 16),
         // Signing out sits by itself at the bottom, away from the settings it must not be
         // confused with.
@@ -934,6 +1058,37 @@ class _StaffDialogState extends State<_StaffDialog> {
     }
   }
 
+  Future<void> _temporaryPassword() async {
+    if (_busy) return;
+    final l = strings(context);
+    final name = widget.existing!.displayName;
+    final go = await confirmAction(
+      context,
+      l.tempPasswordAction,
+      l.tempPasswordConfirm(name),
+    );
+    if (!go || !mounted) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final password = await widget.repository.temporaryPassword(
+        widget.existing!.id,
+      );
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (_) =>
+            _TemporaryPasswordDialog(name: name, password: password),
+      );
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
@@ -969,7 +1124,7 @@ class _StaffDialogState extends State<_StaffDialog> {
                 ),
                 const SizedBox(height: 12),
                 LabeledField(
-                  label: l.emailLabel,
+                  label: l.emailOptionalLabel,
                   child: TextField(
                     key: const ValueKey('staff-email'),
                     controller: _email,
@@ -1087,29 +1242,32 @@ class _StaffDialogState extends State<_StaffDialog> {
                 )
               else ...[
                 const SizedBox(height: 12),
-                LabeledField(
+                PasswordField(
+                  key: const ValueKey('staff-password'),
                   label: l.initialPasswordLabel,
-                  child: TextField(
-                    key: const ValueKey('staff-password'),
-                    controller: _password,
-                    enabled: !_busy,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      helperText: l.initialPasswordHint,
-                      helperMaxLines: 3,
-                      errorText: fieldError(l, _error, 'password'),
-                      errorMaxLines: 3,
-                    ),
-                  ),
+                  controller: _password,
+                  enabled: !_busy,
+                  autofillHint: AutofillHints.newPassword,
+                  helperText: l.initialPasswordHint,
+                  errorText: fieldError(l, _error, 'password'),
                 ),
               ],
               if (_editing) ...[
                 const SizedBox(height: 8),
+                // Without an email there is nobody to send a code to: the owner hands over a
+                // temporary password instead.
+                if (widget.existing!.email.isNotEmpty)
+                  TextButton.icon(
+                    key: const ValueKey('staff-send-code'),
+                    onPressed: _busy ? null : _sendCode,
+                    icon: const AppIcon(AppIcons.mail),
+                    label: Text(l.sendResetCode),
+                  ),
                 TextButton.icon(
-                  key: const ValueKey('staff-send-code'),
-                  onPressed: _busy ? null : _sendCode,
-                  icon: const AppIcon(AppIcons.mail),
-                  label: Text(l.sendResetCode),
+                  key: const ValueKey('staff-temp-password'),
+                  onPressed: _busy ? null : _temporaryPassword,
+                  icon: const AppIcon(AppIcons.lock),
+                  label: Text(l.tempPasswordAction),
                 ),
                 if (_codeSent)
                   Text(
@@ -1139,6 +1297,77 @@ class _StaffDialogState extends State<_StaffDialog> {
           key: const ValueKey('staff-save'),
           onPressed: _busy ? null : _save,
           child: Text(l.save),
+        ),
+      ],
+    );
+  }
+}
+
+/// A temporary password, shown once: the owner reads or copies it to the person, who will be
+/// asked to choose their own the first time they sign in.
+class _TemporaryPasswordDialog extends StatefulWidget {
+  const _TemporaryPasswordDialog({required this.name, required this.password});
+
+  final String name;
+  final String password;
+
+  @override
+  State<_TemporaryPasswordDialog> createState() =>
+      _TemporaryPasswordDialogState();
+}
+
+class _TemporaryPasswordDialogState extends State<_TemporaryPasswordDialog> {
+  bool _copied = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = strings(context);
+    return AlertDialog(
+      key: const ValueKey('temp-password-dialog'),
+      title: Text(l.tempPasswordTitle(widget.name)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.tempPasswordBody, style: const TextStyle(height: 1.5)),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceSoft,
+              borderRadius: BorderRadius.circular(AppRadius.control),
+              border: Border.all(color: AppColors.line),
+            ),
+            child: SelectableText(
+              widget.password,
+              key: const ValueKey('temp-password-value'),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton.icon(
+          key: const ValueKey('temp-password-copy'),
+          onPressed: () async {
+            try {
+              await Clipboard.setData(ClipboardData(text: widget.password));
+              if (mounted) setState(() => _copied = true);
+            } catch (_) {
+              // a browser or phone may refuse the clipboard; the password is on screen to read
+            }
+          },
+          icon: AppIcon(_copied ? AppIcons.check : AppIcons.copy, size: 18),
+          label: Text(_copied ? l.copiedDone : l.copyAction),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.close),
         ),
       ],
     );

@@ -79,6 +79,13 @@ class CartController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Takes a removed line back to where it was ("Undo" after the bin).
+  void restore(CartLine line, int index) {
+    if (_lines.contains(line)) return;
+    _lines.insert(index.clamp(0, _lines.length), line);
+    notifyListeners();
+  }
+
   void clear() {
     _lines.clear();
     _customer = null;

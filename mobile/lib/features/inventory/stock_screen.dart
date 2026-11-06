@@ -190,7 +190,7 @@ class _StockScreenState extends State<StockScreen> {
   );
 
   List<(_StockTab, String)> _tabsFor(AppLocalizations l) => [
-    (_StockTab.location, l.stockTabByLocation),
+    (_StockTab.location, l.stockTabBalances),
     if (session.can('stock.history.view'))
       (_StockTab.movements, l.movementHistory),
     // Moving goods between places needs two places; a business is one shop now.
@@ -220,7 +220,7 @@ class _StockScreenState extends State<StockScreen> {
           key: const ValueKey('stock-add-manual'),
           onPressed: () => _intake(manual: true),
           icon: const AppIcon(AppIcons.plus, size: 20),
-          label: Text(l.intakeAddProduct),
+          label: Text(l.stockReceiveButton),
         ),
       // The two rarely used ones sit in a menu, each with a line that says what it is for.
       if (session.can('stock.opening.post') || session.can('stock.adjust'))
@@ -271,7 +271,7 @@ class _StockScreenState extends State<StockScreen> {
           PageHead(
             title: l.inventory,
             subtitle: _locationId == null
-                ? session.location?.name
+                ? session.placeSubtitle
                 : locations
                       .where((x) => x.id == _locationId)
                       .map((x) => x.name)
@@ -369,15 +369,17 @@ class _StockScreenState extends State<StockScreen> {
           },
         ),
         for (final c in _conditions)
-          AppPill(
-            key: ValueKey('stock-condition-$c'),
-            label: conditionLabel(l, c),
-            selected: _condition == c,
-            onTap: () {
-              _condition = c;
-              _load(reset: true);
-            },
-          ),
+          // goods "in transit" exist only between two places; a business is one shop
+          if (c != 'in_transit' || locations.length > 1)
+            AppPill(
+              key: ValueKey('stock-condition-$c'),
+              label: conditionLabel(l, c),
+              selected: _condition == c,
+              onTap: () {
+                _condition = c;
+                _load(reset: true);
+              },
+            ),
         if (locations.length > 1) ...[
           AppPill(
             key: const ValueKey('stock-location-all'),
@@ -401,13 +403,18 @@ class _StockScreenState extends State<StockScreen> {
         ],
       ],
     );
+    // No goods yet and nobody searching: filters and a search box have nothing to work on, so
+    // the page says what to do first instead.
+    final blank = !searching && !_loading && _error == null && _items.isEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        search,
-        const SizedBox(height: 14),
-        chips,
-        const SizedBox(height: 16),
+        if (!blank) ...[
+          search,
+          const SizedBox(height: 14),
+          chips,
+          const SizedBox(height: 16),
+        ],
         if (_error != null)
           ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
         else if (_loading && _items.isEmpty)
@@ -424,6 +431,28 @@ class _StockScreenState extends State<StockScreen> {
                     title: l.stockEmpty,
                     subtitle: l.stockEmptyHint,
                     icon: AppIcons.box,
+                    action: session.can('intake.create')
+                        ? Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              PrimaryButton(
+                                key: const ValueKey('stock-empty-intake'),
+                                label: l.intakeTitle,
+                                icon: AppIcons.scan,
+                                onPressed: _intake,
+                              ),
+                              if (session.can('stock.opening.post'))
+                                OutlinedButton(
+                                  key: const ValueKey('stock-empty-opening'),
+                                  onPressed: () =>
+                                      _enter(StockEntryMode.opening),
+                                  child: Text(l.openingStock),
+                                ),
+                            ],
+                          )
+                        : null,
                   ),
           )
         else ...[

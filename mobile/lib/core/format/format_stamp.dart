@@ -6,3 +6,9 @@ String formatStamp(DateTime t) {
   return '${local.year}-${_two(local.month)}-${_two(local.day)} '
       '${_two(local.hour)}:${_two(local.minute)}';
 }
+
+/// A date as people write it here: 07.11.2026.
+String formatDay(DateTime t) {
+  final local = t.toLocal();
+  return '${_two(local.day)}.${_two(local.month)}.${local.year}';
+}

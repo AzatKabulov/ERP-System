@@ -683,35 +683,22 @@ void main() {
 
   group('layouts', () {
     for (final size in [const Size(360, 800), const Size(800, 1100)]) {
-      testWidgets('sign-in and administration work at $size with doubled text', (
-        tester,
-      ) async {
-        tester.platformDispatcher.textScaleFactorTestValue = 2;
-        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-        final rig = RealRig();
-        await rig.launch(tester, size: size);
-        expect(tester.takeException(), isNull);
-        await rig.signIn(tester);
-        expect(tester.takeException(), isNull);
-        expect(key('welcome'), findsOneWidget);
-        // compact layouts reach every page through the menu button
-        if (size.width < 600) {
-          await tester.tap(find.byTooltip('Меню'));
-          await settle(tester, ms: 400);
-          // the drawer is a scrolling list; at doubled text the last page is below the fold
-          await tester.scrollUntilVisible(
-            key('nav-administration'),
-            200,
-            scrollable: find.descendant(
-              of: find.byType(Drawer),
-              matching: find.byType(Scrollable),
-            ),
-          );
-        }
-        await tapKey(tester, 'nav-administration');
-        await settle(tester);
-        expect(tester.takeException(), isNull);
-      });
+      testWidgets(
+        'sign-in and administration work at $size with doubled text',
+        (tester) async {
+          tester.platformDispatcher.textScaleFactorTestValue = 2;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          final rig = RealRig();
+          await rig.launch(tester, size: size);
+          expect(tester.takeException(), isNull);
+          await rig.signIn(tester);
+          expect(tester.takeException(), isNull);
+          expect(key('welcome'), findsOneWidget);
+          await tapKey(tester, 'nav-administration');
+          await settle(tester);
+          expect(tester.takeException(), isNull);
+        },
+      );
     }
   });
 }

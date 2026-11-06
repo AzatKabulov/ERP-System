@@ -221,6 +221,12 @@ class AdminRepository {
     await api.post('$_base/staff/$id/send-code/');
   }
 
+  /// A new temporary password for a member who has forgotten theirs and has no email: the server
+  /// makes one and answers with it once. The person must choose their own at the next sign-in.
+  Future<String> temporaryPassword(String id) async =>
+      (await api.post('$_base/staff/$id/temporary-password/')).map['password']
+          as String;
+
   /// Reads every page of a list endpoint.
   Future<List<Map<String, dynamic>>> _all(
     String path,

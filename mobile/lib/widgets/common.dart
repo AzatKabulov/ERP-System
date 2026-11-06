@@ -1226,10 +1226,14 @@ class EmptyState extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.icon = AppIcons.inbox,
+    this.action,
   });
   final String title;
   final String? subtitle;
   final AppIconData icon;
+
+  /// The obvious next step (a button, or a few): an empty page must say what to do about it.
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -1278,6 +1282,7 @@ class EmptyState extends StatelessWidget {
             ),
           ),
         ],
+        if (action != null) ...[const SizedBox(height: 20), action!],
       ],
     ),
   );

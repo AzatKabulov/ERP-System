@@ -10,6 +10,7 @@ import '../../core/operations/operation_runner.dart';
 import '../../core/operations/pending_operation_store.dart';
 import '../../core/session/session_controller.dart';
 import '../../widgets/common.dart';
+import '../auth/password_form.dart';
 import '../auth/sign_in_screen.dart';
 import 'real_workspace.dart';
 import 'unsaved_work.dart';
@@ -133,6 +134,9 @@ class _RealHomeState extends State<RealHome> with WidgetsBindingObserver {
           server: widget.server,
         );
       case SessionStatus.signedIn:
+        if (session.mustChangePassword) {
+          return ChoosePasswordScreen(session: session);
+        }
         final runner = _runner;
         if (runner == null) return const SizedBox.shrink();
         return RealWorkspace(

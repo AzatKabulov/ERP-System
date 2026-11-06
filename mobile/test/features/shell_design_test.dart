@@ -7,13 +7,16 @@ import '../support/real_rig.dart';
 void main() {
   group('navigation follows the width', () {
     testWidgets(
-      'a phone has a bottom bar of four modules and a menu for the rest',
+      'a phone has a bottom bar of four modules and a labelled More tab for the rest',
       (tester) async {
         final rig = RealRig();
         await rig.launch(tester, size: const Size(360, 800));
         await rig.signIn(tester);
         expect(key('phone-navigation'), findsOneWidget);
         expect(key('nav-administration'), findsNothing);
+        // no hidden hamburger: the way to the rest is a visible tab with a name
+        expect(find.byTooltip('Меню'), findsNothing);
+        expect(key('tab-more'), findsOneWidget);
 
         // The bar leads somewhere: the sales tab opens the sales page.
         await tester.tap(key('tab-sales'));
@@ -21,11 +24,44 @@ void main() {
         expect(key('phone-navigation'), findsOneWidget);
         expect(key('sales-search'), findsOneWidget);
 
-        // The menu button reaches every other module, and sign-out.
-        await tester.tap(find.byTooltip('Меню'));
+        // The More tab lists every other module, the help and sign-out.
+        await tester.tap(key('tab-more'));
         await settle(tester, ms: 400);
-        expect(key('nav-administration'), findsOneWidget);
-        expect(key('sidebar-sign-out'), findsOneWidget);
+        expect(key('more-sheet'), findsOneWidget);
+        expect(key('more-administration'), findsOneWidget);
+        expect(key('more-expenses'), findsOneWidget);
+        expect(key('more-help'), findsOneWidget);
+        expect(key('more-sign-out'), findsOneWidget);
+
+        // A page from the list opens, and More is then the selected tab.
+        await tester.tap(key('more-administration'));
+        await settle(tester);
+        expect(key('more-sheet'), findsNothing);
+        expect(key('settings-tab-account'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'the side menu and the bottom bar list pages in the same order',
+      (tester) async {
+        final rig = RealRig();
+        await rig.launch(tester, size: const Size(800, 1100));
+        await rig.signIn(tester);
+        double top(String name) => tester.getTopLeft(key(name)).dy;
+        expect(top('nav-dashboard'), lessThan(top('nav-products')));
+        expect(top('nav-products'), lessThan(top('nav-sales')));
+        expect(top('nav-sales'), lessThan(top('nav-inventory')));
+        expect(top('nav-inventory'), lessThan(top('nav-expenses')));
+      },
+    );
+
+    testWidgets(
+      'a phone shows the shop once and no language switch in the bar',
+      (tester) async {
+        final rig = RealRig();
+        await rig.launch(tester, size: const Size(360, 800));
+        await rig.signIn(tester);
+        expect(key('language-selector'), findsNothing);
       },
     );
 

@@ -129,6 +129,16 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                           height: 1.5,
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l.resetNoMailHint,
+                        key: const ValueKey('reset-no-mail-hint'),
+                        style: const TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 13,
+                          height: 1.5,
+                        ),
+                      ),
                       const SizedBox(height: 16),
                       LabeledField(
                         label: l.identifierLabel,

@@ -117,6 +117,7 @@ class _ErpAppState extends State<ErpApp> {
     httpClient: _httpClient,
     monitor: _monitor,
     onSessionExpired: () => _session.handleSessionExpired(),
+    onSubscriptionBlocked: () => _session.handleSubscriptionBlocked(),
   );
   late final ServerSettings _server = ServerSettings(
     preferences: widget.preferences,

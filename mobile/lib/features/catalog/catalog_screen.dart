@@ -425,6 +425,14 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     title: l.noProducts,
                     subtitle: l.noProductsHint,
                     icon: AppIcons.overview,
+                    action: _canManage
+                        ? PrimaryButton(
+                            key: const ValueKey('catalog-empty-add'),
+                            label: l.addProduct,
+                            icon: AppIcons.plus,
+                            onPressed: () => _add(),
+                          )
+                        : null,
                   ),
           )
         else ...[

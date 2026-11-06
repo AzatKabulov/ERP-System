@@ -28,6 +28,20 @@ String apiErrorText(AppLocalizations l, ApiException e) {
     case 'invalid_token':
     case 'not_authenticated':
       return l.sessionExpiredNotice;
+    case 'use_password_change':
+      return l.errorUsePasswordChange;
+    case 'account_shared':
+      return l.errorAccountShared;
+    case 'subscription_expired':
+      return l.errorSubscriptionExpired;
+    case 'subscription_suspended':
+      return l.errorSubscriptionSuspended;
+    case 'password_change_required':
+      return l.errorPasswordChangeRequired;
+    case 'email_or_password_required':
+      return l.fieldEmailOrPassword;
+    case 'support_closed':
+      return l.supportClosedNote;
     case 'barcode_not_found':
       return l.errorBarcodeNotFound;
     case 'unit_in_use':
@@ -136,6 +150,7 @@ String fieldErrorText(AppLocalizations l, FieldError e) => switch (e.code) {
   'name_taken' => l.fieldNameTaken,
   'locations_required' => l.fieldLocationsRequired,
   'invalid_location' => l.fieldInvalidLocation,
+  'email_or_password_required' => l.fieldEmailOrPassword,
   'password_too_short' => l.passwordTooShort,
   'password_too_common' => l.passwordTooCommon,
   'password_entirely_numeric' => l.passwordNumeric,

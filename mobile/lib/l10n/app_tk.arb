@@ -331,8 +331,8 @@
   "fullNameLabel": "Ady",
   "roleLabel": "Wezipe",
   "allLocationsLabel": "Ähli ýerler",
-  "initialPasswordLabel": "Başlangyç parol (hökman däl)",
-  "initialPasswordHint": "Görkezilmese, işgär e-poçta arkaly bir gezeklik kod alar.",
+  "initialPasswordLabel": "Wagtlaýyn parol",
+  "initialPasswordHint": "Işgär ilkinji girişde öz parolyny döreder. Email ýok bolsa gerek.",
   "staffCreated": "Işgär goşuldy.",
   "sendResetCode": "Parol üçin kod ibermek",
   "resetCodeRequested": "Kod işgäriň e-poçtasyna iberildi.",
@@ -1288,5 +1288,160 @@
   "warrantyClaimOpenBadge": "Ýüzlenme açyk",
   "warrantyRegisterEmpty": "Kepillikli satylan haryt entek ýok",
   "warrantyRegisterEmptyHint": "Kepillikli haryt satylandan soň şu ýerde peýda bolýar. Kepillik möhleti harydyň kartoçkasynda goýulýar.",
-  "warrantyNoMatch": "Hiç zat tapylmady"
+  "warrantyNoMatch": "Hiç zat tapylmady",
+  "showPassword": "Paroly görkez",
+  "hidePassword": "Paroly gizle",
+  "recentSignIns": "Soňky girişler",
+  "forgetAccountTip": "Sanawdan aýyr",
+  "choosePasswordTitle": "Öz parolyňyzy dörediň",
+  "choosePasswordIntro": "Bu parol size wagtlaýynça berildi. Özüňiziň parolyňyzy dörediň: ony diňe siz bilersiňiz.",
+  "currentPasswordLabel": "Häzirki parol",
+  "repeatPasswordLabel": "Täze paroly gaýtalaň",
+  "passwordMismatch": "Parollar gabat gelmeýär",
+  "passwordRulesHint": "Azyndan 10 belgi, diňe sanlardan däl we ýönekeý sözlerden däl.",
+  "changePasswordTitle": "Paroly çalyşmak",
+  "changePasswordIntro": "Täze parol könesini çalyşar. Beýleki enjamlarda täzeden girmeli bolarsyňyz.",
+  "passwordChangedDone": "Parol üýtgedildi",
+  "resetNoMailHint": "Kod gelmedi? Dükanyň eýesinden size wagtlaýyn parol bermegini soraň.",
+  "errorPasswordChangeRequired": "Ilki bilen öz parolyňyzy dörediň.",
+  "fieldEmailOrPassword": "Email ýa-da wagtlaýyn parol giriziň.",
+  "emailOptionalLabel": "Email (hökman däl)",
+  "tempPasswordAction": "Wagtlaýyn parol bermek",
+  "tempPasswordTitle": "Wagtlaýyn parol: {name}",
+  "@tempPasswordTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tempPasswordBody": "Ony işgäre görkeziň. Ol diňe şu wagt görünýär; girenden soň işgär öz parolyny döreder.",
+  "tempPasswordConfirm": "{name} üçin täze wagtlaýyn parol berilsinmi? Könesi işlemez bolar.",
+  "@tempPasswordConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "copyAction": "Göçürmek",
+  "copiedDone": "Göçürildi",
+  "subBannerExpiring": "Ýazylyşygyň möhleti {date} gutarýar (gün: {days}).",
+  "@subBannerExpiring": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "subBannerExpiringToday": "Ýazylyşygyň möhleti şu gün gutarýar.",
+  "subBannerTrial": "Synag möhleti {date} çenli (gün: {days}).",
+  "@subBannerTrial": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "subBannerGrace": "Ýazylyşygyň möhleti gutardy. {until} çenli ählisi işleýär, soň diňe görmek mümkin bolar.",
+  "@subBannerGrace": {
+    "placeholders": {
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "subBannerReadOnly": "Ýazylyşygyň möhleti gutardy: maglumatlary görmek we ýükläp almak mümkin, üýtgetmek bolmaýar.",
+  "subBannerReadOnlyStaff": "Dükanyň ýazylyşygynyň möhleti gutardy: häzir diňe görmek mümkin. Eýesine habar beriň.",
+  "subRenewAction": "Nähili uzaltmaly",
+  "subRenewTitle": "Ýazylyşygy uzaltmak",
+  "subRenewBody": "Biz bilen habarlaşyň: şol gün uzaldarys. Uzaldylandan soň ählisi ýene işlär, hiç zat ýitmez.",
+  "subCall": "Jaň etmek: {phone}",
+  "@subCall": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "subWriteUs": "Bize ýazmak",
+  "subSuspendedTitle": "Elýeterlilik togtadyldy",
+  "subSuspendedBody": "Dükanyňyzyň maglumatlary bilen işlemek togtadyldy. Elýeterliligi dikeltmek üçin biz bilen habarlaşyň. Maglumatlaryňyz saklanýar.",
+  "subSuspendedStaff": "Dükanyň elýeterliligi togtadyldy. Eýesine habar beriň.",
+  "errorSubscriptionExpired": "Ýazylyşygyň möhleti gutardy: maglumatlary görmek mümkin, ýöne üýtgetmek bolmaýar. Biz bilen habarlaşyň.",
+  "errorSubscriptionSuspended": "Elýeterlilik togtadyldy. Biz bilen habarlaşyň.",
+  "hideNotice": "Gizlemek",
+  "helpAndContact": "Kömek we aragatnaşyk",
+  "supportTitle": "Bize ýazmak",
+  "supportIntro": "Soragyňyzy ýa-da meseläňizi ýazyň. Biz şu ýerde jogap bereris.",
+  "supportSubject": "Tema",
+  "supportMessage": "Habar",
+  "supportSend": "Ugratmak",
+  "supportSentOk": "Ugradyldy. Jogap şu ýerde peýda bolar.",
+  "supportEmpty": "Heniz ýüz tutma ýok",
+  "supportEmptyHint": "Näme-de bolsa düşnüksiz ýa-da işlemeýän bolsa, bize ýazyň.",
+  "supportNewRequest": "Täze ýüz tutma",
+  "supportStatusOpen": "Jogap garaşýar",
+  "supportStatusAnswered": "Jogap bar",
+  "supportStatusClosed": "Ýapyk",
+  "supportFromYou": "Siz",
+  "supportFromUs": "Biz",
+  "supportReplyHint": "Jogap bermek",
+  "supportClosedNote": "Ýüz tutma ýapyldy. Sorag galan bolsa, täzesini ýazyň.",
+  "supportOwnersOnly": "Bize eýesi we menejer ýazyp biler. Soragyňyz bar bolsa, olara aýdyň.",
+  "supportPhoneLine": "Telefon: {phone}",
+  "@supportPhoneLine": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardTitle": "Işe başlaň",
+  "onboardProgress": "Taýýar: {done} / {total}",
+  "@onboardProgress": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardProducts": "Ilkinji harydy goşuň",
+  "onboardStock": "Harydy sklada kabul ediň",
+  "onboardSale": "Ilkinji satuwy ediň",
+  "onboardDetails": "Dükanyň salgysyny we telefonyny giriziň (çekde çap edilýär)",
+  "onboardTeam": "Işgärleri goşuň",
+  "onboardHide": "Sanawy gizlemek",
+  "helpTitle": "Bu nähili işleýär",
+  "helpIntro": "Esasy hereketler boýunça gysga maslahatlar.",
+  "helpReceiveTitle": "Haryt kabul etmek",
+  "helpReceiveBody": "«Sklad» bölümini açyp «Skanerläp kabul etmek» düwmesine basyň. Kamerany bir harydyň barkoduna tutuň, gutuda näçe sanynyň bardygyny giriziň we tassyklaň. Haryt katalogda ýokmy? Adyny ýazyň: ol özi goşular. Bahasyny soňra görkezip bolar.",
+  "helpSellTitle": "Haryt satmak",
+  "helpSellBody": "«Satuwlar» bölümini açyň. Haryt adyndan ýa-da barkoddan tapyp, oňa basyň. Sebetde sanyny we bahasyny üýtgedip bolýar. Töleg usulyny saýlap «Satuwy tamamlamak» düwmesine basyň. Çegi çap edip ýa-da ugradyp bolýar.",
+  "helpReturnTitle": "Yzyna almak",
+  "helpReturnBody": "«Satuwlar», soňra «Yzyna almalar». Çegi tapyň, nämäniň gaýtarylandygyny belläň we harydyň ýagdaýyny görkeziň. Pul satylan bahasy boýunça yzyna berilýär.",
+  "helpWarrantyTitle": "Kepillik",
+  "helpWarrantyBody": "Harytda kepillik aýlary görkezilen bolsa, kepillik satylanda özi başlaýar. Kepilli satylan harytlar we gutarýança galan günler «Kepillikler» bölüminde görünýär. Müşderiniň ýüz tutmasy: «Täze ýüz tutma».",
+  "helpStockTitle": "Sklad we galyndylar",
+  "helpStockBody": "Her harydyň galyndysy «Sklad» sahypasynda görünýär. Başlangyç galyndylar we düzedişler şu sahypadaky «Ýene» menýusynda; düzediş hemişe sebäp talap edýär.",
+  "helpMoneyTitle": "Çykdajylar we hasabatlar",
+  "helpMoneyBody": "Çykdajyny «Çykdajylar» bölüminde ýazyň. Döwür boýunça girdejini, peýdany we çykdajylary «Hasabatlar» bölüminde görüň. Salgytlar peýda hasaplanylanda göz öňünde tutulmaýar.",
+  "helpMore": "Jogap tapmadyňyzmy? Bize ýazyň.",
+  "moreTitle": "Bölümler",
+  "stockReceiveButton": "Elde kabul etmek",
+  "lineRemoved": "Haryt aýryldy",
+  "undoAction": "Yzyna gaýtarmak",
+  "greetingNoName": "Salam!",
+  "errorUsePasswordChange": "Öz parolyňyz «Sazlamalar» bölüminde üýtgedilýär.",
+  "errorAccountShared": "Bu hasaby siziň dükanyňyzdan daşarda hem ulanýarlar: paroly diňe özi üýtgedip biler.",
+  "stockTabBalances": "Galyndylar"
 }

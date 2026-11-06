@@ -338,8 +338,8 @@
   "fullNameLabel": "Имя",
   "roleLabel": "Роль",
   "allLocationsLabel": "Все местоположения",
-  "initialPasswordLabel": "Начальный пароль (необязательно)",
-  "initialPasswordHint": "Если не указан, сотрудник получит одноразовый код на почту.",
+  "initialPasswordLabel": "Временный пароль",
+  "initialPasswordHint": "Сотрудник придумает свой пароль при первом входе. Нужен, если нет email.",
   "staffCreated": "Сотрудник добавлен.",
   "sendResetCode": "Отправить код для пароля",
   "resetCodeRequested": "Код отправлен на почту сотрудника.",
@@ -1847,5 +1847,160 @@
   "warrantyClaimOpenBadge": "Обращение открыто",
   "warrantyRegisterEmpty": "Пока нет проданных товаров с гарантией",
   "warrantyRegisterEmptyHint": "Товар с гарантией появится здесь сразу после продажи. Срок гарантии задаётся в карточке товара.",
-  "warrantyNoMatch": "Ничего не найдено"
+  "warrantyNoMatch": "Ничего не найдено",
+  "showPassword": "Показать пароль",
+  "hidePassword": "Скрыть пароль",
+  "recentSignIns": "Недавние входы",
+  "forgetAccountTip": "Убрать из списка",
+  "choosePasswordTitle": "Придумайте свой пароль",
+  "choosePasswordIntro": "Этот пароль вам выдали временно. Придумайте свой: его будете знать только вы.",
+  "currentPasswordLabel": "Текущий пароль",
+  "repeatPasswordLabel": "Повторите новый пароль",
+  "passwordMismatch": "Пароли не совпадают",
+  "passwordRulesHint": "Не короче 10 символов, не только из цифр и не из простых слов.",
+  "changePasswordTitle": "Сменить пароль",
+  "changePasswordIntro": "Новый пароль заменит старый. На других устройствах придётся войти заново.",
+  "passwordChangedDone": "Пароль изменён",
+  "resetNoMailHint": "Код не пришёл? Попросите владельца магазина выдать вам временный пароль.",
+  "errorPasswordChangeRequired": "Сначала придумайте свой пароль.",
+  "fieldEmailOrPassword": "Укажите email или временный пароль.",
+  "emailOptionalLabel": "Email (необязательно)",
+  "tempPasswordAction": "Выдать временный пароль",
+  "tempPasswordTitle": "Временный пароль: {name}",
+  "@tempPasswordTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tempPasswordBody": "Покажите его сотруднику. Он виден только сейчас; при входе сотрудник придумает свой пароль.",
+  "tempPasswordConfirm": "Выдать новый временный пароль для {name}? Старый перестанет работать.",
+  "@tempPasswordConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "copyAction": "Скопировать",
+  "copiedDone": "Скопировано",
+  "subBannerExpiring": "Подписка заканчивается {date} (дней: {days}).",
+  "@subBannerExpiring": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "subBannerExpiringToday": "Подписка заканчивается сегодня.",
+  "subBannerTrial": "Пробный период до {date} (дней: {days}).",
+  "@subBannerTrial": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "subBannerGrace": "Подписка закончилась. Всё работает до {until}, затем останется только просмотр.",
+  "@subBannerGrace": {
+    "placeholders": {
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "subBannerReadOnly": "Подписка закончилась: данные можно смотреть и выгружать, менять нельзя.",
+  "subBannerReadOnlyStaff": "Подписка магазина закончилась: сейчас можно только смотреть. Сообщите владельцу.",
+  "subRenewAction": "Как продлить",
+  "subRenewTitle": "Продление подписки",
+  "subRenewBody": "Свяжитесь с нами: продлим в тот же день. После продления всё снова заработает, ничего не потеряется.",
+  "subCall": "Позвонить: {phone}",
+  "@subCall": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "subWriteUs": "Написать нам",
+  "subSuspendedTitle": "Доступ приостановлен",
+  "subSuspendedBody": "Работа с данными вашего магазина приостановлена. Свяжитесь с нами, чтобы вернуть доступ. Ваши данные сохранены.",
+  "subSuspendedStaff": "Доступ магазина приостановлен. Сообщите владельцу.",
+  "errorSubscriptionExpired": "Подписка закончилась: данные можно смотреть, но не менять. Свяжитесь с нами.",
+  "errorSubscriptionSuspended": "Доступ приостановлен. Свяжитесь с нами.",
+  "hideNotice": "Скрыть",
+  "helpAndContact": "Помощь и связь",
+  "supportTitle": "Написать нам",
+  "supportIntro": "Опишите вопрос или проблему. Мы ответим прямо здесь.",
+  "supportSubject": "Тема",
+  "supportMessage": "Сообщение",
+  "supportSend": "Отправить",
+  "supportSentOk": "Отправлено. Ответ появится здесь.",
+  "supportEmpty": "Обращений пока нет",
+  "supportEmptyHint": "Если что-то непонятно или не работает, напишите нам.",
+  "supportNewRequest": "Новое обращение",
+  "supportStatusOpen": "Ждёт ответа",
+  "supportStatusAnswered": "Есть ответ",
+  "supportStatusClosed": "Закрыто",
+  "supportFromYou": "Вы",
+  "supportFromUs": "Мы",
+  "supportReplyHint": "Ответить",
+  "supportClosedNote": "Обращение закрыто. Если вопрос остался, напишите новое.",
+  "supportOwnersOnly": "Писать нам могут владелец и менеджер. Если есть вопрос, сообщите им.",
+  "supportPhoneLine": "Телефон: {phone}",
+  "@supportPhoneLine": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardTitle": "Начните работу",
+  "onboardProgress": "Готово {done} из {total}",
+  "@onboardProgress": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardProducts": "Добавьте первый товар",
+  "onboardStock": "Примите товар на склад",
+  "onboardSale": "Сделайте первую продажу",
+  "onboardDetails": "Укажите адрес и телефон магазина (они печатаются на чеке)",
+  "onboardTeam": "Добавьте сотрудников",
+  "onboardHide": "Скрыть список",
+  "helpTitle": "Как это работает",
+  "helpIntro": "Короткие подсказки по главным действиям.",
+  "helpReceiveTitle": "Принять товар",
+  "helpReceiveBody": "Откройте «Склад» и нажмите «Приёмка сканированием». Наведите камеру на штрих-код одного товара, введите, сколько штук в коробке, и подтвердите. Товара нет в каталоге? Введите название: он добавится сам. Цену можно указать позже.",
+  "helpSellTitle": "Продать товар",
+  "helpSellBody": "Откройте «Продажи». Найдите товар по названию или штрих-коду и нажмите на него. В корзине можно изменить количество и цену. Выберите способ оплаты и нажмите «Завершить продажу». Чек можно распечатать или отправить.",
+  "helpReturnTitle": "Принять возврат",
+  "helpReturnBody": "«Продажи», затем «Возвраты». Найдите чек, отметьте, что вернули, и укажите состояние товара. Деньги возвращаются по цене, за которую продали.",
+  "helpWarrantyTitle": "Гарантия",
+  "helpWarrantyBody": "Гарантия начинается сама при продаже, если у товара указаны месяцы гарантии. Все проданные товары с гарантией и дни до конца видны в разделе «Гарантии». Обращение клиента: «Новое обращение».",
+  "helpStockTitle": "Склад и остатки",
+  "helpStockBody": "Остатки каждого товара видны на странице «Склад». Начальные остатки и исправления находятся в меню «Ещё» на этой странице; исправление всегда требует причину.",
+  "helpMoneyTitle": "Расходы и отчёты",
+  "helpMoneyBody": "Запишите расход в разделе «Расходы». Выручку, прибыль и расходы за период смотрите в «Отчётах». Налоги в прибыли не учитываются.",
+  "helpMore": "Не нашли ответ? Напишите нам.",
+  "moreTitle": "Разделы",
+  "stockReceiveButton": "Принять вручную",
+  "lineRemoved": "Позиция удалена",
+  "undoAction": "Отменить",
+  "greetingNoName": "Здравствуйте!",
+  "errorUsePasswordChange": "Свой пароль меняется в «Настройках».",
+  "errorAccountShared": "Этим аккаунтом пользуются и вне вашего магазина: пароль может сменить только он сам.",
+  "stockTabBalances": "Остатки"
 }

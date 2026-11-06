@@ -8,6 +8,7 @@ import '../../core/session/session_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
+import 'password_form.dart';
 import 'password_reset_screen.dart';
 
 /// A build made with `--dart-define=ROLE_PICKER=true` signs in by choosing a role and then typing
@@ -84,6 +85,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   final _username = TextEditingController();
   final _password = TextEditingController();
+  final _passwordFocus = FocusNode();
   bool _busy = false;
   ApiException? _error;
 
@@ -92,6 +94,7 @@ class _SignInScreenState extends State<SignInScreen> {
     widget.server.removeListener(_serverChanged);
     _username.dispose();
     _password.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -257,6 +260,37 @@ class _SignInScreenState extends State<SignInScreen> {
               key: const ValueKey('notice-unconfigured'),
             ),
           if (!_roleMode) ...[
+            if (session.recentUsernames.isNotEmpty) ...[
+              Text(
+                l.recentSignIns,
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final name in session.recentUsernames)
+                    AppPill(
+                      key: ValueKey('recent-$name'),
+                      label: name,
+                      icon: AppIcons.user,
+                      selected: _username.text.trim().toLowerCase() == name,
+                      onTap: _busy
+                          ? null
+                          : () {
+                              setState(() => _username.text = name);
+                              _passwordFocus.requestFocus();
+                            },
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
             LabeledField(
               label: l.username,
               child: TextField(
@@ -277,23 +311,14 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
             ),
             const SizedBox(height: 18),
-            LabeledField(
+            PasswordField(
+              key: const ValueKey('sign-in-password'),
               label: l.password,
-              child: TextField(
-                key: const ValueKey('sign-in-password'),
-                controller: _password,
-                enabled: !_busy,
-                obscureText: true,
-                autofillHints: const [AutofillHints.password],
-                onSubmitted: (_) => _submit(),
-                decoration: InputDecoration(
-                  prefixIcon: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 14),
-                    child: AppIcon(AppIcons.lock, size: 20),
-                  ),
-                  prefixIconConstraints: const BoxConstraints(minWidth: 48),
-                ),
-              ),
+              controller: _password,
+              focusNode: _passwordFocus,
+              enabled: !_busy,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
             ),
           ],
           if (_error != null) ...[

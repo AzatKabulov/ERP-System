@@ -276,7 +276,7 @@ class _SalesScreenState extends State<SalesScreen> {
             PageHead(
               eyebrow: l.sales,
               title: l.salesCashDesk,
-              subtitle: session.location?.name,
+              subtitle: session.placeSubtitle,
               actions: [
                 if (session.can('sales.view'))
                   OutlinedButton.icon(
@@ -889,10 +889,28 @@ class _CartLineCardState extends State<_CartLineCard> {
                         key: ValueKey('cart-remove-${widget.index}'),
                         tooltip: l.removeLine,
                         style: IconButton.styleFrom(
-                          minimumSize: const Size(40, 40),
+                          minimumSize: const Size(48, 48),
                           foregroundColor: AppColors.muted,
                         ),
-                        onPressed: () => cart.remove(line),
+                        // Removing is easy to undo, so it needs no "are you sure": the
+                        // snackbar offers the line back for a few seconds.
+                        onPressed: () {
+                          final index = cart.lines.indexOf(line);
+                          cart.remove(line);
+                          final messenger = ScaffoldMessenger.of(context);
+                          messenger
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(
+                                content: Text(l.lineRemoved),
+                                action: SnackBarAction(
+                                  key: const ValueKey('cart-undo'),
+                                  label: l.undoAction,
+                                  onPressed: () => cart.restore(line, index),
+                                ),
+                              ),
+                            );
+                        },
                         icon: const AppIcon(AppIcons.trash, size: 20),
                       ),
                     ],

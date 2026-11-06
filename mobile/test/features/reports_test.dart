@@ -427,18 +427,6 @@ void main() {
       await rig.launch(tester, size: size);
       await rig.signIn(tester);
       expect(tester.takeException(), isNull, reason: 'dashboard');
-      if (size.width < 600) {
-        await tester.tap(find.byTooltip('Меню'));
-        await settle(tester, ms: 400);
-        await tester.scrollUntilVisible(
-          key('nav-reports'),
-          200,
-          scrollable: find.descendant(
-            of: find.byType(Drawer),
-            matching: find.byType(Scrollable),
-          ),
-        );
-      }
       await tapKey(tester, 'nav-reports');
       await settle(tester);
       for (final tab in [

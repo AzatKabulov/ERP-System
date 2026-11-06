@@ -255,6 +255,24 @@ abstract final class AppIcons {
   static const save = AppIconData(
     paths: ['M5 3h12l3 3v15H5V3Z', 'M8 3v5h7V3M8 21v-7h8v7'],
   );
+  static const eyeOff = AppIconData(
+    paths: [
+      'M2.5 12S6 6.5 12 6.5c1.2 0 2.3.2 3.3.6M21.5 12s-1.4 2.2-3.7 3.9M9.9 17.3c.7.1 1.4.2 2.1.2',
+      'M4 4l16 16',
+    ],
+    circles: [(12, 12, 2.5)],
+  );
+  static const help = AppIconData(
+    paths: ['M9.5 9.5a2.6 2.6 0 1 1 3.6 2.4c-.7.4-1.1.9-1.1 1.8', 'M12 17v.01'],
+    circles: [(12, 12, 9)],
+  );
+  static const chat = AppIconData(
+    paths: ['M4 5h16v11H9l-5 4V5Z', 'M8 9.5h8M8 12.5h5'],
+  );
+  static const copy = AppIconData(
+    paths: ['M5 15V5h10'],
+    rects: [(9, 9, 11, 11, 2)],
+  );
 }
 
 /// Draws an [AppIconData] with the current icon color and size (or the ones given).

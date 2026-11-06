@@ -20,6 +20,10 @@ import '../reports/dashboard_screen.dart';
 import '../reports/reports_repository.dart';
 import '../reports/reports_screen.dart';
 import '../sales/cart_controller.dart';
+import '../subscription/subscription_widgets.dart';
+import '../support/help_screen.dart';
+import '../support/support_repository.dart';
+import '../support/support_screen.dart';
 import '../expenses/expenses_repository.dart';
 import '../expenses/expenses_screen.dart';
 import '../sales/sales_repository.dart';
@@ -110,6 +114,34 @@ class _RealWorkspaceState extends State<RealWorkspace> {
     if (mounted) setState(() => _reloadCounter++);
   }
 
+  /// How-to pages, with a way to write to us for those who may.
+  Future<void> _openHelp() => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => HelpScreen(
+        onWriteToUs: session.can('support.write')
+            ? () {
+                Navigator.of(context).pop();
+                _openSupport();
+              }
+            : null,
+      ),
+    ),
+  );
+
+  /// The conversation with us.
+  Future<void> _openSupport() => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => SupportScreen(
+        session: session,
+        repository: SupportRepository(
+          widget.api,
+          session.membership!.businessId,
+        ),
+        screenName: _page.name,
+      ),
+    ),
+  );
+
   Widget _content() {
     final membership = session.membership!;
     final page = _allowed(_page) ? _page : AppPage.dashboard;
@@ -119,6 +151,7 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         session: session,
         repository: ReportsRepository(widget.api, membership.businessId),
         onOpenReports: () => setState(() => _page = AppPage.reports),
+        onGo: (page) => setState(() => _page = page),
         onOpenToComplete: session.can('catalog.manage')
             ? _openToComplete
             : null,
@@ -178,6 +211,8 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         catalog: CatalogRepository(widget.api, membership.businessId),
         languageCode: widget.languageCode,
         onLanguageChanged: widget.onLanguageChanged,
+        onOpenHelp: _openHelp,
+        onOpenSupport: _openSupport,
       ),
     };
   }
@@ -214,13 +249,15 @@ class _RealWorkspaceState extends State<RealWorkspace> {
             style: const TextStyle(color: AppColors.muted, fontSize: 13),
           )
         else if (membership.locations.length == 1)
-          // One shop: nothing to choose, so just its name (no menu, no arrow).
+          // One shop: nothing to choose, so just its name (no menu, no arrow). It is the
+          // business's name, the one name the owner sets in Settings, so the shop never has
+          // two names on screen.
           Semantics(
-            label: '${l.location}: ${session.location?.name ?? ''}',
+            label: membership.businessName,
             child: TopbarControl(
               key: const ValueKey('location-label'),
               icon: AppIcons.stock,
-              text: session.location?.name ?? '',
+              text: membership.businessName,
             ),
           )
         else
@@ -252,6 +289,13 @@ class _RealWorkspaceState extends State<RealWorkspace> {
       final l = strings(context);
       final membership = session.membership;
       if (membership == null) return NoBusinessScreen(session: session);
+      if (session.subscription?.isSuspended ?? false) {
+        // Access was cut off by us: nothing of the shop opens, only how to reach us.
+        return SubscriptionBlockedScreen(
+          session: session,
+          onWriteToUs: session.can('support.write') ? _openSupport : null,
+        );
+      }
       return AppShell(
         pages: _pages,
         page: _allowed(_page) ? _page : AppPage.dashboard,
@@ -260,7 +304,17 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         languageCode: widget.languageCode,
         onLanguageChanged: widget.onLanguageChanged,
         locationControl: _selectors(context),
+        onHelp: _openHelp,
         banners: [
+          AnnouncementBanner(session: session),
+          SubscriptionBanner(
+            session: session,
+            onRenew: () => showRenewDialog(
+              context,
+              session,
+              onWriteToUs: session.can('support.write') ? _openSupport : null,
+            ),
+          ),
           if (!widget.monitor.online)
             Container(
               key: const ValueKey('offline-banner'),

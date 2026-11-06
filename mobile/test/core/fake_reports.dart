@@ -189,6 +189,9 @@ class FakeReports {
     ],
   };
 
+  /// What a new owner has not done yet (null: the server sends none, as for an old shop).
+  Map<String, dynamic>? onboarding;
+
   Map<String, dynamic> dashboard() => {
     'generated_at': '2026-10-07T12:00:00Z',
     if (_can('sales.view')) ...{
@@ -201,6 +204,7 @@ class FakeReports {
     },
     if (_can('catalog.manage'))
       'to_complete_count': server.toCompleteData.length,
+    if (_can('catalog.manage') && onboarding != null) 'onboarding': onboarding,
     if (_can('expense.view')) 'expenses_month': '150.00',
     if (_can('stock.cost.view')) 'inventory_value': '1330.00',
     if (_can('stock.view')) 'low_stock_count': 2,

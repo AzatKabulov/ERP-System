@@ -213,7 +213,7 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
       children: [
         PageHead(
           title: l.warranties,
-          subtitle: session.location?.name,
+          subtitle: session.placeSubtitle,
           actions: [
             if (session.can('warranty.open'))
               PrimaryButton(
@@ -307,7 +307,10 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
         )
       else if (_sold.isEmpty)
         SurfaceCard(
-          child: _search.text.trim().isEmpty && _soldStatus == null
+          child:
+              _search.text.trim().isEmpty &&
+                  (_soldStatus == null ||
+                      _soldCounts.values.every((n) => n == 0))
               ? EmptyState(
                   key: const ValueKey('warranty-sold-empty'),
                   title: l.warrantyRegisterEmpty,

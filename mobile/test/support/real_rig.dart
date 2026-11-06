@@ -119,7 +119,26 @@ Finder key(String name) => find.byKey(ValueKey(name));
 
 /// Scrolls the control into view first, as a person would, then taps it.
 Future<void> tapKey(WidgetTester tester, String name) async {
-  final finder = find.byKey(ValueKey(name));
+  var finder = find.byKey(ValueKey(name));
+  // 'nav-<page>' is the side menu of tablets and computers. A phone reaches the same page by
+  // its bottom-bar tab, or by the "More" tab and the list it opens.
+  if (finder.evaluate().isEmpty && name.startsWith('nav-')) {
+    final page = name.substring(4);
+    final tab = find.byKey(ValueKey('tab-$page'));
+    if (tab.evaluate().isNotEmpty) {
+      await tester.tap(tab);
+      await tester.pump();
+      return;
+    }
+    final more = find.byKey(const ValueKey('tab-more'));
+    if (more.evaluate().isNotEmpty) {
+      await tester.tap(more);
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      finder = find.byKey(ValueKey('more-$page'));
+    }
+  }
   await tester.ensureVisible(finder);
   // The scroll is animated, and a scrollable ignores taps until it has stopped;
   // frame by frame, because one long pump would skip the end of the animation.

@@ -6,11 +6,13 @@ import '../theme/app_theme.dart';
 import 'common.dart';
 import 'motion.dart';
 
+/// The order is the order of the side menu and of the "More" list, and starts with the four
+/// pages of the phone's bottom bar in the same order as the bar.
 enum AppPage {
   dashboard,
   products,
-  inventory,
   sales,
+  inventory,
   expenses,
   warranties,
   reports,
@@ -39,7 +41,7 @@ AppIconData pageIcon(AppPage page) => switch (page) {
   AppPage.administration => AppIcons.settings,
 };
 
-/// The four modules of the phone's bottom bar; every other module is behind the menu button.
+/// The four modules of the phone's bottom bar; every other module is behind its "More" tab.
 const _phoneTabs = [
   AppPage.dashboard,
   AppPage.products,
@@ -67,6 +69,7 @@ class AppShell extends StatefulWidget {
     this.userName = '',
     this.roleName,
     this.onSignOut,
+    this.onHelp,
   });
 
   /// Destinations to offer, in order.
@@ -90,17 +93,15 @@ class AppShell extends StatefulWidget {
   /// Offered under the person's name when given.
   final VoidCallback? onSignOut;
 
+  /// Opens the how-to pages: a "?" in the top bar and an entry in the phone's "More" list.
+  final VoidCallback? onHelp;
+
   @override
   State<AppShell> createState() => _AppShellState();
 }
 
 class _AppShellState extends State<AppShell> {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  void _navigate(AppPage page) {
-    widget.onNavigate(page);
-    _scaffoldKey.currentState?.closeDrawer();
-  }
+  void _navigate(AppPage page) => widget.onNavigate(page);
 
   String get _initials {
     final words = widget.userName
@@ -325,8 +326,8 @@ class _AppShellState extends State<AppShell> {
     ),
   );
 
-  /// The navigation column, shared by the side navigation and the phone's drawer.
-  Widget _navigation(double width, {VoidCallback? onClose}) {
+  /// The side navigation of tablets and computers.
+  Widget _navigation(double width) {
     final l = strings(context);
     return Container(
       width: width,
@@ -339,17 +340,7 @@ class _AppShellState extends State<AppShell> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(child: _brand(l)),
-                if (onClose != null)
-                  IconButton(
-                    tooltip: l.menu,
-                    icon: const AppIcon(AppIcons.close),
-                    onPressed: onClose,
-                  ),
-              ],
-            ),
+            _brand(l),
             const SizedBox(height: 28),
             Expanded(
               child: SingleChildScrollView(
@@ -394,35 +385,34 @@ class _AppShellState extends State<AppShell> {
             text: widget.roleName!,
           );
     return Container(
-      padding: EdgeInsets.fromLTRB(phone ? 8 : 32, 12, phone ? 12 : 32, 12),
+      padding: EdgeInsets.fromLTRB(
+        phone ? 12 : 32,
+        phone ? 8 : 12,
+        phone ? 4 : 32,
+        phone ? 8 : 12,
+      ),
       decoration: const BoxDecoration(
         color: Color(0xFFF6F3EE),
         border: Border(bottom: BorderSide(color: AppColors.line)),
       ),
       child: phone
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          // One slim row: whose shop this is, and the help. The page's own name is on the page
+          // (not repeated here) and the language is set once, in Settings.
+          ? Row(
               children: [
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: l.menu,
-                      icon: const AppIcon(AppIcons.menu),
-                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(child: title),
-                    const SizedBox(width: 8),
-                    _languageSwitch(),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8, top: 4),
+                Expanded(
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: widget.locationControl,
                   ),
                 ),
+                if (widget.onHelp != null)
+                  IconButton(
+                    key: const ValueKey('help-button'),
+                    tooltip: l.helpTitle,
+                    icon: const AppIcon(AppIcons.help, size: 22),
+                    onPressed: widget.onHelp,
+                  ),
               ],
             )
           : ConstrainedBox(
@@ -443,6 +433,13 @@ class _AppShellState extends State<AppShell> {
                         children: [
                           widget.locationControl,
                           _languageSwitch(),
+                          if (widget.onHelp != null)
+                            IconButton(
+                              key: const ValueKey('help-button'),
+                              tooltip: l.helpTitle,
+                              icon: const AppIcon(AppIcons.help, size: 22),
+                              onPressed: widget.onHelp,
+                            ),
                           ?role,
                         ],
                       ),
@@ -454,11 +451,150 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
+  /// The tab that stands for every page not on the bar.
+  bool get _moreSelected => !_phoneTabs.contains(widget.page);
+
+  /// The pages that are not on the bar, and help and sign-out, as one list: what used to hide
+  /// behind a menu button now sits behind a labelled tab people can see.
+  Future<void> _openMore() {
+    final l = strings(context);
+    final others = [
+      for (final p in widget.pages)
+        if (!_phoneTabs.contains(p)) p,
+    ];
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (sheet) => SafeArea(
+        // A list, not a column: a sheet is at most 9/16 of the screen high, and large system
+        // text makes the rows taller, so it must be able to scroll.
+        child: ListView(
+          key: const ValueKey('more-sheet'),
+          shrinkWrap: true,
+          children: [
+            for (final page in others)
+              ListTile(
+                key: ValueKey('more-${page.name}'),
+                minTileHeight: 56,
+                leading: AppIcon(
+                  pageIcon(page),
+                  color: widget.page == page ? AppColors.blue : AppColors.muted,
+                ),
+                title: Text(
+                  pageLabel(l, page),
+                  style: TextStyle(
+                    fontWeight: widget.page == page
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    color: widget.page == page ? AppColors.blue : AppColors.ink,
+                  ),
+                ),
+                selected: widget.page == page,
+                onTap: () {
+                  Navigator.of(sheet).pop();
+                  widget.onNavigate(page);
+                },
+              ),
+            if (widget.onHelp != null)
+              ListTile(
+                key: const ValueKey('more-help'),
+                minTileHeight: 56,
+                leading: const AppIcon(AppIcons.help, color: AppColors.muted),
+                title: Text(l.helpTitle),
+                onTap: () {
+                  Navigator.of(sheet).pop();
+                  widget.onHelp!();
+                },
+              ),
+            if (widget.onSignOut != null) ...[
+              const Divider(height: 1),
+              ListTile(
+                key: const ValueKey('more-sign-out'),
+                minTileHeight: 56,
+                leading: const AppIcon(AppIcons.logout, color: AppColors.muted),
+                title: Text(
+                  widget.userName.isEmpty
+                      ? l.signOut
+                      : '${l.signOut} · ${widget.userName}',
+                ),
+                onTap: () {
+                  Navigator.of(sheet).pop();
+                  widget.onSignOut!();
+                },
+              ),
+            ],
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _bottomBar(AppLocalizations l) {
     final tabs = [
       for (final p in _phoneTabs)
         if (widget.pages.contains(p)) p,
     ];
+    final hasMore = widget.pages.any((p) => !_phoneTabs.contains(p));
+
+    Widget tab({
+      required Key key,
+      required String label,
+      required AppIconData icon,
+      required bool selected,
+      required VoidCallback onTap,
+    }) => Expanded(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            key: key,
+            borderRadius: BorderRadius.circular(12),
+            onTap: onTap,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: AppMotion.of(context, AppMotion.base),
+                  curve: AppMotion.arrive,
+                  width: selected ? 56 : 36,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: selected ? AppColors.tint : Colors.transparent,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Center(
+                    child: TweenAnimationBuilder<Color?>(
+                      tween: ColorTween(
+                        end: selected ? AppColors.blue : AppColors.muted,
+                      ),
+                      duration: AppMotion.of(context, AppMotion.base),
+                      builder: (context, c, _) =>
+                          AppIcon(icon, size: 22, color: c),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: selected ? AppColors.blue : AppColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
     return Container(
       key: const ValueKey('phone-navigation'),
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
@@ -473,67 +609,20 @@ class _AppShellState extends State<AppShell> {
           child: Row(
             children: [
               for (final page in tabs)
-                Expanded(
-                  child: Semantics(
-                    button: true,
-                    selected: widget.page == page,
-                    child: Material(
-                      type: MaterialType.transparency,
-                      child: InkWell(
-                        key: ValueKey('tab-${page.name}'),
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => widget.onNavigate(page),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            AnimatedContainer(
-                              duration: AppMotion.of(context, AppMotion.base),
-                              curve: AppMotion.arrive,
-                              width: widget.page == page ? 56 : 36,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: widget.page == page
-                                    ? AppColors.tint
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: Center(
-                                child: TweenAnimationBuilder<Color?>(
-                                  tween: ColorTween(
-                                    end: widget.page == page
-                                        ? AppColors.blue
-                                        : AppColors.muted,
-                                  ),
-                                  duration: AppMotion.of(
-                                    context,
-                                    AppMotion.base,
-                                  ),
-                                  builder: (context, c, _) => AppIcon(
-                                    pageIcon(page),
-                                    size: 22,
-                                    color: c,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              pageLabel(l, page),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: widget.page == page
-                                    ? AppColors.blue
-                                    : AppColors.muted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                tab(
+                  key: ValueKey('tab-${page.name}'),
+                  label: pageLabel(l, page),
+                  icon: pageIcon(page),
+                  selected: widget.page == page,
+                  onTap: () => widget.onNavigate(page),
+                ),
+              if (hasMore)
+                tab(
+                  key: const ValueKey('tab-more'),
+                  label: l.navMore,
+                  icon: AppIcons.dots,
+                  selected: _moreSelected,
+                  onTap: _openMore,
                 ),
             ],
           ),
@@ -549,18 +638,6 @@ class _AppShellState extends State<AppShell> {
       final phone = constraints.maxWidth < _phoneBreakpoint;
       final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
       return Scaffold(
-        key: _scaffoldKey,
-        drawer: phone
-            ? Drawer(
-                width: 320,
-                backgroundColor: Colors.white,
-                shape: const RoundedRectangleBorder(),
-                child: _navigation(
-                  320,
-                  onClose: () => _scaffoldKey.currentState?.closeDrawer(),
-                ),
-              )
-            : null,
         bottomNavigationBar: phone && !keyboardOpen ? _bottomBar(l) : null,
         body: Row(
           children: [
