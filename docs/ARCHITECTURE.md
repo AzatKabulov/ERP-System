@@ -190,6 +190,8 @@ If the connection times out, the outcome may be unknown. Query the operation sta
 
 Lists support pagination, permitted location/date filters, and indexed search. Financial fields are filtered on the server, not merely hidden in the interface.
 
+A value the database cannot store although every field accepted it (for example a quantity times a price larger than the 14-digit money column) is a 400 `validation_error` with the field code `value_out_of_range`, never a 500; the surrounding transaction has rolled back and the idempotency key stays free.
+
 Return structured errors such as `code`, message parameters, field errors, and a request ID. The client translates error codes using its selected language. Distinguish validation errors, expired sessions, denied access, stock conflicts, and temporary service failures. Do not expose server tracebacks or another business's records.
 
 ## Database and Storage

@@ -9,6 +9,8 @@ Then read, as relevant to the task:
 - [docs/PRD.md](docs/PRD.md): product scope and requirements.
 - [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md): before any UI change.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): before any technical change. It separates the demonstration prototype from the planned production backend.
+- [docs/USABILITY.md](docs/USABILITY.md): before any UI change. The rules every screen follows and the open usability problems.
+- [docs/SAAS_PLATFORM_PLAN.md](docs/SAAS_PLATFORM_PLAN.md): the plan for selling the system to many stores (subscriptions, owner console).
 
 ## Claude Code cloud sessions
 

@@ -1,5 +1,13 @@
 # Product Requirements Document
 
+## One business is one shop; warranty register; categories (owner decisions, 2026-10-31)
+
+- **One shop per business.** The warehouse of a Turkmen shop is a back room of the shop, so a business has exactly one location (its name is the shop's name, e.g. "Авто Запчасти"). A business cannot add another location (the server answers `single_location`): otherwise one licence could run several shops. Moving goods between places and the place switcher therefore disappear from the app while there is one place; the transfer code stays on the server, unused. This replaces the multi-location scope of the earlier sections.
+- **Warranty starts by itself.** A product carries its warranty months. Every sale of it starts a warranty on that sale line from the day of the sale (shown on the receipt as "warranty until DD.MM.YYYY"). The Warranties page opens on **goods sold with a warranty**: one row per sold line with the sale number, customer, the day it was bought, the last day it holds, the days left, and a state: in force, ending soon (30 days), expired, or returned in full. Search by receipt number, customer name or phone, product, article or a scanned barcode. From a row the seller takes a claim (repair, replacement, refund, rejection, as before); after the last day only an owner or manager may accept one, with a written reason. Assumptions to confirm: a replacement keeps the original warranty (it does not start a new one); returning goods ends their warranty; an open claim is shown beside the state and does not change it.
+- **Categories are created where they are chosen**: the product filter, the product form and the receiving form open the same list with search and "Create «name»" (owners and managers).
+- **Receipt time** is printed in the shop's own time zone, which is a setting of the shop (Settings > Shop), not of the device.
+- **Offline work** is proposed in [OFFLINE_DESIGN.md](OFFLINE_DESIGN.md) and waits for the owner's decision.
+
 ## Manual receiving, stock visibility and expiry (owner request, 2026-10-26)
 
 Receiving also offers **Add manually** for a product without a barcode: enter its name and quantity, with other fields optional. An internal article identifier is generated when none is entered; no barcode is invented. Existing products can be selected by name without scanning. Existing catalog-management permissions still apply to creating or editing products.

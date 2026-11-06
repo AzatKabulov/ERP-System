@@ -1,6 +1,43 @@
 # Handoff
 
-Last updated 2026-10-26. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+Last updated 2026-10-30. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+
+## Subscription direction and open corrections (2026-11-06)
+
+- **New direction:** one shared system sold to many stores by subscription. Plan: [docs/SAAS_PLATFORM_PLAN.md](docs/SAAS_PLATFORM_PLAN.md), awaiting the owner's decisions D1-D8. Usability rules and review: [docs/USABILITY.md](docs/USABILITY.md). Neither is built.
+- **Live server:** https://erp.kemalysh.dev on a free 1 GB Oracle VM (168.107.87.98), deployed by upload from uncommitted local work, not from git. Nightly backups run (4 of 4) but stay on that VM, and no restore has been tried. No email service is configured.
+- **Corrections to the 2026-11-02 mobile round:** the iPhone clipping is **not confirmed fixed** (the check was desktop Chromium at 393 px; see USABILITY.md item 21). The Android APK has not been run on any device or emulator, so the adaptive icon, native splash and system bars are unverified. The owner was told passwords can be changed in Settings; the app has no such screen.
+- The `ROLE_PICKER` build flag assumes logins equal role names, so it must be off before a second store exists.
+
+## Owner's manual-test round (2026-10-31)
+
+From the owner's hands-on test (19 points). Done and tested unless marked:
+- **Receipt time was not a bug:** receipts print in the *shop's* time zone (Asia/Ashgabat, UTC+5) and the owner tests from UTC+8. Settings > Shop now has a time zone selector; the test shop was set to Asia/Kuala_Lumpur through the API.
+- **One business is one shop** (PRD, 2026-10-31): `POST .../locations/` answers 409 `single_location` once the business has a location (`apps/businesses/views.py`, tests in `test_access.py`); the sample business has one location "Авто Запчасти" (the warehouse role works there); the app shows a plain name instead of the place menu, hides "Add location" and the Transfers tab. The test shop's "Main store" was renamed and its empty "Warehouse" switched off (via the API).
+- **Warranty register** (`apps/warranties/register.py`, `GET .../warranty-register/`, 18 backend tests; app: the first tab of the Warranties page, 8 tests): computed from sales, returns and claims, nothing stored. The receipt now prints "warranty until DD.MM.YYYY". Scenarios and assumptions: PRD.
+- **Products page** redone: header with one main button and a "More" menu (import, export, complete data), one search row, a filter row (category list with search and *create category*, expiry, archive). Same pills replace the Material chips (the double outline) on the stock and warranty pages. The page header's buttons now sit at the right edge on every page; the hover wash of tabs is rounded.
+- **Receiving form** laid out in sections (product with photo, quantity and prices side by side, the rest in two columns); its category field opens the same list with *create category*. The stock page has an **Add product** button (manual entry without a barcode) and short explanations (tooltips) of *Opening stock* (the first quantities and costs, once) and *Adjustment* (a correction with a mandatory reason).
+- **Cart price box** is now clearly an input (caption, pencil, tint, cobalt edge).
+- **Settings** split into Account / Shop / Team; sign-out has its own card.
+- Verified: **800 backend tests** (PostgreSQL) and **459 app tests** pass, Ruff and `flutter analyze` clean; the new screens were also looked at in a real browser against the real local server (products, stock, warranty register, settings, the receiving form). Not checked: a phone, a tablet, the Turkmen wording (every new Turkmen string is a draft), printing the new receipt line on paper.
+- The stock page's *Opening stock* and *Adjustment* moved into a "More" menu that explains each in one line (the page header was wrapping onto two rows).
+- **Not done, waiting for the owner:** offline work ([OFFLINE_DESIGN.md](docs/OFFLINE_DESIGN.md): needs the decision on situation and option); a sliding tab indicator and further animation work (the shell already animates pages; no measured problem found).
+
+## Production-readiness review, first pass (2026-10-30)
+
+Owner request: look for flaws in the logic and make the system production ready. Read the stock ledger (`inventory.post`), sales, returns, authentication, idempotency, settings, the deployment stack and scripts, the CSV import and the local-login endpoint. **No defect was found in the stock, FIFO, sale or return arithmetic**; the findings are at the edges. Fixed, each with a test that fails without the fix:
+
+- **A number too big for its column gave a bare 500** (e.g. 20 x 99,999,999,999.99: each value is allowed alone, the line total is not). `apps/common/errors.py` now maps PostgreSQL `DataError` to a 400 `validation_error` with the field code `value_out_of_range` (the app already shows its localized "check the values" text); the work was inside the transaction, so nothing is written and the same key can be reused. Test: `apps/sales/tests/test_limits.py`.
+- **Sign-in throttle counters could be erased.** The database cache keeps Django's default of 300 entries and then deletes a third of them (the barcode-name cache alone can fill it). `MAX_ENTRIES` is now 200,000. Test: `apps/common/tests/test_cache.py` (fails with the old limit).
+- **CSV import read "1,200" as 1.20.** Trailing zeros hid the extra digits. The digits as typed are now judged: more than two after the separator is `too_many_decimals`. The app's own price fields already refused this. Tests in `test_csv.py`.
+- **The password-free local role login now refuses any request carrying proxy or tunnel headers** (`X-Forwarded-*`, `Forwarded`, `X-Real-IP`, `CF-*`). A tunnel or proxy on the same computer connects from 127.0.0.1, so the address checks alone would have passed for the internet. `serve_https.py` strips and adds no such headers, so the private-Wi-Fi HTTPS test still works. Never expose the local launcher publicly anyway; it is development mode with sample data.
+- **Deployment stack:** Docker logs are capped (5 x 10 MB per container; before, the API's per-request log could fill a small disk); gunicorn workers come from `WEB_CONCURRENCY` (default 3; `infra/.env` can lower it on a 1 GB machine); Caddy sends `X-Frame-Options: SAMEORIGIN` and `frame-ancestors 'self'` (clickjacking; same-origin frames still work).
+- **`scripts/deploy/backup.sh`:** a failed or cut-off dump used to leave a file named like a good backup; files were readable by every user; a missing files volume was silently skipped. Now: written under a temporary name and kept only after it reads back (the dump must end with pg_dump's completion line, the tarball must list), mode 600, a missing volume stops with a message, and old backups are deleted only after a fully successful run. **Only syntax-checked (`bash -n`): this PC has no Docker and no shellcheck, so run `shellcheck -x -P SCRIPTDIR scripts/deploy/*.sh` and one real backup and restore on the test server.**
+- `docs/DEPLOY_TESTING.md` has a new "Before real customers use it" checklist and rows for small servers and disk use.
+
+Verified: **783 backend tests passed before the changes and 788 after them** (the 5 new ones; PostgreSQL, this PC), Ruff check and format clean, `makemigrations --check` clean. The Flutter app was not changed and its tests were not rerun. Nothing was deployed.
+
+Known and left alone (decisions or small risks, for the owner): sales take batches in receipt order (FIFO), not earliest-expiry-first, as the owner decided; goods awaiting inspection from two different returns share one FIFO queue, so an inspection can move another return's batch at its cost (totals stay right, the split by condition can differ by cost); the sign-in limit is per address and user name, so a many-address attack on one user name is not capped; idempotency records and audit events are never pruned (small for a shop, worth a retention rule later); no error-reporting service is connected (monitoring, PLAN 10.1); quick-tunnel mode probably makes all visitors share one rate-limit address (see the checklist).
 
 ## Manual receiving, stock visibility, expiry and local role login (2026-10-26)
 

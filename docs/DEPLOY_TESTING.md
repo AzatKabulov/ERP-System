@@ -111,7 +111,9 @@ Two kinds of files come from GitHub. For **your own trying** (Option 0, or a qui
 | What | How |
 | --- | --- |
 | Update to the newest code | `bash scripts/deploy/update.sh` (it takes a backup first, then rebuilds and restarts) |
-| Backup now | `bash scripts/deploy/backup.sh`. Files go to `infra/backups/`, the nightly job does it by itself. **Copy them off the machine now and then** (a backup on the same disk does not survive losing the machine). |
+| Backup now | `bash scripts/deploy/backup.sh`. Files go to `infra/backups/` (readable by you only), the nightly job does it by itself. A backup is kept only after it has been read back and checked, and the script stops with a message if the database dump is incomplete or the uploaded-files volume is missing; old backups are deleted only after a fully successful run. **Copy them off the machine now and then** (a backup on the same disk does not survive losing the machine). |
+| A small server (about 1 GB of memory) | Add `WEB_CONCURRENCY=2` (or `1`) to `infra/.env` and run `docker compose up -d`: fewer API processes, less memory. The default is 3. Also add 2 GB of swap (the install steps for Google and Oracle micro machines above). |
+| Disk filling up | The containers' logs are limited to five files of 10 MB each, so they cannot fill the disk. Backups are kept 14 days; check `df -h` now and then. |
 | Restore, or move to another server | `bash scripts/deploy/restore.sh infra/backups/db-....sql.gz infra/backups/files-....tar.gz` (it asks you to type `restore`) |
 | See what is running or why it stopped | `cd infra && docker compose ps` and `docker compose logs --tail 80 api` |
 | Stop / start | `cd infra && docker compose stop` / `docker compose up -d` |
@@ -123,6 +125,19 @@ Two kinds of files come from GitHub. For **your own trying** (Option 0, or a qui
 2. To bring over existing data: `backup.sh` on the old server, copy the two files, `restore.sh` on the new one.
 3. Tell the client's people the new address; they type it once in the app (sign-in screen > Server > Change). No new app is needed.
 4. One server can hold several businesses (the software keeps them apart), but giving each paying client **their own server and database** is the simplest to explain, to back up, to move and to switch off.
+
+## Before real customers use it
+
+This is the short list from the review of 2026-10-30; the full plan is `PLAN.md` Phase 10. Tick each one on the real server.
+
+- [ ] Opened `https://your-address/api/v1/health/` **from the shop's own internet connection** and the web app signs in there.
+- [ ] Changed the owner password (Settings) and wrote it somewhere safe. Staff have their own accounts and passwords.
+- [ ] Took a backup, **copied it off the server**, and restored it on another machine once (`restore.sh`; never over live data). A backup that was never restored is a hope, not a backup.
+- [ ] A free uptime check on the health address (for example UptimeRobot) that emails you.
+- [ ] Password recovery by email works (`EMAIL_*` in `infra/.env`; send yourself a code), or the owner knows that staff passwords are reset by the owner in Settings > Staff.
+- [ ] Only ports 22, 80 and 443 are open at the provider's firewall; ssh uses a key, not a password.
+- [ ] `sudo apt-get install -y unattended-upgrades` on the server (security updates install by themselves).
+- [ ] Not using the quick-tunnel mode for the shop. In that mode the proxy chain (tunnel, then Caddy) most likely makes every visitor look like one address to the sign-in rate limit (not tested), so its limits (30 attempts a minute, 5 per user name) would be shared by everybody. Use a real domain with ports 80 and 443 open.
 
 ## What is not covered
 

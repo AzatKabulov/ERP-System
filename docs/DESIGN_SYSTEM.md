@@ -143,6 +143,7 @@ Failed requests never produce success colors, changed totals or misleading recei
 
 ## Review Checklist
 
+- Check every new or changed screen against the 14 rules in [USABILITY.md](USABILITY.md).
 - Compare Overview, Products, Stock, Sales and Reports with the mock-up at phone, tablet and desktop widths.
 - Both languages, long names, large totals, portrait and landscape, doubled text.
 - Loading, empty, error, disabled, offline and success states without losing drafts.
