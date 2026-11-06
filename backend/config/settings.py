@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     "apps.expenses",
     "apps.warranties",
     "apps.reports",
+    "apps.billing",
 ]
 
 CORS_ALLOWED_ORIGINS = env.get_list("DJANGO_CORS_ALLOWED_ORIGINS")  # empty = CORS disabled
@@ -55,6 +58,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -224,3 +228,13 @@ LOGGING = {
     },
     "root": {"handlers": ["console"], "level": env.get("DJANGO_LOG_LEVEL", "INFO")},
 }
+
+# Subscriptions (docs/SAAS_PLATFORM_PLAN.md). A store sees a warning WARN_DAYS before its paid
+# time ends, keeps working fully for GRACE_DAYS after, then can only look and export.
+SUBSCRIPTION_WARN_DAYS = env.get_int("SUBSCRIPTION_WARN_DAYS", 7)
+SUBSCRIPTION_GRACE_DAYS = env.get_int("SUBSCRIPTION_GRACE_DAYS", 7)
+SUBSCRIPTION_TRIAL_DAYS = env.get_int("SUBSCRIPTION_TRIAL_DAYS", 14)
+# How a store reaches us: shown on the "subscription ended" screen. Empty = the screen only says
+# to contact the provider.
+PLATFORM_SUPPORT_PHONE = env.get("PLATFORM_SUPPORT_PHONE", "")
+PLATFORM_SUPPORT_NOTE = env.get("PLATFORM_SUPPORT_NOTE", "")

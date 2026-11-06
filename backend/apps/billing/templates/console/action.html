@@ -1,0 +1,17 @@
+{% extends "console/page.html" %}
+{% block content %}
+<h1>{{ spec.title }}</h1>
+<p class="help">{{ client.business.name }}</p>
+<div class="panel">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.as_p }}
+    <input type="hidden" name="step" value="review">
+    <div class="btns">
+      <button type="submit">Review</button>
+      <a class="quiet" href="{% url 'console:billing_client_change' client.pk %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

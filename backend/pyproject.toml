@@ -14,6 +14,7 @@ dependencies = [
     "django-cors-headers>=4.7",
     "reportlab>=4.2",
     "pillow>=12.3",
+    "django-otp>=1.7.5",
 ]
 
 [dependency-groups]

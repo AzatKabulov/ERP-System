@@ -1,0 +1,90 @@
+{% extends "console/page.html" %}
+{% block content %}
+<h1>{{ client.business.name }} &nbsp; {{ badge }}</h1>
+<p class="help">
+  {% if status.ends_at %}Paid until <b>{{ status.ends_at|date:"d M Y" }}</b>{% else %}No paid time{% endif %}
+  {% if client.plan %} · last package: {{ client.plan.name }}{% endif %}
+  · client since {{ client.created_at|date:"d M Y" }}
+</p>
+
+{% if messages %}<ul class="messagelist">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+
+<div class="panel">
+  <h2>What do you want to do?</h2>
+  <div class="btns">
+    <a href="{% url 'console:billing_client_action' client.pk 'renew' %}">+ Add a package</a>
+    <a href="{% url 'console:billing_client_action' client.pk 'extend' %}">+ Add custom days</a>
+    {% if suspended %}
+      <a href="{% url 'console:billing_client_action' client.pk 'resume' %}">Resume</a>
+    {% else %}
+      <a class="danger" href="{% url 'console:billing_client_action' client.pk 'suspend' %}">Suspend</a>
+    {% endif %}
+    {% if free %}
+      <a class="quiet" href="{% url 'console:billing_client_action' client.pk 'free-off' %}">End free access</a>
+    {% else %}
+      <a class="quiet" href="{% url 'console:billing_client_action' client.pk 'free-on' %}">Give free access</a>
+    {% endif %}
+    <a class="quiet" href="{% url 'console:billing_client_action' client.pk 'correct' %}">Correct the end date</a>
+    <a class="danger" href="{% url 'console:billing_client_action' client.pk 'reset-password' %}">Reset the owner's password</a>
+  </div>
+</div>
+
+<div class="two">
+  <div class="panel">
+    <h2>Contact</h2>
+    <form method="post">{% csrf_token %}<input type="hidden" name="which" value="contact">
+      {{ contact_form.as_p }}
+      <div class="btns"><button type="submit">Save</button></div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>Signs of life</h2>
+    <p>Last sign-in: <b>{{ stats.last_sign_in|date:"d M Y H:i"|default:"never" }}</b></p>
+    <p>Sales in the last 30 days: <b>{{ stats.sales_30d }}</b></p>
+    <p>People with access: <b>{{ stats.staff }}</b></p>
+    <p class="help">Counts only: we never look at what a store sold or to whom.</p>
+    <h2>Team</h2>
+    <table class="simple">
+      {% for m in staff %}<tr><td>{{ m.user.username }}</td><td>{{ m.get_role_display }}</td>
+        <td>{% if not m.is_active %}off{% endif %}</td></tr>{% endfor %}
+    </table>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Notes</h2>
+  <form method="post">{% csrf_token %}<input type="hidden" name="which" value="note">
+    {{ note_form.as_p }}
+    <div class="btns"><button type="submit">Add note</button></div>
+  </form>
+  {% for n in notes %}
+    <p><span class="help">{{ n.created_at|date:"d M Y H:i" }} · {{ n.author.username }}</span><br>{{ n.text|linebreaksbr }}</p>
+  {% empty %}<p class="help">No notes yet. Write what you agreed with them.</p>{% endfor %}
+</div>
+
+<div class="panel">
+  <h2>Support requests</h2>
+  {% for r in requests %}
+    <p><a href="{% url 'console:billing_supportrequest_change' r.pk %}">{{ r.subject }}</a>
+       <span class="help">· {{ r.get_status_display }} · {{ r.updated_at|date:"d M Y" }}</span></p>
+  {% empty %}<p class="help">None.</p>{% endfor %}
+</div>
+
+<div class="panel">
+  <h2>History</h2>
+  <table class="simple">
+    <thead><tr><th>When</th><th>What</th><th>New end</th><th>Paid</th><th>By</th><th>Note</th></tr></thead>
+    {% for e in events %}
+      <tr>
+        <td>{{ e.created_at|date:"d M Y H:i" }}</td>
+        <td>{{ e.get_kind_display }}{% if e.plan %} · {{ e.plan.name }}{% endif %}{% if e.days %} · {{ e.days }} d{% endif %}</td>
+        <td>{{ e.new_until|date:"d M Y"|default:"" }}</td>
+        <td>{% if e.amount is not None %}{{ e.amount }} {{ e.currency }} {{ e.get_method_display }} {{ e.reference }}{% endif %}</td>
+        <td>{{ e.actor.username|default:"system" }}</td>
+        <td>{{ e.note }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

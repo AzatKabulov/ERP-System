@@ -96,7 +96,8 @@ class _LocationsMixin:
 
 class StaffCreateSerializer(_LocationsMixin, serializers.Serializer):
     username = serializers.CharField(max_length=64)
-    email = serializers.EmailField()
+    # Many sellers have no email: then the owner gives a temporary password instead.
+    email = serializers.EmailField(required=False, allow_blank=True, default="")
     full_name = serializers.CharField(max_length=200, required=False, allow_blank=True, default="")
     preferred_language = serializers.ChoiceField(choices=LANGUAGES, default="ru")
     role = serializers.ChoiceField(choices=Role.choices)
@@ -104,7 +105,8 @@ class StaffCreateSerializer(_LocationsMixin, serializers.Serializer):
     locations = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Location.objects.all(), required=False, default=list
     )
-    # Optional. Without it the person receives an emailed code to choose their own password.
+    # A temporary password: the person must choose their own at first sign-in. Without it the
+    # person receives an emailed code to choose one (so an email is then required).
     password = serializers.CharField(
         max_length=256, trim_whitespace=False, required=False, write_only=True
     )
@@ -121,12 +123,22 @@ class StaffCreateSerializer(_LocationsMixin, serializers.Serializer):
 
     def validate_email(self, value):
         value = value.strip()
-        if User.objects.filter(email__iexact=value).exists():
+        if value and User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("This email is already used.", code="email_taken")
         return value
 
     def validate(self, attrs):
         self.check_location_rules(attrs["role"], attrs["all_locations"], attrs["locations"])
+        if not attrs.get("email") and not attrs.get("password"):
+            raise serializers.ValidationError(
+                {
+                    "password": [
+                        serializers.ErrorDetail(
+                            "Give a temporary password or an email.", "email_or_password_required"
+                        )
+                    ]
+                }
+            )
         if attrs.get("password"):
             candidate = User(
                 username=attrs["username"], email=attrs["email"], full_name=attrs["full_name"]

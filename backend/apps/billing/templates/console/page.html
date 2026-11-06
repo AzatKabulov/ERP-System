@@ -1,0 +1,28 @@
+{% extends "admin/base_site.html" %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .cards { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 20px; }
+  .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; min-width: 150px; }
+  .card b { display: block; font-size: 28px; line-height: 1.2; }
+  .card span { color: #666; font-size: 13px; }
+  .panel { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px 18px; margin: 0 0 16px; }
+  .panel h2 { margin: 0 0 10px; font-size: 16px; }
+  .btns a, .btns button { display: inline-block; margin: 0 8px 8px 0; padding: 9px 16px; border-radius: 6px;
+    background: #1740ff; color: #fff; text-decoration: none; border: 0; font-size: 14px; cursor: pointer; }
+  .btns a.danger, .btns button.danger { background: #c0392b; }
+  .btns a.quiet { background: #eee; color: #222; }
+  .secret { font: 700 26px monospace; letter-spacing: 1px; padding: 12px 16px; background: #f6f3ee;
+    border: 1px dashed #999; display: inline-block; user-select: all; }
+  .help { color: #666; font-size: 13px; }
+  table.simple { width: 100%; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  form p { margin: 0 0 12px; }
+  form label { display: block; font-weight: 600; margin-bottom: 3px; }
+  form input[type=text], form input[type=number], form input[type=email], form input[type=date],
+  form select, form textarea { width: 100%; max-width: 480px; padding: 8px; }
+  .errorlist { color: #c0392b; margin: 0 0 6px; padding: 0; list-style: none; }
+</style>
+{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs"><a href="{% url 'console:index' %}">Home</a>{% if title %} › {{ title }}{% endif %}</div>
+{% endblock %}

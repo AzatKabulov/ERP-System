@@ -8,8 +8,15 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "full_name", "email", "preferred_language"]
-        read_only_fields = ["id", "username", "email"]
+        fields = [
+            "id",
+            "username",
+            "full_name",
+            "email",
+            "preferred_language",
+            "must_change_password",
+        ]
+        read_only_fields = ["id", "username", "email", "must_change_password"]
 
 
 class LoginSerializer(serializers.Serializer):

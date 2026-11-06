@@ -267,7 +267,7 @@ class QueryCountTests(ReportsCase):
         "reports/purchasing/": 7,
         "reports/returns/": 5,
         "reports/expenses/": 3,
-        "dashboard/": 16,
+        "dashboard/": 17,  # +1: the first-run checklist facts (one query)
         "audit/": 3,
         "audit/actions/": 2,
     }

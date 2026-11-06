@@ -7,6 +7,7 @@
 #
 # What is where:
 #   /api/*       the Django API (the only thing that reaches the database)
+#   /console/    the owner console (clients and subscriptions; password + authenticator code)
 #   /install/    the page you send to testers (how to install the Android app)
 #   /downloads/  the Android app file (erp.apk) you put in infra/public/downloads/
 #   /            the web app (the web build, unzipped into infra/public/)
@@ -35,6 +36,15 @@
 				response_header_timeout 90s
 			}
 		}
+	}
+
+	# The owner console (our back office) and the few static files its pages need. Both are
+	# served by the API container; the console asks for a password and an authenticator code.
+	handle /console/* {
+		reverse_proxy api:8000
+	}
+	handle /static/* {
+		reverse_proxy api:8000
 	}
 
 	handle /install* {

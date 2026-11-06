@@ -81,6 +81,9 @@ MATRIX: dict[str, frozenset[str]] = {
     "report.view": frozenset({Role.OWNER, Role.MANAGER}),
     "dashboard.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
     "audit.view": frozenset({Role.OWNER, Role.MANAGER}),
+    # writing to us (the platform's support desk) is for the owner and managers; sellers ask them
+    "support.view": frozenset({Role.OWNER, Role.MANAGER}),
+    "support.write": frozenset({Role.OWNER, Role.MANAGER}),
     # every member may look up the outcome of their own operations
     "operations.view": frozenset({Role.OWNER, Role.MANAGER, Role.SALES, Role.WAREHOUSE}),
 }

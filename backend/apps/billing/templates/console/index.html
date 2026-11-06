@@ -1,0 +1,59 @@
+{% extends "admin/index.html" %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .cards { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 20px; }
+  .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; min-width: 150px; }
+  .card b { display: block; font-size: 28px; line-height: 1.2; }
+  .card span { color: #666; font-size: 13px; }
+  .panel { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px 18px; margin: 0 0 16px; }
+  .panel h2 { margin: 0 0 10px; font-size: 16px; }
+  .btn { display: inline-block; padding: 9px 16px; border-radius: 6px; background: #1740ff; color: #fff; text-decoration: none; }
+</style>
+{% endblock %}
+{% block content %}
+<p><a class="btn" href="{% url 'console:billing_client_add' %}">+ New client</a></p>
+
+<div class="cards">
+  <div class="card"><b>{{ snapshot.total }}</b><span>clients</span></div>
+  <div class="card"><b>{{ snapshot.counts.active }}</b><span>active ({{ snapshot.counts.trial }} on trial)</span></div>
+  <div class="card"><b>{{ snapshot.counts.expiring }}</b><span>ending within a week</span></div>
+  <div class="card"><b>{{ snapshot.counts.grace }}</b><span>in grace days</span></div>
+  <div class="card"><b>{{ snapshot.counts.read_only }}</b><span>read-only (lapsed)</span></div>
+  <div class="card"><b>{{ snapshot.counts.suspended }}</b><span>suspended</span></div>
+  <div class="card"><b>{{ snapshot.new_30_days }}</b><span>new in 30 days</span></div>
+  <div class="card"><b>{{ snapshot.lapsed_this_month }}</b><span>lapsed this month</span></div>
+</div>
+
+<div class="panel">
+  <h2>Received this month</h2>
+  {% if snapshot.income_this_month %}
+    {% for currency, total in snapshot.income_this_month.items %}<b style="font-size:22px">{{ total }} {{ currency }}</b>&nbsp;&nbsp;{% endfor %}
+    <p class="help">Payments recorded by hand in the history. Working figures, not accounting.</p>
+  {% else %}
+    <p class="help">No payment recorded yet this month.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Who to call</h2>
+  {% if snapshot.attention %}
+  <table style="width:100%">
+    <thead><tr><th>Store</th><th>State</th><th>Ended / ends</th><th>Phone</th></tr></thead>
+    <tbody>
+    {% for client, status in snapshot.attention %}
+      <tr>
+        <td><a href="{% url 'console:billing_client_change' client.pk %}">{{ client.business.name }}</a></td>
+        <td>{{ status.state }}{% if status.days_left is not None %} ({{ status.days_left }} d){% endif %}</td>
+        <td>{{ status.ends_at|date:"d M Y" }}</td>
+        <td>{{ client.contact_phone|default:"—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="help">Nobody needs a call today.</p>
+  {% endif %}
+</div>
+
+{{ block.super }}
+{% endblock %}

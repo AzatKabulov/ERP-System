@@ -44,6 +44,8 @@ def create_staff(business, actor, *, data) -> Membership:
                 password,
                 full_name=data["full_name"],
                 preferred_language=data["preferred_language"],
+                # a password typed by the owner is only temporary: the person picks their own
+                must_change_password=bool(password),
             )
             membership = Membership.objects.create(
                 user=user,

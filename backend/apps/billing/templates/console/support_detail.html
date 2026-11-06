@@ -1,0 +1,30 @@
+{% extends "console/page.html" %}
+{% block content %}
+<h1>{{ ticket.subject }}</h1>
+<p class="help">
+  {{ ticket.business.name }} · asked by {{ ticket.raised_by.get_full_name }} · {{ ticket.get_status_display }}
+  {% if ticket.screen %}· on screen "{{ ticket.screen }}"{% endif %}
+  {% if ticket.app_version %}· app {{ ticket.app_version }}{% endif %}
+  {% if client %}· <a href="{% url 'console:billing_client_change' client.pk %}">open the client</a>{% endif %}
+</p>
+
+<div class="panel">
+  {% for m in messages_list %}
+    <p><span class="help">{{ m.created_at|date:"d M Y H:i" }} · {% if m.from_store %}store{% else %}us ({{ m.author.username }}){% endif %}</span><br>
+       {{ m.text|linebreaksbr }}</p>
+  {% endfor %}
+</div>
+
+<div class="panel">
+  <h2>Reply</h2>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <div class="btns"><button type="submit">Send reply</button></div>
+  </form>
+  {% if ticket.status != "closed" %}
+    <form method="post">{% csrf_token %}<input type="hidden" name="which" value="close">
+      <div class="btns"><button type="submit" class="quiet" style="background:#eee;color:#222">Close without a reply</button></div>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

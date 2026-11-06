@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.billing.console import console_site
 from apps.common.views import health
 from config import env
 
@@ -21,12 +22,20 @@ api = [
     path("", include("apps.warranties.urls")),
     path("", include("apps.audit.urls")),
     path("", include("apps.reports.urls")),
+    path("", include("apps.billing.urls")),
 ]
 
 urlpatterns = [
-    path(env.get("DJANGO_ADMIN_PATH", "admin/"), admin.site.urls),
+    # Our own back office (clients, subscriptions, support): its own address, sign-in with a
+    # password and an authenticator code. See apps/billing/console.py.
+    path(env.get("DJANGO_CONSOLE_PATH", "console/"), console_site.urls),
     path("api/v1/", include(api)),
 ]
+
+# Django's stock admin lists every store's sales, customers and stock. It is a development aid
+# only: in production it is not mounted at all, so there is no address to attack.
+if env.get_bool("DJANGO_ENABLE_DATA_ADMIN", env.get("DJANGO_ENV", "production") == "development"):
+    urlpatterns.append(path(env.get("DJANGO_ADMIN_PATH", "admin/"), admin.site.urls))
 
 from django.conf import settings  # noqa: E402
 

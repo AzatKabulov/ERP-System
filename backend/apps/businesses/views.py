@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
@@ -6,8 +7,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts import services as account_services
-from apps.accounts.serializers import UserSerializer
+from apps.accounts.serializers import UserSerializer, password_errors
 from apps.audit import services as audit
+from apps.billing import api as billing_api
 from apps.common.errors import ApiError
 
 from . import services
@@ -32,18 +34,21 @@ class MeView(APIView):
     def _payload(self, user):
         memberships = (
             Membership.objects.filter(user=user, is_active=True, business__is_active=True)
-            .select_related("business")
+            .select_related("business", "business__client")
             .prefetch_related("locations")
             .order_by("business__name")
         )
         return {
             "user": UserSerializer(user).data,
+            "announcements": billing_api.announcements_for(user.preferred_language),
+            "platform": billing_api.platform_payload(),
             "memberships": [
                 {
                     "id": m.id,
                     "business": BusinessSerializer(m.business).data,
                     "role": m.role,
                     "permissions": permissions_for(m.role),
+                    "subscription": billing_api.subscription_payload(m),
                     "locations": [
                         {"id": loc.id, "name": loc.name, "kind": loc.kind}
                         for loc in (
@@ -212,6 +217,43 @@ class StaffSendCodeView(BusinessAPIView):
             "staff.code_sent", actor=request.user, business=request.business, obj=membership
         )
         return Response({"status": "accepted"}, status=202)
+
+
+class StaffTemporaryPasswordView(BusinessAPIView):
+    """The owner gives a staff member a temporary password (typed, or generated and shown once)
+    when they forgot theirs and have no email for a code. The person must choose their own at
+    the next sign-in."""
+
+    required_permission = "staff.manage"
+
+    def post(self, request, business_id, staff_id):
+        membership = get_object_or_404(
+            Membership.objects.select_related("user"), pk=staff_id, business=request.business
+        )
+        user = membership.user
+        if user.pk == request.user.pk:
+            raise ApiError(
+                "use_password_change", "Change your own password in Settings", status_code=409
+            )
+        # A person who works for another business too (or runs this system) keeps a password
+        # that only they control: otherwise one owner could take over their other account.
+        elsewhere = Membership.objects.filter(user=user).exclude(business=request.business)
+        if user.is_staff or user.is_superuser or elsewhere.exists():
+            raise ApiError(
+                "account_shared", "This account is used outside your business", status_code=409
+            )
+        password = request.data.get("password") or account_services.generate_temporary_password()
+        try:
+            account_services.set_password(user, password, temporary=True)
+        except DjangoValidationError as exc:
+            raise password_errors(exc, field="password") from exc
+        audit.record(
+            "staff.temporary_password",
+            actor=request.user,
+            business=request.business,
+            obj=membership,
+        )
+        return Response({"password": password})
 
 
 class StaffDetailView(BusinessAPIView):

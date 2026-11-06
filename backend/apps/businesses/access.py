@@ -5,6 +5,7 @@ from rest_framework import exceptions
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
 
+from apps.billing.enforcement import check_subscription
 from apps.common.errors import ApiError
 
 from .models import Membership
@@ -21,7 +22,7 @@ class HasBusinessPermission(BasePermission):
 
     def has_permission(self, request, view) -> bool:
         membership = (
-            Membership.objects.select_related("business", "user")
+            Membership.objects.select_related("business", "business__client", "user")
             .filter(
                 user=request.user,
                 business_id=view.kwargs.get("business_id"),
@@ -34,6 +35,15 @@ class HasBusinessPermission(BasePermission):
             raise exceptions.NotFound()
         request.membership = membership
         request.business = membership.business
+        if request.user.must_change_password:
+            # Someone else chose this password: nothing in the business opens until the person
+            # has chosen their own. (Checked after membership, so strangers still get a 404.)
+            raise ApiError(
+                "password_change_required",
+                "Choose your own password before continuing",
+                status_code=403,
+            )
+        check_subscription(request, view, membership.business)
         code = view.required_permission_for(request)
         return bool(code) and has_permission(membership.role, code)
 

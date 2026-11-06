@@ -1,0 +1,16 @@
+{% extends "console/page.html" %}
+{% block content %}
+<h1>{{ spec.title }}: please check</h1>
+<div class="panel" {% if spec.danger %}style="border-color:#c0392b"{% endif %}>
+  {% for line in lines %}<p style="font-size:16px">{{ line }}</p>{% endfor %}
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}{{ field.as_hidden }}{% endfor %}
+    <input type="hidden" name="step" value="confirm">
+    <div class="btns">
+      <button type="submit" {% if spec.danger %}class="danger"{% endif %}>{{ spec.button }}</button>
+      <a class="quiet" href="{% url 'console:billing_client_action' client.pk action %}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

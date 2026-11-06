@@ -46,6 +46,9 @@ def issue_code(user: User) -> str:
 def send_code(user: User, kind: str, business_name: str = "") -> None:
     """Email a fresh code. A delivery failure is logged, never shown to the caller, so the
     response cannot reveal whether an account exists."""
+    if not user.email:
+        logger.info("User %s has no email; no %s code sent", user.pk, kind)
+        return
     code = issue_code(user)
     try:
         send_code_email(user, kind, code, CODE_MINUTES, business_name)
@@ -61,14 +64,39 @@ def revoke_sessions(user: User) -> None:
     )
 
 
-def set_password(user: User, new_password: str) -> None:
-    """Validate and set a new password, revoking all existing sessions."""
+def set_password(user: User, new_password: str, *, temporary: bool = False) -> None:
+    """Validate and set a new password, revoking all existing sessions.
+
+    `temporary` means somebody other than the user chose it (the owner for a seller, us for a
+    new client): the person must pick their own password at the next sign-in. A password the
+    user chose themselves clears that requirement."""
     password_validation.validate_password(new_password, user)
     user.set_password(new_password)
     user.password_changed_at = timezone.now()
+    user.must_change_password = temporary
     user.session_version += 1  # every access token issued so far stops working at once
-    user.save(update_fields=["password", "password_changed_at", "session_version"])
+    user.save(
+        update_fields=["password", "password_changed_at", "must_change_password", "session_version"]
+    )
     revoke_sessions(user)
+
+
+# No 0/O/1/l/I: a temporary password is read aloud or copied from a message.
+_TEMP_ALPHABET = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+
+def generate_temporary_password() -> str:
+    """Like 'Kd7mQ-4xvWp-9TnzB': 15 random characters in three groups, always with a digit,
+    a lower-case and an upper-case letter."""
+    while True:
+        groups = ["".join(secrets.choice(_TEMP_ALPHABET) for _ in range(5)) for _ in range(3)]
+        value = "-".join(groups)
+        if (
+            any(c.isdigit() for c in value)
+            and any(c.islower() for c in value)
+            and any(c.isupper() for c in value)
+        ):
+            return value
 
 
 def issue_tokens(user: User) -> dict:

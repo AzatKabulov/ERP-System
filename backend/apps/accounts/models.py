@@ -22,11 +22,12 @@ class UserManager(BaseUserManager):
         return self.get(username=normalize_username(username))
 
     def _create(self, username, email, password, **extra):
-        if not username or not email:
-            raise ValueError("username and email are required")
+        if not username:
+            raise ValueError("username is required")
+        email = email or ""  # staff of a small shop may have no email; owners always give one
         user = self.model(
             username=normalize_username(username),
-            email=self.normalize_email(email.strip()),
+            email=self.normalize_email(email.strip()) if email else "",
             **extra,
         )
         user.full_clean(exclude=["password"])
@@ -56,11 +57,16 @@ class User(UUIDModel, AbstractBaseUser, PermissionsMixin):
     # Always stored lowercase (save() and the check constraint), so plain uniqueness is
     # case-insensitive and Django's USERNAME_FIELD requirement is met.
     username = models.CharField(max_length=64, unique=True, validators=[USERNAME_VALIDATOR])
-    email = models.EmailField()
+    # Blank for staff who have none (the owner then sets a temporary password for them). Only a
+    # non-blank email must be unique.
+    email = models.EmailField(blank=True)
     full_name = models.CharField(max_length=200, blank=True)
     preferred_language = models.CharField(max_length=2, choices=LANGUAGES, default="ru")
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False, help_text="Operators who may use Django admin.")
+    # True after someone else chose the password (the owner, or us when creating a client): the
+    # person must choose their own before doing anything else. Cleared by set_password().
+    must_change_password = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     password_changed_at = models.DateTimeField(null=True, blank=True)
     # Bumped whenever sessions must die (password change/reset). Tokens carry the value they
@@ -76,7 +82,11 @@ class User(UUIDModel, AbstractBaseUser, PermissionsMixin):
             models.CheckConstraint(
                 condition=models.Q(username=Lower("username")), name="accounts_user_username_lower"
             ),
-            models.UniqueConstraint(Lower("email"), name="accounts_user_email_ci_unique"),
+            models.UniqueConstraint(
+                Lower("email"),
+                condition=~models.Q(email=""),
+                name="accounts_user_email_ci_unique",
+            ),
         ]
 
     def save(self, *args, **kwargs):

@@ -18,15 +18,19 @@ this month runs from its first day to today. Sales figures are sale totals (reve
 profit is net of returns as defined in `sales.py`.
 """
 
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Exists, OuterRef, Q, Sum
 from django.utils import timezone
 from rest_framework import serializers
 
 from apps.audit.models import AuditEvent
 from apps.audit.serializers import AuditEventSerializer
+from apps.businesses.models import Business
 from apps.businesses.permissions import has_permission
+from apps.catalog.models import Product
+from apps.inventory.models import StockBalance
 from apps.purchasing import reorder
 from apps.sales import costs
+from apps.sales.models import Sale
 from apps.warranties.models import WarrantyClaim
 
 from . import expenses as expense_figures
@@ -36,6 +40,29 @@ from .purchases import open_orders_count
 from .scope import Period, ReportContext, Rights, Scope, money, round_money
 
 RECENT_ACTIVITY = 10
+
+
+def onboarding(business) -> dict:
+    """What a new owner has not done yet: the app turns it into a short first-run checklist.
+    One query, so it stays cheap on every dashboard load."""
+    row = (
+        Business.objects.filter(pk=business.pk)
+        .annotate(
+            has_products=Exists(Product.objects.filter(business=OuterRef("pk"), is_active=True)),
+            has_stock=Exists(StockBalance.objects.filter(business=OuterRef("pk"), quantity__gt=0)),
+            has_sales=Exists(Sale.objects.filter(business=OuterRef("pk"))),
+            people=Count("memberships", filter=Q(memberships__is_active=True)),
+        )
+        .values("has_products", "has_stock", "has_sales", "people")
+        .get()
+    )
+    return {
+        "has_products": row["has_products"],
+        "has_stock": row["has_stock"],
+        "has_sales": row["has_sales"],
+        "has_details": bool(business.address and business.phone),
+        "has_team": row["people"] > 1,
+    }
 
 
 def summary_report(ctx: ReportContext) -> dict:
@@ -87,6 +114,7 @@ def dashboard(request) -> dict:
         out["without_cost_month"] = month_figures["without_cost"]
     if has_permission(role, "catalog.manage"):
         out["to_complete_count"] = costs.count_to_complete(business)
+        out["onboarding"] = onboarding(business)
     if rights.expenses:
         out["expenses_month"] = money(expense_figures.expenses_total(scope, month))
     if rights.stock_cost:

@@ -1,0 +1,16 @@
+{% extends "console/page.html" %}
+{% block content %}
+<h1>Client created</h1>
+<div class="panel">
+  <p><b>{{ client.business.name }}</b> is ready. Give the owner these details. <b>The password is shown only now.</b></p>
+  <p>Address: <b>{{ app_url }}</b></p>
+  <p>Login: <span class="secret">{{ login }}</span></p>
+  <p>Temporary password: <span class="secret">{{ password }}</span></p>
+  <p class="help">The owner will be asked to choose their own password the first time they sign in.</p>
+  <div class="btns">
+    <button type="button" onclick="window.print()">Print</button>
+    <a href="{% url 'console:billing_client_change' client.pk %}">Open the client</a>
+    <a class="quiet" href="{% url 'console:billing_client_add' %}">Add another</a>
+  </div>
+</div>
+{% endblock %}

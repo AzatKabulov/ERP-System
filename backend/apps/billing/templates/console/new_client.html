@@ -1,0 +1,16 @@
+{% extends "console/page.html" %}
+{% block content %}
+<h1>New client</h1>
+<p class="help">Creates the store, its owner's login and a temporary password. The owner chooses their own password the first time they sign in, and you never need to know it.</p>
+<div class="panel">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.as_p }}
+    <div class="btns">
+      <button type="submit">Create client</button>
+      <a class="quiet" href="{% url 'console:billing_client_changelist' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

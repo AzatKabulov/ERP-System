@@ -27,6 +27,10 @@ class OwnerDashboardTests(DashboardCase):
         body = self.dash()
         activity = body.pop("recent_activity")
         self.assertEqual(
+            set(body.pop("onboarding")),
+            {"has_products", "has_stock", "has_sales", "has_details", "has_team"},
+        )
+        self.assertEqual(
             body,
             {
                 "generated_at": "2026-10-03T15:00:00Z",
@@ -92,7 +96,7 @@ class OwnerDashboardTests(DashboardCase):
         cases = {
             "sales.view": {"sales_today", "sales_month"},
             "sales.cost.view": {"gross_profit_month", "without_cost_month"},
-            "catalog.manage": {"to_complete_count"},
+            "catalog.manage": {"to_complete_count", "onboarding"},
             "expense.view": {"expenses_month"},
             "stock.cost.view": {"inventory_value"},
             "stock.view": {"low_stock_count"},
@@ -179,8 +183,19 @@ class EmptyBusinessTests(DashboardCase):
         with at(*NOW):
             response = owner.get(f"/api/v1/businesses/{shop.pk}/dashboard/")
         self.assertEqual(response.status_code, 200)
+        body = response.json()
         self.assertEqual(
-            response.json(),
+            body.pop("onboarding"),
+            {
+                "has_products": False,
+                "has_stock": False,
+                "has_sales": False,
+                "has_details": False,
+                "has_team": False,
+            },
+        )
+        self.assertEqual(
+            body,
             {
                 "generated_at": "2026-10-03T15:00:00Z",
                 "sales_today": {"count": 0, "total": "0.00"},
