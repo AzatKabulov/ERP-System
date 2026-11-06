@@ -19,20 +19,75 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Inventory ERP interface prototype">
+  <meta name="theme-color" content="#1740FF">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="ERP System">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>ERP System</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* The app is touch UI, not a document: native pinch/double-tap zoom only ever leaves it
+       zoomed into a raster of the canvas, scrolled off-centre (exactly what cut the dashboard
+       off at the right edge on an iPhone). Flutter has its own text-scale handling for
+       accessibility, so this trades an unsupported gesture for a UI that never mis-renders.
+       iOS Safari ignores the viewport meta tag's user-scalable/maximum-scale since iOS 10, so
+       the restriction has to live here instead; Flutter also replaces any meta viewport tag of
+       its own at startup, which is why this can't be done through that tag either. */
+    html, body {
+      touch-action: pan-x pan-y;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+      background: #F5F2EC;
+    }
+
+    /* Covers the page from first paint until Flutter's own first frame, so there is no blank
+       white flash while main.dart.js (a few MB) downloads and the engine starts. Removed once
+       the 'flutter-first-frame' event fires; see the loader script at the end of <body>. */
+    #splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #F5F2EC;
+      z-index: 9999;
+    }
+    #splash img {
+      width: 72px;
+      height: 72px;
+      animation: splash-breathe 1.4s ease-in-out infinite;
+    }
+    @keyframes splash-breathe {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.92); }
+    }
+    #splash.gone {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease-out;
+    }
+  </style>
 </head>
 <body>
+  <div id="splash"><img src="icons/splash-mark.png" alt=""></div>
+
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('splash');
+      if (!splash) return;
+      splash.classList.add('gone');
+      setTimeout(function () { splash.remove(); }, 200);
+    });
+  </script>
+
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -41,6 +96,14 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    {{flutter_js}}
+    {{flutter_build_config}}
+    _flutter.loader.load({
+      serviceWorkerSettings: {
+        serviceWorkerVersion: {{flutter_service_worker_version}}
+      }
+    });
+  </script>
 </body>
 </html>
