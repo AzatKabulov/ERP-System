@@ -5,6 +5,7 @@ from . import views
 B = "businesses/<uuid:business_id>/"
 
 urlpatterns = [
+    path(f"{B}warranty-register/", views.RegisterView.as_view(), name="warranty-register"),
     path(f"{B}warranty-claims/", views.ClaimListCreateView.as_view(), name="warranty-claim-list"),
     path(
         f"{B}warranty-claims/<uuid:claim_id>/",

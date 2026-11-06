@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
@@ -7,10 +8,11 @@ from rest_framework.views import APIView
 from apps.accounts import services as account_services
 from apps.accounts.serializers import UserSerializer
 from apps.audit import services as audit
+from apps.common.errors import ApiError
 
 from . import services
 from .access import BusinessAPIView, BusinessScopedMixin, restrict_to_locations
-from .models import ExchangeRate, Location, Membership
+from .models import Business, ExchangeRate, Location, Membership
 from .permissions import has_permission, permissions_for
 from .serializers import (
     BusinessSerializer,
@@ -120,6 +122,21 @@ class LocationListCreateView(BusinessScopedMixin, generics.ListCreateAPIView):
         if not (manage and self.request.query_params.get("include_inactive") == "1"):
             qs = qs.filter(is_active=True)
         return qs
+
+    def create(self, request, *args, **kwargs):
+        """One business is one shop (owner, 2026-10-31): the warehouse is the shop's own back
+        room, not a second place, so a business cannot add another location. Otherwise one
+        licence could run several shops. The business row is locked so two requests cannot both
+        pass the check."""
+        with transaction.atomic():
+            Business.objects.select_for_update().get(pk=request.business.pk)
+            if Location.objects.filter(business=request.business).exists():
+                raise ApiError(
+                    "single_location",
+                    "A business has one shop; its warehouse is part of it",
+                    status_code=409,
+                )
+            return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         location = serializer.save(business=self.request.business)

@@ -56,7 +56,7 @@ class CreateSampleBusinessCommandTests(APITestCase):
             {"owner": "owner", "manager": "manager", "sales": "sales", "warehouse": "warehouse"},
         )
         self.assertTrue(User.objects.get(username="sales").check_password(PASSWORD))
-        self.assertEqual(business.locations.count(), 2)
+        self.assertEqual(business.locations.count(), 1)  # one business is one shop
         with self.assertRaises(CommandError):  # second run
             call_command("create_sample_business", stdout=StringIO())
 

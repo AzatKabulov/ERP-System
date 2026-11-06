@@ -200,21 +200,33 @@ class LocationScopeTests(APITestCase):
             len(manager.get(f"{self.base}/locations/?include_inactive=1").json()["results"]), 1
         )
 
-    def test_location_names_are_unique_per_business_ignoring_case(self):
+    def test_a_business_is_one_shop_and_cannot_add_another_location(self):
+        # owner decision 2026-10-31: the warehouse is part of the shop; a second location would
+        # let one licence run several shops
         owner = client_for(self.w.user("a", Role.OWNER))
-        taken = owner.post(
-            f"{self.base}/locations/", {"name": "a store", "kind": "store"}, format="json"
+        before = Location.objects.filter(business=self.w.a).count()
+        refused = owner.post(
+            f"{self.base}/locations/", {"name": "Second shop", "kind": "store"}, format="json"
         )
-        self.assertEqual(taken.status_code, 400)
-        self.assertEqual(taken.json()["error"]["fields"]["name"][0]["code"], "name_taken")
-        # the same name in another business is fine
-        other = client_for(self.w.user("b", Role.OWNER))
-        ok = other.post(
-            f"/api/v1/businesses/{self.w.b.pk}/locations/",
-            {"name": "A Store", "kind": "store"},
+        self.assertEqual(refused.status_code, 409)
+        self.assertEqual(refused.json()["error"]["code"], "single_location")
+        self.assertEqual(Location.objects.filter(business=self.w.a).count(), before)
+
+    def test_the_first_location_of_an_empty_business_can_be_created(self):
+        empty = Business.objects.create(name="Fresh shop")
+        owner = make_member(empty, Role.OWNER, username="fresh-owner", all_locations=True)
+        created = client_for(owner).post(
+            f"/api/v1/businesses/{empty.pk}/locations/",
+            {"name": "Авто Запчасти", "kind": "store"},
             format="json",
         )
-        self.assertEqual(ok.status_code, 201)
+        self.assertEqual(created.status_code, 201, created.content)
+        again = client_for(owner).post(
+            f"/api/v1/businesses/{empty.pk}/locations/",
+            {"name": "Warehouse", "kind": "warehouse"},
+            format="json",
+        )
+        self.assertEqual(again.status_code, 409)
 
 
 class StaffTests(APITestCase):

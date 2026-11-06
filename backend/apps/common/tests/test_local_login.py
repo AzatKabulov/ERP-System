@@ -69,6 +69,31 @@ class LocalLoginTests(APITestCase):
             404,
         )
 
+    def test_a_request_that_came_through_a_proxy_or_tunnel_is_refused(self):
+        # A tunnel or proxy on this computer connects from 127.0.0.1 and may keep the Host
+        # "localhost": only its own headers show that the request came from the internet.
+        for header in (
+            "HTTP_X_FORWARDED_FOR",
+            "HTTP_X_FORWARDED_HOST",
+            "HTTP_FORWARDED",
+            "HTTP_X_REAL_IP",
+            "HTTP_CF_CONNECTING_IP",
+            "HTTP_CF_RAY",
+        ):
+            with self.subTest(header):
+                extra = {header: "203.0.113.7", "HTTP_HOST": "localhost"}
+                refused = self.client.post(
+                    "/api/v1/local-test-login/", {"role": "owner"}, format="json", **extra
+                )
+                self.assertEqual(refused.status_code, 404)
+                health = self.client.get("/api/v1/health/", **extra)
+                self.assertEqual(health.json()["test_login_roles"], [])
+        # the same request without the header still works
+        direct = self.client.post(
+            "/api/v1/local-test-login/", {"role": "owner"}, format="json", HTTP_HOST="localhost"
+        )
+        self.assertEqual(direct.status_code, 200)
+
     def test_disabled_flag_public_host_and_production_are_refused(self):
         for overrides in ({"LOCAL_TEST_LOGIN_ENABLED": False}, {"DJANGO_ENV": "production"}):
             with self.settings(**overrides):

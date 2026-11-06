@@ -519,6 +519,11 @@ class PreviewAndApplyTests(CsvCase):
             (row("P-1", price="abc"), [("price", "invalid_number")]),
             (row("P-2", price="-5"), [("price", "negative_number")]),
             (row("P-3", price="1.234"), [("price", "too_many_decimals")]),
+            # a thousands separator must not be read as a decimal point: 1,200 is not 1.20
+            (row("P-3a", price="1,200"), [("price", "too_many_decimals")]),
+            (row("P-3b", price="1.000"), [("price", "too_many_decimals")]),
+            (row("P-3c", price="1,20"), []),
+            (row("P-3d", price="1200"), []),
             (row("P-4", price=""), [("price", "required")]),
             (row("P-5", price="1e3"), [("price", "invalid_number")]),
             (row("P-6", price="99999999999999"), [("price", "out_of_range")]),

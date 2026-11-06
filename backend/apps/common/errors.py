@@ -7,12 +7,17 @@
 for logs. Tracebacks and other businesses' data are never exposed.
 """
 
+import logging
+
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import DataError
 from django.http import Http404, JsonResponse
 from rest_framework import exceptions
 from rest_framework.response import Response
 from rest_framework.views import set_rollback
+
+logger = logging.getLogger(__name__)
 
 
 class ApiError(exceptions.APIException):
@@ -69,6 +74,21 @@ def exception_handler(exc, context):
     if isinstance(exc, DjangoValidationError):
         exc = exceptions.ValidationError(
             detail=exc.message_dict if hasattr(exc, "error_dict") else exc.messages
+        )
+    elif isinstance(exc, DataError):
+        # PostgreSQL refused a value that passed every field check, e.g. a line total
+        # (quantity x price) or a stock balance too big for its column. It is the entered
+        # numbers that are wrong, not the server: answer 400 instead of a bare 500. The work
+        # was inside a transaction, so nothing was written. Logged so a real bug stays visible.
+        logger.warning("Database refused a value: %s", exc)
+        exc = exceptions.ValidationError(
+            detail={
+                "non_field_errors": [
+                    exceptions.ErrorDetail(
+                        "A number is too large or a text is too long", code="value_out_of_range"
+                    )
+                ]
+            }
         )
     elif isinstance(exc, Http404):
         exc = exceptions.NotFound()

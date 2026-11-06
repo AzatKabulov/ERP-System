@@ -30,7 +30,7 @@ LABELS = {
         "payment": "Оплата",
         "cash": "Наличные",
         "card": "Карта",
-        "warranty": "Гарантия: {n} мес.",
+        "warranty": "Гарантия: {n} мес., до {until}",
         "phone": "Тел.",
         "thanks": "Спасибо за покупку!",
         "note": "Примечание",
@@ -44,7 +44,7 @@ LABELS = {
         "payment": "Töleg",
         "cash": "Nagt",
         "card": "Kart",
-        "warranty": "Kepillik: {n} aý",
+        "warranty": "Kepillik: {n} aý, {until} çenli",
         "phone": "Tel.",
         "thanks": "Satyn alanyňyz üçin sagboluň!",
         "note": "Bellik",
@@ -188,7 +188,10 @@ def _receipt(w: _Writer, sale, t: dict) -> None:
             8,
         )
         if line.warranty_months:
-            w.line(f"  {t['warranty'].format(n=line.warranty_months)}", 7)
+            from apps.warranties.entitlement import warranty_until  # here: avoids an import cycle
+
+            until = warranty_until(business, sale, line).strftime("%d.%m.%Y")
+            w.line("  " + t["warranty"].format(n=line.warranty_months, until=until), 7)
         w.space(2)
     w.rule()
     w.pair(t["total"], money(sale.total), 11, True)

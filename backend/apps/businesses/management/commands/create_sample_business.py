@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from apps.accounts.models import User
 from apps.businesses import services
-from apps.businesses.models import Location, Membership, Role
+from apps.businesses.models import Membership, Role
 
 SAMPLE_NAME = "Sample Auto Parts (test data)"
 
@@ -37,16 +37,14 @@ class Command(BaseCommand):
             "owner", "owner@sample.test", password, full_name="Sample Owner"
         )
         business = services.create_business(
-            name=SAMPLE_NAME, owner=owner, location_name="Main store"
+            name=SAMPLE_NAME, owner=owner, location_name="Авто Запчасти"
         )
+        # One business is one shop (its warehouse is the shop's back room): no second location.
         store = business.locations.get()
-        warehouse = Location.objects.create(
-            business=business, name="Warehouse", kind=Location.Kind.WAREHOUSE
-        )
         for username, role, locations in (
             ("manager", Role.MANAGER, []),
             ("sales", Role.SALES, [store]),
-            ("warehouse", Role.WAREHOUSE, [warehouse]),
+            ("warehouse", Role.WAREHOUSE, [store]),
         ):
             user = User.objects.create_user(
                 username, f"{username}@sample.test", password, full_name=f"Sample {role}"

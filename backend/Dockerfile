@@ -23,7 +23,8 @@ USER app
 ENV PATH="/app/.venv/bin:$PATH" \
     DJANGO_ENV=production \
     DJANGO_DEBUG=false \
-    PRIVATE_FILES_ROOT=/var/lib/erp/private_files
+    PRIVATE_FILES_ROOT=/var/lib/erp/private_files \
+    WEB_CONCURRENCY=3
 
 # collectstatic needs a key but never uses it at runtime; real secrets come from the environment.
 RUN DJANGO_SECRET_KEY=build-time-only python manage.py collectstatic --noinput
@@ -33,4 +34,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=4)"
 
 # Migrations are a separate, reviewed step (see infra/README.md), not run on every start.
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "60", "--access-logfile", "-"]
+# The number of workers is WEB_CONCURRENCY (3 here; set it lower in infra/.env on a machine with
+# 1 GB of memory). /dev/shm keeps gunicorn's heartbeat files in memory, as recommended in Docker.
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--timeout", "60", "--worker-tmp-dir", "/dev/shm", "--access-logfile", "-"]

@@ -100,10 +100,14 @@ DATABASES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Shared across gunicorn workers without Redis; run `manage.py createcachetable` once.
+# Login/recovery throttle counters live here. Django's default limit of 300 entries makes it
+# delete a third of them at random when full (looked-up barcode names alone can fill that), which
+# would erase the counter of someone who is being locked out; keep the limit far above any use.
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": "django_cache",
+        "OPTIONS": {"MAX_ENTRIES": 200_000, "CULL_FREQUENCY": 10},
     }
 }
 

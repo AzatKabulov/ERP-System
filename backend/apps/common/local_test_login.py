@@ -39,12 +39,32 @@ _PRIVATE_NETWORKS = tuple(
 )
 
 
+# Headers that a reverse proxy or a tunnel (Caddy, nginx, Cloudflare Tunnel, ngrok) adds. A proxy
+# on the same computer connects from 127.0.0.1, so the address check alone would pass for anyone
+# on the internet; a request that went through one is never "local".
+_PROXY_HEADERS = (
+    "HTTP_X_FORWARDED_FOR",
+    "HTTP_X_FORWARDED_HOST",
+    "HTTP_X_FORWARDED_PROTO",
+    "HTTP_FORWARDED",
+    "HTTP_X_REAL_IP",
+    "HTTP_TRUE_CLIENT_IP",
+    "HTTP_CF_CONNECTING_IP",
+    "HTTP_CF_RAY",
+)
+
+
+def _direct(request):
+    return not any(request.META.get(header) for header in _PROXY_HEADERS)
+
+
 def _enabled(request):
     from urllib.parse import urlsplit
 
     return (
         getattr(settings, "LOCAL_TEST_LOGIN_ENABLED", False)
         and settings.DJANGO_ENV == "development"
+        and _direct(request)
         and _local(urlsplit("http://" + request.get_host()).hostname)
         and _local(request.META.get("REMOTE_ADDR", ""))
     )

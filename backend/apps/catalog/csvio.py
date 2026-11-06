@@ -197,11 +197,14 @@ def _decimal(text: str, field_name: str, errors: list, *, required: bool) -> Dec
         errors.append((field_name, "invalid_number"))
         return None
     value = Decimal(text.replace(",", "."))
+    # Judge the digits as typed, not the value: "1,200" is a thousands separator to many people
+    # and 1.2 to a program, and zeros after the point must not hide that.
+    typed_decimals = len(re.split(r"[.,]", text)[1]) if re.search(r"[.,]", text) else 0
     if value < 0:
         errors.append((field_name, "negative_number"))
     elif value >= MAX_MONEY:
         errors.append((field_name, "out_of_range"))
-    elif value != value.quantize(CENT):
+    elif typed_decimals > 2:
         errors.append((field_name, "too_many_decimals"))
     else:
         return value.quantize(CENT)

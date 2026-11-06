@@ -10,7 +10,7 @@ from apps.businesses.access import BusinessAPIView, BusinessScopedMixin, restric
 from apps.common.errors import ApiError
 from apps.sales.models import SaleReturn
 
-from . import services
+from . import register, services
 from .models import WarrantyClaim, WarrantyEvent
 from .serializers import (
     ClaimSerializer,
@@ -94,6 +94,47 @@ class ClaimListCreateView(BusinessScopedMixin, generics.GenericAPIView):
             request.business, request.user, request.membership, serializer.validated_data
         )
         return Response(_detail(request, claim.pk), status=201)
+
+
+class RegisterView(BusinessAPIView):
+    """Goods sold with a warranty and where each warranty stands (see `register.py`). Query:
+    `status` (active, soon, expired or returned; empty = all), `q` (sale number, customer name or
+    phone, product name, article or an exact barcode), `location`, `offset`, `limit`."""
+
+    required_permission = "warranty.view"
+
+    def get(self, request, business_id):
+        params = request.query_params
+        status = params.get("status", "")
+        if status and status not in (*register.STATUSES, "active"):
+            raise ApiError(
+                "validation_error",
+                "status is active, soon, expired or returned",
+                fields={"status": [{"code": "invalid_choice", "message": "Invalid"}]},
+            )
+        try:
+            offset = max(int(params.get("offset", 0)), 0)
+            limit = min(max(int(params.get("limit", 30)), 1), 100)
+        except ValueError as exc:
+            raise ApiError(
+                "validation_error",
+                "offset and limit are whole numbers",
+                fields={"limit": [{"code": "invalid", "message": "Invalid"}]},
+            ) from exc
+        if params.get("location"):
+            try:
+                uuid.UUID(params["location"])
+            except ValueError as exc:
+                raise ApiError(
+                    "validation_error",
+                    "Not a valid id",
+                    fields={"location": [{"code": "invalid", "message": "Invalid"}]},
+                ) from exc
+        items, more = register.build(request, params, offset=offset, limit=limit)
+        body = {"results": items, "has_more": more, "offset": offset}
+        if offset == 0:
+            body["counts"] = register.summary(request, params)
+        return Response(body)
 
 
 class ClaimDetailView(BusinessAPIView):
