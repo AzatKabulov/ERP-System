@@ -16,6 +16,10 @@
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy no-referrer
+		# no other site may put the app or the API inside its page (clickjacking); the app may
+		# still show its own content (for example a receipt preview) in a frame
+		X-Frame-Options SAMEORIGIN
+		Content-Security-Policy "frame-ancestors 'self'"
 		-Server
 	}
 

@@ -1,2 +1,6 @@
 # Windows batch files must keep Windows line endings
 *.bat text eol=crlf
+
+# Shell scripts and the proxy file run on Linux: always LF, even when checked out on Windows
+*.sh text eol=lf
+Caddyfile text eol=lf

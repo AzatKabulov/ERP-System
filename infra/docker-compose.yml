@@ -1,9 +1,18 @@
 # Test / staging stack: PostgreSQL + one-shot migration + the API + Caddy (HTTPS, the web app and
 # the install page). Usage and runbook: infra/README.md and docs/DEPLOY_TESTING.md
+# Docker keeps every container's output forever by default; the API logs every request, so on a
+# small disk that fills up and takes the whole server down. Keep a few small files instead.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   db:
     image: postgres:16
     restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-erp}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in infra/.env}
@@ -23,6 +32,7 @@ services:
     environment:
       POSTGRES_HOST: db
     command: sh -c "python manage.py migrate --noinput && python manage.py createcachetable"
+    logging: *default-logging
     depends_on:
       db:
         condition: service_healthy
@@ -31,6 +41,7 @@ services:
   api:
     build: ../backend
     restart: unless-stopped
+    logging: *default-logging
     env_file: .env
     environment:
       POSTGRES_HOST: db
@@ -48,6 +59,7 @@ services:
   caddy:
     image: caddy:2
     restart: unless-stopped
+    logging: *default-logging
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
     ports:
