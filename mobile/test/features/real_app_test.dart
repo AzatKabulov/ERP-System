@@ -165,6 +165,11 @@ void main() {
       rig.server.refreshRejected = true;
       await tapKey(tester, 'nav-administration');
       await settle(tester);
+      await tapKey(
+        tester,
+        'settings-tab-shop',
+      ); // the account section asks the server nothing
+      await settle(tester);
       expect(key('sign-in-submit'), findsOneWidget);
       expect(key('notice-expired'), findsOneWidget);
     });
@@ -309,6 +314,11 @@ void main() {
         rig.server.reachable = false;
         await tapKey(tester, 'nav-administration');
         await settle(tester);
+        await tapKey(
+          tester,
+          'settings-tab-shop',
+        ); // the account section asks the server nothing
+        await settle(tester);
         expect(key('offline-banner'), findsOneWidget);
         expect(find.text('Нет связи с сервером.'), findsWidgets);
         rig.server.reachable = true;
@@ -411,18 +421,31 @@ void main() {
       await settle(tester);
     }
 
+    /// The settings page has three sections (account, shop, team): open one.
+    Future<void> openTab(WidgetTester tester, String tab) async {
+      await tapKey(tester, 'settings-tab-$tab');
+      await settle(tester, ms: 400);
+    }
+
     testWidgets(
-      'an owner sees business, locations and staff with edit controls',
+      'an owner sees the shop and the team, with edit controls but no way to add a second place',
       (tester) async {
         final rig = RealRig();
         await openAdmin(tester, rig);
+        expect(
+          key('signed-in-as'),
+          findsOneWidget,
+        ); // the account section comes first
+        await openTab(tester, 'shop');
         expect(find.text('Профиль бизнеса'), findsOneWidget);
         expect(find.text('Валюта: TMT'), findsOneWidget);
         expect(key('location-Esasy dükan'), findsOneWidget);
-        expect(key('staff-aman'), findsOneWidget);
-        expect(key('add-location'), findsOneWidget);
-        expect(key('add-staff'), findsOneWidget);
+        expect(key('business-timezone'), findsOneWidget);
+        expect(key('add-location'), findsNothing); // one business is one shop
         expect(key('business-save'), findsOneWidget);
+        await openTab(tester, 'team');
+        expect(key('staff-aman'), findsOneWidget);
+        expect(key('add-staff'), findsOneWidget);
       },
     );
 
@@ -433,8 +456,10 @@ void main() {
       rig.server.role = 'manager';
       rig.server.permissions = ['business.view', 'location.view', 'staff.view'];
       await openAdmin(tester, rig);
+      await openTab(tester, 'team');
       expect(key('staff-aman'), findsOneWidget);
       expect(key('add-staff'), findsNothing);
+      await openTab(tester, 'shop');
       expect(key('add-location'), findsNothing);
       expect(key('business-save'), findsNothing);
     });
@@ -449,29 +474,28 @@ void main() {
       expect(find.text('Сотрудники'), findsNothing);
     });
 
-    testWidgets('adding a location, including a duplicate-name refusal', (
-      tester,
-    ) async {
-      final rig = RealRig();
-      await openAdmin(tester, rig);
-      await tapKey(tester, 'add-location');
-      await settle(tester, ms: 300);
-      await tester.enterText(key('location-name'), 'ammar');
-      await tapKey(tester, 'location-save');
-      await settle(tester, ms: 300);
-      expect(find.text('Такое название уже есть.'), findsOneWidget);
-      await tester.enterText(key('location-name'), 'Täze şahamça');
-      await tapKey(tester, 'location-save');
-      await settle(tester);
-      expect(key('location-Täze şahamça'), findsOneWidget);
-      expect(rig.server.locationsData.last['name'], 'Täze şahamça');
-    });
+    testWidgets(
+      'the name of the shop can be changed, a second place cannot be added',
+      (tester) async {
+        final rig = RealRig();
+        await openAdmin(tester, rig);
+        await openTab(tester, 'shop');
+        expect(key('add-location'), findsNothing);
+        await tapKey(tester, 'edit-location-Esasy dükan');
+        await settle(tester, ms: 300);
+        await tester.enterText(key('location-name'), 'Täze ady');
+        await tapKey(tester, 'location-save');
+        await settle(tester);
+        expect(key('location-Täze ady'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'creating staff: field errors are shown, then the person is added',
       (tester) async {
         final rig = RealRig();
         await openAdmin(tester, rig);
+        await openTab(tester, 'team');
         await tapKey(tester, 'add-staff');
         await settle(tester, ms: 400);
         await tester.enterText(key('staff-username'), 'taken');
@@ -501,6 +525,7 @@ void main() {
     ) async {
       final rig = RealRig();
       await openAdmin(tester, rig);
+      await openTab(tester, 'team');
       await tapKey(tester, 'edit-staff-sata');
       await settle(tester, ms: 400);
       await tapKey(tester, 'staff-send-code');
@@ -514,6 +539,7 @@ void main() {
       (tester) async {
         final rig = RealRig();
         await openAdmin(tester, rig);
+        await openTab(tester, 'team');
         await tapKey(tester, 'edit-staff-aman');
         await settle(tester, ms: 400);
         await tapKey(tester, 'staff-active');
@@ -544,6 +570,7 @@ void main() {
     testWidgets('saving the business profile', (tester) async {
       final rig = RealRig();
       await openAdmin(tester, rig);
+      await openTab(tester, 'shop');
       await tester.enterText(key('business-name'), 'Ýüpek Ätiýaçlyk Bölekler');
       await tapKey(tester, 'business-save');
       await settle(tester);
@@ -556,6 +583,7 @@ void main() {
     ) async {
       final rig = RealRig();
       await openAdmin(tester, rig);
+      await openTab(tester, 'shop');
       await tester.enterText(
         key('business-address'),
         'Aşgabat, Garaşsyzlyk 12',
@@ -571,6 +599,7 @@ void main() {
       await settle(tester);
       await tapKey(tester, 'nav-administration');
       await settle(tester);
+      await openTab(tester, 'shop');
       expect(find.text('Aşgabat, Garaşsyzlyk 12'), findsOneWidget);
     });
   });

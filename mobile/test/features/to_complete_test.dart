@@ -72,6 +72,8 @@ void main() {
       await rig.launchSignedIn(tester);
       await tapKey(tester, 'nav-products');
       await settle(tester);
+      await tapKey(tester, 'catalog-more');
+      await settle(tester, ms: 300);
       await tapKey(tester, 'catalog-to-complete');
       await settle(tester);
       expect(key('complete-BP-1'), findsOneWidget);
@@ -228,6 +230,8 @@ void main() {
       await goBack(tester);
       await tapKey(tester, 'nav-products');
       await settle(tester);
+      await tapKey(tester, 'catalog-more');
+      await settle(tester, ms: 300);
       await tapKey(tester, 'catalog-to-complete');
       await settle(tester);
       expect(key('complete-none'), findsOneWidget);
@@ -262,11 +266,11 @@ void main() {
         }
         await tapKey(tester, 'nav-products');
         await settle(tester);
-        if (size.width < 600) {
-          // On a phone this action sits behind the "more" menu.
-          await tapKey(tester, 'catalog-more');
-          await settle(tester);
-        }
+        await tapKey(
+          tester,
+          'catalog-more',
+        ); // this action sits in the "more" menu
+        await settle(tester, ms: 300);
         await tapKey(tester, 'catalog-to-complete');
         await settle(tester);
         expect(tester.takeException(), isNull);

@@ -902,8 +902,21 @@ class _CartLineCardState extends State<_CartLineCard> {
               final right = Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  // The price is the one thing the seller changes on a line, so the box says so:
+                  // a caption, a pencil, a tinted fill and a cobalt edge, never plain text.
+                  ExcludeSemantics(
+                    child: Text(
+                      l.priceFieldLabel,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   SizedBox(
-                    height: 42,
+                    height: 44,
                     child: Semantics(
                       label: l.priceFieldLabel,
                       child: TextField(
@@ -915,17 +928,33 @@ class _CartLineCardState extends State<_CartLineCard> {
                         ),
                         onChanged: (v) => cart.setPriceText(line, v),
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontVariations: [FontVariation.weight(650)],
+                          fontSize: 15,
+                          fontVariations: [FontVariation.weight(700)],
                         ),
                         decoration: InputDecoration(
                           isDense: true,
+                          filled: true,
+                          fillColor: AppColors.tint,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 10,
                           ),
+                          prefixIcon: const Padding(
+                            padding: EdgeInsets.only(left: 10, right: 4),
+                            child: AppIcon(
+                              AppIcons.edit,
+                              size: 14,
+                              color: AppColors.blue,
+                            ),
+                          ),
+                          prefixIconConstraints: const BoxConstraints(
+                            minWidth: 28,
+                            minHeight: 28,
+                          ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.line),
+                            borderSide: BorderSide(
+                              color: AppColors.blue.withValues(alpha: 0.45),
+                            ),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -934,7 +963,7 @@ class _CartLineCardState extends State<_CartLineCard> {
                             borderRadius: BorderRadius.circular(10),
                             borderSide: const BorderSide(
                               color: AppColors.blue,
-                              width: 1.5,
+                              width: 2,
                             ),
                           ),
                         ),
@@ -977,7 +1006,7 @@ class _CartLineCardState extends State<_CartLineCard> {
                 children: [
                   Expanded(child: left),
                   const SizedBox(width: 12),
-                  SizedBox(width: 126, child: right),
+                  SizedBox(width: 144, child: right),
                 ],
               );
             },
@@ -1016,17 +1045,19 @@ class _Stepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 44x44 is Apple's minimum comfortable touch target (Android's Material minimum, 48dp, is
+    // close enough not to need a second size here); this is tapped often, adjusting a cart line.
     Widget button(Key key, AppIconData icon, VoidCallback onTap) => InkWell(
       key: key,
       onTap: onTap,
       child: SizedBox(
-        width: 40,
-        height: 40,
+        width: 44,
+        height: 44,
         child: Center(child: AppIcon(icon, size: 16)),
       ),
     );
     return Container(
-      height: 40,
+      height: 44,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,

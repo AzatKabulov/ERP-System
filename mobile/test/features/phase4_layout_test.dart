@@ -46,6 +46,8 @@ void main() {
       await tapKey(tester, 'stock-tab-movements');
       await settle(tester);
       expect(tester.takeException(), isNull);
+      await tapKey(tester, 'stock-more');
+      await settle(tester, ms: 300);
       await tapKey(tester, 'stock-adjust');
       await settle(tester);
       await tapKey(tester, 'entry-add-line');

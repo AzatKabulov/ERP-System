@@ -1755,5 +1755,97 @@
   "expiryDateFormat": "ДД.ММ.ГГГГ",
   "expiryDateInvalid": "Введите существующую дату в формате ДД.ММ.ГГГГ",
   "testLoginUsePassword": "Войти по логину и паролю",
-  "testLoginUseRole": "Выбрать тестовую роль"
+  "testLoginUseRole": "Выбрать тестовую роль",
+  "roleLoginUseRole": "Выбрать, кем войти",
+  "roleLoginPasswordTitle": "Пароль: {role}",
+  "@roleLoginPasswordTitle": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryFilterCaption": "Категория",
+  "productsCount": "Товаров: {count}",
+  "@productsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categoryPickerTitle": "Категория",
+  "categorySearchHint": "Найти или создать категорию",
+  "categoryCreateNamed": "Создать «{name}»",
+  "@categoryCreateNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryAdd": "Новая категория",
+  "categoryNewHint": "Введите название выше, например «Тормоза», и нажмите «Создать».",
+  "categoryNoMatch": "Такой категории нет",
+  "categoryNone": "Без категории",
+  "intakeSectionProduct": "Товар",
+  "intakeSectionPrices": "Количество и цены",
+  "intakeSectionMore": "Дополнительно",
+  "intakeAddProductHint": "Ввести товар вручную, если штрихкода нет",
+  "openingStockHelp": "Один раз при запуске: внесите то, что уже лежит на полках, с количеством и закупочной ценой.",
+  "adjustStockHelp": "Исправить остаток: списать брак или потери, добавить найденное. Обязательно указывается причина.",
+  "settingsTabAccount": "Аккаунт",
+  "settingsTabShop": "Магазин",
+  "languageHint": "Язык меню и кнопок на этом устройстве. Названия товаров не переводятся.",
+  "signOutTitle": "Выйти из аккаунта",
+  "signOutHint": "Вы выйдете только на этом устройстве. Данные магазина остаются на сервере.",
+  "shopPlaceTitle": "Название магазина и склада",
+  "shopPlaceHint": "Магазин и склад — одно место. Название видно в шапке, на чеке и в отчётах.",
+  "timezoneHint": "По этому поясу считается время на чеках и день в отчётах.",
+  "warrantyTabSold": "Проданные с гарантией",
+  "warrantyTabClaims": "Обращения",
+  "warrantySearchHint": "Чек, клиент, телефон, товар или штрихкод",
+  "warrantyFilterActive": "Действует",
+  "warrantyFilterSoon": "Скоро истекает",
+  "warrantyFilterExpired": "Истекла",
+  "warrantyFilterReturned": "Возвращён",
+  "warrantySoldOn": "Куплено {date}",
+  "@warrantySoldOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyUntil": "Гарантия до {date}",
+  "@warrantyUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "warrantyDaysLeft": "Осталось {n} дн.",
+  "@warrantyDaysLeft": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "warrantyExpiredDaysAgo": "Истекла {n} дн. назад",
+  "@warrantyExpiredDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "warrantyLastDay": "Сегодня последний день",
+  "warrantyReturnedNote": "Товар возвращён — гарантии нет",
+  "warrantyAccept": "Принять обращение",
+  "warrantyClaimOpenBadge": "Обращение открыто",
+  "warrantyRegisterEmpty": "Пока нет проданных товаров с гарантией",
+  "warrantyRegisterEmptyHint": "Товар с гарантией появится здесь сразу после продажи. Срок гарантии задаётся в карточке товара.",
+  "warrantyNoMatch": "Ничего не найдено"
 }

@@ -213,6 +213,16 @@ class _RealWorkspaceState extends State<RealWorkspace> {
             l.noLocationsAvailable,
             style: const TextStyle(color: AppColors.muted, fontSize: 13),
           )
+        else if (membership.locations.length == 1)
+          // One shop: nothing to choose, so just its name (no menu, no arrow).
+          Semantics(
+            label: '${l.location}: ${session.location?.name ?? ''}',
+            child: TopbarControl(
+              key: const ValueKey('location-label'),
+              icon: AppIcons.stock,
+              text: session.location?.name ?? '',
+            ),
+          )
         else
           PopupMenuButton<String>(
             key: const ValueKey('location-selector'),

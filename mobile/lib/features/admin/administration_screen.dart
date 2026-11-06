@@ -7,6 +7,7 @@ import '../../core/session/session_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
+import '../../widgets/motion.dart';
 import '../shared/async_section.dart';
 import '../catalog/catalog_repository.dart';
 import 'admin_repository.dart';
@@ -61,13 +62,23 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
     await session.refreshProfile(); // the header location picker follows
   }
 
+  _SettingsTab _tab = _SettingsTab.account;
+
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
-    final user = session.user;
+    final narrow = MediaQuery.sizeOf(context).width < 768; // padding only
+    final tabs = <(_SettingsTab, String)>[
+      (_SettingsTab.account, l.settingsTabAccount),
+      if (session.can('business.view') ||
+          session.can('exchange_rate.view') ||
+          session.can('location.view'))
+        (_SettingsTab.shop, l.settingsTabShop),
+      if (session.can('staff.view')) (_SettingsTab.team, l.staffTitle),
+    ];
+    final tab = tabs.any((t) => t.$1 == _tab) ? _tab : _SettingsTab.account;
     // A plain scrolling column (not a lazy list): the page is short, and every
     // section should exist for accessibility tools and tests alike.
-    final narrow = MediaQuery.sizeOf(context).width < 768; // padding only
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         narrow ? 16 : 32,
@@ -83,248 +94,371 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
             subtitle: session.membership?.businessName,
           ),
           const SizedBox(height: 24),
+          if (tabs.length > 1) ...[
+            AppTabs<_SettingsTab>(
+              keyPrefix: 'settings-tab',
+              keyName: (t) => t.name,
+              tabs: tabs,
+              value: tab,
+              onChanged: (t) => setState(() => _tab = t),
+            ),
+            const SizedBox(height: 24),
+          ],
+          // the sections slide in softly instead of snapping
+          AnimatedSwitcher(
+            duration: AppMotion.of(context, AppMotion.base),
+            switchInCurve: AppMotion.arrive,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, 0.02),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.topCenter,
+              children: [...previous, ?current],
+            ),
+            child: Align(
+              key: ValueKey(tab),
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 880),
+                child: switch (tab) {
+                  _SettingsTab.account => _account(context),
+                  _SettingsTab.shop => _shop(context),
+                  _SettingsTab.team => _team(context),
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The person: who is signed in, the interface language, and signing out.
+  Widget _account(BuildContext context) {
+    final l = strings(context);
+    final user = session.user;
+    final membership = session.membership;
+    final name = user?.displayName ?? '';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SurfaceCard(
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: AppGradients.spotlight,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  name.isEmpty ? '?' : name.characters.first.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (user != null)
+                      Text(
+                        l.signedInAs(user.displayName),
+                        key: const ValueKey('signed-in-as'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                    if (membership != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '${roleLabel(l, membership.role)} · ${membership.businessName}',
+                        style: const TextStyle(color: AppColors.muted),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeading(l.language),
+              const SizedBox(height: 4),
+              Text(
+                l.languageHint,
+                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              AppSegmented<String>(
+                keyPrefix: 'language-chip',
+                options: [('ru', l.languageRussian), ('tk', l.languageTurkmen)],
+                value: widget.languageCode,
+                onChanged: widget.onLanguageChanged,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l.translationsPending,
+                style: const TextStyle(color: AppColors.muted, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Signing out sits by itself at the bottom, away from the settings it must not be
+        // confused with.
+        SurfaceCard(
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            alignment: WrapAlignment.spaceBetween,
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.signOutTitle,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l.signOutHint,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                key: const ValueKey('admin-sign-out'),
+                onPressed: session.signOut,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.danger,
+                  side: const BorderSide(color: Color(0xFFF3C9C5)),
+                ),
+                icon: const AppIcon(AppIcons.logout),
+                label: Text(l.signOut),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// The shop: its details, the exchange rate and the name of its place. One business is one
+  /// shop (its warehouse is its back room), so a place cannot be added here.
+  Widget _shop(BuildContext context) {
+    final l = strings(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (session.can('business.view'))
           SurfaceCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SectionHeading(l.preferences),
-                const SizedBox(height: 16),
-                if (user != null)
-                  Text(
-                    l.signedInAs(user.displayName),
-                    key: const ValueKey('signed-in-as'),
+                SectionHeading(l.adminBusinessProfile),
+                const SizedBox(height: 12),
+                AsyncSection<BusinessInfo>(
+                  key: _business,
+                  load: repo.business,
+                  builder: (context, info) => _BusinessForm(
+                    info: info,
+                    canEdit: session.can('business.manage'),
+                    repository: repo,
+                    // The form already shows what was saved; reloading it would
+                    // discard its confirmation. Only the header needs refreshing.
+                    onSaved: session.refreshProfile,
                   ),
-                const SizedBox(height: 16),
-                Text(
-                  l.language,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  children: [
-                    ChoiceChip(
-                      key: const ValueKey('language-chip-ru'),
-                      label: Text(l.languageRussian),
-                      selected: widget.languageCode == 'ru',
-                      onSelected: (_) => widget.onLanguageChanged('ru'),
-                    ),
-                    ChoiceChip(
-                      key: const ValueKey('language-chip-tk'),
-                      label: Text(l.languageTurkmen),
-                      selected: widget.languageCode == 'tk',
-                      onSelected: (_) => widget.onLanguageChanged('tk'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  key: const ValueKey('admin-sign-out'),
-                  onPressed: session.signOut,
-                  icon: const AppIcon(AppIcons.logout),
-                  label: Text(l.signOut),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l.translationsPending,
-                  style: const TextStyle(color: AppColors.muted, height: 1.5),
                 ),
               ],
             ),
           ),
-          if (session.can('business.view')) ...[
-            const SizedBox(height: 24),
-            SurfaceCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SectionHeading(l.adminBusinessProfile),
-                  const SizedBox(height: 12),
-                  AsyncSection<BusinessInfo>(
-                    key: _business,
-                    load: repo.business,
-                    builder: (context, info) => _BusinessForm(
-                      info: info,
-                      canEdit: session.can('business.manage'),
-                      repository: repo,
-                      // The form already shows what was saved; reloading it would
-                      // discard its confirmation. Only the header needs refreshing.
-                      onSaved: session.refreshProfile,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (session.can('exchange_rate.view')) ...[
-            const SizedBox(height: 24),
-            ExchangeRateSection(
-              repository: widget.catalog,
-              canManage: session.can('exchange_rate.manage'),
-            ),
-          ],
-          if (session.can('location.view')) ...[
-            const SizedBox(height: 24),
-            SurfaceCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SectionHeading(
-                    l.locations,
-                    action: session.can('location.manage')
-                        ? OutlinedButton.icon(
-                            key: const ValueKey('add-location'),
-                            onPressed: () async {
-                              if (await showLocationDialog(context, repo) ==
-                                  true) {
-                                await _locationsChanged();
-                              }
-                            },
-                            icon: const AppIcon(AppIcons.plus),
-                            label: Text(l.addLocation),
-                          )
-                        : null,
-                  ),
-                  AsyncSection<List<LocationRecord>>(
-                    key: _locations,
-                    load: () => repo.locations(
-                      includeInactive: session.can('location.manage'),
-                    ),
-                    builder: (context, items) => Column(
-                      children: [
-                        for (final item in items)
-                          ListTile(
-                            key: ValueKey('location-${item.name}'),
-                            contentPadding: EdgeInsets.zero,
-                            leading: AppIcon(
-                              item.kind == 'warehouse'
-                                  ? AppIcons.stock
-                                  : AppIcons.stock,
-                              color: AppColors.blue,
-                            ),
-                            title: Text(item.name),
-                            subtitle: Text(kindLabel(l, item.kind)),
-                            trailing: Wrap(
-                              spacing: 8,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                if (!item.isActive)
-                                  StatusPill(
-                                    label: l.inactiveLabel,
-                                    warning: true,
-                                  ),
-                                if (session.can('location.manage'))
-                                  IconButton(
-                                    key: ValueKey('edit-location-${item.name}'),
-                                    tooltip: l.editLocation,
-                                    icon: const AppIcon(AppIcons.edit),
-                                    onPressed: () async {
-                                      if (await showLocationDialog(
-                                            context,
-                                            repo,
-                                            existing: item,
-                                          ) ==
-                                          true) {
-                                        await _locationsChanged();
-                                      }
-                                    },
-                                  ),
-                              ],
-                            ),
+        if (session.can('exchange_rate.view')) ...[
+          const SizedBox(height: 16),
+          ExchangeRateSection(
+            repository: widget.catalog,
+            canManage: session.can('exchange_rate.manage'),
+          ),
+        ],
+        if (session.can('location.view')) ...[
+          const SizedBox(height: 16),
+          SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeading(l.shopPlaceTitle),
+                const SizedBox(height: 4),
+                Text(
+                  l.shopPlaceHint,
+                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                AsyncSection<List<LocationRecord>>(
+                  key: _locations,
+                  load: () => repo.locations(),
+                  builder: (context, items) => Column(
+                    children: [
+                      for (final item in items.where((i) => i.isActive))
+                        ListTile(
+                          key: ValueKey('location-${item.name}'),
+                          contentPadding: EdgeInsets.zero,
+                          leading: const AppIcon(
+                            AppIcons.stock,
+                            color: AppColors.blue,
                           ),
-                      ],
-                    ),
+                          title: Text(item.name),
+                          subtitle: Text(kindLabel(l, item.kind)),
+                          trailing: session.can('location.manage')
+                              ? IconButton(
+                                  key: ValueKey('edit-location-${item.name}'),
+                                  tooltip: l.editLocation,
+                                  icon: const AppIcon(AppIcons.edit),
+                                  onPressed: () async {
+                                    if (await showLocationDialog(
+                                          context,
+                                          repo,
+                                          existing: item,
+                                        ) ==
+                                        true) {
+                                      await _locationsChanged();
+                                    }
+                                  },
+                                )
+                              : null,
+                        ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-          if (session.can('staff.view')) ...[
-            const SizedBox(height: 24),
-            SurfaceCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SectionHeading(
-                    l.staffTitle,
-                    action: session.can('staff.manage')
-                        ? OutlinedButton.icon(
-                            key: const ValueKey('add-staff'),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// The people who work in the shop and what each may do.
+  Widget _team(BuildContext context) {
+    final l = strings(context);
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeading(
+            l.staffTitle,
+            action: session.can('staff.manage')
+                ? OutlinedButton.icon(
+                    key: const ValueKey('add-staff'),
+                    onPressed: () async {
+                      if (await showStaffDialog(context, repo) == true) {
+                        _staff.currentState?.reload();
+                      }
+                    },
+                    icon: const AppIcon(AppIcons.personAdd),
+                    label: Text(l.addStaff),
+                  )
+                : null,
+          ),
+          AsyncSection<List<StaffRecord>>(
+            key: _staff,
+            load: repo.staff,
+            builder: (context, items) => Column(
+              children: [
+                for (final member in items)
+                  ListTile(
+                    key: ValueKey('staff-${member.username}'),
+                    contentPadding: EdgeInsets.zero,
+                    leading: const AppIcon(
+                      AppIcons.user,
+                      color: AppColors.blue,
+                    ),
+                    title: Text(
+                      member.userId == session.user?.id
+                          ? '${member.displayName} (${l.staffYou})'
+                          : member.displayName,
+                    ),
+                    subtitle: Text(
+                      '${member.username} · ${roleLabel(l, member.role)}',
+                    ),
+                    trailing: Wrap(
+                      spacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (!member.isActive)
+                          StatusPill(
+                            label: l.membershipInactive,
+                            warning: true,
+                          ),
+                        if (session.can('staff.manage'))
+                          IconButton(
+                            key: ValueKey('edit-staff-${member.username}'),
+                            tooltip: l.editStaff,
+                            icon: const AppIcon(AppIcons.edit),
                             onPressed: () async {
-                              if (await showStaffDialog(context, repo) ==
+                              if (await showStaffDialog(
+                                    context,
+                                    repo,
+                                    existing: member,
+                                  ) ==
                                   true) {
                                 _staff.currentState?.reload();
                               }
                             },
-                            icon: const AppIcon(AppIcons.personAdd),
-                            label: Text(l.addStaff),
-                          )
-                        : null,
-                  ),
-                  AsyncSection<List<StaffRecord>>(
-                    key: _staff,
-                    load: repo.staff,
-                    builder: (context, items) => Column(
-                      children: [
-                        for (final member in items)
-                          ListTile(
-                            key: ValueKey('staff-${member.username}'),
-                            contentPadding: EdgeInsets.zero,
-                            leading: const AppIcon(
-                              AppIcons.user,
-                              color: AppColors.blue,
-                            ),
-                            title: Text(
-                              member.userId == session.user?.id
-                                  ? '${member.displayName} (${l.staffYou})'
-                                  : member.displayName,
-                            ),
-                            subtitle: Text(
-                              '${member.username} · ${roleLabel(l, member.role)}',
-                            ),
-                            trailing: Wrap(
-                              spacing: 8,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                if (!member.isActive)
-                                  StatusPill(
-                                    label: l.membershipInactive,
-                                    warning: true,
-                                  ),
-                                if (session.can('staff.manage'))
-                                  IconButton(
-                                    key: ValueKey(
-                                      'edit-staff-${member.username}',
-                                    ),
-                                    tooltip: l.editStaff,
-                                    icon: const AppIcon(AppIcons.edit),
-                                    onPressed: () async {
-                                      if (await showStaffDialog(
-                                            context,
-                                            repo,
-                                            existing: member,
-                                          ) ==
-                                          true) {
-                                        _staff.currentState?.reload();
-                                      }
-                                    },
-                                  ),
-                              ],
-                            ),
                           ),
                       ],
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );
   }
 }
+
+enum _SettingsTab { account, shop, team }
+
+/// The time zones a shop is likely to use: the receipts and the reports read the shop's day and
+/// hour in this zone. (Any other zone already stored stays selectable.)
+const _timezones = <String, String>{
+  'Asia/Ashgabat': 'Ашхабад · Asia/Ashgabat (UTC+5)',
+  'Asia/Kuala_Lumpur': 'Куала-Лумпур · Asia/Kuala_Lumpur (UTC+8)',
+  'Europe/Moscow': 'Москва · Europe/Moscow (UTC+3)',
+  'Europe/Istanbul': 'Стамбул · Europe/Istanbul (UTC+3)',
+  'Asia/Dubai': 'Дубай · Asia/Dubai (UTC+4)',
+  'Asia/Tashkent': 'Ташкент · Asia/Tashkent (UTC+5)',
+  'Asia/Almaty': 'Алматы · Asia/Almaty (UTC+5)',
+  'UTC': 'UTC',
+};
 
 class _BusinessForm extends StatefulWidget {
   const _BusinessForm({
@@ -348,6 +482,7 @@ class _BusinessFormState extends State<_BusinessForm> {
   late final _phone = TextEditingController(text: widget.info.phone);
   late String _defaultLanguage = widget.info.defaultLanguage;
   late String _documentLanguage = widget.info.documentLanguage;
+  late String _timezone = widget.info.timezone;
   bool _busy = false;
   bool _saved = false;
   ApiException? _error;
@@ -374,6 +509,7 @@ class _BusinessFormState extends State<_BusinessForm> {
         documentLanguage: _documentLanguage,
         address: _address.text.trim(),
         phone: _phone.text.trim(),
+        timezone: _timezone,
       );
       await widget.onSaved();
       if (mounted) setState(() => _saved = true);
@@ -457,9 +593,38 @@ class _BusinessFormState extends State<_BusinessForm> {
           l.currencyFixedNote,
           style: const TextStyle(color: AppColors.muted, fontSize: 13),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 16),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: LabeledField(
+            label: l.timezoneLabel,
+            child: DropdownButtonFormField<String>(
+              key: const ValueKey('business-timezone'),
+              isExpanded: true,
+              initialValue: _timezone,
+              decoration: const InputDecoration(),
+              items: [
+                for (final zone in {
+                  ..._timezones.keys,
+                  _timezone, // a zone set some other way stays selectable
+                })
+                  DropdownMenuItem(
+                    value: zone,
+                    child: Text(
+                      _timezones[zone] ?? zone,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+              onChanged: enabled
+                  ? (v) => setState(() => _timezone = v ?? _timezone)
+                  : null,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         Text(
-          '${l.timezoneLabel}: ${widget.info.timezone}',
+          l.timezoneHint,
           style: const TextStyle(color: AppColors.muted, fontSize: 13),
         ),
         if (_error != null && _error!.fields.isEmpty) ...[

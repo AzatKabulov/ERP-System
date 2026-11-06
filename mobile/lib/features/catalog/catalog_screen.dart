@@ -16,6 +16,7 @@ import '../shared/async_section.dart';
 import '../workspace/unsaved_work.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
+import 'category_picker.dart';
 import 'csv_import_screen.dart';
 import 'product_detail_screen.dart';
 import 'product_photo.dart';
@@ -150,6 +151,23 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   bool _exporting = false;
 
+  Future<void> _pickCategory() async {
+    final pick = await showCategoryPicker(
+      context,
+      repository: widget.repository,
+      selectedId: _categoryId,
+      allLabel: strings(context).allCategories,
+      canCreate: _canManage,
+    );
+    if (pick == null || !mounted) return;
+    // a category created in the list must show up in this page's own copy too
+    widget.repository.categories().then((items) {
+      if (mounted) setState(() => _categories = items);
+    }, onError: (_) {});
+    _categoryId = pick.category?.id;
+    _load(reset: true);
+  }
+
   Future<void> _import() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
@@ -231,33 +249,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
         (_canManage && widget.onOpenToComplete != null) ||
         widget.session.can('catalog.import') ||
         widget.session.can('catalog.export');
-    final secondary = <Widget>[
-      if (_canManage && widget.onOpenToComplete != null)
-        OutlinedButton.icon(
-          key: const ValueKey('catalog-to-complete'),
-          onPressed: widget.onOpenToComplete,
-          icon: const AppIcon(AppIcons.edit, size: 20),
-          label: Text(l.toCompleteTitle),
-        ),
-      if (widget.session.can('catalog.import'))
-        OutlinedButton.icon(
-          key: const ValueKey('catalog-import'),
-          onPressed: _import,
-          icon: const AppIcon(AppIcons.upload, size: 20),
-          label: Text(l.catalogImport),
-        ),
-      if (widget.session.can('catalog.export'))
-        OutlinedButton.icon(
-          key: const ValueKey('catalog-export'),
-          onPressed: _exporting ? null : _export,
-          icon: const AppIcon(AppIcons.download, size: 20),
-          label: Text(l.catalogExport),
-        ),
-    ];
+    // The page's side actions live in one menu next to the main button: import, export and the
+    // list of products that still need a price or a cost.
     final more = PopupMenuButton<String>(
       key: const ValueKey('catalog-more'),
       tooltip: l.menu,
-      icon: const AppIcon(AppIcons.dots),
+      position: PopupMenuPosition.under,
       onSelected: (value) => switch (value) {
         'complete' => widget.onOpenToComplete?.call(),
         'import' => _import(),
@@ -268,21 +265,46 @@ class _CatalogScreenState extends State<CatalogScreen> {
           PopupMenuItem(
             key: const ValueKey('catalog-to-complete'),
             value: 'complete',
-            child: Text(l.toCompleteTitle),
+            child: _MenuRow(AppIcons.edit, l.toCompleteTitle),
           ),
         if (widget.session.can('catalog.import'))
           PopupMenuItem(
             key: const ValueKey('catalog-import'),
             value: 'import',
-            child: Text(l.catalogImport),
+            child: _MenuRow(AppIcons.upload, l.catalogImport),
           ),
         if (widget.session.can('catalog.export'))
           PopupMenuItem(
             key: const ValueKey('catalog-export'),
             value: 'export',
-            child: Text(l.catalogExport),
+            child: _MenuRow(AppIcons.download, l.catalogExport),
           ),
       ],
+      child: IgnorePointer(
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppRadius.control),
+            border: Border.all(color: AppColors.line),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AppIcon(AppIcons.dots, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                l.more,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
     final toggle = AppSegmented<bool>(
       key: const ValueKey('catalog-view-toggle'),
@@ -290,87 +312,64 @@ class _CatalogScreenState extends State<CatalogScreen> {
       value: _gallery,
       onChanged: _setGallery,
     );
-    final chips = _chipRow([
-      if (widget.session.can('stock.view')) ...[
-        for (final mode in ['soon', 'expired'])
-          FilterChip(
-            key: ValueKey('catalog-expiry-$mode'),
-            label: Text(
-              mode == 'soon' ? l.expirySoonFilter : l.expiryExpiredFilter,
+    final category = _categories.where((c) => c.id == _categoryId).firstOrNull;
+    // Every filter in one tidy wrap: the category (it opens a list where a new category can be
+    // created too), the expiry filters, and the archive. Chosen ones are tinted cobalt.
+    final filters = Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        FilterButton(
+          key: const ValueKey('catalog-category-filter'),
+          caption: l.categoryFilterCaption,
+          value: category?.name ?? l.allCategories,
+          active: category != null,
+          icon: AppIcons.tag,
+          onTap: _pickCategory,
+        ),
+        if (widget.session.can('stock.view'))
+          for (final mode in ['soon', 'expired'])
+            AppPill(
+              key: ValueKey('catalog-expiry-$mode'),
+              label: mode == 'soon'
+                  ? l.expirySoonFilter
+                  : l.expiryExpiredFilter,
+              selected: _expiryFilter == mode,
+              icon: AppIcons.clock,
+              onTap: () {
+                _expiryFilter = _expiryFilter == mode ? null : mode;
+                _load(reset: true);
+              },
             ),
-            selected: _expiryFilter == mode,
-            onSelected: (selected) {
-              _expiryFilter = selected ? mode : null;
-              _load(reset: true);
-            },
-          ),
-      ],
-      ChoiceChip(
-        label: Text(l.allCategories),
-        selected: _categoryId == null,
-        onSelected: (_) {
-          _categoryId = null;
-          _load(reset: true);
-        },
-      ),
-      for (final category in _categories)
-        ChoiceChip(
-          key: ValueKey('catalog-category-${category.name}'),
-          label: Text(category.name),
-          selected: _categoryId == category.id,
-          onSelected: (_) {
-            _categoryId = category.id;
+        AppPill(
+          key: const ValueKey('catalog-archived-toggle'),
+          label: l.showArchived,
+          selected: _archived,
+          icon: AppIcons.archive,
+          onTap: () {
+            _archived = !_archived;
             _load(reset: true);
           },
         ),
-      FilterChip(
-        key: const ValueKey('catalog-archived-toggle'),
-        label: Text(l.showArchived),
-        selected: _archived,
-        onSelected: (value) {
-          _archived = value;
-          _load(reset: true);
-        },
-      ),
-    ]);
+      ],
+    );
+    final gutter = compact ? 16.0 : 32.0;
     return ListView(
-      padding: EdgeInsets.fromLTRB(
-        compact ? 16 : 32,
-        compact ? 20 : 32,
-        compact ? 16 : 32,
-        40,
-      ),
+      padding: EdgeInsets.fromLTRB(gutter, compact ? 20 : 32, gutter, 40),
       children: [
         PageHead(
           title: l.products,
-          actions: compact
-              ? [?add, if (hasSecondary) more]
-              : [...secondary, ?add],
+          subtitle: _loading && _items.isEmpty ? null : l.productsCount(_count),
+          actions: [if (hasSecondary) more, ?add],
         ),
         const SizedBox(height: 24),
+        // Row 1: the search with its camera button, and the way to see the products.
         if (compact) ...[
           search,
           const SizedBox(height: 12),
           Align(alignment: Alignment.centerLeft, child: toggle),
-          const SizedBox(height: 12),
-          chips,
-        ] else if (width - 64 >= 1000)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(width: 420, child: search),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: chips,
-                ),
-              ),
-              const SizedBox(width: 12),
-              toggle,
-            ],
-          )
-        else ...[
+        ] else
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -379,19 +378,19 @@ class _CatalogScreenState extends State<CatalogScreen> {
               toggle,
             ],
           ),
-          const SizedBox(height: 12),
-          chips,
-        ],
+        const SizedBox(height: 14),
+        filters,
         const SizedBox(height: 20),
         if (_items.any(
           (p) => p.expiryStatus == 'soon' || p.expiryStatus == 'expired',
         ))
           Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              l.expiryAttention,
+            padding: const EdgeInsets.only(bottom: 16),
+            child: NoticeBanner(
               key: const ValueKey('catalog-expiry-alert'),
-              style: const TextStyle(color: AppColors.warning),
+              text: l.expiryAttention,
+              icon: AppIcons.warning,
+              tone: StatusTone.warning,
             ),
           ),
         if (_error != null)
@@ -703,20 +702,21 @@ class _ProductCard extends StatelessWidget {
   }
 }
 
-/// Filter chips: one row that scrolls sideways, so many categories never push the products
-/// down the screen.
-Widget _chipRow(List<Widget> chips) => SizedBox(
-  height: 48,
-  child: SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: Row(
-      children: [
-        for (final chip in chips)
-          Padding(padding: const EdgeInsets.only(right: 8), child: chip),
-      ],
-    ),
-  ),
-);
+/// One line of a menu: a small icon and the text.
+class _MenuRow extends StatelessWidget {
+  const _MenuRow(this.icon, this.text);
+  final AppIconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      AppIcon(icon, size: 18, color: AppColors.neutral),
+      const SizedBox(width: 12),
+      Flexible(child: Text(text)),
+    ],
+  );
+}
 
 /// The list view of the catalog on a wide screen: a header row and one row per product.
 class _ProductTable extends StatelessWidget {

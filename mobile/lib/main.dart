@@ -24,6 +24,19 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Android only (a no-op on web and unreachable on iOS, which has no native status bar to
+  // style here): the app has no AppBar to derive this from, no dark theme, and is always drawn
+  // edge-to-edge, so without this the system bars default to undefined, possibly unreadable icon
+  // colours on top of the app's light canvas.
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   LicenseRegistry.addLicense(() async* {
     for (final font in ['Onest']) {
       final text = await rootBundle.loadString(

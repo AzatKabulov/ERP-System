@@ -69,6 +69,11 @@ Future<void> openClaimPage(WidgetTester tester, RealRig rig) async {
   await rig.launch(tester);
   await tapKey(tester, 'nav-warranties');
   await settle(tester);
+  await tapKey(
+    tester,
+    'warranty-tab-claims',
+  ); // the page opens on the sold goods
+  await settle(tester);
   await tapKey(tester, 'warranty-W-0001');
   await settle(tester);
 }
@@ -175,6 +180,11 @@ void main() {
         final t = warrantyRig();
         await t.rig.launchSignedIn(tester);
         await tapKey(tester, 'nav-warranties');
+        await settle(tester);
+        await tapKey(
+          tester,
+          'warranty-tab-claims',
+        ); // the page opens on the sold goods
         await settle(tester);
         expect(key('warranties-empty'), findsOneWidget);
         await tapKey(tester, 'warranty-new');

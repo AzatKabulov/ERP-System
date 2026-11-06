@@ -143,7 +143,7 @@ class _StockScreenState extends State<StockScreen> {
     if (result == EntryResult.posted) _load(reset: true);
   }
 
-  Future<void> _intake() async {
+  Future<void> _intake({bool manual = false}) async {
     final result = await Navigator.of(context).push<EntryResult>(
       MaterialPageRoute(
         builder: (_) => IntakeScreen(
@@ -151,6 +151,7 @@ class _StockScreenState extends State<StockScreen> {
           catalog: widget.catalog,
           runner: widget.runner,
           monitor: widget.monitor,
+          startManual: manual,
           store: IntakeDraftStore(
             session.preferences,
             businessId: widget.repository.businessId,
@@ -192,7 +193,10 @@ class _StockScreenState extends State<StockScreen> {
     (_StockTab.location, l.stockTabByLocation),
     if (session.can('stock.history.view'))
       (_StockTab.movements, l.movementHistory),
-    if (session.can('transfer.view')) (_StockTab.transfers, l.transfersTitle),
+    // Moving goods between places needs two places; a business is one shop now.
+    if (session.can('transfer.view') &&
+        (session.membership?.locations.length ?? 0) > 1)
+      (_StockTab.transfers, l.transfersTitle),
     if (session.can('count.view')) (_StockTab.counts, l.countsTitle),
   ];
 
@@ -210,19 +214,46 @@ class _StockScreenState extends State<StockScreen> {
           )
         : null;
     final others = <Widget>[
-      if (session.can('stock.opening.post'))
+      // A product without a barcode: type it in by hand (no need to open the scanner first).
+      if (session.can('intake.create'))
         OutlinedButton.icon(
-          key: const ValueKey('stock-opening'),
-          onPressed: () => _enter(StockEntryMode.opening),
-          icon: const AppIcon(AppIcons.listPlus, size: 20),
-          label: Text(l.openingStock),
+          key: const ValueKey('stock-add-manual'),
+          onPressed: () => _intake(manual: true),
+          icon: const AppIcon(AppIcons.plus, size: 20),
+          label: Text(l.intakeAddProduct),
         ),
-      if (session.can('stock.adjust'))
-        OutlinedButton.icon(
-          key: const ValueKey('stock-adjust'),
-          onPressed: () => _enter(StockEntryMode.adjustment),
-          icon: const AppIcon(AppIcons.tune, size: 20),
-          label: Text(l.adjustStock),
+      // The two rarely used ones sit in a menu, each with a line that says what it is for.
+      if (session.can('stock.opening.post') || session.can('stock.adjust'))
+        MoreMenuButton(
+          key: const ValueKey('stock-more'),
+          label: l.more,
+          onSelected: (value) => _enter(
+            value == 'opening'
+                ? StockEntryMode.opening
+                : StockEntryMode.adjustment,
+          ),
+          itemBuilder: (context) => [
+            if (session.can('stock.opening.post'))
+              PopupMenuItem(
+                key: const ValueKey('stock-opening'),
+                value: 'opening',
+                child: MenuEntry(
+                  icon: AppIcons.listPlus,
+                  title: l.openingStock,
+                  help: l.openingStockHelp,
+                ),
+              ),
+            if (session.can('stock.adjust'))
+              PopupMenuItem(
+                key: const ValueKey('stock-adjust'),
+                value: 'adjust',
+                child: MenuEntry(
+                  icon: AppIcons.tune,
+                  title: l.adjustStock,
+                  help: l.adjustStockHelp,
+                ),
+              ),
+          ],
         ),
     ];
     // A plain scrolling column, not a lazy list: the tabs and the actions must exist for
@@ -321,69 +352,61 @@ class _StockScreenState extends State<StockScreen> {
         _load(reset: true);
       },
     );
-    final chips = <Widget>[
-      ChoiceChip(
-        key: const ValueKey('stock-condition-all'),
-        label: Text(l.statusAll),
-        selected: _condition == null,
-        onSelected: (_) {
-          _condition = null;
-          _load(reset: true);
-        },
-      ),
-      for (final c in _conditions)
-        ChoiceChip(
-          key: ValueKey('stock-condition-$c'),
-          label: Text(conditionLabel(l, c)),
-          selected: _condition == c,
-          onSelected: (_) {
-            _condition = c;
+    // The condition and place filters wrap onto the next line instead of hiding in a row that
+    // cannot be scrolled with a mouse.
+    final chips = Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        AppPill(
+          key: const ValueKey('stock-condition-all'),
+          label: l.statusAll,
+          selected: _condition == null,
+          onTap: () {
+            _condition = null;
             _load(reset: true);
           },
         ),
-      if (locations.length > 1) ...[
-        ChoiceChip(
-          key: const ValueKey('stock-location-all'),
-          label: Text(l.allLocationsLabel),
-          selected: _locationId == null,
-          onSelected: (_) {
-            _locationId = null;
-            _load(reset: true);
-          },
-        ),
-        for (final location in locations)
-          ChoiceChip(
-            key: ValueKey('stock-location-${location.name}'),
-            label: Text(location.name),
-            selected: _locationId == location.id,
-            onSelected: (_) {
-              _locationId = location.id;
+        for (final c in _conditions)
+          AppPill(
+            key: ValueKey('stock-condition-$c'),
+            label: conditionLabel(l, c),
+            selected: _condition == c,
+            onTap: () {
+              _condition = c;
               _load(reset: true);
             },
           ),
+        if (locations.length > 1) ...[
+          AppPill(
+            key: const ValueKey('stock-location-all'),
+            label: l.allLocationsLabel,
+            selected: _locationId == null,
+            onTap: () {
+              _locationId = null;
+              _load(reset: true);
+            },
+          ),
+          for (final location in locations)
+            AppPill(
+              key: ValueKey('stock-location-${location.name}'),
+              label: location.name,
+              selected: _locationId == location.id,
+              onTap: () {
+                _locationId = location.id;
+                _load(reset: true);
+              },
+            ),
+        ],
       ],
-    ];
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (compact) ...[
-          search,
-          const SizedBox(height: 12),
-          _chipScroll(chips),
-        ] else
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(width: 420, child: search),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: _chipScroll(chips),
-                ),
-              ),
-            ],
-          ),
+        search,
+        const SizedBox(height: 14),
+        chips,
         const SizedBox(height: 16),
         if (_error != null)
           ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
@@ -427,20 +450,6 @@ class _StockScreenState extends State<StockScreen> {
       ],
     );
   }
-
-  /// One row of filter chips that scrolls sideways.
-  Widget _chipScroll(List<Widget> chips) => SizedBox(
-    height: 48,
-    child: SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final chip in chips)
-            Padding(padding: const EdgeInsets.only(right: 8), child: chip),
-        ],
-      ),
-    ),
-  );
 }
 
 enum _StockTab { location, movements, transfers, counts }

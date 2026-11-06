@@ -39,6 +39,8 @@ void main() {
   ) async {
     final rig = rigWithProduct();
     await openCatalog(tester, rig);
+    await tapKey(tester, 'catalog-more');
+    await settle(tester, ms: 300);
     await tapKey(tester, 'catalog-import');
     await settle(tester);
     expect(canPress(tester, 'import-choose'), isTrue);
@@ -71,6 +73,8 @@ void main() {
   ) async {
     final rig = rigWithProduct();
     await openCatalog(tester, rig);
+    await tapKey(tester, 'catalog-more');
+    await settle(tester, ms: 300);
     await tapKey(tester, 'catalog-import');
     await settle(tester);
     await chooseFile(
@@ -98,6 +102,8 @@ void main() {
     final rig = rigWithProduct();
     rig.server.office.importLimit = 2;
     await openCatalog(tester, rig);
+    await tapKey(tester, 'catalog-more');
+    await settle(tester, ms: 300);
     await tapKey(tester, 'catalog-import');
     await settle(tester);
     await chooseFile(
@@ -117,6 +123,8 @@ void main() {
   testWidgets('wrong column names are reported', (tester) async {
     final rig = rigWithProduct();
     await openCatalog(tester, rig);
+    await tapKey(tester, 'catalog-more');
+    await settle(tester, ms: 300);
     await tapKey(tester, 'catalog-import');
     await settle(tester);
     rig.picking.nextFile = PickedFile(
@@ -131,6 +139,8 @@ void main() {
   testWidgets('cancelling the file dialog changes nothing', (tester) async {
     final rig = rigWithProduct();
     await openCatalog(tester, rig);
+    await tapKey(tester, 'catalog-more');
+    await settle(tester, ms: 300);
     await tapKey(tester, 'catalog-import');
     await settle(tester);
     rig.picking.nextFile = null;
@@ -143,6 +153,8 @@ void main() {
   testWidgets('export hands the file over for sharing', (tester) async {
     final rig = rigWithProduct();
     await openCatalog(tester, rig);
+    await tapKey(tester, 'catalog-more');
+    await settle(tester, ms: 300);
     await tapKey(tester, 'catalog-export');
     await settle(tester);
     final shared = rig.sharing.shared.single;
@@ -188,11 +200,11 @@ void main() {
       await tapKey(tester, 'nav-products');
       await settle(tester);
       expect(tester.takeException(), isNull, reason: 'catalog');
-      if (size.width < 600) {
-        // On a phone import and export sit behind the "more" menu.
-        await tapKey(tester, 'catalog-more');
-        await settle(tester);
-      }
+      await tapKey(
+        tester,
+        'catalog-more',
+      ); // import, export and the rest sit in this menu
+      await settle(tester, ms: 300);
       await tapKey(tester, 'catalog-import');
       await settle(tester);
       await chooseFile(

@@ -150,3 +150,79 @@ bool warrantyExpired({
   final today = now ?? DateTime.now();
   return DateTime(today.year, today.month, today.day).isAfter(until);
 }
+
+/// One sold line that carries a warranty (the register): when it started, the last day it
+/// holds and where it stands today. The server works the dates out from the sale, the returns and
+/// the claims, so the screen only shows them.
+@immutable
+class WarrantyRegisterItem {
+  const WarrantyRegisterItem({
+    required this.saleLineId,
+    required this.saleId,
+    required this.saleNumber,
+    required this.sku,
+    required this.name,
+    required this.quantityMilli,
+    required this.returnedMilli,
+    required this.customerName,
+    required this.customerPhone,
+    required this.months,
+    required this.terms,
+    required this.starts,
+    required this.until,
+    required this.daysLeft,
+    required this.status,
+    required this.openClaims,
+  });
+
+  final String saleLineId;
+  final String saleId;
+  final int saleNumber;
+  final String sku;
+  final String name;
+  final int quantityMilli;
+  final int returnedMilli;
+  final String customerName;
+  final String customerPhone;
+  final int months;
+  final String terms;
+  final DateTime starts;
+  final DateTime until;
+  final int daysLeft;
+
+  /// active | soon | expired | returned
+  final String status;
+  final int openClaims;
+
+  bool get covered => status == 'active' || status == 'soon';
+
+  factory WarrantyRegisterItem.fromJson(Map<String, dynamic> json) =>
+      WarrantyRegisterItem(
+        saleLineId: json['sale_line'] as String,
+        saleId: json['sale'] as String,
+        saleNumber: json['sale_number'] as int,
+        sku: json['sku'] as String,
+        name: json['name'] as String,
+        quantityMilli: parseServerDecimal(json['quantity'] as String?, 3) ?? 0,
+        returnedMilli: parseServerDecimal(json['returned'] as String?, 3) ?? 0,
+        customerName: (json['customer_name'] as String?) ?? '',
+        customerPhone: (json['customer_phone'] as String?) ?? '',
+        months: json['warranty_months'] as int,
+        terms: (json['warranty_terms'] as String?) ?? '',
+        starts: DateTime.parse(json['starts'] as String),
+        until: DateTime.parse(json['until'] as String),
+        daysLeft: json['days_left'] as int,
+        status: json['status'] as String,
+        openClaims: (json['open_claims'] as int?) ?? 0,
+      );
+}
+
+class WarrantyRegisterPage {
+  const WarrantyRegisterPage(this.items, this.hasMore, this.counts);
+  final List<WarrantyRegisterItem> items;
+  final bool hasMore;
+
+  /// How many lines are in each state (active includes those ending soon); only on the first
+  /// page.
+  final Map<String, int> counts;
+}

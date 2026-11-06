@@ -379,14 +379,21 @@ class PageHead extends StatelessWidget {
           children: [heading, const SizedBox(height: 16), buttons],
         );
       }
+      // The title takes what the buttons leave; the buttons sit at the right edge (up to 70% of
+      // the width, then they wrap), the same on every page.
       return Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Flexible(child: heading),
+          Expanded(child: heading),
           const SizedBox(width: 24),
-          Flexible(
-            flex: 3,
-            child: Align(alignment: Alignment.centerRight, child: buttons),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.7),
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              runSpacing: 8,
+              children: actions,
+            ),
           ),
         ],
       );
@@ -639,9 +646,18 @@ class FilterSelect<T> extends StatelessWidget {
 /// A form field with its label above it (13 px, semibold), as in the design. The field keeps its
 /// own label for screen readers; the visible one here is not read twice.
 class LabeledField extends StatelessWidget {
-  const LabeledField({super.key, required this.label, required this.child});
+  const LabeledField({
+    super.key,
+    required this.label,
+    required this.child,
+    this.minLabelHeight = 0,
+  });
   final String label;
   final Widget child;
+
+  /// Reserves room for a label of two lines, so side-by-side fields whose labels differ in
+  /// length still start their boxes at the same height.
+  final double minLabelHeight;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -649,13 +665,16 @@ class LabeledField extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     children: [
       ExcludeSemantics(
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.ink,
-            height: 1.3,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: minLabelHeight),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.ink,
+              height: 1.3,
+            ),
           ),
         ),
       ),
@@ -911,11 +930,18 @@ class AppTabs<T> extends StatelessWidget {
                     ? null
                     : ValueKey('$keyPrefix-${keyName?.call(v) ?? v}'),
                 onTap: () => onChanged(v),
+                // A soft rounded wash on hover, never the default square box.
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(10),
+                ),
+                hoverColor: AppColors.blue.withValues(alpha: 0.06),
+                highlightColor: Colors.transparent,
+                splashColor: AppColors.blue.withValues(alpha: 0.08),
                 child: AnimatedContainer(
                   duration: AppMotion.of(context, AppMotion.base),
                   curve: AppMotion.arrive,
                   constraints: const BoxConstraints(minHeight: 48),
-                  margin: const EdgeInsets.only(right: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     border: Border(
@@ -939,6 +965,218 @@ class AppTabs<T> extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    ),
+  );
+}
+
+/// The "More" button of a page header: a white button with three dots that opens a menu of the
+/// page's less-used actions, so the header keeps one main button and one tidy neighbour.
+class MoreMenuButton extends StatelessWidget {
+  const MoreMenuButton({
+    super.key,
+    required this.label,
+    required this.itemBuilder,
+    required this.onSelected,
+  });
+  final String label;
+  final PopupMenuItemBuilder<String> itemBuilder;
+  final PopupMenuItemSelected<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) => PopupMenuButton<String>(
+    tooltip: label,
+    position: PopupMenuPosition.under,
+    onSelected: onSelected,
+    itemBuilder: itemBuilder,
+    child: IgnorePointer(
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.control),
+          border: Border.all(color: AppColors.line),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppIcon(AppIcons.dots, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// A menu entry with a title and a short grey explanation under it.
+class MenuEntry extends StatelessWidget {
+  const MenuEntry({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.help,
+  });
+  final AppIconData icon;
+  final String title;
+  final String? help;
+
+  @override
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 320),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: AppIcon(icon, size: 18, color: AppColors.neutral),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                if (help != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      help!,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// A filter or choice drawn as a pill: white with a hairline, or tinted with a cobalt edge when
+/// chosen. One clean outline (the Material chip drew a second ring on hover and focus), a soft
+/// colour glide, and a ripple that stays inside the pill.
+class AppPill extends StatelessWidget {
+  const AppPill({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+    this.trailing,
+  });
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+  final AppIconData? icon;
+
+  /// A small widget after the label (a chevron, a count).
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppColors.blue : AppColors.neutral;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.fast),
+        curve: Curves.easeOut,
+        decoration: ShapeDecoration(
+          color: selected ? AppColors.tint : Colors.white,
+          shape: StadiumBorder(
+            side: BorderSide(color: selected ? AppColors.blue : AppColors.line),
+          ),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            customBorder: const StadiumBorder(),
+            onTap: onTap,
+            hoverColor: AppColors.blue.withValues(alpha: 0.05),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 36),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) ...[
+                      AppIcon(icon!, size: 16, color: color),
+                      const SizedBox(width: 6),
+                    ],
+                    Flexible(
+                      child: AnimatedDefaultTextStyle(
+                        duration: AppMotion.of(context, AppMotion.fast),
+                        style: TextStyle(
+                          fontFamily: AppFonts.ui,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    ?trailing,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A filter that opens a list or a menu: a caption, the chosen value and a chevron. Cobalt-tinted
+/// while a value other than "all" is chosen, so an active filter is never missed.
+class FilterButton extends StatelessWidget {
+  const FilterButton({
+    super.key,
+    required this.caption,
+    required this.value,
+    required this.onTap,
+    this.active = false,
+    this.icon,
+  });
+  final String caption;
+  final String value;
+  final bool active;
+  final VoidCallback onTap;
+  final AppIconData? icon;
+
+  @override
+  Widget build(BuildContext context) => AppPill(
+    label: '$caption: $value',
+    selected: active,
+    onTap: onTap,
+    icon: icon,
+    trailing: Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: AppIcon(
+        AppIcons.chevronDown,
+        size: 16,
+        color: active ? AppColors.blue : AppColors.neutral,
       ),
     ),
   );

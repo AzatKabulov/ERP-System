@@ -40,6 +40,35 @@ class WarrantiesRepository {
     ], map['count'] as int);
   }
 
+  /// Goods sold with a warranty and where each warranty stands. [status] is active, soon,
+  /// expired or returned (empty: all); [query] searches the receipt number, the customer's name
+  /// or phone, the product and an exact barcode.
+  Future<WarrantyRegisterPage> register({
+    String? status,
+    String query = '',
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final map = (await api.get(
+      '/api/v1/businesses/$businessId/warranty-register/',
+      query: {
+        'status': ?status,
+        if (query.trim().isNotEmpty) 'q': query.trim(),
+        'limit': '$limit',
+        'offset': '$offset',
+      },
+    )).map;
+    final counts = (map['counts'] as Map?)?.cast<String, dynamic>() ?? const {};
+    return WarrantyRegisterPage(
+      [
+        for (final r in map['results'] as List)
+          WarrantyRegisterItem.fromJson((r as Map).cast<String, dynamic>()),
+      ],
+      map['has_more'] as bool,
+      {for (final e in counts.entries) e.key: e.value as int},
+    );
+  }
+
   Future<WarrantyClaim> claim(String id) async =>
       WarrantyClaim.fromJson((await api.get('$_base/$id/')).map);
 

@@ -656,6 +656,11 @@ void main() {
       await rig.launchSignedIn(tester);
       await tapKey(tester, 'nav-administration');
       await settle(tester);
+      await tapKey(
+        tester,
+        'settings-tab-shop',
+      ); // the rate is part of the shop's settings
+      await settle(tester, ms: 400);
     }
 
     testWidgets('shows that no rate exists, then records one with history', (

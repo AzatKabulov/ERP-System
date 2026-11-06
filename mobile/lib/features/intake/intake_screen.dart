@@ -35,6 +35,7 @@ class IntakeScreen extends StatefulWidget {
     required this.runner,
     required this.monitor,
     required this.store,
+    this.startManual = false,
   });
 
   final SessionController session;
@@ -42,6 +43,10 @@ class IntakeScreen extends StatefulWidget {
   final OperationRunner runner;
   final ConnectionMonitor monitor;
   final IntakeDraftStore store;
+
+  /// Opens the form for typing a product in by hand straight away (the "Add product" button of
+  /// the stock page), for goods with no barcode.
+  final bool startManual;
 
   @override
   State<IntakeScreen> createState() => _IntakeScreenState();
@@ -77,6 +82,11 @@ class _IntakeScreenState extends State<IntakeScreen> {
     }
     _wasOnline = widget.monitor.online;
     widget.monitor.addListener(_connectionChanged);
+    if (widget.startManual) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _manual();
+      });
+    }
   }
 
   @override

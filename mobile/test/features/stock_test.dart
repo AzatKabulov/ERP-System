@@ -31,8 +31,10 @@ void main() {
       await openStock(tester, rig);
       expect(key('stock-empty'), findsOneWidget);
       expect(find.text('Остатков пока нет'), findsOneWidget);
-      expect(key('stock-opening'), findsOneWidget);
-      expect(key('stock-adjust'), findsOneWidget);
+      expect(
+        key('stock-more'),
+        findsOneWidget,
+      ); // opening stock and adjustments sit in it
       expect(key('stock-tab-movements'), findsOneWidget);
     });
 
@@ -119,8 +121,7 @@ void main() {
         await openStock(tester, rig);
         expect(find.text('10 шт'), findsOneWidget);
         expect(find.textContaining('Стоимость'), findsNothing);
-        expect(key('stock-opening'), findsNothing);
-        expect(key('stock-adjust'), findsNothing);
+        expect(key('stock-more'), findsNothing);
         expect(key('stock-tab-movements'), findsOneWidget);
         await tapKey(tester, 'stock-tab-movements');
         await settle(tester);
@@ -174,6 +175,8 @@ void main() {
   group('opening stock', () {
     Future<void> openForm(WidgetTester tester, RealRig rig) async {
       await openStock(tester, rig);
+      await tapKey(tester, 'stock-more');
+      await settle(tester, ms: 300);
       await tapKey(tester, 'stock-opening');
       await settle(tester);
     }
@@ -305,6 +308,8 @@ void main() {
   group('adjustments', () {
     Future<void> openForm(WidgetTester tester, RealRig rig) async {
       await openStock(tester, rig);
+      await tapKey(tester, 'stock-more');
+      await settle(tester, ms: 300);
       await tapKey(tester, 'stock-adjust');
       await settle(tester);
     }

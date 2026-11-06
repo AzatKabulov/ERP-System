@@ -49,6 +49,9 @@ class FakeOffice {
   int claimsOpened = 0;
   int claimsClosed = 0;
 
+  /// The register of goods sold with a warranty, as the server would answer it (a test fills it).
+  final List<Map<String, dynamic>> register = [];
+
   // ---- CSV ------------------------------------------------------------------------
   int importsApplied = 0;
   int importLimit = 2000;
@@ -379,6 +382,46 @@ class FakeOffice {
         e['void_reason'] = '${body['reason']}'.trim();
         return server.jsonResponse(200, presentExpense(e));
       }
+    }
+
+    // ---- the register of goods sold with a warranty ----
+    if (rest == 'warranty-register/' && m == 'GET') {
+      bool takes(Map<String, dynamic> r) {
+        final status = q['status'];
+        final ok =
+            status == null ||
+            r['status'] == status ||
+            (status == 'active' && r['status'] == 'soon');
+        final query = (q['q'] ?? '').toLowerCase();
+        return ok &&
+            (query.isEmpty ||
+                '${r['name']} ${r['customer_name']} ${r['sku']}'
+                    .toLowerCase()
+                    .contains(query));
+      }
+
+      final all = [
+        for (final r in register)
+          if (takes(r)) r,
+      ];
+      final offset = int.tryParse(q['offset'] ?? '') ?? 0;
+      final limit = int.tryParse(q['limit'] ?? '') ?? 30;
+      int count(bool Function(Map<String, dynamic>) test) =>
+          register.where(test).length;
+      return server.jsonResponse(200, {
+        'results': all.skip(offset).take(limit).toList(),
+        'has_more': all.length > offset + limit,
+        'offset': offset,
+        if (offset == 0)
+          'counts': {
+            'active': count(
+              (r) => r['status'] == 'active' || r['status'] == 'soon',
+            ),
+            'soon': count((r) => r['status'] == 'soon'),
+            'expired': count((r) => r['status'] == 'expired'),
+            'returned': count((r) => r['status'] == 'returned'),
+          },
+      });
     }
 
     // ---- warranty claims ----

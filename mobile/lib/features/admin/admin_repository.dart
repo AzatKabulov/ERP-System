@@ -125,6 +125,7 @@ class AdminRepository {
     String? documentLanguage,
     String? address,
     String? phone,
+    String? timezone,
   }) async => BusinessInfo.fromJson(
     (await api.patch(
       '$_base/',
@@ -134,6 +135,7 @@ class AdminRepository {
         'document_language': ?documentLanguage,
         'address': ?address,
         'phone': ?phone,
+        'timezone': ?timezone,
       },
     )).map,
   );

@@ -10,6 +10,11 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import 'password_reset_screen.dart';
 
+/// A build made with `--dart-define=ROLE_PICKER=true` signs in by choosing a role and then typing
+/// that account's password (the usernames are the role names). Plain password sign-in stays one
+/// tap away; the server's rules do not change.
+bool rolePicker = const bool.fromEnvironment('ROLE_PICKER');
+
 /// The first screen of a real (non-demo) build. A language switch is offered here
 /// because it applies before anyone has signed in.
 class SignInScreen extends StatefulWidget {
@@ -36,7 +41,9 @@ class _SignInScreenState extends State<SignInScreen> {
   List<String> _testRoles = const [];
   int _probeId = 0;
   bool _usePassword = false;
-  bool get _roleMode => _testRoles.isNotEmpty && !_usePassword;
+  static const _allRoles = ['owner', 'manager', 'sales', 'warehouse'];
+  bool get _hasRoleChoice => _testRoles.isNotEmpty || rolePicker;
+  bool get _roleMode => _hasRoleChoice && !_usePassword;
   void _serverChanged() {
     setState(() {
       _error = null;
@@ -103,7 +110,7 @@ class _SignInScreenState extends State<SignInScreen> {
           builder: (context) => SimpleDialog(
             title: Text(l.testLoginChooseRole),
             children: [
-              for (final role in _testRoles)
+              for (final role in _testRoles.isNotEmpty ? _testRoles : _allRoles)
                 SimpleDialogOption(
                   key: ValueKey('test-login-$role'),
                   onPressed: () => Navigator.of(context).pop(role),
@@ -125,7 +132,14 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         );
         if (mounted && role != null) {
-          await widget.session.signInAsTestRole(role);
+          if (_testRoles.isNotEmpty) {
+            await widget.session.signInAsTestRole(role);
+          } else {
+            final password = await _askPassword(role);
+            if (mounted && password != null) {
+              await widget.session.signIn(role, password);
+            }
+          }
         }
       } on ApiException catch (e) {
         if (mounted) setState(() => _error = e);
@@ -154,6 +168,43 @@ class _SignInScreenState extends State<SignInScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<String?> _askPassword(String role) {
+    final l = strings(context);
+    final controller = TextEditingController();
+    final name = switch (role) {
+      'owner' => l.roleOwner,
+      'manager' => l.roleManager,
+      'sales' => l.roleSales,
+      _ => l.roleWarehouse,
+    };
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l.roleLoginPasswordTitle(name)),
+        content: TextField(
+          key: const ValueKey('role-login-password'),
+          controller: controller,
+          autofocus: true,
+          obscureText: true,
+          autofillHints: const [AutofillHints.password],
+          decoration: InputDecoration(labelText: l.password),
+          onSubmitted: (value) => Navigator.of(context).pop(value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            key: const ValueKey('role-login-submit'),
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: Text(l.signInAction),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _languageSwitch({bool expand = false}) => AppSegmented<String>(
@@ -276,7 +327,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 child: Text(l.forgotPassword),
               ),
             ),
-          if (_testRoles.isNotEmpty)
+          if (_hasRoleChoice)
             TextButton(
               key: const ValueKey('test-login-toggle'),
               onPressed: _busy
@@ -286,7 +337,11 @@ class _SignInScreenState extends State<SignInScreen> {
                       _error = null;
                     }),
               child: Text(
-                _roleMode ? l.testLoginUsePassword : l.testLoginUseRole,
+                _roleMode
+                    ? l.testLoginUsePassword
+                    : _testRoles.isNotEmpty
+                    ? l.testLoginUseRole
+                    : l.roleLoginUseRole,
               ),
             ),
           const SizedBox(height: 10),
