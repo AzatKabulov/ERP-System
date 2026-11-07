@@ -26,3 +26,15 @@ void syncBrowserChrome({required bool dark}) {
     return (top: 0, bottom: 0);
   }
 }
+
+@JS('erpFullScreen')
+external bool? get _fullScreen;
+
+/// True only in the full-screen test copy of the web app (it sets `window.erpFullScreen`).
+bool fullScreenMode() {
+  try {
+    return _fullScreen ?? false;
+  } on Object {
+    return false;
+  }
+}

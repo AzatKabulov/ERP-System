@@ -35,8 +35,15 @@
       d.remove();
       return v;
     };
-    window.erpSafeTop = function () { return erpProbe('top'); };
-    window.erpSafeBottom = function () { return erpProbe('bottom'); };
+    var erpSafe = { top: 0, bottom: 0 };
+    var erpMeasure = function () { erpSafe.top = erpProbe('top'); erpSafe.bottom = erpProbe('bottom'); };
+    window.addEventListener('resize', erpMeasure);
+    window.addEventListener('orientationchange', erpMeasure);
+    document.addEventListener('DOMContentLoaded', erpMeasure);
+    window.erpSafeTop = function () { return erpSafe.top; };
+    window.erpSafeBottom = function () { return erpSafe.bottom; };
+    /* The full-screen test copy (/fs/) sets this to true; the normal app never does. */
+    window.erpFullScreen = false;
     window.erpSetScheme = function (dark) {
       var color = dark ? '#090C16' : '#EEF1F8';
       var set = function (name, value) {

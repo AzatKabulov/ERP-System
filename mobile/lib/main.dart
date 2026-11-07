@@ -203,12 +203,8 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
 
   /// The phone's own top and bottom areas (web only), added to what Flutter already knows.
   MediaQueryData _withPhoneAreas(MediaQueryData data) {
-    // Off: reading the phone's areas shifted where taps land. Kept as one place to switch it on.
-    return data;
-  }
-
-  // ignore: unused_element
-  MediaQueryData _withPhoneAreasUnused(MediaQueryData data) {
+    if (!fullScreenMode())
+      return data; // the normal app leaves the phone's areas to the browser
     final areas = safeAreaInsets();
     final padding = data.padding.copyWith(
       top: areas.top > data.padding.top ? areas.top : data.padding.top,
@@ -271,6 +267,7 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
                     ),
                   ),
                 ),
+                const _TopScrim(),
               ],
             ),
           ),
@@ -295,6 +292,37 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
               server: _server,
               pendingStore: widget.pendingStore,
             ),
+    );
+  }
+}
+
+/// Full-screen copy, light scheme: the page is drawn under the phone's clock, whose text is always
+/// white there, so the top few millimetres fade from a soft blue-grey into the page.
+class _TopScrim extends StatelessWidget {
+  const _TopScrim();
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    if (!fullScreenMode() || top <= 0 || AppColors.isDark) {
+      return const SizedBox.shrink();
+    }
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      height: top + 14,
+      child: const IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x8C3A4A86), Color(0x003A4A86)],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
