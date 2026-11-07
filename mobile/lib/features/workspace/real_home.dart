@@ -12,6 +12,7 @@ import '../../core/session/session_controller.dart';
 import '../../widgets/common.dart';
 import '../auth/password_form.dart';
 import '../auth/sign_in_screen.dart';
+import '../platform/platform_workspace.dart';
 import 'real_workspace.dart';
 import 'unsaved_work.dart';
 
@@ -136,6 +137,16 @@ class _RealHomeState extends State<RealHome> with WidgetsBindingObserver {
       case SessionStatus.signedIn:
         if (session.mustChangePassword) {
           return ChoosePasswordScreen(session: session);
+        }
+        // The platform owner signs in like anyone else and lands on their own pages.
+        if (session.isOperator) {
+          return PlatformWorkspace(
+            key: ValueKey('platform-${session.user?.id}'),
+            session: session,
+            api: widget.api,
+            languageCode: widget.languageCode,
+            onLanguageChanged: widget.onLanguageChanged,
+          );
         }
         final runner = _runner;
         if (runner == null) return const SizedBox.shrink();

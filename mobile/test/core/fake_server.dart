@@ -7,6 +7,7 @@ import 'package:http/testing.dart';
 
 import 'fake_ledger.dart';
 import 'fake_office.dart';
+import 'fake_platform.dart';
 import 'fake_reports.dart';
 
 /// A tiny in-memory stand-in for the real API, with the same idempotency rules:
@@ -24,6 +25,12 @@ class FakeServer {
 
   /// Expenses, receipt files, warranty claims and the CSV import (see fake_office.dart).
   late final FakeOffice office = FakeOffice(this);
+
+  /// The platform owner's pages (see fake_platform.dart).
+  final FakePlatform platform = FakePlatform();
+
+  /// When set, the account that signs in is an operator: after the password it must give this code.
+  String? operatorCode;
 
   /// Reports, the dashboard and the activity history (see fake_reports.dart).
   late final FakeReports reports = FakeReports(this);
@@ -413,6 +420,11 @@ class FakeServer {
       if (body['password'] != userPassword) {
         return _error(401, 'invalid_credentials');
       }
+      if (operatorCode != null) {
+        final given = '${body['otp_token'] ?? ''}';
+        if (given.isEmpty) return _error(401, 'otp_required');
+        if (given != operatorCode) return _error(401, 'invalid_otp');
+      }
       return _json(200, {
         'access': accessToken,
         'refresh': refreshToken,
@@ -491,6 +503,8 @@ class FakeServer {
       refreshToken = 'refresh-$tokenCounter';
       return _json(200, {'access': accessToken, 'refresh': refreshToken});
     }
+    final platformAnswer = platform.handle(request, path, body);
+    if (platformAnswer != null) return platformAnswer;
     if (path == '/api/v1/me/' && request.method == 'GET') {
       final memberships = me['memberships'] as List;
       if (memberships.isNotEmpty) {

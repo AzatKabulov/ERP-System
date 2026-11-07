@@ -20,7 +20,34 @@ enum AppPage {
   warranties,
   reports,
   administration,
+
+  // The platform owner's pages (see features/platform/). A shop never lists these.
+  platformOverview,
+  platformClients,
+  platformSupport,
+  platformNotices,
 }
+
+/// What a shop's people can open, in menu order.
+const storePages = [
+  AppPage.dashboard,
+  AppPage.products,
+  AppPage.sales,
+  AppPage.inventory,
+  AppPage.expenses,
+  AppPage.warranties,
+  AppPage.reports,
+  AppPage.administration,
+];
+
+/// What the platform owner can open, in menu order (settings are the shared page).
+const platformPages = [
+  AppPage.platformOverview,
+  AppPage.platformClients,
+  AppPage.platformSupport,
+  AppPage.platformNotices,
+  AppPage.administration,
+];
 
 String pageLabel(AppLocalizations l, AppPage page) => switch (page) {
   AppPage.dashboard => l.dashboard,
@@ -31,6 +58,10 @@ String pageLabel(AppLocalizations l, AppPage page) => switch (page) {
   AppPage.warranties => l.warranties,
   AppPage.reports => l.reports,
   AppPage.administration => l.administration,
+  AppPage.platformOverview => l.pfOverview,
+  AppPage.platformClients => l.pfClients,
+  AppPage.platformSupport => l.pfSupport,
+  AppPage.platformNotices => l.pfNotices,
 };
 
 AppIconData pageIcon(AppPage page) => switch (page) {
@@ -42,6 +73,10 @@ AppIconData pageIcon(AppPage page) => switch (page) {
   AppPage.warranties => AppIcons.shield,
   AppPage.reports => AppIcons.chart,
   AppPage.administration => AppIcons.settings,
+  AppPage.platformOverview => AppIcons.overview,
+  AppPage.platformClients => AppIcons.user,
+  AppPage.platformSupport => AppIcons.chat,
+  AppPage.platformNotices => AppIcons.mail,
 };
 
 /// The four modules of the phone's bottom bar; every other module is behind its "More" tab.
@@ -78,7 +113,11 @@ class AppShell extends StatefulWidget {
     this.roleName,
     this.onSignOut,
     this.onHelp,
+    this.phoneTabs = _phoneTabs,
   });
+
+  /// The destinations on a phone's bottom bar; the rest are behind its "More" tab.
+  final List<AppPage> phoneTabs;
 
   /// Destinations to offer, in order.
   final List<AppPage> pages;
@@ -441,7 +480,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   /// The tab that stands for every page not on the bar.
-  bool get _moreSelected => !_phoneTabs.contains(widget.page);
+  bool get _moreSelected => !widget.phoneTabs.contains(widget.page);
 
   /// The pages that are not on the bar, and help and sign-out, as one list: what used to hide
   /// behind a menu button now sits behind a labelled tab people can see.
@@ -449,7 +488,7 @@ class _AppShellState extends State<AppShell> {
     final l = strings(context);
     final others = [
       for (final p in widget.pages)
-        if (!_phoneTabs.contains(p)) p,
+        if (!widget.phoneTabs.contains(p)) p,
     ];
     return showModalBottomSheet<void>(
       context: context,
@@ -525,10 +564,10 @@ class _AppShellState extends State<AppShell> {
   /// The floating tab bar of a phone.
   Widget _bottomBar(AppLocalizations l) {
     final tabs = [
-      for (final p in _phoneTabs)
+      for (final p in widget.phoneTabs)
         if (widget.pages.contains(p)) p,
     ];
-    final hasMore = widget.pages.any((p) => !_phoneTabs.contains(p));
+    final hasMore = widget.pages.any((p) => !widget.phoneTabs.contains(p));
 
     Widget tab({
       required Key key,

@@ -54,6 +54,9 @@ class SessionController extends ChangeNotifier {
 
   /// The password someone else chose must be replaced before anything else opens.
   bool get mustChangePassword => _user?.mustChangePassword ?? false;
+
+  /// A platform operator works on the platform page, in no shop.
+  bool get isOperator => _user?.isOperator ?? false;
   String? get enteredPassword => _enteredPassword;
 
   /// Where the shop stands with its subscription (null: nothing to say).
@@ -132,8 +135,12 @@ class SessionController extends ChangeNotifier {
   }
 
   /// Throws [ApiException] (wrong password, throttled, unreachable...).
-  Future<void> signIn(String username, String password) async {
-    await api.login(username.trim(), password);
+  Future<void> signIn(
+    String username,
+    String password, {
+    String? otpToken,
+  }) async {
+    await api.login(username.trim(), password, otpToken: otpToken);
     _expired = false;
     _unreachable = false;
     _enteredPassword = password;

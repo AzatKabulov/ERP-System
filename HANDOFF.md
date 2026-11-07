@@ -4,6 +4,8 @@ Last updated 2026-11-07. Read [AGENTS.md](AGENTS.md) first, then this file, then
 
 ## State on 2026-11-07: subscriptions built, premium redesign deployed
 
+**Owner page inside the app (2026-11-07, replaces the separate console login):** the platform owner signs in on the ordinary screen; the server then asks for the authenticator code (operators only) and the app opens the owner pages: overview, clients (search, filters, new client), the client page with every button (add package, custom days, correct date, suspend/resume, free access, reset owner password; each is reviewed before it is done), notes, history, support desk, notices to all shops, packages and prices, settings. API: `/api/v1/platform/` (`apps/billing/platform_api.py`), 403 for any store account. The old `/console/` still exists as a fallback and can be switched off later.
+
 **Branches (both pushed to GitHub on 2026-11-07; `main` is untouched):** `feature/subscriptions-and-usability` holds the subscription work in logical commits (backend, deploy files, app, branding, docs). `feature/premium-design` is cut from it and holds the redesign; to go back to the old look, check out the first branch (or revert the design commits one by one, they are logical steps).
 
 **Built and tested**

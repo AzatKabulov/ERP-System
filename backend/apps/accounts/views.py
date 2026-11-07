@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -40,6 +41,24 @@ class PublicView(APIView):
     permission_classes = [AllowAny]
 
 
+def check_operator_code(user: User, token: str) -> None:
+    """An operator may act on every client, so the password alone is not enough: the code from
+    their authenticator app is needed too (the same device the old console used). Store staff are
+    never asked. An operator without an authenticator cannot sign in at all."""
+    device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
+    if device is None:
+        raise ApiError("invalid_credentials", "Wrong username or password", status_code=401)
+    token = (token or "").strip().replace(" ", "")
+    if not token:
+        raise ApiError("otp_required", "The authenticator code is needed", status_code=401)
+    allowed, _ = device.verify_is_allowed()
+    if not allowed:  # the library's own lock-out after repeated wrong codes
+        raise ApiError("otp_locked", "Too many wrong codes, wait a little", status_code=429)
+    if not device.verify_token(token):
+        logger.info("Wrong authenticator code")
+        raise ApiError("invalid_otp", "The authenticator code is wrong", status_code=401)
+
+
 class LoginView(PublicView):
     throttle_classes = [LoginIdentityThrottle, LoginIPThrottle]
 
@@ -54,6 +73,8 @@ class LoginView(PublicView):
         if user is None:  # unknown user, wrong password and inactive account look the same
             logger.info("Failed sign-in attempt")
             raise ApiError("invalid_credentials", "Wrong username or password", status_code=401)
+        if user.is_staff:
+            check_operator_code(user, data.validated_data["otp_token"])
         update_last_login(None, user)
         audit.record("auth.login", actor=user)
         return Response({**services.issue_tokens(user), "user": UserSerializer(user).data})

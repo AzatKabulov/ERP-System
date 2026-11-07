@@ -1448,5 +1448,280 @@
   "appearanceHint": "Ýagty, garaňky ýa-da telefonda sazlanyşy ýaly.",
   "themeAuto": "Telefondaky ýaly",
   "themeLight": "Ýagty",
-  "themeDark": "Garaňky"
+  "themeDark": "Garaňky",
+  "pfOverview": "Umumy görnüş",
+  "pfClients": "Müşderiler",
+  "pfSupport": "Goldaw",
+  "pfNotices": "Habarlar",
+  "pfPlatform": "Platforma",
+  "pfOwnerRole": "Platformanyň eýesi",
+  "pfStateActive": "Işjeň",
+  "pfStateExpiring": "Tiz gutarýar",
+  "pfStateGrace": "Goşmaça günler",
+  "pfStateReadOnly": "Diňe okamak",
+  "pfStateSuspended": "Togtadylan",
+  "pfStateFree": "Mugt",
+  "pfStateTrial": "Synag möhleti",
+  "pfFilterAll": "Hemmesi",
+  "pfFilterAttention": "Üns",
+  "pfTotalClients": "Jemi müşderi",
+  "pfCountActive": "Işleýär",
+  "pfCountTrial": "Synagda",
+  "pfCountExpiring": "Tiz gutarýar",
+  "pfCountGrace": "Goşmaça günler",
+  "pfCountReadOnly": "Diňe okamak",
+  "pfCountSuspended": "Togtadylan",
+  "pfCountFree": "Mugt",
+  "pfIncomeMonth": "Aýlyk töleg",
+  "pfNoIncome": "Bu aýda entek töleg bolmady",
+  "pfNewClients30": "30 günde täzeler",
+  "pfNeedsAttention": "Üns talap edýär",
+  "pfNothingUrgent": "Gyssagly zat ýok: ähli müşderi tertipde.",
+  "pfRecentPayments": "Soňky tölegler",
+  "pfNoPayments": "Entek töleg ýok.",
+  "pfSearchClients": "Gözleg: ady, at, telefon",
+  "pfNewClient": "Täze müşderi",
+  "pfNoClients": "Müşderi tapylmady",
+  "pfNoClientsHint": "Süzgüji üýtgediň ýa-da täze müşderi goşuň.",
+  "pfEndsOn": "{date} çenli",
+  "@pfEndsOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pfDaysLeft": "{count} gün galdy",
+  "@pfDaysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfDaysOver": "{count} gün gecikdi",
+  "@pfDaysOver": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfNoEnd": "möhletsiz",
+  "pfSubscription": "Abuna",
+  "pfPlan": "Paket",
+  "pfPaidUntil": "Çenli tölenen",
+  "pfGraceUntil": "Goşmaça günler çenli",
+  "pfLastPayment": "Soňky töleg",
+  "pfLastSignIn": "Soňky giriş",
+  "pfSales30": "30 günde satuw",
+  "pfNever": "hiç haçan",
+  "pfNoPlan": "Paketsiz",
+  "pfActions": "Hereketler",
+  "pfContact": "Habarlaşmak",
+  "pfContactName": "Ady",
+  "pfContactPhone": "Telefon",
+  "pfContactEmail": "E-poçta",
+  "pfContactSaved": "Maglumatlar saklandy",
+  "pfHistory": "Taryh",
+  "pfNoHistory": "Entek taryh ýok",
+  "pfNotes": "Bellikler",
+  "pfNoteHint": "Mysal: jaň etdim, anna töleýär",
+  "pfAddNote": "Bellik goşmak",
+  "pfPeople": "Dükanyň işgärleri",
+  "pfTickets": "Ýüzlenmeler",
+  "pfEventCreated": "Müşderi döredildi",
+  "pfEventTrial": "Synag möhleti",
+  "pfEventRenew": "Paket",
+  "pfEventExtend": "Goşmaça günler",
+  "pfEventCorrection": "Gutarýan sene düzedildi",
+  "pfEventSuspend": "Togtadyldy",
+  "pfEventResume": "Dowam etdirildi",
+  "pfEventFreeOn": "Mugt giriş açyldy",
+  "pfEventFreeOff": "Mugt giriş ýapyldy",
+  "pfEventPasswordReset": "Eýesiniň paroly täzelendi",
+  "pfActRenew": "Paket goşmak",
+  "pfActExtend": "Gün goşmak",
+  "pfActCorrect": "Gutarýan seneni düzetmek",
+  "pfActSuspend": "Togtatmak",
+  "pfActResume": "Dowam etdirmek",
+  "pfActFreeOn": "Mugt giriş",
+  "pfActFreeOff": "Mugt girişi tamamlamak",
+  "pfActResetPassword": "Eýesiniň parolyny täzelemek",
+  "pfFieldPackage": "Paket",
+  "pfFieldAmount": "Mukdar",
+  "pfFieldCurrency": "Walýuta",
+  "pfFieldMethod": "Töleg usuly",
+  "pfFieldReference": "Kwitansiýa ýa-da bellik",
+  "pfFieldNote": "Sebäp (hökman)",
+  "pfFieldNoteOptional": "Bellik (hökman däl)",
+  "pfFieldDays": "Näçe gün",
+  "pfFieldNewEnd": "Täze gutarýan sene",
+  "pfMethodCash": "Nagt",
+  "pfMethodCard": "Kart",
+  "pfMethodTransfer": "Geçirim",
+  "pfMethodOther": "Başga",
+  "pfNoMethod": "Görkezilmedi",
+  "pfAmountHintPackage": "Boş: paketiň bahasy",
+  "pfReviewTitle": "Etmezden öň barlaň",
+  "pfReviewRenew": "«{store}» dükanyna «{plan}» paketini goşmak.",
+  "@pfReviewRenew": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewExtend": "«{store}» dükanyna {days} gün goşmak.",
+  "@pfReviewExtend": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewCorrect": "«{store}» üçin gutarýan seneni {date} edip bellemek. Bu ýalňyşlygy düzetmek üçin.",
+  "@pfReviewCorrect": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewDates": "Häzir {before} çenli → {after} çenli bolar.",
+  "@pfReviewDates": {
+    "placeholders": {
+      "before": {
+        "type": "String"
+      },
+      "after": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewSuspend": "«{store}» derrew öçüriler: hiç kim hiç zat açyp bilmez. Tölenen wagt saklanýar.",
+  "@pfReviewSuspend": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewResume": "«{store}» adaty abuna ýagdaýyna dolanar.",
+  "@pfReviewResume": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewFreeOn": "«{store}» näçe töleg bolsa-da gutarmaz.",
+  "@pfReviewFreeOn": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewFreeOff": "«{store}» tölenen wagta dolanar.",
+  "@pfReviewFreeOff": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewReset": "«{store}» eýesi üçin täze wagtlaýyn parol döredilýär. Onuň ähli sessiýalary ýapylýar. Paroly bir gezek görersiňiz.",
+  "@pfReviewReset": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfPaymentRecorded": "Töleg ýazylar: {amount} {currency}.",
+  "@pfPaymentRecorded": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "pfNoPaymentRecorded": "Töleg ýazylmaýar.",
+  "pfDoIt": "Ýerine ýetirmek",
+  "pfBack": "Yza",
+  "pfDone": "Taýýar",
+  "pfSecretTitle": "Täze wagtlaýyn parol",
+  "pfSecretHint": "Ol bir gezek görkezilýär. Eýesine beriň: ilkinji girişde özüni saýlar.",
+  "pfCopy": "Göçürmek",
+  "pfCopied": "Göçürildi",
+  "pfNewClientTitle": "Täze müşderi",
+  "pfStoreName": "Dükanyň ady",
+  "pfOwnerName": "Eýesiniň ady",
+  "pfOwnerLogin": "Eýesiniň logini",
+  "pfOwnerLoginHint": "Boş: login atdan döredilýär",
+  "pfStoreLanguage": "Dükanyň dili",
+  "pfStartWith": "Başlamak",
+  "pfFreeTrial": "Mugt synag möhleti",
+  "pfCreateClient": "Müşderi döretmek",
+  "pfClientCreated": "Müşderi döredildi",
+  "pfClientCreatedHint": "Logini we wagtlaýyn paroly eýesine beriň. Parol bir gezek görkezilýär; ilkinji girişde eýesi özüni saýlar.",
+  "pfLoginLabel": "Login",
+  "pfTempPasswordLabel": "Wagtlaýyn parol",
+  "pfOpenClient": "Müşderini açmak",
+  "pfNoTickets": "Ýüzlenme ýok",
+  "pfTicketOpen": "Jogap garaşýar",
+  "pfTicketAnswered": "Jogap berildi",
+  "pfTicketClosed": "Ýapyldy",
+  "pfReplyHint": "Siziň jogabyňyz",
+  "pfSendReply": "Jogap bermek",
+  "pfReplyClose": "Jogap berip ýapmak",
+  "pfCloseTicket": "Ýüzlenmäni ýapmak",
+  "pfFromStore": "Dükan",
+  "pfFromYou": "Siz",
+  "pfAskedBy": "Ýazan: {name}",
+  "@pfAskedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pfNoticesIntro": "Programmada ähli dükanlaryň görýän gysga habary.",
+  "pfNoNotices": "Habar ýok",
+  "pfNewNotice": "Täze habar",
+  "pfMessageRu": "Rusça tekst",
+  "pfMessageTk": "Türkmençe tekst (hökman däl)",
+  "pfShownFrom": "Görkezmek: başlangyç",
+  "pfShownUntil": "Görkezmek: soňy",
+  "pfShownSwitch": "Görkezilýär",
+  "pfPackages": "Paketler we bahalar",
+  "pfPackagesHint": "Paket goşulanda baha özi goýulýar.",
+  "pfPackagePrice": "Baha",
+  "pfPackageOnSale": "Satylýar",
+  "pfPackageMonths": "{count} aý",
+  "@pfPackageMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfPackageCustom": "Öz günleriňiz",
+  "signInCodeLabel": "Autentifikator programmasyndaky kod",
+  "signInCodeHint": "Telefonyňyzdaky programmadan 6 sany sanyny giriziň.",
+  "errorInvalidOtp": "Kod nädogry. Telefonyňyzyň wagty dogrudygyny barlaň we täze kod giriziň.",
+  "errorOtpLocked": "Nädogry kod köp boldy. Biraz garaşyp, täzeden synanyşyň."
 }

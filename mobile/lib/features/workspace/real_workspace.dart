@@ -85,11 +85,15 @@ class _RealWorkspaceState extends State<RealWorkspace> {
     AppPage.expenses => session.can('expense.view'),
     AppPage.warranties => session.can('warranty.view'),
     AppPage.reports => session.can('report.view'),
+    AppPage.platformOverview ||
+    AppPage.platformClients ||
+    AppPage.platformSupport ||
+    AppPage.platformNotices => false,
     _ => true,
   };
 
   List<AppPage> get _pages => [
-    for (final p in AppPage.values)
+    for (final p in storePages)
       if (_allowed(p)) p,
   ];
 
@@ -204,6 +208,10 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         session: session,
         repository: ReportsRepository(widget.api, membership.businessId),
       ),
+      AppPage.platformOverview ||
+      AppPage.platformClients ||
+      AppPage.platformSupport ||
+      AppPage.platformNotices => const SizedBox.shrink(),
       AppPage.administration => RealAdministrationScreen(
         key: ValueKey('admin-${membership.id}-$_reloadCounter'),
         session: session,

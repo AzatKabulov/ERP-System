@@ -2007,5 +2007,280 @@
   "appearanceHint": "Светлая, тёмная или как настроено на телефоне.",
   "themeAuto": "Как на телефоне",
   "themeLight": "Светлая",
-  "themeDark": "Тёмная"
+  "themeDark": "Тёмная",
+  "pfOverview": "Обзор",
+  "pfClients": "Клиенты",
+  "pfSupport": "Поддержка",
+  "pfNotices": "Объявления",
+  "pfPlatform": "Платформа",
+  "pfOwnerRole": "Владелец платформы",
+  "pfStateActive": "Активен",
+  "pfStateExpiring": "Скоро конец",
+  "pfStateGrace": "Льготные дни",
+  "pfStateReadOnly": "Только чтение",
+  "pfStateSuspended": "Приостановлен",
+  "pfStateFree": "Бесплатно",
+  "pfStateTrial": "Пробный период",
+  "pfFilterAll": "Все",
+  "pfFilterAttention": "Внимание",
+  "pfTotalClients": "Всего клиентов",
+  "pfCountActive": "Работают",
+  "pfCountTrial": "На пробном",
+  "pfCountExpiring": "Скоро конец",
+  "pfCountGrace": "Льготные дни",
+  "pfCountReadOnly": "Только чтение",
+  "pfCountSuspended": "Приостановлены",
+  "pfCountFree": "Бесплатные",
+  "pfIncomeMonth": "Оплаты за месяц",
+  "pfNoIncome": "В этом месяце оплат ещё не было",
+  "pfNewClients30": "Новых за 30 дней",
+  "pfNeedsAttention": "Требуют внимания",
+  "pfNothingUrgent": "Срочного нет: все клиенты в порядке.",
+  "pfRecentPayments": "Последние оплаты",
+  "pfNoPayments": "Оплат пока нет.",
+  "pfSearchClients": "Поиск: название, имя, телефон",
+  "pfNewClient": "Новый клиент",
+  "pfNoClients": "Клиентов не найдено",
+  "pfNoClientsHint": "Измените фильтр или добавьте нового клиента.",
+  "pfEndsOn": "до {date}",
+  "@pfEndsOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pfDaysLeft": "осталось {count} дн.",
+  "@pfDaysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfDaysOver": "просрочено {count} дн.",
+  "@pfDaysOver": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfNoEnd": "без срока",
+  "pfSubscription": "Подписка",
+  "pfPlan": "Пакет",
+  "pfPaidUntil": "Оплачено до",
+  "pfGraceUntil": "Льготные дни до",
+  "pfLastPayment": "Последняя оплата",
+  "pfLastSignIn": "Последний вход",
+  "pfSales30": "Продаж за 30 дней",
+  "pfNever": "никогда",
+  "pfNoPlan": "Без пакета",
+  "pfActions": "Действия",
+  "pfContact": "Контакты",
+  "pfContactName": "Имя",
+  "pfContactPhone": "Телефон",
+  "pfContactEmail": "Эл. почта",
+  "pfContactSaved": "Контакты сохранены",
+  "pfHistory": "История",
+  "pfNoHistory": "Истории пока нет",
+  "pfNotes": "Заметки",
+  "pfNoteHint": "Например: позвонил, оплатит в пятницу",
+  "pfAddNote": "Добавить заметку",
+  "pfPeople": "Сотрудники магазина",
+  "pfTickets": "Обращения",
+  "pfEventCreated": "Клиент создан",
+  "pfEventTrial": "Пробный период",
+  "pfEventRenew": "Пакет",
+  "pfEventExtend": "Дополнительные дни",
+  "pfEventCorrection": "Исправлена дата окончания",
+  "pfEventSuspend": "Приостановлен",
+  "pfEventResume": "Возобновлён",
+  "pfEventFreeOn": "Бесплатный доступ включён",
+  "pfEventFreeOff": "Бесплатный доступ выключен",
+  "pfEventPasswordReset": "Пароль владельца сброшен",
+  "pfActRenew": "Добавить пакет",
+  "pfActExtend": "Добавить дни",
+  "pfActCorrect": "Исправить дату окончания",
+  "pfActSuspend": "Приостановить",
+  "pfActResume": "Возобновить",
+  "pfActFreeOn": "Бесплатный доступ",
+  "pfActFreeOff": "Закончить бесплатный доступ",
+  "pfActResetPassword": "Сбросить пароль владельца",
+  "pfFieldPackage": "Пакет",
+  "pfFieldAmount": "Сумма",
+  "pfFieldCurrency": "Валюта",
+  "pfFieldMethod": "Способ оплаты",
+  "pfFieldReference": "Квитанция или пометка",
+  "pfFieldNote": "Причина (обязательно)",
+  "pfFieldNoteOptional": "Заметка (необязательно)",
+  "pfFieldDays": "Сколько дней",
+  "pfFieldNewEnd": "Новая дата окончания",
+  "pfMethodCash": "Наличные",
+  "pfMethodCard": "Карта",
+  "pfMethodTransfer": "Перевод",
+  "pfMethodOther": "Другое",
+  "pfNoMethod": "Не указан",
+  "pfAmountHintPackage": "Пусто: цена пакета",
+  "pfReviewTitle": "Проверьте перед выполнением",
+  "pfReviewRenew": "Добавить пакет «{plan}» магазину «{store}».",
+  "@pfReviewRenew": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewExtend": "Добавить {days} дн. магазину «{store}».",
+  "@pfReviewExtend": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewCorrect": "Установить дату окончания для «{store}»: {date}. Это для исправления ошибки.",
+  "@pfReviewCorrect": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewDates": "Сейчас до {before} → будет до {after}.",
+  "@pfReviewDates": {
+    "placeholders": {
+      "before": {
+        "type": "String"
+      },
+      "after": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewSuspend": "«{store}» будет отключён сразу: никто не сможет ничего открыть. Оплаченное время сохраняется.",
+  "@pfReviewSuspend": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewResume": "«{store}» вернётся к обычному состоянию подписки.",
+  "@pfReviewResume": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewFreeOn": "«{store}» не будет заканчиваться, что бы ни было оплачено.",
+  "@pfReviewFreeOn": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewFreeOff": "«{store}» вернётся к оплаченному времени.",
+  "@pfReviewFreeOff": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfReviewReset": "Для владельца «{store}» будет создан новый временный пароль. Все его сеансы завершатся. Вы увидите пароль один раз.",
+  "@pfReviewReset": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "pfPaymentRecorded": "Будет записана оплата: {amount} {currency}.",
+  "@pfPaymentRecorded": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "pfNoPaymentRecorded": "Оплата не записывается.",
+  "pfDoIt": "Выполнить",
+  "pfBack": "Назад",
+  "pfDone": "Готово",
+  "pfSecretTitle": "Новый временный пароль",
+  "pfSecretHint": "Он показан один раз. Передайте его владельцу: при первом входе он выберет свой.",
+  "pfCopy": "Скопировать",
+  "pfCopied": "Скопировано",
+  "pfNewClientTitle": "Новый клиент",
+  "pfStoreName": "Название магазина",
+  "pfOwnerName": "Имя владельца",
+  "pfOwnerLogin": "Логин владельца",
+  "pfOwnerLoginHint": "Пусто: логин будет создан из названия",
+  "pfStoreLanguage": "Язык магазина",
+  "pfStartWith": "Начать с",
+  "pfFreeTrial": "Бесплатный пробный период",
+  "pfCreateClient": "Создать клиента",
+  "pfClientCreated": "Клиент создан",
+  "pfClientCreatedHint": "Передайте логин и временный пароль владельцу. Пароль показан один раз; при первом входе владелец выберет свой.",
+  "pfLoginLabel": "Логин",
+  "pfTempPasswordLabel": "Временный пароль",
+  "pfOpenClient": "Открыть клиента",
+  "pfNoTickets": "Обращений нет",
+  "pfTicketOpen": "Ждёт ответа",
+  "pfTicketAnswered": "Отвечено",
+  "pfTicketClosed": "Закрыто",
+  "pfReplyHint": "Ваш ответ",
+  "pfSendReply": "Ответить",
+  "pfReplyClose": "Ответить и закрыть",
+  "pfCloseTicket": "Закрыть обращение",
+  "pfFromStore": "Магазин",
+  "pfFromYou": "Вы",
+  "pfAskedBy": "Написал: {name}",
+  "@pfAskedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pfNoticesIntro": "Короткое сообщение, которое видят все магазины в приложении.",
+  "pfNoNotices": "Объявлений нет",
+  "pfNewNotice": "Новое объявление",
+  "pfMessageRu": "Текст по-русски",
+  "pfMessageTk": "Текст по-туркменски (необязательно)",
+  "pfShownFrom": "Показывать с",
+  "pfShownUntil": "Показывать до",
+  "pfShownSwitch": "Показывается",
+  "pfPackages": "Пакеты и цены",
+  "pfPackagesHint": "Цена подставляется при добавлении пакета.",
+  "pfPackagePrice": "Цена",
+  "pfPackageOnSale": "Продаётся",
+  "pfPackageMonths": "{count} мес.",
+  "@pfPackageMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfPackageCustom": "Свои дни",
+  "signInCodeLabel": "Код из приложения-аутентификатора",
+  "signInCodeHint": "Введите 6 цифр из приложения на вашем телефоне.",
+  "errorInvalidOtp": "Код неверный. Проверьте, что время на телефоне точное, и введите новый код.",
+  "errorOtpLocked": "Слишком много неверных кодов. Подождите немного и попробуйте снова."
 }

@@ -84,7 +84,7 @@ class _WorkspaceState extends State<Workspace> {
     builder: (context, _) {
       final l = strings(context);
       return AppShell(
-        pages: AppPage.values,
+        pages: storePages,
         page: _page,
         onNavigate: _navigate,
         body: _content(),

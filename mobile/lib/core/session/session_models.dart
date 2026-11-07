@@ -9,6 +9,7 @@ class UserProfile {
     required this.email,
     required this.preferredLanguage,
     this.mustChangePassword = false,
+    this.isOperator = false,
   });
 
   final String id;
@@ -21,6 +22,9 @@ class UserProfile {
   /// by the person's own before anything else opens.
   final bool mustChangePassword;
 
+  /// One of the people who run the platform (not a shop's staff): their page lists every client.
+  final bool isOperator;
+
   String get displayName => fullName.isEmpty ? username : fullName;
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
@@ -30,6 +34,7 @@ class UserProfile {
     email: (json['email'] as String?) ?? '',
     preferredLanguage: (json['preferred_language'] as String?) ?? 'ru',
     mustChangePassword: (json['must_change_password'] as bool?) ?? false,
+    isOperator: (json['is_platform_operator'] as bool?) ?? false,
   );
 }
 

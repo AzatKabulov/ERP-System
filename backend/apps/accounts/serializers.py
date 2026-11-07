@@ -15,13 +15,26 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "preferred_language",
             "must_change_password",
+            "is_platform_operator",
         ]
-        read_only_fields = ["id", "username", "email", "must_change_password"]
+        read_only_fields = [
+            "id",
+            "username",
+            "email",
+            "must_change_password",
+            "is_platform_operator",
+        ]
+
+    # One of the people who run this system (the platform owner), not a store's staff. Their
+    # page in the app lists every client; the server decides again on every request.
+    is_platform_operator = serializers.BooleanField(source="is_staff", read_only=True)
 
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     password = serializers.CharField(max_length=256, trim_whitespace=False)
+    # Only an operator is asked for it (the code from their authenticator app).
+    otp_token = serializers.CharField(max_length=16, required=False, allow_blank=True, default="")
 
 
 class RefreshSerializer(serializers.Serializer):

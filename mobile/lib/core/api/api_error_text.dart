@@ -7,6 +7,10 @@ String apiErrorText(AppLocalizations l, ApiException e) {
   switch (e.code) {
     case 'invalid_credentials':
       return l.errorInvalidCredentials;
+    case 'invalid_otp':
+      return l.errorInvalidOtp;
+    case 'otp_locked':
+      return l.errorOtpLocked;
     case 'session_storage_unavailable':
       return l.errorSessionStorage;
     case 'rate_limited':
