@@ -64,7 +64,7 @@ class _SignInScreenState extends State<SignInScreen> {
         authenticated: false,
       )).map;
       if (!mounted || id != _probeId) return;
-      const allowed = ['owner', 'manager', 'sales', 'warehouse'];
+      const allowed = ['owner', 'manager', 'sales', 'warehouse', 'platform'];
       setState(
         () => _testRoles = [
           for (final role in allowed)
@@ -132,6 +132,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       'owner' => l.roleOwner,
                       'manager' => l.roleManager,
                       'sales' => l.roleSales,
+                      'platform' => l.pfOwnerRole,
                       _ => l.roleWarehouse,
                     }),
                   ),

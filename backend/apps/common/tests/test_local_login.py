@@ -125,3 +125,44 @@ class LocalLoginTests(APITestCase):
                 ).status_code,
                 404,
             )
+
+
+@override_settings(
+    ROOT_URLCONF=local_urls,
+    LOCAL_TEST_LOGIN_ENABLED=False,
+    DJANGO_ENV="production",
+    ALLOWED_HOSTS=["erp.example.test", "testserver"],
+)
+class PublicTestLoginSwitchTests(APITestCase):
+    """The testing switch (ERP_PUBLIC_TEST_LOGIN): off by default, and when on it works from the
+    internet, behind a proxy, in production mode."""
+
+    def setUp(self):
+        super().setUp()
+        business = make_business("Real Name Shop")
+        make_member(business, Role.OWNER, username="owner")
+        from apps.accounts.models import User
+
+        User.objects.create_superuser("boss", "", "operator-password-1")
+        self.call = lambda role: self.client.post(
+            "/api/v1/local-test-login/",
+            {"role": role},
+            format="json",
+            HTTP_HOST="erp.example.test",
+            HTTP_X_FORWARDED_FOR="203.0.113.9",
+        )
+
+    def test_off_by_default(self):
+        self.assertEqual(self.call("owner").status_code, 404)
+        self.assertEqual(self.call("platform").status_code, 404)
+
+    @override_settings(PUBLIC_TEST_LOGIN=True)
+    def test_on_it_signs_in_a_shop_role_and_the_platform_owner_without_a_password(self):
+        self.assertEqual(self.call("owner").status_code, 200)
+        platform = self.call("platform")
+        self.assertEqual(platform.status_code, 200)
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer " + platform.json()["access"])
+        me = self.client.get("/api/v1/me/", HTTP_HOST="erp.example.test").json()
+        self.assertTrue(me["user"]["is_platform_operator"])
+        health = self.client.get("/api/v1/health/", HTTP_HOST="erp.example.test").json()
+        self.assertIn("platform", health["test_login_roles"])

@@ -152,6 +152,12 @@ STORAGES = {
     },
 }
 
+# TESTING ONLY. When "true", the sign-in screen offers "sign in as owner, manager, seller, keeper
+# or platform owner" with no password (apps/common/local_test_login.py). Anyone who knows the
+# address can use it. Off unless infra/.env says ERP_PUBLIC_TEST_LOGIN=true; remove it before
+# real clients.
+PUBLIC_TEST_LOGIN = env.get_bool("ERP_PUBLIC_TEST_LOGIN", False)
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["apps.accounts.authentication.ERPJWTAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],

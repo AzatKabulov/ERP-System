@@ -12,6 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts.models import User
 from apps.accounts.services import issue_tokens
 from apps.audit import services as audit
 from apps.businesses.models import Membership
@@ -19,6 +20,9 @@ from apps.common.errors import ApiError
 from apps.common.views import health
 
 ROLES = ("owner", "manager", "sales", "warehouse")
+# The platform owner (our own back office): the local operator, no password and no code. Local
+# test run only, behind the same checks as the shop roles.
+PLATFORM = "platform"
 SAMPLE_SHOP = "Sample Auto Parts (test data)"
 
 
@@ -61,6 +65,8 @@ def _direct(request):
 def _enabled(request):
     from urllib.parse import urlsplit
 
+    if getattr(settings, "PUBLIC_TEST_LOGIN", False):
+        return True  # the owner switched it on for a test server (settings.py)
     return (
         getattr(settings, "LOCAL_TEST_LOGIN_ENABLED", False)
         and settings.DJANGO_ENV == "development"
@@ -73,8 +79,9 @@ def _enabled(request):
 def _members(request):
     if not _enabled(request):
         return Membership.objects.none()
+    shop = {} if getattr(settings, "PUBLIC_TEST_LOGIN", False) else {"business__name": SAMPLE_SHOP}
     return Membership.objects.filter(
-        business__name=SAMPLE_SHOP,
+        **shop,
         business__is_active=True,
         is_active=True,
         user__is_active=True,
@@ -92,7 +99,15 @@ def local_health(request):
             for role in ROLES
             if _members(request).filter(role=role, user__username=role).exists()
         ]
+        if response.data["test_login_roles"] and _operator(request) is not None:
+            response.data["test_login_roles"].append(PLATFORM)
     return response
+
+
+def _operator(request):
+    if not _enabled(request):
+        return None
+    return User.objects.filter(is_staff=True, is_active=True).order_by("date_joined").first()
 
 
 class LocalTestLogin(APIView):
@@ -103,6 +118,13 @@ class LocalTestLogin(APIView):
         if not _enabled(request):
             raise ApiError("not_found", "Not found", status_code=404)
         role = request.data.get("role")
+        if role == PLATFORM:
+            operator = _operator(request)
+            if operator is None:
+                raise ApiError("not_found", "Test role unavailable", status_code=404)
+            update_last_login(None, operator)
+            audit.record("auth.local_test_login", actor=operator)
+            return Response(issue_tokens(operator))
         if role not in ROLES:
             raise ApiError("validation_error", "Unknown test role")
         members = list(_members(request).filter(role=role, user__username=role)[:2])

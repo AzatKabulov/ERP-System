@@ -25,7 +25,19 @@ api = [
     path("", include("apps.billing.urls")),
 ]
 
+from django.conf import settings as _settings  # noqa: E402
+
+_test_login = []
+if _settings.PUBLIC_TEST_LOGIN:  # testing only, see settings.py
+    from apps.common.local_test_login import LocalTestLogin, local_health
+
+    _test_login = [
+        path("api/v1/health/", local_health),
+        path("api/v1/local-test-login/", LocalTestLogin.as_view()),
+    ]
+
 urlpatterns = [
+    *_test_login,
     # Our own back office (clients, subscriptions, support): its own address, sign-in with a
     # password and an authenticator code. See apps/billing/console.py.
     path(env.get("DJANGO_CONSOLE_PATH", "console/"), console_site.urls),
