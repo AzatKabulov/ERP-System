@@ -25,6 +25,19 @@
     /* One full-screen surface: the browser's own top area (status bar) and the page behind the app
        take the app's canvas colour, light or dark, from the very first paint. The app calls this
        again when the person changes the scheme. */
+    /* How far the phone's clock / camera area and home bar reach into the page. Flutter on the web
+       does not read these itself, so the app asks (see lib/core/web/). */
+    var erpProbe = function (side) {
+      var d = document.createElement('div');
+      d.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding-' + side +
+        ':env(safe-area-inset-' + side + ',0px)';
+      document.documentElement.appendChild(d);
+      var v = parseFloat(getComputedStyle(d)['padding' + side.charAt(0).toUpperCase() + side.slice(1)]) || 0;
+      d.remove();
+      return v;
+    };
+    window.erpSafeTop = function () { return erpProbe('top'); };
+    window.erpSafeBottom = function () { return erpProbe('bottom'); };
     window.erpSetScheme = function (dark) {
       var color = dark ? '#090C16' : '#EEF1F8';
       var set = function (name, value) {

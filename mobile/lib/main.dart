@@ -201,6 +201,21 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  /// The phone's own top and bottom areas (web only), added to what Flutter already knows.
+  MediaQueryData _withPhoneAreas(MediaQueryData data) {
+    final areas = safeAreaInsets();
+    if (areas.top <= data.padding.top && areas.bottom <= data.padding.bottom) {
+      return data;
+    }
+    final padding = data.padding.copyWith(
+      top: areas.top > data.padding.top ? areas.top : data.padding.top,
+      bottom: areas.bottom > data.padding.bottom
+          ? areas.bottom
+          : data.padding.bottom,
+    );
+    return data.copyWith(padding: padding, viewPadding: padding);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -220,36 +235,41 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      builder: (context, child) => ThemeScope(
-        controller: _theme,
-        // the status bar's icons follow the scheme (dark icons on light, light on dark)
-        child: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: AppColors.isDark
-              ? SystemUiOverlayStyle.light.copyWith(
-                  statusBarColor: Colors.transparent,
-                  systemNavigationBarColor: Colors.transparent,
-                )
-              : SystemUiOverlayStyle.dark.copyWith(
-                  statusBarColor: Colors.transparent,
-                  systemNavigationBarColor: Colors.transparent,
-                ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // the soft light behind every screen, which the frosted layers blur
-              const AmbientField(),
-              ScannerScope(
-                scanner: widget.scanner,
-                child: FilesScope(
-                  picking: widget.picking,
-                  sharing: widget.sharing,
-                  child: DocumentsScope(
-                    actions: widget.documents,
-                    child: child!,
+      builder: (context, child) => MediaQuery(
+        // Full screen: the page reaches under the phone's clock and home bar, so tell every screen
+        // how far those areas reach, and its content keeps clear of them.
+        data: _withPhoneAreas(MediaQuery.of(context)),
+        child: ThemeScope(
+          controller: _theme,
+          // the status bar's icons follow the scheme (dark icons on light, light on dark)
+          child: AnnotatedRegion<SystemUiOverlayStyle>(
+            value: AppColors.isDark
+                ? SystemUiOverlayStyle.light.copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: Colors.transparent,
+                  )
+                : SystemUiOverlayStyle.dark.copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: Colors.transparent,
+                  ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // the soft light behind every screen, which the frosted layers blur
+                const AmbientField(),
+                ScannerScope(
+                  scanner: widget.scanner,
+                  child: FilesScope(
+                    picking: widget.picking,
+                    sharing: widget.sharing,
+                    child: DocumentsScope(
+                      actions: widget.documents,
+                      child: child!,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

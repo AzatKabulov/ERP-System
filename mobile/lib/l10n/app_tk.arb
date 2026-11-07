@@ -471,7 +471,7 @@
   "conditionDamaged": "Zaýalanan",
   "conditionInspection": "Barlaga garaşýar",
   "conditionInTransit": "Ýolda",
-  "unitCostLabel": "Birligiň öz bahasy, TMT",
+  "unitCostLabel": "Bir sany üçin satyn alyş bahasy, TMT",
   "addLineProduct": "Haryt goşmak",
   "removeLine": "Setiri aýyrmak",
   "directionIn": "Giriş",
@@ -1786,5 +1786,6 @@
   "guSalesCheckout": "Hemmesi saýlanda şu ýere basyň: satuw geçirilýär we çek peýda bolýar. Haryt setirindäki bahany üýtgedip bolýar.",
   "guStockMore": "Bu ýerde «Haryt galyndysyny girizmek» (başlanda bir gezek) we «Düzediş» (tapawut tapsaňyz).",
   "guStockIntake": "Täze haryt geldimi? Ony şu ýerde kabul ediň.",
-  "guStockSearch": "Harydyň nirede we näçe barlygyny görmek üçin ony tapyň."
+  "guStockSearch": "Harydyň nirede we näçe barlygyny görmek üçin ony tapyň.",
+  "unitCostHelp": "Bir sany üçin näçe töländigi. Bu satuw bahasy däl: satuw bahasy üýtgemeýär, ony haryt kartasynda üýtgedýärler."
 }
