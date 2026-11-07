@@ -45,8 +45,9 @@
         if (m) m.setAttribute('content', value);
       };
       set('theme-color', color);
-      // dark: the app is drawn under the status bar (light text); light: the normal bar
-      set('apple-mobile-web-app-status-bar-style', dark ? 'black-translucent' : 'default');
+      // Always full screen: the page itself is drawn under the status bar, in both schemes. (An
+      // installed web app reads this once, when it starts, so it must not depend on the scheme.)
+      set('apple-mobile-web-app-status-bar-style', 'black-translucent');
       document.documentElement.style.background = color;
       if (document.body) document.body.style.background = color;
       var splash = document.getElementById('splash');
@@ -64,7 +65,7 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ERP System">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
