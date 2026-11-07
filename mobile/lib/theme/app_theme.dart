@@ -2,27 +2,41 @@ import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import '../widgets/app_icons.dart';
+import 'app_palette.dart';
 
-/// The palette of the "Premium Minimalist ERP" design (docs/DESIGN_SYSTEM.md): a warm ivory
-/// canvas, ink, cobalt for action and selection, and a small set of accents with one job each
-/// (violet, emerald, amber, rose). Widgets use these names, not literal colors.
+/// The colours of the interface. Widgets use these names, never literal colours: each one is read
+/// from the palette in force ([AppPalette.light] or [AppPalette.dark]), so the same screens are
+/// drawn in either scheme. The two surfaces that are navy in both schemes (the hero figure) keep
+/// constant colours.
 abstract final class AppColors {
-  static const canvas = Color(0xFFF5F2EC);
-  static const surface = Colors.white;
-  static const surfaceSoft = Color(0xFFFAF8F4);
-  static const ink = Color(0xFF0D1311);
-  static const muted = Color(0xFF5D6561);
-  static const line = Color(0xFFE4DFD5);
+  static AppPalette _p = AppPalette.light;
+
+  /// The palette in force. Changed only by [use], when the scheme changes.
+  static AppPalette get palette => _p;
+  static Brightness get brightness => _p.brightness;
+  static bool get isDark => _p.isDark;
+  static void use(AppPalette palette) => _p = palette;
+
+  static Color get canvas => _p.canvas;
+  static Color get canvasEdge => _p.canvasEdge;
+  static Color get surface => _p.surface;
+  static Color get surfaceSoft => _p.surfaceSoft;
+  static Color get surfaceMuted => _p.surfaceMuted;
+  static Color get ink => _p.ink;
+  static Color get muted => _p.muted;
+  static Color get neutral => _p.neutral;
+  static Color get line => _p.line;
 
   /// Hover border of a secondary button or card.
-  static const lineStrong = Color(0xFFCBC4B8);
+  static Color get lineStrong => _p.lineStrong;
 
   /// The outline of an enabled input: darker than [line] so the field stays visible
-  /// (at least 3:1 on white), in the same warm gray family.
-  static const control = Color(0xFF8E887B);
-  static const blue = Color(0xFF1740FF);
-  static const blueDark = Color(0xFF1234D6);
-  static const tint = Color(0xFFEAEEFF);
+  /// (at least 3:1 against its surface).
+  static Color get control => _p.control;
+
+  static Color get blue => _p.blue;
+  static Color get blueDark => _p.blueDark;
+  static Color get tint => _p.tint;
 
   /// The second voice of the palette: every colour has one job, so a screen can be read by colour
   /// as well as by words (never by colour alone: each use also carries a label or an icon).
@@ -32,56 +46,92 @@ abstract final class AppColors {
   ///   amber  attention, low stock
   ///   rose   money out, returns, out of stock
   /// The strong shade is for icons, chart marks and tiles; text uses the darker status colours.
-  static const violet = Color(0xFF6A4DFF);
-  static const violetTint = Color(0xFFEEEAFF);
-  static const violetText = Color(0xFF4A32C9);
-  static const emerald = Color(0xFF0FA36B);
-  static const emeraldTint = Color(0xFFE0F5EC);
-  static const amber = Color(0xFFF5A300);
-  static const amberTint = Color(0xFFFFF0CC);
-  static const rose = Color(0xFFE5484D);
-  static const roseTint = Color(0xFFFFE8E8);
+  static Color get violet => _p.violet;
+  static Color get violetTint => _p.violetTint;
+  static Color get violetText => _p.violetText;
+  static Color get emerald => _p.emerald;
+  static Color get emeraldTint => _p.emeraldTint;
+  static Color get amber => _p.amber;
+  static Color get amberTint => _p.amberTint;
+  static Color get rose => _p.rose;
+  static Color get roseTint => _p.roseTint;
+
+  static Color get success => _p.success;
+  static Color get successTint => _p.successTint;
+  static Color get warning => _p.warning;
+  static Color get warningTint => _p.warningTint;
+  static Color get danger => _p.danger;
+  static Color get dangerTint => _p.dangerTint;
+  static Color get info => _p.blue;
+
+  /// Frosted glass (see GlassSurface): the translucent fill, a denser fill for readable surfaces,
+  /// the rim, and the bright top edge of the rim.
+  static Color get glass => _p.glass;
+  static Color get glassStrong => _p.glassStrong;
+  static Color get glassEdge => _p.glassEdge;
+  static Color get glassHighlight => _p.glassHighlight;
+  static Color get shadow => _p.shadow;
+  static Color get scrim => _p.scrim;
+  static Color get orbBlue => _p.orbBlue;
+  static Color get orbViolet => _p.orbViolet;
+  static Color get orbTeal => _p.orbTeal;
 
   /// The deep surface of the one figure that matters most, and the end of the brand gradient.
+  /// Navy in both schemes.
   static const navy = Color(0xFF0A1030);
   static const navyMid = Color(0xFF14226B);
 
-  static const success = Color(0xFF14703B);
-  static const successTint = Color(0xFFE8F4EC);
-  static const warning = Color(0xFF8C5300);
-  static const warningTint = Color(0xFFFFF4E0);
-  static const danger = Color(0xFFB3261E);
-  static const dangerTint = Color(0xFFFDECEA);
-  static const info = blue;
-  static const neutral = Color(0xFF4B544F);
-  static const surfaceMuted = Color(0xFFEEEBE4);
-
-  /// Text on the ink (inverse) surfaces.
+  /// Text on the navy surface.
   static const onInverse = Colors.white;
   static const onInverseMuted = Color(0xFFB9C0BC);
 }
 
 abstract final class AppRadius {
   static const small = 8.0;
-  static const control = 12.0;
-  static const card = 14.0;
-  static const dialog = 18.0;
+  static const control = 14.0;
+  static const card = 16.0;
+  static const dialog = 22.0;
 }
 
+/// Soft, offset, low-spread shadows tinted with the palette's shadow colour (navy in the light
+/// scheme, black in the dark one). Elevation is declared once per surface: a shadow or a rim,
+/// not both.
 abstract final class AppShadows {
-  /// The two-layer, low-spread surface shadow of every card.
-  static const card = [
-    BoxShadow(color: Color(0x0A0D1311), offset: Offset(0, 1), blurRadius: 2),
-    BoxShadow(color: Color(0x0D0D1311), offset: Offset(0, 8), blurRadius: 24),
-  ];
+  static List<BoxShadow> _layers(double a1, double a2, double y, double blur) =>
+      [
+        BoxShadow(
+          color: AppColors.shadow.withValues(alpha: a1),
+          offset: const Offset(0, 1),
+          blurRadius: 2,
+        ),
+        BoxShadow(
+          color: AppColors.shadow.withValues(alpha: a2),
+          offset: Offset(0, y),
+          blurRadius: blur,
+        ),
+      ];
+
+  /// The two-layer surface shadow of a raised card.
+  static List<BoxShadow> get card => AppColors.isDark
+      ? _layers(0.30, 0.38, 10, 28)
+      : _layers(0.05, 0.08, 10, 28);
 
   /// A card that can be pressed, lifted under the pointer.
-  static const cardHover = [
-    BoxShadow(color: Color(0x0F0D1311), offset: Offset(0, 2), blurRadius: 4),
-    BoxShadow(color: Color(0x1F14226B), offset: Offset(0, 16), blurRadius: 36),
-  ];
-  static const overlay = [
-    BoxShadow(color: Color(0x2E0D1311), offset: Offset(0, 24), blurRadius: 80),
+  static List<BoxShadow> get cardHover => AppColors.isDark
+      ? _layers(0.35, 0.5, 18, 40)
+      : _layers(0.06, 0.14, 18, 40);
+
+  /// A floating bar or sheet.
+  static List<BoxShadow> get float => AppColors.isDark
+      ? _layers(0.4, 0.55, 14, 36)
+      : _layers(0.06, 0.16, 14, 36);
+
+  static List<BoxShadow> get overlay => [
+    BoxShadow(
+      color: AppColors.shadow.withValues(alpha: AppColors.isDark ? 0.6 : 0.22),
+      offset: const Offset(0, 24),
+      blurRadius: 80,
+    ),
   ];
 }
 
@@ -92,15 +142,18 @@ abstract final class AppGradients {
     end: Alignment.bottomRight,
     colors: [Color(0xFF2B55FF), Color(0xFF5B3DF5)],
   );
-  static const button = LinearGradient(
+  static LinearGradient get button => LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF3560FF), Color(0xFF1740FF)],
+    colors: [AppColors.palette.blueFill, AppColors.palette.blueFillDeep],
   );
-  static const buttonDeep = LinearGradient(
+  static LinearGradient get buttonDeep => LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF2A52F0), Color(0xFF1234D6)],
+    colors: [
+      AppColors.palette.blueFillDeep,
+      Color.lerp(AppColors.palette.blueFillDeep, Colors.black, 0.18)!,
+    ],
   );
   static const spotlight = LinearGradient(
     begin: Alignment.topLeft,
@@ -125,17 +178,33 @@ abstract final class AppFonts {
 }
 
 abstract final class AppTheme {
-  static ThemeData get light {
+  static ThemeData get light => _build(AppPalette.light);
+  static ThemeData get dark => _build(AppPalette.dark);
+
+  /// Builds the theme with [palette] in force, then puts the palette that was in force back: a
+  /// theme holds resolved colours, so building both schemes never disturbs the one on screen.
+  static ThemeData _build(AppPalette palette) {
+    final previous = AppColors.palette;
+    AppColors.use(palette);
+    try {
+      return _make(palette);
+    } finally {
+      AppColors.use(previous);
+    }
+  }
+
+  static ThemeData _make(AppPalette p) {
     final scheme = ColorScheme.fromSeed(
+      brightness: p.brightness,
       seedColor: AppColors.blue,
       primary: AppColors.blue,
       onPrimary: Colors.white,
       primaryContainer: AppColors.tint,
       onPrimaryContainer: AppColors.blue,
-      surface: Colors.white,
+      surface: AppColors.surface,
       onSurface: AppColors.ink,
       onSurfaceVariant: AppColors.muted,
-      surfaceContainerLowest: Colors.white,
+      surfaceContainerLowest: AppColors.surface,
       surfaceContainerLow: AppColors.surfaceSoft,
       surfaceContainer: AppColors.surfaceMuted,
       surfaceContainerHigh: AppColors.surfaceMuted,
@@ -148,9 +217,11 @@ abstract final class AppTheme {
     );
     final base = ThemeData(
       useMaterial3: true,
+      brightness: p.brightness,
       fontFamily: AppFonts.ui,
       colorScheme: scheme,
-      scaffoldBackgroundColor: AppColors.canvas,
+      // pages are transparent: the ambient field behind them is the page colour
+      scaffoldBackgroundColor: Colors.transparent,
       visualDensity: VisualDensity.standard,
     );
 
@@ -159,14 +230,14 @@ abstract final class AppTheme {
       FontWeight weight, {
       double height = 1.4,
       double spacing = 0,
-      Color color = AppColors.ink,
+      Color? color,
     }) => TextStyle(
       fontFamily: AppFonts.ui,
       fontSize: size,
       fontWeight: weight,
       height: height,
       letterSpacing: spacing,
-      color: color,
+      color: color ?? AppColors.ink,
       fontFeatures: AppFonts.tabular,
     );
     TextStyle display(double size, {double height = 1.15}) => TextStyle(
@@ -194,7 +265,7 @@ abstract final class AppTheme {
       bodySmall: ui(13, FontWeight.w400, height: 1.45, color: AppColors.muted),
       labelLarge: ui(14, FontWeight.w600, height: 1.2),
       labelMedium: ui(13, FontWeight.w600, height: 1.35),
-      labelSmall: const TextStyle(
+      labelSmall: TextStyle(
         fontFamily: AppFonts.ui,
         fontSize: 12,
         fontWeight: FontWeight.w700,
@@ -232,8 +303,8 @@ abstract final class AppTheme {
     return base.copyWith(
       textTheme: text,
       primaryTextTheme: text,
-      dividerTheme: const DividerThemeData(color: AppColors.line, space: 1),
-      iconTheme: const IconThemeData(color: AppColors.ink, size: 20),
+      dividerTheme: DividerThemeData(color: AppColors.line, space: 1),
+      iconTheme: IconThemeData(color: AppColors.ink, size: 20),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
@@ -257,21 +328,24 @@ abstract final class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: ui(16, FontWeight.w600),
-        shape: const Border(bottom: BorderSide(color: AppColors.line)),
+        shape: Border(bottom: BorderSide(color: AppColors.line)),
       ),
       cardTheme: CardThemeData(
-        color: Colors.white,
+        color: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.card),
-          side: const BorderSide(color: AppColors.line),
+          side: BorderSide(color: AppColors.line),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        // a field is a little more solid than the glass it sits on, in both schemes
+        fillColor: AppColors.isDark
+            ? AppColors.surface.withValues(alpha: 0.72)
+            : Colors.white.withValues(alpha: 0.9),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 14,
@@ -296,7 +370,7 @@ abstract final class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.blue,
+          backgroundColor: AppColors.palette.blueFill,
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.surfaceMuted,
           disabledForegroundColor: AppColors.muted.withValues(alpha: 0.7),
@@ -310,13 +384,15 @@ abstract final class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style:
             OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.surface.withValues(
+                alpha: AppColors.isDark ? 0.5 : 0.72,
+              ),
               minimumSize: const Size(48, 48),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               shape: controlShape,
               foregroundColor: AppColors.ink,
               textStyle: ui(14, FontWeight.w600, height: 1),
-              side: const BorderSide(color: AppColors.line),
+              side: BorderSide(color: AppColors.line),
             ).copyWith(
               overlayColor: overlay(AppColors.ink),
               side: WidgetStateProperty.resolveWith(
@@ -351,10 +427,10 @@ abstract final class AppTheme {
           shape: WidgetStatePropertyAll(controlShape),
           minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
           textStyle: WidgetStatePropertyAll(ui(13, FontWeight.w600, height: 1)),
-          side: const WidgetStatePropertyAll(BorderSide(color: AppColors.line)),
+          side: WidgetStatePropertyAll(BorderSide(color: AppColors.line)),
           backgroundColor: WidgetStateProperty.resolveWith(
             (states) => states.contains(WidgetState.selected)
-                ? Colors.white
+                ? AppColors.surface
                 : AppColors.surfaceSoft,
           ),
           foregroundColor: WidgetStateProperty.resolveWith(
@@ -366,7 +442,7 @@ abstract final class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         selectedColor: AppColors.tint,
         disabledColor: AppColors.surfaceMuted,
         checkmarkColor: AppColors.blue,
@@ -391,15 +467,15 @@ abstract final class AppTheme {
         iconTheme: const IconThemeData(size: 16),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shadowColor: const Color(0x2E0D1311),
+        shadowColor: AppColors.shadow.withValues(alpha: 0.2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.dialog),
-          side: const BorderSide(color: AppColors.line),
+          side: BorderSide(color: AppColors.line),
         ),
-        barrierColor: const Color(0x6B0D1311),
+        barrierColor: AppColors.scrim,
         titleTextStyle: display(24, height: 1.25),
         contentTextStyle: ui(
           14,
@@ -408,7 +484,7 @@ abstract final class AppTheme {
           color: AppColors.muted,
         ),
       ),
-      bottomSheetTheme: const BottomSheetThemeData(
+      bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: AppColors.canvas,
         surfaceTintColor: Colors.transparent,
         showDragHandle: true,
@@ -419,13 +495,13 @@ abstract final class AppTheme {
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: Colors.white,
+        color: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 8,
-        shadowColor: const Color(0x2E0D1311),
+        shadowColor: AppColors.shadow.withValues(alpha: 0.2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),
-          side: const BorderSide(color: AppColors.line),
+          side: BorderSide(color: AppColors.line),
         ),
         textStyle: ui(14, FontWeight.w500),
       ),
@@ -438,21 +514,24 @@ abstract final class AppTheme {
           color: AppColors.ink,
           borderRadius: BorderRadius.circular(AppRadius.small),
         ),
-        textStyle: ui(12, FontWeight.w500, color: Colors.white),
+        textStyle: ui(12, FontWeight.w500, color: AppColors.canvas),
         waitDuration: const Duration(milliseconds: 500),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.white,
-        contentTextStyle: ui(14, FontWeight.w600),
-        actionTextColor: AppColors.blue,
+        // the inverse of the page (dark on light, light on dark), as Material does
+        backgroundColor: AppColors.ink,
+        contentTextStyle: ui(14, FontWeight.w600, color: AppColors.canvas),
+        actionTextColor: AppColors.isDark
+            ? AppColors.palette.blueDark
+            : const Color(0xFF9DB1FF),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.card),
-          side: const BorderSide(color: AppColors.line),
+          side: BorderSide(color: AppColors.line),
         ),
         elevation: 6,
       ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
+      progressIndicatorTheme: ProgressIndicatorThemeData(
         color: AppColors.blue,
         linearTrackColor: AppColors.surfaceMuted,
         circularTrackColor: AppColors.surfaceMuted,
@@ -468,10 +547,10 @@ abstract final class AppTheme {
       ),
       checkboxTheme: CheckboxThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        side: const BorderSide(color: AppColors.control, width: 1.5),
+        side: BorderSide(color: AppColors.control, width: 1.5),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         indicatorColor: AppColors.tint,
         indicatorShape: RoundedRectangleBorder(

@@ -4,6 +4,7 @@ import 'app_icons.dart';
 import '../demo/demo_store.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import 'glass.dart';
 import 'motion.dart';
 
 AppLocalizations strings(BuildContext context) => AppLocalizations.of(context);
@@ -98,15 +99,27 @@ class _SurfaceCardState extends State<SurfaceCard> {
       curve: AppMotion.arrive,
       transform: Matrix4.translationValues(0, lifted ? -2 : 0, 0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: widget.featured
+            ? Color.alphaBlend(
+                AppColors.blue.withValues(
+                  alpha: AppColors.isDark ? 0.14 : 0.06,
+                ),
+                AppColors.glassStrong,
+              )
+            : widget.flat
+            ? AppColors.glass
+            : AppColors.glass,
         borderRadius: radius,
+        // the rim of the glass: lit at rest, cobalt when it is the emphasised card or under
+        // the pointer; a flat (list) card has a plain hairline and no shadow
         border: Border.all(
           color: widget.featured
-              ? AppColors.blue
+              ? AppColors.blue.withValues(alpha: 0.55)
               : lifted
               ? AppColors.blue.withValues(alpha: 0.38)
-              : AppColors.line,
-          width: widget.featured ? 1.5 : 1,
+              : widget.flat
+              ? AppColors.line
+              : AppColors.glassEdge,
         ),
         boxShadow: widget.flat
             ? null
@@ -181,6 +194,20 @@ class _PrimaryButtonState extends State<PrimaryButton> {
             child: AnimatedContainer(
               duration: AppMotion.of(context, AppMotion.base),
               curve: Curves.easeOut,
+              foregroundDecoration: enabled
+                  ? BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppRadius.control),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.18),
+                          Colors.white.withValues(alpha: 0),
+                        ],
+                        stops: const [0, 0.55],
+                      ),
+                    )
+                  : null,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppRadius.control),
                 color: enabled ? null : AppColors.blue.withValues(alpha: 0.42),
@@ -189,7 +216,7 @@ class _PrimaryButtonState extends State<PrimaryButton> {
                     : null,
                 boxShadow: [
                   if (_focused && enabled) ...[
-                    const BoxShadow(color: AppColors.canvas, spreadRadius: 2),
+                    BoxShadow(color: AppColors.canvas, spreadRadius: 2),
                     BoxShadow(
                       color: AppColors.blue.withValues(alpha: 0.4),
                       spreadRadius: 5,
@@ -197,11 +224,13 @@ class _PrimaryButtonState extends State<PrimaryButton> {
                   ],
                   if (enabled)
                     BoxShadow(
-                      color: AppColors.blue.withValues(
-                        alpha: _pressed ? 0.12 : 0.28,
+                      color: AppColors.palette.blueFillDeep.withValues(
+                        alpha: _pressed
+                            ? 0.16
+                            : (AppColors.isDark ? 0.45 : 0.32),
                       ),
-                      offset: Offset(0, _pressed ? 2 : 6),
-                      blurRadius: _pressed ? 6 : 16,
+                      offset: Offset(0, _pressed ? 2 : 8),
+                      blurRadius: _pressed ? 6 : 20,
                     ),
                 ],
               ),
@@ -303,20 +332,20 @@ class StatusPill extends StatelessWidget {
   }
 }
 
-/// The small uppercase label above a title or a form section.
+/// A short caption above a section of a page or a chart ("Revenue by day"): small, muted,
+/// sentence case. It names what follows; it is not a label above a heading.
 class Eyebrow extends StatelessWidget {
-  const Eyebrow(this.text, {super.key, this.color = AppColors.muted});
+  const Eyebrow(this.text, {super.key, this.color});
   final String text;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) => Text(
-    text.toUpperCase(),
+    text,
     style: TextStyle(
-      color: color,
-      fontSize: 12,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 1.2,
+      color: color ?? AppColors.muted,
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
       height: 1.3,
     ),
   );
@@ -328,14 +357,12 @@ class PageHead extends StatelessWidget {
   const PageHead({
     super.key,
     required this.title,
-    this.eyebrow,
     this.subtitle,
     this.actions = const [],
     this.titleKey,
     this.titleWidget,
   });
   final String title;
-  final String? eyebrow;
   final String? subtitle;
   final List<Widget> actions;
   final Key? titleKey;
@@ -350,23 +377,21 @@ class PageHead extends StatelessWidget {
       final heading = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (eyebrow != null) ...[
-            Eyebrow(eyebrow!),
-            const SizedBox(height: 8),
-          ],
           titleWidget ??
               Text(
                 title,
                 key: titleKey,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: narrow ? 24 : 28,
+                  fontSize: narrow ? 28 : 34,
+                  letterSpacing: narrow ? -0.7 : -1.0,
+                  height: 1.1,
                 ),
               ),
           if (subtitle != null) ...[
             const SizedBox(height: 8),
             Text(
               subtitle!,
-              style: const TextStyle(color: AppColors.muted, fontSize: 14),
+              style: TextStyle(color: AppColors.muted, fontSize: 14),
             ),
           ],
         ],
@@ -379,7 +404,7 @@ class PageHead extends StatelessWidget {
           children: [heading, const SizedBox(height: 16), buttons],
         );
       }
-      // The title takes what the buttons leave; the buttons sit at the right edge (up to 70% of
+      // The title takes what the buttons leave; the buttons sit at the right edge (up to 80% of
       // the width, then they wrap), the same on every page.
       return Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -387,7 +412,7 @@ class PageHead extends StatelessWidget {
           Expanded(child: heading),
           const SizedBox(width: 24),
           ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.7),
+            constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.8),
             child: Wrap(
               alignment: WrapAlignment.end,
               spacing: 8,
@@ -407,23 +432,25 @@ class Glyph extends StatelessWidget {
     this.icon, {
     super.key,
     this.size = 48,
-    this.background = AppColors.surfaceMuted,
-    this.color = AppColors.neutral,
+    this.background,
+    this.color,
   });
   final AppIconData icon;
   final double size;
-  final Color background;
-  final Color color;
+  final Color? background;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) => Container(
     width: size,
     height: size,
     decoration: BoxDecoration(
-      color: background,
+      color: background ?? AppColors.surfaceMuted,
       borderRadius: BorderRadius.circular(12),
     ),
-    child: Center(child: AppIcon(icon, color: color, size: 20)),
+    child: Center(
+      child: AppIcon(icon, color: color ?? AppColors.neutral, size: 20),
+    ),
   );
 }
 
@@ -543,10 +570,12 @@ class TopbarControl extends StatelessWidget {
   Widget build(BuildContext context) => ConstrainedBox(
     constraints: const BoxConstraints(minHeight: 40),
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.surface.withValues(
+          alpha: AppColors.isDark ? 0.55 : 0.7,
+        ),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: AppColors.line),
       ),
       child: Row(
@@ -564,7 +593,7 @@ class TopbarControl extends StatelessWidget {
           ),
           if (chevron) ...[
             const SizedBox(width: 8),
-            const AppIcon(AppIcons.chevron, size: 16, color: AppColors.ink),
+            AppIcon(AppIcons.chevron, size: 16, color: AppColors.ink),
           ],
         ],
       ),
@@ -604,8 +633,8 @@ class FilterSelect<T> extends StatelessWidget {
     constraints: const BoxConstraints(minHeight: 40),
     padding: const EdgeInsets.symmetric(horizontal: 12),
     decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(10),
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(12),
       border: Border.all(color: AppColors.line),
     ),
     child: Row(
@@ -624,12 +653,8 @@ class FilterSelect<T> extends StatelessWidget {
               items: items,
               onChanged: onChanged,
               borderRadius: BorderRadius.circular(AppRadius.control),
-              icon: const AppIcon(
-                AppIcons.chevron,
-                size: 16,
-                color: AppColors.ink,
-              ),
-              style: const TextStyle(
+              icon: AppIcon(AppIcons.chevron, size: 16, color: AppColors.ink),
+              style: TextStyle(
                 fontFamily: AppFonts.ui,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -669,7 +694,7 @@ class LabeledField extends StatelessWidget {
           constraints: BoxConstraints(minHeight: minLabelHeight),
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.ink,
@@ -731,17 +756,19 @@ class AppSegmented<T> extends StatelessWidget {
                 heightFactor: 1,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(9),
-                    boxShadow: const [
+                    color: AppColors.isDark
+                        ? AppColors.palette.surfaceMuted
+                        : AppColors.surface,
+                    borderRadius: BorderRadius.circular(11),
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x1A0D1311),
-                        offset: Offset(0, 1),
+                        color: AppColors.shadow.withValues(alpha: 0.14),
+                        offset: const Offset(0, 1),
                         blurRadius: 4,
                       ),
                       BoxShadow(
-                        color: Color(0x0F1740FF),
-                        offset: Offset(0, 4),
+                        color: AppColors.blue.withValues(alpha: 0.1),
+                        offset: const Offset(0, 4),
                         blurRadius: 10,
                       ),
                     ],
@@ -773,9 +800,8 @@ class AppSegmented<T> extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 48),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceSoft,
-        borderRadius: BorderRadius.circular(AppRadius.control),
-        border: Border.all(color: AppColors.line),
+        color: AppColors.surfaceMuted.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(AppRadius.control + 2),
       ),
       child: expand ? inner : IntrinsicWidth(child: inner),
     );
@@ -799,7 +825,7 @@ class _Segment extends StatelessWidget {
     selected: selected,
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(9),
+      borderRadius: BorderRadius.circular(11),
       child: Container(
         constraints: const BoxConstraints(minWidth: 76, minHeight: 40),
         padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -839,24 +865,13 @@ class NoticeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (fg, bg, edge) = switch (tone) {
-      StatusTone.warning => (
-        AppColors.warning,
-        AppColors.warningTint,
-        const Color(0xFFF0D5A9),
-      ),
-      StatusTone.danger => (
-        AppColors.danger,
-        AppColors.dangerTint,
-        const Color(0xFFF3C9C5),
-      ),
-      StatusTone.success => (
-        AppColors.success,
-        AppColors.successTint,
-        const Color(0xFFBFE0CB),
-      ),
-      _ => (AppColors.blue, AppColors.tint, const Color(0xFFCBD5FF)),
+    final (fg, bg) = switch (tone) {
+      StatusTone.warning => (AppColors.warning, AppColors.warningTint),
+      StatusTone.danger => (AppColors.danger, AppColors.dangerTint),
+      StatusTone.success => (AppColors.success, AppColors.successTint),
+      _ => (AppColors.blue, AppColors.tint),
     };
+    final edge = fg.withValues(alpha: 0.28);
     return Container(
       constraints: const BoxConstraints(minHeight: 52),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -893,7 +908,7 @@ class NoticeBanner extends StatelessWidget {
 }
 
 /// Underlined tabs (a page's sections), with a cobalt line under the current one.
-class AppTabs<T> extends StatelessWidget {
+class AppTabs<T> extends StatefulWidget {
   const AppTabs({
     super.key,
     required this.tabs,
@@ -913,58 +928,152 @@ class AppTabs<T> extends StatelessWidget {
   final String Function(T)? keyName;
 
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: const BoxDecoration(
-      border: Border(bottom: BorderSide(color: AppColors.line)),
-    ),
-    child: SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+  State<AppTabs<T>> createState() => _AppTabsState<T>();
+}
+
+/// A page's sections as a row of pills in a recessed track. When the row is wider than the
+/// screen it fades out at the edge that has more behind it, so nobody has to guess that it
+/// scrolls.
+class _AppTabsState<T> extends State<AppTabs<T>> {
+  final _scroll = ScrollController();
+  bool _more = false; // something is hidden to the right
+  bool _less = false; // something is hidden to the left
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_check);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _check() {
+    if (!_scroll.hasClients || !_scroll.position.hasContentDimensions) return;
+    final p = _scroll.position;
+    final more = p.maxScrollExtent - p.pixels > 4;
+    final less = p.pixels > 4;
+    if (more != _more || less != _less) {
+      setState(() {
+        _more = more;
+        _less = less;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+    final track = Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(AppRadius.control + 4),
+      ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          for (final (v, label) in tabs)
-            Semantics(
-              button: true,
-              selected: v == value,
-              child: InkWell(
-                key: keyPrefix == null
-                    ? null
-                    : ValueKey('$keyPrefix-${keyName?.call(v) ?? v}'),
-                onTap: () => onChanged(v),
-                // A soft rounded wash on hover, never the default square box.
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(10),
-                ),
-                hoverColor: AppColors.blue.withValues(alpha: 0.06),
-                highlightColor: Colors.transparent,
-                splashColor: AppColors.blue.withValues(alpha: 0.08),
-                child: AnimatedContainer(
-                  duration: AppMotion.of(context, AppMotion.base),
-                  curve: AppMotion.arrive,
-                  constraints: const BoxConstraints(minHeight: 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: v == value ? AppColors.blue : Colors.transparent,
-                        width: 3,
-                      ),
+          for (final (v, label) in widget.tabs)
+            _TabPill(
+              key: widget.keyPrefix == null
+                  ? null
+                  : ValueKey(
+                      '${widget.keyPrefix}-${widget.keyName?.call(v) ?? v}',
                     ),
-                  ),
-                  child: AnimatedDefaultTextStyle(
-                    duration: AppMotion.of(context, AppMotion.base),
-                    style: TextStyle(
-                      fontFamily: AppFonts.ui,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: v == value ? AppColors.blue : AppColors.muted,
-                    ),
-                    child: Text(label),
-                  ),
-                ),
-              ),
+              label: label,
+              selected: v == widget.value,
+              onTap: () => widget.onChanged(v),
             ),
         ],
+      ),
+    );
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: ShaderMask(
+        blendMode: BlendMode.dstIn,
+        shaderCallback: (rect) => LinearGradient(
+          colors: [
+            _less ? Colors.transparent : Colors.black,
+            Colors.black,
+            Colors.black,
+            _more ? Colors.transparent : Colors.black,
+          ],
+          stops: const [0, 0.07, 0.93, 1],
+        ).createShader(rect),
+        child: SingleChildScrollView(
+          controller: _scroll,
+          scrollDirection: Axis.horizontal,
+          child: track,
+        ),
+      ),
+    );
+  }
+}
+
+class _TabPill extends StatelessWidget {
+  const _TabPill({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: selected,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.control + 1),
+      hoverColor: AppColors.blue.withValues(alpha: 0.06),
+      highlightColor: Colors.transparent,
+      splashColor: AppColors.blue.withValues(alpha: 0.08),
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.base),
+        curve: AppMotion.arrive,
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected
+              ? (AppColors.isDark
+                    ? AppColors.palette.surface
+                    : AppColors.surface)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.control + 1),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.shadow.withValues(alpha: 0.14),
+                    offset: const Offset(0, 1),
+                    blurRadius: 4,
+                  ),
+                  BoxShadow(
+                    color: AppColors.blue.withValues(alpha: 0.1),
+                    offset: const Offset(0, 4),
+                    blurRadius: 10,
+                  ),
+                ]
+              : null,
+        ),
+        child: AnimatedDefaultTextStyle(
+          duration: AppMotion.of(context, AppMotion.base),
+          style: TextStyle(
+            fontFamily: AppFonts.ui,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: selected ? AppColors.blue : AppColors.muted,
+          ),
+          child: Text(label),
+        ),
       ),
     ),
   );
@@ -994,7 +1103,9 @@ class MoreMenuButton extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface.withValues(
+            alpha: AppColors.isDark ? 0.55 : 0.78,
+          ),
           borderRadius: BorderRadius.circular(AppRadius.control),
           border: Border.all(color: AppColors.line),
         ),
@@ -1052,7 +1163,7 @@ class MenuEntry extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 3),
                     child: Text(
                       help!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 12,
                         height: 1.35,
@@ -1098,9 +1209,17 @@ class AppPill extends StatelessWidget {
         duration: AppMotion.of(context, AppMotion.fast),
         curve: Curves.easeOut,
         decoration: ShapeDecoration(
-          color: selected ? AppColors.tint : Colors.white,
+          color: selected
+              ? AppColors.blue.withValues(alpha: AppColors.isDark ? 0.22 : 0.1)
+              : AppColors.surface.withValues(
+                  alpha: AppColors.isDark ? 0.5 : 0.7,
+                ),
           shape: StadiumBorder(
-            side: BorderSide(color: selected ? AppColors.blue : AppColors.line),
+            side: BorderSide(
+              color: selected
+                  ? AppColors.blue.withValues(alpha: 0.6)
+                  : AppColors.line,
+            ),
           ),
         ),
         child: Material(
@@ -1252,7 +1371,7 @@ class EmptyState extends StatelessWidget {
           child: Container(
             width: 64,
             height: 64,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.tint,
               shape: BoxShape.circle,
             ),
@@ -1274,7 +1393,7 @@ class EmptyState extends StatelessWidget {
             child: Text(
               subtitle!,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.muted,
                 fontSize: 13,
                 height: 1.55,
@@ -1300,8 +1419,8 @@ class MetricCard extends StatelessWidget {
     this.onTap,
     this.featured = false,
     this.icon,
-    this.accent = AppColors.blue,
-    this.accentTint = AppColors.tint,
+    this.accent,
+    this.accentTint,
   });
   final String label;
   final String value;
@@ -1309,8 +1428,8 @@ class MetricCard extends StatelessWidget {
   final VoidCallback? onTap;
   final bool featured;
   final AppIconData? icon;
-  final Color accent;
-  final Color accentTint;
+  final Color? accent;
+  final Color? accentTint;
 
   @override
   Widget build(BuildContext context) => SurfaceCard(
@@ -1328,7 +1447,7 @@ class MetricCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -1342,10 +1461,16 @@ class MetricCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: accentTint,
+                    color: accentTint ?? AppColors.tint,
                     borderRadius: BorderRadius.circular(11),
                   ),
-                  child: Center(child: AppIcon(icon!, size: 18, color: accent)),
+                  child: Center(
+                    child: AppIcon(
+                      icon!,
+                      size: 18,
+                      color: accent ?? AppColors.blue,
+                    ),
+                  ),
                 ),
               ],
             ],
@@ -1375,7 +1500,7 @@ class MetricCard extends StatelessWidget {
               child: Text(
                 value,
                 softWrap: false,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
                   height: 1.2,
@@ -1388,10 +1513,7 @@ class MetricCard extends StatelessWidget {
           ),
           if (meta != null) ...[
             const SizedBox(height: 8),
-            Text(
-              meta!,
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
-            ),
+            Text(meta!, style: TextStyle(color: AppColors.muted, fontSize: 13)),
           ],
         ],
       ),
@@ -1415,9 +1537,23 @@ class AdaptiveGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final count = ((constraints.maxWidth + gap) / (minimumWidth + gap))
+      var count = ((constraints.maxWidth + gap) / (minimumWidth + gap))
           .floor()
           .clamp(1, maxColumns);
+      // More cards than columns: take the column count (at most two fewer) that leaves the last
+      // row fullest, so six cards sit as 3 + 3 rather than 4 + 2.
+      if (children.length > count && count > 2) {
+        var best = count;
+        var fewest = (count - children.length % count) % count;
+        for (var c = count - 1; c >= (count - 2).clamp(2, count); c--) {
+          final empty = (c - children.length % c) % c;
+          if (empty < fewest) {
+            best = c;
+            fewest = empty;
+          }
+        }
+        count = best;
+      }
       final width = (constraints.maxWidth - (count - 1) * gap) / count;
       return Wrap(
         spacing: gap,
@@ -1484,56 +1620,58 @@ class AppDialog extends StatelessWidget {
   );
 
   Widget _dialog(BuildContext context) => Dialog(
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.transparent,
     surfaceTintColor: Colors.transparent,
     insetPadding: const EdgeInsets.all(16),
     elevation: 0,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadius.dialog),
-      side: const BorderSide(color: AppColors.line),
-    ),
     child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 440),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.tint,
-                  borderRadius: BorderRadius.circular(14),
+      child: GlassSurface(
+        radius: AppRadius.dialog,
+        strong: true,
+        blur: 30,
+        shadow: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.tint,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: AppIcon(icon, size: 20, color: AppColors.blue),
+                  ),
                 ),
-                child: Center(
-                  child: AppIcon(icon, size: 20, color: AppColors.blue),
+              ),
+              const SizedBox(height: 20),
+              Text(title, style: Theme.of(context).dialogTheme.titleTextStyle),
+              if (message != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  message!,
+                  style: Theme.of(context).dialogTheme.contentTextStyle,
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(title, style: Theme.of(context).dialogTheme.titleTextStyle),
-            if (message != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                message!,
-                style: Theme.of(context).dialogTheme.contentTextStyle,
-              ),
+              ],
+              if (content != null) ...[const SizedBox(height: 20), content!],
+              if (actions.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: actions,
+                ),
+              ],
             ],
-            if (content != null) ...[const SizedBox(height: 20), content!],
-            if (actions.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 8,
-                runSpacing: 8,
-                children: actions,
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     ),

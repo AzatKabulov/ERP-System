@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- AppColors.canvas (lib/theme/app_theme.dart) -->
-    <color name="launch_background">#F5F2EC</color>
+    <color name="launch_background">#EEF1F8</color>
 </resources>

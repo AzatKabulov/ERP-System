@@ -21,6 +21,8 @@ import 'l10n/app_localizations.dart';
 import 'l10n/turkmen_localizations.dart';
 import 'screens/workspace.dart';
 import 'theme/app_theme.dart';
+import 'theme/theme_controller.dart';
+import 'widgets/glass.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -92,7 +94,8 @@ class ErpApp extends StatefulWidget {
   State<ErpApp> createState() => _ErpAppState();
 }
 
-class _ErpAppState extends State<ErpApp> {
+class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
+  late final ThemeController _theme = ThemeController(widget.preferences);
   late final bool _demo = widget.store != null || widget.config.demoMode;
   late final DemoStore? _store = _demo ? (widget.store ?? DemoStore()) : null;
   late final ConnectionMonitor _monitor = ConnectionMonitor();
@@ -150,7 +153,40 @@ class _ErpAppState extends State<ErpApp> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // the scheme is in force before the first frame, so there is no flash of the wrong one
+    ThemeController.apply(
+      _theme.resolve(
+        WidgetsBinding.instance.platformDispatcher.platformBrightness,
+      ),
+    );
+    _theme.addListener(_schemeChanged);
+  }
+
+  /// The phone switched between light and dark while the app was open.
+  @override
+  void didChangePlatformBrightness() => _schemeChanged();
+
+  void _schemeChanged() {
+    final brightness = _theme.resolve(
+      WidgetsBinding.instance.platformDispatcher.platformBrightness,
+    );
+    final changed = ThemeController.apply(brightness);
+    setState(() {}); // the Material theme follows the chosen mode
+    if (!changed) return;
+    // every widget reads its colours when it builds: build them all again, in place
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => ThemeController.repaintEverything(),
+    );
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _theme.removeListener(_schemeChanged);
+    _theme.dispose();
     if (_demo) {
       if (widget.store == null) _store!.dispose();
     } else {
@@ -168,6 +204,8 @@ class _ErpAppState extends State<ErpApp> {
       title: 'ERP System',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: _theme.themeMode,
       locale: _locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
@@ -179,12 +217,37 @@ class _ErpAppState extends State<ErpApp> {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      builder: (context, child) => ScannerScope(
-        scanner: widget.scanner,
-        child: FilesScope(
-          picking: widget.picking,
-          sharing: widget.sharing,
-          child: DocumentsScope(actions: widget.documents, child: child!),
+      builder: (context, child) => ThemeScope(
+        controller: _theme,
+        // the status bar's icons follow the scheme (dark icons on light, light on dark)
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: AppColors.isDark
+              ? SystemUiOverlayStyle.light.copyWith(
+                  statusBarColor: Colors.transparent,
+                  systemNavigationBarColor: Colors.transparent,
+                )
+              : SystemUiOverlayStyle.dark.copyWith(
+                  statusBarColor: Colors.transparent,
+                  systemNavigationBarColor: Colors.transparent,
+                ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // the soft light behind every screen, which the frosted layers blur
+              const AmbientField(),
+              ScannerScope(
+                scanner: widget.scanner,
+                child: FilesScope(
+                  picking: widget.picking,
+                  sharing: widget.sharing,
+                  child: DocumentsScope(
+                    actions: widget.documents,
+                    child: child!,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       home: _demo

@@ -172,7 +172,9 @@ class _Tooltip extends StatelessWidget {
             title,
             style: TextStyle(
               fontSize: 11,
-              color: onDark ? AppColors.muted : AppColors.onInverseMuted,
+              color: onDark
+                  ? const Color(0xFF5D6575)
+                  : AppColors.canvas.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 2),
@@ -183,7 +185,7 @@ class _Tooltip extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: onDark ? AppColors.ink : Colors.white,
+              color: onDark ? AppColors.navy : AppColors.canvas,
               fontFeatures: AppFonts.tabular,
             ),
           ),
@@ -385,9 +387,7 @@ class _BarRow extends StatelessWidget {
           height: 10,
           child: Stack(
             children: [
-              const Positioned.fill(
-                child: ColoredBox(color: AppColors.surfaceMuted),
-              ),
+              Positioned.fill(child: ColoredBox(color: AppColors.surfaceMuted)),
               TweenAnimationBuilder<double>(
                 tween: Tween(
                   begin: AppMotion.skipEntrance(context) ? fraction : 0,

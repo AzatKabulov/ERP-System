@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 /// One icon of the design: thin (1.5 px on a 24-pixel grid) rounded line art, drawn from SVG
 /// path data, circles and rounded rectangles so that it matches the design file exactly.
 class AppIconData {
@@ -290,10 +292,7 @@ class AppIcon extends StatelessWidget {
       width: side,
       height: side,
       child: CustomPaint(
-        painter: _IconPainter(
-          icon,
-          color ?? theme.color ?? const Color(0xFF0D1311),
-        ),
+        painter: _IconPainter(icon, color ?? theme.color ?? AppColors.ink),
       ),
     );
   }
