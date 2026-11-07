@@ -18,7 +18,8 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
-from django_otp.admin import OTPAdminSite
+from django_otp import devices_for_user
+from django_otp.admin import OTPAdminAuthenticationForm, OTPAdminSite
 
 from apps.businesses.models import Membership, Role
 from apps.sales.models import Sale
@@ -77,7 +78,25 @@ def state_badge(client: Client, now=None):
     )
 
 
+class ConsoleLoginForm(OTPAdminAuthenticationForm):
+    """The password step, then the code from the operator's authenticator app.
+
+    The library makes a person choose which device the code is from, so the first try with a
+    right password always failed with "Please select a device". An operator has one
+    authenticator: use it without asking. The code is still checked against a device that belongs
+    to this person only, with the library's own lock-out after repeated wrong codes."""
+
+    def _chosen_device(self, user):
+        device = super()._chosen_device(user)
+        if device is None:
+            own = list(devices_for_user(user))
+            if len(own) == 1:
+                device = own[0]
+        return device
+
+
 class ConsoleSite(OTPAdminSite):
+    login_form = ConsoleLoginForm
     site_header = "Owner console"
     site_title = "Owner console"
     index_title = "Clients and subscriptions"

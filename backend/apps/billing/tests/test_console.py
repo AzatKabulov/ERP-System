@@ -11,6 +11,7 @@ from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from django_otp import DEVICE_ID_SESSION_KEY
+from django_otp.oath import TOTP
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.accounts.models import User
@@ -74,6 +75,64 @@ class WhoMayEnterTests(TestCase):
     def test_a_verified_operator_gets_in(self):
         operator_client(self)
         self.assertEqual(self.client.get(HOME).status_code, 200)
+
+    def _code(self, device):
+        return str(TOTP(device.bin_key, device.step, device.t0, device.digits).token()).zfill(
+            device.digits
+        )
+
+    def _operator_with_authenticator(self):
+        user = User.objects.create_superuser("operator-c", "", "operator-password-1")
+        device = TOTPDevice.objects.create(user=user, name="authenticator", confirmed=True)
+        return device
+
+    def test_an_operator_signs_in_with_password_and_code_without_choosing_a_device(self):
+        device = self._operator_with_authenticator()
+        response = self.client.post(
+            "/console/login/",
+            {
+                "username": "operator-c",
+                "password": "operator-password-1",
+                "otp_token": self._code(device),
+                "next": HOME,
+            },
+        )
+        self.assertEqual(response.status_code, 302, response.content[:300])
+        self.assertEqual(self.client.get(HOME).status_code, 200)
+
+    def test_a_right_password_with_a_wrong_or_missing_code_is_not_let_in(self):
+        device = self._operator_with_authenticator()
+        wrong = "000000" if self._code(device) != "000000" else "111111"
+        for code in (wrong, ""):
+            with self.subTest(code=code):
+                response = self.client.post(
+                    "/console/login/",
+                    {
+                        "username": "operator-c",
+                        "password": "operator-password-1",
+                        "otp_token": code,
+                        "next": HOME,
+                    },
+                )
+                self.assertEqual(response.status_code, 200)  # the form again, with a message
+                self.assertEqual(self.client.get(HOME).status_code, 302)
+
+    def test_a_code_from_someone_else_s_authenticator_is_not_enough(self):
+        mine = self._operator_with_authenticator()
+        other = User.objects.create_superuser("operator-d", "", "operator-password-2")
+        theirs = TOTPDevice.objects.create(user=other, name="authenticator", confirmed=True)
+        self.assertNotEqual(self._code(mine), self._code(theirs))
+        response = self.client.post(
+            "/console/login/",
+            {
+                "username": "operator-c",
+                "password": "operator-password-1",
+                "otp_token": self._code(theirs),
+                "next": HOME,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.client.get(HOME).status_code, 302)
 
     def test_a_store_s_data_cannot_be_browsed_from_here(self):
         operator_client(self)
