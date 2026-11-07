@@ -2,15 +2,15 @@
 
 Last updated 2026-11-07. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
 
-## State on 2026-11-07: subscriptions built, premium redesign ready to review
+## State on 2026-11-07: subscriptions built, premium redesign deployed
 
-**Branches (nothing is pushed):** `feature/subscriptions-and-usability` holds the subscription work in logical commits (backend, deploy files, app, branding, docs). `feature/premium-design` is cut from it and holds the redesign; to go back to the old look, check out the first branch (or revert the design commits one by one, they are logical steps).
+**Branches (both pushed to GitHub on 2026-11-07; `main` is untouched):** `feature/subscriptions-and-usability` holds the subscription work in logical commits (backend, deploy files, app, branding, docs). `feature/premium-design` is cut from it and holds the redesign; to go back to the old look, check out the first branch (or revert the design commits one by one, they are logical steps).
 
 **Built and tested**
 - **Subscriptions and owner console** (backend `apps/billing`, the console at `/console/`, TOTP sign-in, renew by 1/3/12 months or custom days with a reason, suspend, free, temporary passwords): 894 backend tests passed at the last full run. The store sees a notice 7 days before expiry, then a 7-day grace, then read-only; data is never deleted. Support desk, announcements and a first-run checklist are in the app. Plan: [docs/SAAS_PLATFORM_PLAN.md](docs/SAAS_PLATFORM_PLAN.md).
 - **Premium redesign with a dark theme** (owner request, 2026-11-06): frosted-glass shell and surfaces over a cool luminous field, cobalt kept, a dark scheme chosen in Settings → Appearance (light until chosen), the blue-to-violet "E" brand kept. See [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md). 503 app tests pass, `flutter analyze` is clean, including a contrast test of both schemes. Looked at in a real browser (Flutter web) at phone 393, tablet 1024 and desktop 1440 widths, in both schemes. **Not seen on an Android tablet, a phone or an iPhone**, and glass blur cost on a low-end tablet is unmeasured: if scrolling is not smooth there, `GlassSurface(blur: 0)` keeps the look at no cost.
 
-**Deployed:** the subscription checkpoint (backend, console, app screens) is live at https://erp.kemalysh.dev: console login answers, the old `/admin` is gone, the API carries the new fields, the sample store is on the "free" plan. **The redesign is not deployed**, and no new Android APK was built; both wait for the owner's go-ahead (take a backup first).
+**Deployed:** the subscription checkpoint (backend, console, app screens) is live at https://erp.kemalysh.dev: console login answers, the old `/admin` is gone, the API carries the new fields, the sample store is on the "free" plan. **The redesign was deployed on 2026-11-07** at the owner's request: web files only (the design commits do not touch the backend), after a server backup (`backup-20261107-0852`). The live `main.dart.js` is byte-identical to the build tested locally. Rollback: on the server, `~/web-before-premium.tgz` holds the previous web files (empty `infra/public` except `downloads`, then `tar -xzf` it there); a browser needs a hard reload (Ctrl+Shift+R) or the home-screen icon reopened to pick up the new look. **No new Android APK was built**: the app at `/install/` still has the old look until one is built and uploaded.
 
 **For the owner to do**
 1. Create the console operator yourself (your own password, typed at the prompt, never sent to anyone): `ssh ... "cd ERP-System/infra && docker compose exec api python manage.py create_operator <name>"`, then scan the TOTP key.
