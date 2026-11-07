@@ -44,6 +44,31 @@
     window.erpSafeBottom = function () { return erpSafe.bottom; };
     /* The full-screen test copy (/fs/) sets this to true; the normal app never does. */
     window.erpFullScreen = false;
+    /* Full screen needs `viewport-fit=cover`, but Flutter replaces the page's viewport tag with its
+       own at start-up. Without it the phone gives Flutter a shorter page than the area Flutter
+       draws in: the picture is stretched and taps land lower than they look. So put it back as
+       soon as Flutter adds its tag, then measure the phone's areas again and tell Flutter. */
+    if (window.erpFullScreen) {
+      var erpCover = function () {
+        var changed = false;
+        document.querySelectorAll('meta[name="viewport"]').forEach(function (m) {
+          var c = m.getAttribute('content') || '';
+          if (c.indexOf('viewport-fit') < 0) {
+            m.setAttribute('content', c + ', viewport-fit=cover');
+            changed = true;
+          }
+        });
+        if (changed) {
+          setTimeout(function () {
+            erpMeasure();
+            window.dispatchEvent(new Event('resize'));
+            if (window.visualViewport) window.visualViewport.dispatchEvent(new Event('resize'));
+          }, 60);
+        }
+      };
+      new MutationObserver(erpCover).observe(document.head, { childList: true });
+      erpCover();
+    }
     window.erpSetScheme = function (dark) {
       var color = dark ? '#090C16' : '#EEF1F8';
       var set = function (name, value) {
