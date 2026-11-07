@@ -1,12 +1,32 @@
 # Handoff
 
-Last updated 2026-10-30. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+Last updated 2026-11-07. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
 
-## Subscription direction and open corrections (2026-11-06)
+## State on 2026-11-07: subscriptions built, premium redesign ready to review
 
-- **New direction:** one shared system sold to many stores by subscription. Plan: [docs/SAAS_PLATFORM_PLAN.md](docs/SAAS_PLATFORM_PLAN.md), awaiting the owner's decisions D1-D8. Usability rules and review: [docs/USABILITY.md](docs/USABILITY.md). Neither is built.
+**Branches (nothing is pushed):** `feature/subscriptions-and-usability` holds the subscription work in logical commits (backend, deploy files, app, branding, docs). `feature/premium-design` is cut from it and holds the redesign; to go back to the old look, check out the first branch (or revert the design commits one by one, they are logical steps).
+
+**Built and tested**
+- **Subscriptions and owner console** (backend `apps/billing`, the console at `/console/`, TOTP sign-in, renew by 1/3/12 months or custom days with a reason, suspend, free, temporary passwords): 894 backend tests passed at the last full run. The store sees a notice 7 days before expiry, then a 7-day grace, then read-only; data is never deleted. Support desk, announcements and a first-run checklist are in the app. Plan: [docs/SAAS_PLATFORM_PLAN.md](docs/SAAS_PLATFORM_PLAN.md).
+- **Premium redesign with a dark theme** (owner request, 2026-11-06): frosted-glass shell and surfaces over a cool luminous field, cobalt kept, a dark scheme chosen in Settings → Appearance (light until chosen), the blue-to-violet "E" brand kept. See [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md). 503 app tests pass, `flutter analyze` is clean, including a contrast test of both schemes. Looked at in a real browser (Flutter web) at phone 393, tablet 1024 and desktop 1440 widths, in both schemes. **Not seen on an Android tablet, a phone or an iPhone**, and glass blur cost on a low-end tablet is unmeasured: if scrolling is not smooth there, `GlassSurface(blur: 0)` keeps the look at no cost.
+
+**Deployed:** the subscription checkpoint (backend, console, app screens) is live at https://erp.kemalysh.dev: console login answers, the old `/admin` is gone, the API carries the new fields, the sample store is on the "free" plan. **The redesign is not deployed**, and no new Android APK was built; both wait for the owner's go-ahead (take a backup first).
+
+**For the owner to do**
+1. Create the console operator yourself (your own password, typed at the prompt, never sent to anyone): `ssh ... "cd ERP-System/infra && docker compose exec api python manage.py create_operator <name>"`, then scan the TOTP key.
+2. Put `PLATFORM_SUPPORT_PHONE` and `PLATFORM_SUPPORT_NOTE` in the server's `infra/.env` (what clients see on the support screen).
+3. Replace the shared password the four test accounts (owner, manager, sales, warehouse) still use with a private one for each real person (Settings → Change password now exists). The password is not written here on purpose.
+4. Still open: email service; off-site backups and one restore drill; Android signing key, app id and product name (D8); the iPhone cut-off (USABILITY item 21: delete and re-add the home-screen icon, then test); fluent review of the Turkmen texts (all new ones are drafts); card payments (cash first, as decided).
+
+**Changes of behaviour worth knowing**
+- The sign-in screen's role picker is replaced by "recent accounts" chips (the `ROLE_PICKER` build flag still exists and is off); the test shop's four roles still sign in without a password in development.
+- On a phone the language switch lives in Settings (and on the sign-in page); on a tablet it is in the top bar.
+
+## Subscription direction and open corrections (2026-11-06; the plan is now built, see the section above)
+
+- **New direction:** one shared system sold to many stores by subscription. Plan: [docs/SAAS_PLATFORM_PLAN.md](docs/SAAS_PLATFORM_PLAN.md), built since (decisions D1-D8 are still open where noted there). Usability rules and review: [docs/USABILITY.md](docs/USABILITY.md), whose fixes are mostly built (its status line lists what is not).
 - **Live server:** https://erp.kemalysh.dev on a free 1 GB Oracle VM (168.107.87.98), deployed by upload from uncommitted local work, not from git. Nightly backups run (4 of 4) but stay on that VM, and no restore has been tried. No email service is configured.
-- **Corrections to the 2026-11-02 mobile round:** the iPhone clipping is **not confirmed fixed** (the check was desktop Chromium at 393 px; see USABILITY.md item 21). The Android APK has not been run on any device or emulator, so the adaptive icon, native splash and system bars are unverified. The owner was told passwords can be changed in Settings; the app has no such screen.
+- **Corrections to the 2026-11-02 mobile round:** the iPhone clipping is **not confirmed fixed** (the check was desktop Chromium at 393 px; see USABILITY.md item 21). The Android APK has not been run on any device or emulator, so the adaptive icon, native splash and system bars are unverified. The owner was told passwords can be changed in Settings; that screen did not exist then and has been built since.
 - The `ROLE_PICKER` build flag assumes logins equal role names, so it must be off before a second store exists.
 
 ## Owner's manual-test round (2026-10-31)

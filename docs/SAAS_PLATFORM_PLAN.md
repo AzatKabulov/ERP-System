@@ -1,6 +1,6 @@
 # Selling the ERP as a subscription
 
-Status: plan for the owner's review, 2026-11-06. Nothing here is built yet. It adds to [PRD.md](PRD.md) and [ARCHITECTURE.md](ARCHITECTURE.md). The usability work the owner asked for at the same time is in [USABILITY.md](USABILITY.md).
+Status: plan of 2026-11-06, approved by the owner the same day and built that day (subscriptions, the owner console, temporary passwords, the app's notices, support desk and first-run help; see [HANDOFF.md](../HANDOFF.md) for what is deployed and what is still open: card payments, email, the owner decisions D1-D8). It adds to [PRD.md](PRD.md) and [ARCHITECTURE.md](ARCHITECTURE.md). The usability work the owner asked for at the same time is in [USABILITY.md](USABILITY.md).
 
 ## 1. How it will work
 

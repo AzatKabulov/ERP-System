@@ -1,6 +1,6 @@
 # Usability: principles and review
 
-Status: first review, 2026-11-06. None of the fixes in section 3 are built yet.
+Status: first review, 2026-11-06. Built since (branches `feature/subscriptions-and-usability` and `feature/premium-design`): items 1-10, 12-15, 17, 18 and 20. **Still open:** 11 (agree the wording of the profit terms with the owner), 16 (the RU/TK glossary and a native-speaker review), 19 (bottom-bar labels are 12 px now; check on a real phone) and 21 (the iPhone cut-off is unconfirmed: delete and re-add the home-screen icon, then test on the device). Where the table below describes a problem, read it as the state of the app on the day of the review.
 
 **What this review is:** one expert-style inspection by an AI agent. It looked at the live site in a desktop browser at phone width (393 px), on a nearly empty store (close to what a first-time user sees), and at the code. Screens looked at: dashboard, menu, products, stock, sales and cart, expenses, warranties, reports, settings, sign-in.
 
@@ -36,7 +36,7 @@ Each rule is checked in review on the new or changed screen, in both languages, 
 
 - **Status:** offline banner, pending-operations banner, "Добавлено: water" after adding to the cart (rule 9).
 - **Prevention:** no second-shop option, stock limits, return periods, drafts that survive a crash (rule 7).
-- **Contrast:** muted text is 5.4:1 on the page background and 6.0:1 on white (rule 12).
+- **Contrast:** in both schemes (light, dark) text, status colours, the primary button and field outlines meet the ratios in rule 12; a unit test computes them (`test/features/theme_test.dart`). The dark scheme is a setting in Settings → Appearance (rule 13: a remembered choice).
 - **Doubled text:** tested on the selling, returns, transfers and counts screens. Not checked for every screen (rule 12).
 - **Experts:** barcode scanning, hand-scanner support, keyboard entry (rule 13).
 - **Reversal:** a sale isn't silently edited; returns and corrections are linked records (rule 8).
