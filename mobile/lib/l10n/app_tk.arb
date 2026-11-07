@@ -1723,5 +1723,68 @@
   "signInCodeLabel": "Autentifikator programmasyndaky kod",
   "signInCodeHint": "Telefonyňyzdaky programmadan 6 sany sanyny giriziň.",
   "errorInvalidOtp": "Kod nädogry. Telefonyňyzyň wagty dogrudygyny barlaň we täze kod giriziň.",
-  "errorOtpLocked": "Nädogry kod köp boldy. Biraz garaşyp, täzeden synanyşyň."
+  "errorOtpLocked": "Nädogry kod köp boldy. Biraz garaşyp, täzeden synanyşyň.",
+  "suSkip": "Geçmek",
+  "suNext": "Indiki",
+  "suStepOf": "{current}-nji ädim, jemi {total}",
+  "@suStepOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "suWelcomeTitle": "Dükanyňyzy sazlalyň",
+  "suWelcomeBody": "Çykdajylar we peýda dogry hasaplanar ýaly birnäçe gysga sorag. Bu birnäçe minut alar. Hemmesini geçip, soň dolduryp bolýar.",
+  "suShopTitle": "Dükan barada",
+  "suShopName": "Dükanyň ady",
+  "suShopPhone": "Dükanyň telefony",
+  "suShopAddress": "Salgy (çekde çap edilýär)",
+  "suTeamTitle": "Siziň ýanyňyzda kim işleýär?",
+  "suTeamHint": "Atlar we aýlyklar adamlara edilýän çykdajylary hasaba almak üçin gerek. Bu olara ulgama girmek hukugyny bermeýär: hasaplar «Sazlamalar» bölüminde döredilýär.",
+  "suAddPerson": "Işgär goşmak",
+  "suPersonName": "Ady",
+  "suPersonPhone": "Telefon",
+  "suPersonTitle": "Wezipe",
+  "suPersonPay": "Aýlyk, TMT",
+  "suRemove": "Aýyrmak",
+  "suNoTeam": "Häzir hiç kim ýok. Ýeke işleýän bolsaňyz, «Indiki» basyň.",
+  "suCostsTitle": "Aýlyk hemişelik çykdajylar",
+  "suCostsHint": "Hiç zat satylmasa-da her aý töleýän zatlaryňyz. Peýdada bolmak üçin näçe satmalydygy şulardan hasaplanýar.",
+  "suRent": "Kärende, TMT",
+  "suCosts": "Galany: elektrik, internet, salgytlar, TMT",
+  "suDoneTitle": "Taýýar!",
+  "suDoneBody": "Dükan sazlandy. Indi haryt we galyndylary giriziň: «Harytlar» we «Sklad» bölümleri. Her sahypadaky maslahatlar ilkinji ädime kömek eder.",
+  "suStart": "Işe başlamak",
+  "suPayTotal": "Aýlyklar jemi: {total} TMT",
+  "@suPayTotal": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "suSettingsCard": "Topar we çykdajylar",
+  "suSettingsHint": "Işgärler, aýlyklar, kärende we beýleki hemişelik çykdajylar. Islendik wagt doldurup ýa-da düzedip bolýar.",
+  "suSettingsOpen": "Soraglary açmak",
+  "suSkipped": "Bolýar. Bu soraglara «Sazlamalar», «Dükan» bölüminde dolanyp bolýar.",
+  "guideReplay": "Maslahatlary täzeden görkezmek",
+  "guideReplayHint": "Peýkamly maslahatlar her sahypa girenmde ýene peýda bolar.",
+  "guideReplayDone": "Bolýar, maslahatlar ýene görkeziler.",
+  "guDone": "Düşnükli",
+  "guDashNavSales": "Kassa: şu ýerde satýarsyňyz. Harydy tapyp basyň: ol çege düşer.",
+  "guDashNavProducts": "Harytlar: ilki satýan zatlaryňyzy şu ýere goşuň.",
+  "guDashNavStock": "Sklad: nämeden näçe barlygy. Galyndy satuwdan we getirilenden soň özi üýtgeýär.",
+  "guDashHelp": "Şu ýerden her wagt gollanmany açyp, bize ýazyp bolýar.",
+  "guProdAdd": "Täze haryt goşmak üçin basyň: ady, bahasy, suraty.",
+  "guProdSearch": "Ady boýunça gözläň ýa-da kamera basyp, ştrih-koda tutuň.",
+  "guProdMore": "Bu ýerde faýldan import, eksport we bahasy ýetmeýän harytlar.",
+  "guSalesSearch": "Harydyň adyny ýazyp başlaň ýa-da kamerany ştrih-koda tutuň.",
+  "guSalesCheckout": "Hemmesi saýlanda şu ýere basyň: satuw geçirilýär we çek peýda bolýar. Haryt setirindäki bahany üýtgedip bolýar.",
+  "guStockMore": "Bu ýerde «Haryt galyndysyny girizmek» (başlanda bir gezek) we «Düzediş» (tapawut tapsaňyz).",
+  "guStockIntake": "Täze haryt geldimi? Ony şu ýerde kabul ediň.",
+  "guStockSearch": "Harydyň nirede we näçe barlygyny görmek üçin ony tapyň."
 }

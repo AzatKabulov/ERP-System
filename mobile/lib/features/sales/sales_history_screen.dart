@@ -22,6 +22,7 @@ import '../workspace/unsaved_work.dart';
 import 'document_buttons.dart';
 import 'sales_models.dart';
 import 'sales_repository.dart';
+import '../../widgets/app_route.dart';
 
 String _methodText(AppLocalizations l, String method) =>
     method == 'cash' ? l.payCash : l.payCard;
@@ -152,7 +153,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                       child: _SaleTile(
                         sale: sale,
                         onTap: () => Navigator.of(context).push<void>(
-                          MaterialPageRoute(
+                          appRoute(
                             builder: (_) => SaleDetailScreen(
                               saleId: sale.id,
                               session: widget.session,
@@ -283,7 +284,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
 
   Future<void> _startReturn(SaleDetail sale) async {
     final result = await Navigator.of(context).push<ReturnResult>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ReturnFormScreen(
           sale: sale,
           session: session,
@@ -310,7 +311,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
 
   Future<void> _startWarranty(SaleDetail sale) async {
     final opened = await Navigator.of(context).push<WarrantyClaim>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => WarrantyNewScreen(
           session: session,
           repository: WarrantiesRepository(

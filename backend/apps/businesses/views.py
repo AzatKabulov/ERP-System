@@ -14,7 +14,7 @@ from apps.common.errors import ApiError
 
 from . import services
 from .access import BusinessAPIView, BusinessScopedMixin, restrict_to_locations
-from .models import Business, ExchangeRate, Location, Membership
+from .models import Business, ExchangeRate, Location, Membership, TeamMember
 from .permissions import has_permission, permissions_for
 from .serializers import (
     BusinessSerializer,
@@ -23,6 +23,7 @@ from .serializers import (
     StaffCreateSerializer,
     StaffSerializer,
     StaffUpdateSerializer,
+    TeamMemberSerializer,
 )
 
 
@@ -277,3 +278,49 @@ class StaffDetailView(BusinessAPIView):
             request.business, request.user, membership, serializer.validated_data
         )
         return Response(StaffSerializer(membership).data)
+
+
+class TeamListCreateView(BusinessScopedMixin, generics.ListCreateAPIView):
+    """The people who work in the shop and what they are paid. Pay is money information: only the
+    owner sees or changes it."""
+
+    serializer_class = TeamMemberSerializer
+    permission_by_method = {"GET": "staff.manage", "POST": "staff.manage"}
+    pagination_class = None
+
+    def get_queryset(self):
+        return TeamMember.objects.filter(business=self.request.business, is_active=True)
+
+    def perform_create(self, serializer):
+        member = serializer.save(business=self.request.business)
+        audit.record(
+            "team.created", actor=self.request.user, business=self.request.business, obj=member
+        )
+
+
+class TeamDetailView(BusinessScopedMixin, generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TeamMemberSerializer
+    permission_by_method = {
+        "GET": "staff.manage",
+        "PATCH": "staff.manage",
+        "PUT": "staff.manage",
+        "DELETE": "staff.manage",
+    }
+    lookup_url_kwarg = "member_id"
+
+    def get_queryset(self):
+        return TeamMember.objects.filter(business=self.request.business, is_active=True)
+
+    def perform_update(self, serializer):
+        member = serializer.save()
+        audit.record(
+            "team.changed", actor=self.request.user, business=self.request.business, obj=member
+        )
+
+    def perform_destroy(self, instance):
+        # kept for the history of costs, just no longer listed
+        instance.is_active = False
+        instance.save(update_fields=["is_active", "updated_at"])
+        audit.record(
+            "team.removed", actor=self.request.user, business=self.request.business, obj=instance
+        )

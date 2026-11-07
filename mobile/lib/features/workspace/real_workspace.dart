@@ -20,6 +20,10 @@ import '../reports/dashboard_screen.dart';
 import '../reports/reports_repository.dart';
 import '../reports/reports_screen.dart';
 import '../sales/cart_controller.dart';
+import '../../core/session/session_models.dart';
+import '../../l10n/app_localizations.dart';
+import '../guide/coach_guide.dart';
+import '../setup/setup_wizard.dart';
 import '../subscription/subscription_widgets.dart';
 import '../support/help_screen.dart';
 import '../support/support_repository.dart';
@@ -32,6 +36,7 @@ import 'placeholder_screens.dart';
 import '../warranties/warranties_repository.dart';
 import '../warranties/warranties_screen.dart';
 import 'unsaved_work.dart';
+import '../../widgets/app_route.dart';
 
 /// The signed-in workspace. Navigation shows only what the role may use, the
 /// header lets the user switch location (and business, when they have several),
@@ -63,6 +68,11 @@ class RealWorkspace extends StatefulWidget {
 class _RealWorkspaceState extends State<RealWorkspace> {
   AppPage _page = AppPage.dashboard;
   int _reloadCounter = 0;
+
+  /// The first-sign-in questions are on screen (kept until the owner leaves them, so the last
+  /// "done" page is not replaced the moment the answers are saved).
+  bool _setupActive = false;
+  bool _setupDismissed = false;
 
   /// One cart per business, kept here (not in the sales screen) so it survives moving to
   /// another page and switching the language. It is dropped with the workspace on sign-out.
@@ -109,7 +119,7 @@ class _RealWorkspaceState extends State<RealWorkspace> {
   Future<void> _openToComplete() async {
     final membership = session.membership!;
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ToCompleteScreen(
           repository: CatalogRepository(widget.api, membership.businessId),
         ),
@@ -120,7 +130,7 @@ class _RealWorkspaceState extends State<RealWorkspace> {
 
   /// How-to pages, with a way to write to us for those who may.
   Future<void> _openHelp() => Navigator.of(context).push<void>(
-    MaterialPageRoute(
+    appRoute(
       builder: (_) => HelpScreen(
         onWriteToUs: session.can('support.write')
             ? () {
@@ -134,7 +144,7 @@ class _RealWorkspaceState extends State<RealWorkspace> {
 
   /// The conversation with us.
   Future<void> _openSupport() => Navigator.of(context).push<void>(
-    MaterialPageRoute(
+    appRoute(
       builder: (_) => SupportScreen(
         session: session,
         repository: SupportRepository(
@@ -146,9 +156,70 @@ class _RealWorkspaceState extends State<RealWorkspace> {
     ),
   );
 
+  /// The first-time tips of a page: shown once, with arrows, "Next" and "Skip".
+  Widget _guided(String id, List<GuideStep> steps, Widget child) => GuideOnce(
+    key: ValueKey('guide-$id'),
+    id: id,
+    preferences: session.preferences,
+    steps: steps,
+    child: child,
+  );
+
   Widget _content() {
     final membership = session.membership!;
     final page = _allowed(_page) ? _page : AppPage.dashboard;
+    final inner = _page0(membership, page);
+    return switch (page) {
+      AppPage.dashboard => _guided('dashboard', const [
+        GuideStep(['nav-sales', 'tab-sales'], _tipDashSales),
+        GuideStep(['nav-products', 'tab-products'], _tipDashProducts),
+        GuideStep(['nav-inventory', 'tab-inventory'], _tipDashStock),
+        GuideStep(['help-button'], _tipDashHelp),
+      ], inner),
+      AppPage.products => _guided('products', const [
+        GuideStep(['catalog-add'], _tipProdAdd),
+        GuideStep(['catalog-search'], _tipProdSearch),
+        GuideStep(['catalog-more'], _tipProdMore),
+      ], inner),
+      AppPage.sales => _guided('sales', const [
+        GuideStep(['sales-search'], _tipSalesSearch),
+        GuideStep(['cart-checkout'], _tipSalesCheckout),
+      ], inner),
+      AppPage.inventory => _guided('inventory', const [
+        GuideStep(['stock-intake'], _tipStockIntake),
+        GuideStep(['stock-more'], _tipStockMore),
+        GuideStep(['stock-search'], _tipStockSearch),
+      ], inner),
+      _ => inner,
+    };
+  }
+
+  static String _tipDashSales(AppLocalizations l) => l.guDashNavSales;
+  static String _tipDashProducts(AppLocalizations l) => l.guDashNavProducts;
+  static String _tipDashStock(AppLocalizations l) => l.guDashNavStock;
+  static String _tipDashHelp(AppLocalizations l) => l.guDashHelp;
+  static String _tipProdAdd(AppLocalizations l) => l.guProdAdd;
+  static String _tipProdSearch(AppLocalizations l) => l.guProdSearch;
+  static String _tipProdMore(AppLocalizations l) => l.guProdMore;
+  static String _tipSalesSearch(AppLocalizations l) => l.guSalesSearch;
+  static String _tipSalesCheckout(AppLocalizations l) => l.guSalesCheckout;
+  static String _tipStockIntake(AppLocalizations l) => l.guStockIntake;
+  static String _tipStockMore(AppLocalizations l) => l.guStockMore;
+  static String _tipStockSearch(AppLocalizations l) => l.guStockSearch;
+
+  /// The questions about the shop, opened again from Settings.
+  Future<void> _openSetup() => Navigator.of(context).push<void>(
+    appRoute(
+      builder: (route) => SetupWizard(
+        session: session,
+        repository: SetupRepository(widget.api, session.membership!.businessId),
+        firstRun: false,
+        onClose: () => Navigator.of(route).pop(),
+      ),
+    ),
+  );
+
+  Widget _page0(MembershipInfo membership, AppPage page) {
     return switch (page) {
       AppPage.dashboard => DashboardScreen(
         key: ValueKey('dashboard-${membership.id}-$_reloadCounter'),
@@ -221,6 +292,7 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         onLanguageChanged: widget.onLanguageChanged,
         onOpenHelp: _openHelp,
         onOpenSupport: _openSupport,
+        onOpenSetup: session.can('staff.manage') ? _openSetup : null,
       ),
     };
   }
@@ -297,6 +369,23 @@ class _RealWorkspaceState extends State<RealWorkspace> {
       final l = strings(context);
       final membership = session.membership;
       if (membership == null) return NoBusinessScreen(session: session);
+      // the owner of a shop we set up is asked a few questions first
+      if (_setupActive ||
+          (!_setupDismissed &&
+              membership.role == 'owner' &&
+              membership.setupStatus == 'pending')) {
+        _setupActive = true;
+        return SetupWizard(
+          key: const ValueKey('setup-wizard'),
+          session: session,
+          repository: SetupRepository(widget.api, membership.businessId),
+          firstRun: true,
+          onClose: () => setState(() {
+            _setupActive = false;
+            _setupDismissed = true;
+          }),
+        );
+      }
       if (session.subscription?.isSuspended ?? false) {
         // Access was cut off by us: nothing of the shop opens, only how to reach us.
         return SubscriptionBlockedScreen(

@@ -16,6 +16,7 @@ import 'transfer_detail_screen.dart';
 import 'transfer_form_screen.dart';
 import 'transfers_models.dart';
 import 'transfers_repository.dart';
+import '../../widgets/app_route.dart';
 
 /// Transfers between locations, newest first, with a status filter. From here: send goods,
 /// or open a transfer to receive or cancel it.
@@ -94,7 +95,7 @@ class _TransfersScreenState extends State<TransfersScreen> {
 
   Future<void> _open(String id) async {
     final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => TransferDetailScreen(
           transferId: id,
           session: session,
@@ -110,7 +111,7 @@ class _TransfersScreenState extends State<TransfersScreen> {
 
   Future<void> _create() async {
     final result = await Navigator.of(context).push<EntryResult>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => TransferFormScreen(
           session: session,
           repository: widget.repository,

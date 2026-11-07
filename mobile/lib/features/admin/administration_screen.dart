@@ -8,6 +8,7 @@ import '../../core/session/session_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
+import '../guide/coach_guide.dart';
 import '../../widgets/motion.dart';
 import '../shared/async_section.dart';
 import '../../theme/theme_controller.dart';
@@ -41,6 +42,7 @@ class RealAdministrationScreen extends StatefulWidget {
     required this.onLanguageChanged,
     this.onOpenHelp,
     this.onOpenSupport,
+    this.onOpenSetup,
   });
 
   final SessionController session;
@@ -52,6 +54,9 @@ class RealAdministrationScreen extends StatefulWidget {
   /// The how-to pages and the conversation with us (from the Account tab).
   final VoidCallback? onOpenHelp;
   final VoidCallback? onOpenSupport;
+
+  /// The shop questions (team, pay, fixed costs), for the owner.
+  final VoidCallback? onOpenSetup;
 
   @override
   State<RealAdministrationScreen> createState() =>
@@ -280,6 +285,15 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                 icon: const AppIcon(AppIcons.chat, size: 18),
                 label: Text(l.supportTitle),
               ),
+            OutlinedButton.icon(
+              key: const ValueKey('settings-guide-replay'),
+              onPressed: () async {
+                await Guides.resetAll(session.preferences);
+                if (mounted) showFeedback(context, l.guideReplayDone);
+              },
+              icon: const AppIcon(AppIcons.info, size: 18),
+              label: Text(l.guideReplay),
+            ),
           ],
         ),
       ],
@@ -430,6 +444,29 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (widget.onOpenSetup != null) ...[
+          SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeading(l.suSettingsCard),
+                const SizedBox(height: 4),
+                Text(
+                  l.suSettingsHint,
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  key: const ValueKey('settings-setup'),
+                  onPressed: widget.onOpenSetup,
+                  icon: const AppIcon(AppIcons.checklist, size: 18),
+                  label: Text(l.suSettingsOpen),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         if (session.can('business.view'))
           SurfaceCard(
             child: Column(

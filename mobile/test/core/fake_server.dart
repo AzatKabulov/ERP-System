@@ -26,6 +26,9 @@ class FakeServer {
   /// Expenses, receipt files, warranty claims and the CSV import (see fake_office.dart).
   late final FakeOffice office = FakeOffice(this);
 
+  /// The shop's team (name, phone, job title, monthly pay) for the setup questions.
+  final List<Map<String, dynamic>> teamData = [];
+
   /// The platform owner's pages (see fake_platform.dart).
   final FakePlatform platform = FakePlatform();
 
@@ -575,6 +578,30 @@ class FakeServer {
       if (method == 'PATCH') {
         businessData.addAll(body);
         return _json(200, businessData);
+      }
+    }
+    if (rest == 'team/') {
+      if (method == 'GET') return page(teamData);
+      if (method == 'POST') {
+        final row = {
+          'id': 'tm-${teamData.length + 1}',
+          'is_active': true,
+          ...body,
+        };
+        teamData.add(row);
+        return _json(201, row);
+      }
+    }
+    final teamOne = RegExp(r'^team/([^/]+)/$').firstMatch(rest);
+    if (teamOne != null) {
+      final i = teamData.indexWhere((r) => r['id'] == teamOne.group(1));
+      if (method == 'DELETE') {
+        if (i >= 0) teamData.removeAt(i);
+        return http.Response('', 204);
+      }
+      if (method == 'PATCH' && i >= 0) {
+        teamData[i].addAll(body);
+        return _json(200, teamData[i]);
       }
     }
     if (rest == 'locations/') {

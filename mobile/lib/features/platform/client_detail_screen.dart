@@ -12,6 +12,7 @@ import 'platform_models.dart';
 import 'platform_repository.dart';
 import 'platform_support_screen.dart';
 import 'platform_widgets.dart';
+import '../../widgets/app_route.dart';
 
 /// One client: where the subscription stands, the buttons that change it, contacts, the history
 /// of every payment and change, our own notes, their people and their questions to us.
@@ -429,7 +430,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
           for (final t in d.tickets)
             InkWell(
               onTap: () => Navigator.of(context).push<void>(
-                MaterialPageRoute(
+                appRoute(
                   builder: (_) =>
                       TicketScreen(repository: repo, ticketId: t.id),
                 ),

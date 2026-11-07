@@ -14,6 +14,7 @@ import 'platform_models.dart';
 import 'platform_repository.dart';
 import 'platform_settings_screen.dart';
 import 'platform_support_screen.dart';
+import '../../widgets/app_route.dart';
 
 /// What the platform owner sees after the ordinary sign-in: the same app frame as a shop, with
 /// their own pages (the overview, every client, the support desk, notices) and settings. No shop
@@ -51,7 +52,7 @@ class _PlatformWorkspaceState extends State<PlatformWorkspace> {
 
   Future<void> _openClient(String id, {ClientDetail? initial}) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ClientDetailScreen(
           repository: _repo,
           clientId: id,
@@ -65,7 +66,7 @@ class _PlatformWorkspaceState extends State<PlatformWorkspace> {
 
   Future<void> _newClient() async {
     final created = await Navigator.of(context).push<ClientDetail>(
-      MaterialPageRoute(builder: (_) => NewClientScreen(repository: _repo)),
+      appRoute(builder: (_) => NewClientScreen(repository: _repo)),
     );
     if (!mounted) return;
     setState(() => _version++);

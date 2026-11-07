@@ -23,6 +23,7 @@ import 'product_photo.dart';
 import 'product_stock_info.dart';
 import 'product_form_screen.dart';
 import '../../widgets/glass.dart';
+import '../../widgets/app_route.dart';
 
 /// The product catalog: search by name, SKU, brand or barcode (typed or scanned),
 /// browse, open, add. Reads only what the server returns for this business.
@@ -138,7 +139,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   Future<void> _open(Product product) async {
     final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ProductDetailScreen(
           product: product,
           repository: widget.repository,
@@ -171,9 +172,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   Future<void> _import() async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => CsvImportScreen(repository: widget.repository),
-      ),
+      appRoute(builder: (_) => CsvImportScreen(repository: widget.repository)),
     );
     if (mounted) _load(reset: true);
   }
@@ -197,7 +196,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   Future<void> _add({String? barcode}) async {
     final saved = await Navigator.of(context).push<Product>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ProductFormScreen(
           repository: widget.repository,
           session: widget.session,

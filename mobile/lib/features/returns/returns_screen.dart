@@ -16,6 +16,7 @@ import '../workspace/unsaved_work.dart';
 import 'return_detail_screen.dart';
 import 'returns_models.dart';
 import 'returns_repository.dart';
+import '../../widgets/app_route.dart';
 
 /// Customer returns, newest first, searchable by number. Open one to see what came back and,
 /// for goods that were set aside, to decide whether they are sellable or damaged.
@@ -92,7 +93,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
 
   Future<void> _open(String id) async {
     final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ReturnDetailScreen(
           returnId: id,
           session: widget.session,

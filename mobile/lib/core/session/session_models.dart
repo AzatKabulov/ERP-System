@@ -128,6 +128,7 @@ class MembershipInfo {
     required this.permissions,
     required this.locations,
     this.subscription,
+    this.setupStatus = 'done',
   });
 
   final String id;
@@ -141,6 +142,9 @@ class MembershipInfo {
   /// Null for a seller or keeper while everything is fine.
   final SubscriptionInfo? subscription;
 
+  /// `pending` until the owner has answered (or skipped) the first-sign-in questions.
+  final String setupStatus;
+
   bool can(String permission) => permissions.contains(permission);
 
   factory MembershipInfo.fromJson(Map<String, dynamic> json) {
@@ -150,6 +154,7 @@ class MembershipInfo {
       businessId: business['id'] as String,
       businessName: business['name'] as String,
       currency: (business['currency'] as String?) ?? 'TMT',
+      setupStatus: (business['setup_status'] as String?) ?? 'done',
       role: json['role'] as String,
       permissions: {for (final p in json['permissions'] as List) p as String},
       locations: [

@@ -11,6 +11,7 @@ import '../../widgets/common.dart';
 import '../../widgets/glass.dart';
 import 'password_form.dart';
 import 'password_reset_screen.dart';
+import '../../widgets/app_route.dart';
 
 /// A build made with `--dart-define=ROLE_PICKER=true` signs in by choosing a role and then typing
 /// that account's password (the usernames are the role names). Plain password sign-in stays one
@@ -405,7 +406,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 onPressed: _busy || !widget.server.configured
                     ? null
                     : () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
+                        appRoute<void>(
                           builder: (_) => PasswordResetScreen(
                             api: widget.session.api,
                             initialIdentifier: _username.text.trim(),

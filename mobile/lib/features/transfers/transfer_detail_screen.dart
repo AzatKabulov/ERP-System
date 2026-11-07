@@ -15,6 +15,7 @@ import '../shared/async_section.dart';
 import '../workspace/unsaved_work.dart';
 import 'transfers_models.dart';
 import 'transfers_repository.dart';
+import '../../widgets/app_route.dart';
 
 /// One transfer: what was sent, where it is, and (while it is in transit) buttons to
 /// receive or cancel it. Receiving and cancelling go through the [OperationRunner] too.
@@ -53,7 +54,7 @@ class _TransferDetailScreenState extends State<TransferDetailScreen> {
 
   Future<void> _receive(Transfer transfer) async {
     final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ReceiveTransferScreen(
           transfer: transfer,
           session: session,

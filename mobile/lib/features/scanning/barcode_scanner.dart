@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'continuous_scan_screen.dart';
 import 'scan_screen.dart';
+import '../../widgets/app_route.dart';
 
 /// Reads a barcode with the device camera. A scan only ever **returns a code**:
 /// it never submits a form, completes a sale or moves stock. The screen that asked
@@ -57,10 +58,7 @@ class CameraBarcodeScanner implements BarcodeScanner {
   @override
   Future<String?> scan(BuildContext context) =>
       Navigator.of(context).push<String>(
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (_) => const ScanScreen(),
-        ),
+        appRoute(fullscreenDialog: true, builder: (_) => const ScanScreen()),
       );
 
   @override
@@ -70,7 +68,7 @@ class CameraBarcodeScanner implements BarcodeScanner {
     Listenable? changes,
     WidgetBuilder? status,
   }) => Navigator.of(context).push<void>(
-    MaterialPageRoute(
+    appRoute(
       fullscreenDialog: true,
       builder: (_) => ContinuousScanScreen(
         onCode: onCode,

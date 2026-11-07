@@ -2,6 +2,7 @@ import 'package:erp_system/core/config/app_config.dart';
 import 'package:erp_system/core/operations/pending_operation.dart';
 import 'package:erp_system/core/operations/pending_operation_store.dart';
 import 'package:erp_system/core/session/token_stores.dart';
+import 'package:erp_system/features/guide/coach_guide.dart';
 import 'package:erp_system/features/sales/document_actions.dart';
 import 'package:erp_system/features/scanning/barcode_scanner.dart';
 import 'package:erp_system/main.dart';
@@ -63,6 +64,8 @@ class RealRig {
   }) async {
     await tester.binding.setSurfaceSize(size);
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    // the first-time tips have their own test; elsewhere they would cover the screen under test
+    Guides.enabled = false;
     // Most tests run with the system's "remove animations" setting on, so a screen is in its final
     // state as soon as it is built (and the reduced-motion path of every widget is exercised).
     // The animated path has its own tests (motion_test.dart), which pass `reduceMotion: false`.

@@ -27,6 +27,7 @@ import 'sales_history_screen.dart';
 import 'sales_models.dart';
 import 'sales_repository.dart';
 import '../../widgets/glass.dart';
+import '../../widgets/app_route.dart';
 
 /// Recording a sale: find or scan products, build a cart (which reserves no stock), set the
 /// quantity and the price of every line (prices are not fixed: the seller charges what they
@@ -227,7 +228,7 @@ class _SalesScreenState extends State<SalesScreen> {
     final locationId = _locationId;
     if (locationId == null || !cart.isReady) return;
     final outcome = await Navigator.of(context).push<CheckoutOutcome>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => CheckoutScreen(
           cart: cart,
           session: session,
@@ -277,7 +278,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   OutlinedButton.icon(
                     key: const ValueKey('sales-history'),
                     onPressed: () => Navigator.of(context).push<void>(
-                      MaterialPageRoute(
+                      appRoute(
                         builder: (_) => SalesHistoryScreen(
                           session: session,
                           repository: widget.repository,
@@ -294,7 +295,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   OutlinedButton.icon(
                     key: const ValueKey('sales-returns'),
                     onPressed: () => Navigator.of(context).push<void>(
-                      MaterialPageRoute(
+                      appRoute(
                         builder: (_) => ReturnsScreen(
                           session: session,
                           repository: ReturnsRepository(

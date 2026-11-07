@@ -253,6 +253,8 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
           ),
         ),
       ),
+      // The browser address holds the pushed pages' names; a reload starts at the first page.
+      initialRoute: '/',
       home: _demo
           ? Workspace(
               store: _store!,

@@ -11,6 +11,7 @@ import '../inventory/quantity_input.dart';
 import '../shared/async_section.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
+import '../../widgets/app_route.dart';
 
 /// On the product page: the minimum and the target stock at each place (the reorder list is
 /// built from them). Owners and managers can change them.
@@ -35,7 +36,7 @@ class _ReorderLevelsCardState extends State<ReorderLevelsCard> {
 
   Future<void> _edit(List<ReorderLevel> levels) async {
     final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ReorderLevelsScreen(
           product: widget.product,
           repository: widget.repository,

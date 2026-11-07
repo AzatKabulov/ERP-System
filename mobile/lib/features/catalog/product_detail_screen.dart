@@ -14,6 +14,7 @@ import 'product_form_screen.dart';
 import 'product_photo.dart';
 import 'product_stock_info.dart';
 import 'reorder_levels_screen.dart';
+import '../../widgets/app_route.dart';
 
 /// One product, read-only, with edit and archive for those who may. Closes with
 /// `true` when something was changed so the list can refresh.
@@ -44,7 +45,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<void> _edit() async {
     final saved = await Navigator.of(context).push<Product>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ProductFormScreen(
           repository: widget.repository,
           session: widget.session,

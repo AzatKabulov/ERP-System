@@ -329,7 +329,18 @@ def provision_client(
     )
     business.default_language = business.document_language = language
     business.phone = phone.strip()
-    business.save(update_fields=["default_language", "document_language", "phone", "updated_at"])
+    business.setup_status = (
+        business.Setup.PENDING
+    )  # the owner is asked about the shop at first sign-in
+    business.save(
+        update_fields=[
+            "default_language",
+            "document_language",
+            "phone",
+            "setup_status",
+            "updated_at",
+        ]
+    )
     client = Client.objects.create(
         business=business,
         contact_name=owner_name.strip(),

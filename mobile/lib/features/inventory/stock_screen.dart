@@ -28,6 +28,7 @@ import 'quantity_input.dart';
 import 'stock_entry_screen.dart';
 import 'stock_labels.dart';
 import '../../widgets/glass.dart';
+import '../../widgets/app_route.dart';
 
 /// Current stock per product, location and condition, read from the ledger's
 /// balances. Everything shown is what the server returned for this person: only
@@ -123,7 +124,7 @@ class _StockScreenState extends State<StockScreen> {
 
   Future<void> _enter(StockEntryMode mode) async {
     final result = await Navigator.of(context).push<EntryResult>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => StockEntryScreen(
           mode: mode,
           session: session,
@@ -146,7 +147,7 @@ class _StockScreenState extends State<StockScreen> {
 
   Future<void> _intake({bool manual = false}) async {
     final result = await Navigator.of(context).push<EntryResult>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => IntakeScreen(
           session: session,
           catalog: widget.catalog,
@@ -175,7 +176,7 @@ class _StockScreenState extends State<StockScreen> {
   }
 
   void _history({ProductRef? product}) => Navigator.of(context).push<void>(
-    MaterialPageRoute(
+    appRoute(
       builder: (_) => MovementsScreen(
         repository: widget.repository,
         product: product,

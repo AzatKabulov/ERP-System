@@ -16,6 +16,7 @@ import '../workspace/unsaved_work.dart';
 import 'expense_form_screen.dart';
 import 'expenses_models.dart';
 import 'expenses_repository.dart';
+import '../../widgets/app_route.dart';
 
 /// One expense with its receipt (a photo is shown, a PDF can be shared), and for owners and
 /// managers: change it, or void it with a reason (an expense is never deleted).
@@ -48,7 +49,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
 
   Future<void> _edit(Expense e) async {
     final saved = await Navigator.of(context).push<Expense>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ExpenseFormScreen(
           session: widget.session,
           repository: widget.repository,

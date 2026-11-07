@@ -19,6 +19,7 @@ import 'warranties_repository.dart';
 import 'warranty_detail_screen.dart';
 import 'warranty_new_screen.dart';
 import '../../widgets/glass.dart';
+import '../../widgets/app_route.dart';
 
 /// Warranty claims, newest first, with a status filter. Start a new one from a sale; open one
 /// to follow it and, for owners and managers, to close it with an outcome.
@@ -113,7 +114,7 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
   /// A claim for a sold line: the sale is already known, the person only picks the problem.
   Future<void> _openFor(WarrantyRegisterItem item) async {
     final opened = await Navigator.of(context).push<WarrantyClaim>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => WarrantyNewScreen(
           session: session,
           repository: widget.repository,
@@ -163,7 +164,7 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
 
   Future<void> _open(WarrantyClaim claim) async {
     final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => WarrantyDetailScreen(
           claimId: claim.id,
           session: session,
@@ -178,7 +179,7 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
 
   Future<void> _new() async {
     final opened = await Navigator.of(context).push<WarrantyClaim>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => WarrantyNewScreen(
           session: session,
           repository: widget.repository,

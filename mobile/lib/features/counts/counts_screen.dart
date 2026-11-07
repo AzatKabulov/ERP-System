@@ -17,6 +17,7 @@ import '../workspace/unsaved_work.dart';
 import 'count_screen.dart';
 import 'counts_models.dart';
 import 'counts_repository.dart';
+import '../../widgets/app_route.dart';
 
 /// Stock counts, newest first. From here: start a count, or open one to enter the quantities
 /// found on the shelf, send it for approval, or (for an approver) review and approve it.
@@ -93,7 +94,7 @@ class _CountsScreenState extends State<CountsScreen> {
 
   Future<void> _open(String id) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => CountScreen(
           countId: id,
           session: session,
@@ -110,7 +111,7 @@ class _CountsScreenState extends State<CountsScreen> {
 
   Future<void> _start() async {
     final created = await Navigator.of(context).push<StockCountDoc>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => CountStartScreen(
           session: session,
           repository: widget.repository,

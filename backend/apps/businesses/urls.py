@@ -40,4 +40,14 @@ urlpatterns = [
         views.StaffDetailView.as_view(),
         name="staff-detail",
     ),
+    path(
+        "businesses/<uuid:business_id>/team/",
+        views.TeamListCreateView.as_view(),
+        name="team-list",
+    ),
+    path(
+        "businesses/<uuid:business_id>/team/<uuid:member_id>/",
+        views.TeamDetailView.as_view(),
+        name="team-detail",
+    ),
 ]

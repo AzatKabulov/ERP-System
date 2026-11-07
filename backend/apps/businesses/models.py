@@ -43,6 +43,18 @@ class Business(UUIDModel, TimestampedModel):
     phone = models.CharField(max_length=60, blank=True)
     is_active = models.BooleanField(default=True)
 
+    class Setup(models.TextChoices):
+        PENDING = "pending", "Waiting for the owner's answers"
+        DONE = "done", "Done"
+        SKIPPED = "skipped", "Skipped"
+
+    # The first-sign-in questionnaire. A shop we set up for a client starts "pending"; older shops
+    # are "done" so nobody is asked about a business that has been running for months.
+    setup_status = models.CharField(max_length=10, choices=Setup.choices, default=Setup.DONE)
+    # Fixed monthly costs, for the profit figures: the rent, and everything else that repeats.
+    monthly_rent = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    monthly_costs = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+
     class Meta:
         verbose_name_plural = "businesses"
 
@@ -52,6 +64,26 @@ class Business(UUIDModel, TimestampedModel):
     def local_today(self):
         """Today's date in the business's own time zone (the shop's calendar day)."""
         return timezone.now().astimezone(zoneinfo.ZoneInfo(self.timezone)).date()
+
+
+class TeamMember(UUIDModel, TimestampedModel):
+    """Someone who works in the shop, with what they are paid, so costs and profit can be worked
+    out. Not a login: people who sign in are Memberships."""
+
+    business = models.ForeignKey(Business, on_delete=models.PROTECT, related_name="team")
+    name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=60, blank=True)
+    job_title = models.CharField(max_length=120, blank=True)
+    monthly_pay = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)]
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Location(UUIDModel, TimestampedModel):

@@ -7,7 +7,7 @@ from rest_framework import serializers
 from apps.accounts.models import USERNAME_VALIDATOR, User, normalize_username
 from apps.accounts.serializers import password_errors
 
-from .models import LANGUAGES, Business, ExchangeRate, Location, Membership, Role
+from .models import LANGUAGES, Business, ExchangeRate, Location, Membership, Role, TeamMember
 
 
 class BusinessSerializer(serializers.ModelSerializer):
@@ -23,9 +23,25 @@ class BusinessSerializer(serializers.ModelSerializer):
             "address",
             "phone",
             "is_active",
+            "setup_status",
+            "monthly_rent",
+            "monthly_costs",
             "created_at",
         ]
         read_only_fields = ["id", "currency", "is_active", "created_at"]
+
+    def validate_setup_status(self, value):
+        # the app may finish or skip the questionnaire; only we put a shop back to "pending"
+        if value == Business.Setup.PENDING:
+            raise serializers.ValidationError("Not allowed.")
+        return value
+
+
+class TeamMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeamMember
+        fields = ["id", "name", "phone", "job_title", "monthly_pay", "is_active"]
+        read_only_fields = ["id", "is_active"]
 
 
 class ExchangeRateSerializer(serializers.ModelSerializer):

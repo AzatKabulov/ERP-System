@@ -10,6 +10,7 @@ import '../shared/async_section.dart';
 import 'platform_models.dart';
 import 'platform_repository.dart';
 import 'platform_widgets.dart';
+import '../../widgets/app_route.dart';
 
 /// The questions the shops wrote to us, waiting ones first.
 class PlatformSupportScreen extends StatefulWidget {
@@ -32,7 +33,7 @@ class _PlatformSupportScreenState extends State<PlatformSupportScreen> {
 
   Future<void> _open(TicketRow t) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => TicketScreen(
           repository: widget.repository,
           ticketId: t.id,

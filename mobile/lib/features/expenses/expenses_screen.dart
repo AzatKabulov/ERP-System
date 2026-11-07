@@ -13,6 +13,7 @@ import 'expense_form_screen.dart';
 import 'expenses_models.dart';
 import 'expenses_repository.dart';
 import '../../widgets/glass.dart';
+import '../../widgets/app_route.dart';
 
 String _day(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -114,7 +115,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   Future<void> _add() async {
     final saved = await Navigator.of(context).push<Expense>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ExpenseFormScreen(
           session: session,
           repository: widget.repository,
@@ -131,7 +132,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   Future<void> _open(Expense e) async {
     final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      appRoute(
         builder: (_) => ExpenseDetailScreen(
           expenseId: e.id,
           session: session,
