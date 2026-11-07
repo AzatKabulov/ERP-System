@@ -202,7 +202,7 @@ class _ProductPhotoSectionState extends State<ProductPhotoSection> {
             Text(
               l.productPhotoNone,
               key: const ValueKey('pd-photo-none'),
-              style: const TextStyle(color: AppColors.muted),
+              style: TextStyle(color: AppColors.muted),
             ),
           ],
           if (widget.canEdit) ...[
@@ -247,7 +247,7 @@ class _ProductPhotoSectionState extends State<ProductPhotoSection> {
             Text(
               _error!,
               key: const ValueKey('pd-photo-error'),
-              style: const TextStyle(color: AppColors.danger, fontSize: 13),
+              style: TextStyle(color: AppColors.danger, fontSize: 13),
             ),
           ],
         ],

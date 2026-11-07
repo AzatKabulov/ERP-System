@@ -215,7 +215,7 @@ class _PasswordChangeFormState extends State<PasswordChangeForm> {
               child: Text(
                 key: const ValueKey('password-error'),
                 apiErrorText(l, error),
-                style: const TextStyle(color: AppColors.danger),
+                style: TextStyle(color: AppColors.danger),
               ),
             ),
           ],
@@ -259,11 +259,11 @@ class ChoosePasswordScreen extends StatelessWidget {
                       child: Container(
                         width: 52,
                         height: 52,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.tint,
                           shape: BoxShape.circle,
                         ),
-                        child: const Center(
+                        child: Center(
                           child: AppIcon(
                             AppIcons.lock,
                             size: 24,
@@ -281,7 +281,7 @@ class ChoosePasswordScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       l.choosePasswordIntro,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 14,
                         height: 1.5,

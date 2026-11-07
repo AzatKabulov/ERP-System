@@ -184,10 +184,7 @@ class _ActivityViewState extends State<ActivityView> {
                         e.actorName.isEmpty ? l.activitySystem : e.actorName,
                         formatStamp(e.createdAt),
                       ),
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                     ),
                   ],
                 ),

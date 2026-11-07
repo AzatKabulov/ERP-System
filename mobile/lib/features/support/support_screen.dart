@@ -104,7 +104,7 @@ class _SupportScreenState extends State<SupportScreen> {
               const SizedBox(height: 4),
               Text(
                 platform.supportNote,
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               ),
             ],
           ],
@@ -119,7 +119,7 @@ class _SupportScreenState extends State<SupportScreen> {
       children: [
         Text(
           l.supportIntro,
-          style: const TextStyle(color: AppColors.muted, height: 1.5),
+          style: TextStyle(color: AppColors.muted, height: 1.5),
         ),
         const SizedBox(height: 16),
         LabeledField(
@@ -163,7 +163,7 @@ class _SupportScreenState extends State<SupportScreen> {
           Text(
             apiErrorText(l, _error!),
             key: const ValueKey('support-error'),
-            style: const TextStyle(color: AppColors.danger),
+            style: TextStyle(color: AppColors.danger),
           ),
         ],
         const SizedBox(height: 16),
@@ -367,7 +367,7 @@ class _RequestCardState extends State<_RequestCard> {
           const SizedBox(height: 4),
           Text(
             formatStamp(r.updatedAt),
-            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           if (expanded) ...[
             const SizedBox(height: 12),
@@ -393,10 +393,7 @@ class _RequestCardState extends State<_RequestCard> {
                     children: [
                       Text(
                         '${m.fromStore ? l.supportFromYou : l.supportFromUs} · ${formatStamp(m.createdAt)}',
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: AppColors.muted, fontSize: 11),
                       ),
                       const SizedBox(height: 4),
                       Text(m.text, style: const TextStyle(height: 1.4)),
@@ -407,7 +404,7 @@ class _RequestCardState extends State<_RequestCard> {
             if (r.isClosed)
               Text(
                 l.supportClosedNote,
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
               )
             else ...[
               const SizedBox(height: 4),
@@ -424,7 +421,7 @@ class _RequestCardState extends State<_RequestCard> {
                   suffixIcon: IconButton(
                     key: ValueKey('support-reply-send-${r.id}'),
                     tooltip: l.supportSend,
-                    icon: const AppIcon(AppIcons.send, color: AppColors.blue),
+                    icon: AppIcon(AppIcons.send, color: AppColors.blue),
                     onPressed: _busy ? null : _send,
                   ),
                 ),
@@ -434,7 +431,7 @@ class _RequestCardState extends State<_RequestCard> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     apiErrorText(l, _error!),
-                    style: const TextStyle(color: AppColors.danger),
+                    style: TextStyle(color: AppColors.danger),
                   ),
                 ),
             ],

@@ -77,10 +77,7 @@ class BarcodeInput extends StatelessWidget {
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.muted,
-                      ),
+                      style: TextStyle(fontSize: 14, color: AppColors.muted),
                     ),
                   ),
                   prefixIcon: const Padding(

@@ -161,7 +161,7 @@ class _TransferDetailScreenState extends State<TransferDetailScreen> {
                             Text(l.transferRoute(t.fromName, t.toName)),
                             Text(
                               '${formatStamp(t.createdAt)} · ${t.createdBy}',
-                              style: const TextStyle(color: AppColors.muted),
+                              style: TextStyle(color: AppColors.muted),
                             ),
                             if (t.note.isNotEmpty) Text(t.note),
                             if (t.inTransit)
@@ -169,7 +169,7 @@ class _TransferDetailScreenState extends State<TransferDetailScreen> {
                                 padding: const EdgeInsets.only(top: 8),
                                 child: Text(
                                   l.transferInTransitNote,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.warning,
                                     fontSize: 13,
                                   ),
@@ -472,7 +472,7 @@ class _ReceiveTransferScreenState extends State<ReceiveTransferScreen> {
                                   line.product.unit,
                                 ),
                               ),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.muted,
                                 fontSize: 13,
                               ),
@@ -511,7 +511,7 @@ class _ReceiveTransferScreenState extends State<ReceiveTransferScreen> {
                   if (_short) ...[
                     Text(
                       l.transferShortHint,
-                      style: const TextStyle(color: AppColors.warning),
+                      style: TextStyle(color: AppColors.warning),
                     ),
                     const SizedBox(height: 8),
                     LabeledField(
@@ -532,7 +532,7 @@ class _ReceiveTransferScreenState extends State<ReceiveTransferScreen> {
                       child: Text(
                         apiErrorText(l, _error!),
                         key: const ValueKey('receive-error'),
-                        style: const TextStyle(color: AppColors.danger),
+                        style: TextStyle(color: AppColors.danger),
                       ),
                     ),
                   ],

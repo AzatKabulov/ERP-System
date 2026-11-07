@@ -158,7 +158,7 @@ class _ProductPickerDialogState extends State<_ProductPickerDialog> {
           title: Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis),
           subtitle: Text(
             [p.sku, ?p.brand?.name].join(' · '),
-            style: const TextStyle(color: AppColors.muted),
+            style: TextStyle(color: AppColors.muted),
           ),
           trailing: Text(p.unit.symbol),
           onTap: () => Navigator.of(context).pop(p),

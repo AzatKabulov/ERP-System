@@ -167,7 +167,7 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
                       apiErrorText(l, _createError!),
-                      style: const TextStyle(color: AppColors.danger),
+                      style: TextStyle(color: AppColors.danger),
                     ),
                   ),
                 const SizedBox(height: 16),
@@ -247,10 +247,7 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
     if (_items.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(24),
-        child: Text(
-          l.customersEmpty,
-          style: const TextStyle(color: AppColors.muted),
-        ),
+        child: Text(l.customersEmpty, style: TextStyle(color: AppColors.muted)),
       );
     }
     return ListView.separated(

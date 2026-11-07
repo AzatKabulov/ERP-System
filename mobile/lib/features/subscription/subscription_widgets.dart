@@ -41,7 +41,7 @@ Future<void> showRenewDialog(
             const SizedBox(height: 4),
             Text(
               platform.supportNote,
-              style: const TextStyle(color: AppColors.muted),
+              style: TextStyle(color: AppColors.muted),
             ),
           ],
         ],
@@ -208,11 +208,11 @@ class SubscriptionBlockedScreen extends StatelessWidget {
                     child: Container(
                       width: 56,
                       height: 56,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.warningTint,
                         shape: BoxShape.circle,
                       ),
-                      child: const Center(
+                      child: Center(
                         child: AppIcon(
                           AppIcons.block,
                           size: 26,
@@ -230,7 +230,7 @@ class SubscriptionBlockedScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     manages ? l.subSuspendedBody : l.subSuspendedStaff,
-                    style: const TextStyle(color: AppColors.muted, height: 1.5),
+                    style: TextStyle(color: AppColors.muted, height: 1.5),
                   ),
                   if (platform.supportPhone.isNotEmpty) ...[
                     const SizedBox(height: 20),
@@ -243,7 +243,7 @@ class SubscriptionBlockedScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       platform.supportNote,
-                      style: const TextStyle(color: AppColors.muted),
+                      style: TextStyle(color: AppColors.muted),
                     ),
                   ],
                   const SizedBox(height: 24),

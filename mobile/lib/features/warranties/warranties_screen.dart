@@ -18,6 +18,7 @@ import 'warranties_models.dart';
 import 'warranties_repository.dart';
 import 'warranty_detail_screen.dart';
 import 'warranty_new_screen.dart';
+import '../../widgets/glass.dart';
 
 /// Warranty claims, newest first, with a status filter. Start a new one from a sale; open one
 /// to follow it and, for owners and managers, to close it with an outcome.
@@ -204,12 +205,7 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
   Widget _page(BuildContext context, bool compact) {
     final l = strings(context);
     return ListView(
-      padding: EdgeInsets.fromLTRB(
-        compact ? 16 : 32,
-        compact ? 20 : 32,
-        compact ? 16 : 32,
-        40,
-      ),
+      padding: pagePadding(context, compact: compact),
       children: [
         PageHead(
           title: l.warranties,
@@ -337,7 +333,7 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
                   decoration: BoxDecoration(
                     border: i == 0
                         ? null
-                        : const Border(top: BorderSide(color: AppColors.line)),
+                        : Border(top: BorderSide(color: AppColors.line)),
                   ),
                   child: _SoldRow(
                     item: _sold[i],
@@ -433,9 +429,7 @@ class _WarrantiesScreenState extends State<WarrantiesScreen> {
                     decoration: BoxDecoration(
                       border: i == 0
                           ? null
-                          : const Border(
-                              top: BorderSide(color: AppColors.line),
-                            ),
+                          : Border(top: BorderSide(color: AppColors.line)),
                     ),
                     child: _ClaimRow(claim: _items[i]),
                   ),
@@ -510,7 +504,7 @@ class _SoldRow extends StatelessWidget {
                 if (i.customerName.isNotEmpty) i.customerName,
                 if (i.customerPhone.isNotEmpty) i.customerPhone,
               ].join(' · '),
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 6),
             Text(
@@ -524,7 +518,7 @@ class _SoldRow extends StatelessWidget {
                   i.terms,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
               ),
           ],
@@ -536,10 +530,7 @@ class _SoldRow extends StatelessWidget {
           children: [
             StatusPill(label: text, tone: tone, icon: icon),
             const SizedBox(height: 6),
-            Text(
-              when,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
-            ),
+            Text(when, style: TextStyle(color: AppColors.muted, fontSize: 12)),
             if (i.openClaims > 0) ...[
               const SizedBox(height: 6),
               StatusPill(
@@ -613,12 +604,12 @@ class _ClaimRow extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 '${c.productName} · ${saleNumber(c.saleNumber)}',
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
               ),
               if (c.customerName.isNotEmpty)
                 Text(
                   c.customerName,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
             ],
           ),

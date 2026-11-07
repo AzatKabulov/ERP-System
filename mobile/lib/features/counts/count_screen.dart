@@ -359,11 +359,11 @@ class _CountScreenState extends State<CountScreen> {
               ),
               Text(
                 '${doc.locationName} · ${formatStamp(doc.createdAt)} · ${doc.createdBy}',
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               ),
               Text(
                 doc.scope == 'full' ? l.countScopeFull : l.countScopePartial,
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               ),
               const SizedBox(height: 4),
               Text(
@@ -374,7 +374,7 @@ class _CountScreenState extends State<CountScreen> {
                 Text(
                   doc.decisionReason,
                   key: const ValueKey('cd-decision'),
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: AppColors.muted),
                 ),
             ],
           ),
@@ -398,7 +398,7 @@ class _CountScreenState extends State<CountScreen> {
             child: Text(
               _errorText(l, _error!),
               key: const ValueKey('count-error'),
-              style: const TextStyle(color: AppColors.danger),
+              style: TextStyle(color: AppColors.danger),
             ),
           ),
         ],
@@ -509,7 +509,7 @@ class _CountScreenState extends State<CountScreen> {
                   : l.countSystemLine(
                       quantityWithUnit(row.baselineMilli, row.product.unit),
                     ),
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 8),
             if (editable)
@@ -550,7 +550,7 @@ class _CountScreenState extends State<CountScreen> {
                     '${variance > 0 ? '+' : ''}${formatQuantity(variance, row.product.unit.decimalPlaces)} ${row.product.unit.symbol}',
                   ),
                   key: ValueKey('count-variance-${row.product.sku}'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.danger,
                     fontWeight: FontWeight.w600,
                   ),
@@ -562,10 +562,7 @@ class _CountScreenState extends State<CountScreen> {
                 child: Text(
                   l.countMovedNote,
                   key: ValueKey('count-moved-${row.product.sku}'),
-                  style: const TextStyle(
-                    color: AppColors.warning,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: AppColors.warning, fontSize: 12),
                 ),
               ),
           ],

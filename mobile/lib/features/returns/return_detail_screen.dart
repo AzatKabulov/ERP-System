@@ -135,7 +135,7 @@ class _ReturnDetailScreenState extends State<ReturnDetailScreen> {
               const SizedBox(height: 4),
               Text(
                 '${formatStamp(doc.createdAt)} · ${doc.locationName}',
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               ),
               Text(
                 '${l.returnFromSale(saleNumber(doc.saleNumber))} · ${doc.createdBy}',
@@ -169,7 +169,7 @@ class _ReturnDetailScreenState extends State<ReturnDetailScreen> {
                   ),
                   Text(
                     formatMoney(line.refundMinor, 'TMT'),
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: AppColors.muted),
                   ),
                   if (line.awaitingMilli > 0) ...[
                     const SizedBox(height: 6),
@@ -178,7 +178,7 @@ class _ReturnDetailScreenState extends State<ReturnDetailScreen> {
                         '${formatQuantity(line.awaitingMilli, line.unitDecimals)} ${line.unitSymbol}',
                       ),
                       key: ValueKey('rd-awaiting-${line.id}'),
-                      style: const TextStyle(color: AppColors.warning),
+                      style: TextStyle(color: AppColors.warning),
                     ),
                     if (canDecide)
                       Padding(

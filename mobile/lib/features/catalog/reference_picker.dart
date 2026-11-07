@@ -56,12 +56,12 @@ class NamedRefPicker extends StatelessWidget {
             value: _addNew,
             child: Row(
               children: [
-                const AppIcon(AppIcons.plus, size: 18, color: AppColors.blue),
+                AppIcon(AppIcons.plus, size: 18, color: AppColors.blue),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     l.addNewOption,
-                    style: const TextStyle(color: AppColors.blue),
+                    style: TextStyle(color: AppColors.blue),
                   ),
                 ),
               ],
@@ -217,7 +217,7 @@ class _NameDialogState<T> extends State<_NameDialog<T>> {
                 const SizedBox(height: 12),
                 Text(
                   apiErrorText(l, _error!),
-                  style: const TextStyle(color: AppColors.danger),
+                  style: TextStyle(color: AppColors.danger),
                 ),
               ],
             ],

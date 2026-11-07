@@ -139,7 +139,11 @@ Future<void> tapKey(WidgetTester tester, String name) async {
       finder = find.byKey(ValueKey('more-$page'));
     }
   }
-  await tester.ensureVisible(finder);
+  // Scrolled to the middle of the viewport, not to its top edge: the page scrolls beneath the
+  // frosted top bar, so an item at the very top would be covered by it.
+  if (finder.evaluate().isNotEmpty) {
+    await Scrollable.ensureVisible(finder.evaluate().first, alignment: 0.5);
+  }
   // The scroll is animated, and a scrollable ignores taps until it has stopped;
   // frame by frame, because one long pump would skip the end of the animation.
   for (var i = 0; i < 10; i++) {

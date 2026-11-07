@@ -36,7 +36,7 @@ class _ToCompleteScreenState extends State<ToCompleteScreen> {
         children: [
           Text(
             l.toCompleteHint,
-            style: const TextStyle(color: AppColors.muted, height: 1.5),
+            style: TextStyle(color: AppColors.muted, height: 1.5),
           ),
           const SizedBox(height: 16),
           AsyncSection<List<ToCompleteItem>>(
@@ -197,7 +197,7 @@ class _CompleteRowState extends State<_CompleteRow> {
           const SizedBox(height: 2),
           Text(
             item.sku,
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -262,7 +262,7 @@ class _CompleteRowState extends State<_CompleteRow> {
             Text(
               _error!,
               key: ValueKey('complete-error-${item.sku}'),
-              style: const TextStyle(color: AppColors.danger, fontSize: 13),
+              style: TextStyle(color: AppColors.danger, fontSize: 13),
             ),
           ],
         ],

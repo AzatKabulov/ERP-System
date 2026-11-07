@@ -218,7 +218,7 @@ class _CategoryPickerDialogState extends State<_CategoryPickerDialog> {
                               child: Text(
                                 l.categoryNoMatch,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(color: AppColors.muted),
+                                style: TextStyle(color: AppColors.muted),
                               ),
                             ),
                         ],
@@ -229,7 +229,7 @@ class _CategoryPickerDialogState extends State<_CategoryPickerDialog> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     _createError!,
-                    style: const TextStyle(color: AppColors.danger),
+                    style: TextStyle(color: AppColors.danger),
                   ),
                 ),
               if (widget.canCreate && !_loading && _loadError == null) ...[
@@ -256,10 +256,7 @@ class _CategoryPickerDialogState extends State<_CategoryPickerDialog> {
                     child: Text(
                       l.categoryNewHint,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 12),
                     ),
                   ),
               ],
@@ -308,7 +305,7 @@ class _Row extends StatelessWidget {
               ),
             ),
             if (selected)
-              const AppIcon(AppIcons.check, size: 18, color: AppColors.blue),
+              AppIcon(AppIcons.check, size: 18, color: AppColors.blue),
           ],
         ),
       ),

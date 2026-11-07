@@ -351,10 +351,7 @@ class _IntakeScreenState extends State<IntakeScreen> {
                       padding: 12,
                       child: Row(
                         children: [
-                          const AppIcon(
-                            AppIcons.history,
-                            color: AppColors.warning,
-                          ),
+                          AppIcon(AppIcons.history, color: AppColors.warning),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -379,10 +376,7 @@ class _IntakeScreenState extends State<IntakeScreen> {
                         l.intakeEmpty,
                         key: const ValueKey('intake-empty'),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          height: 1.5,
-                        ),
+                        style: TextStyle(color: AppColors.muted, height: 1.5),
                       ),
                     ),
                   for (final entry in _ctl.entries.reversed)
@@ -429,7 +423,7 @@ class _IntakeScreenState extends State<IntakeScreen> {
                         child: Text(
                           l.intakeCostMissingNote,
                           key: const ValueKey('intake-cost-note'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.muted,
                             fontSize: 12,
                             height: 1.4,
@@ -444,7 +438,7 @@ class _IntakeScreenState extends State<IntakeScreen> {
                       child: Text(
                         _blocked ?? apiErrorText(l, _error!),
                         key: const ValueKey('intake-error'),
-                        style: const TextStyle(color: AppColors.danger),
+                        style: TextStyle(color: AppColors.danger),
                       ),
                     ),
                   ],
@@ -459,7 +453,7 @@ class _IntakeScreenState extends State<IntakeScreen> {
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Text(
                               l.offlineBanner,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.danger,
                                 fontSize: 12,
                               ),
@@ -623,10 +617,7 @@ class _EntryCard extends StatelessWidget {
                 if (canCost && entry.costMinor != null)
                   Text(
                     l.intakeCostShown(formatMoney(entry.costMinor!, 'TMT')),
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: AppColors.muted, fontSize: 13),
                   ),
                 if (entry.state == IntakeEntryState.lookingUp)
                   const SizedBox(

@@ -10,10 +10,12 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/motion.dart';
 import '../shared/async_section.dart';
+import '../../theme/theme_controller.dart';
 import '../auth/password_form.dart';
 import '../catalog/catalog_repository.dart';
 import 'admin_repository.dart';
 import 'exchange_rate_section.dart';
+import '../../widgets/glass.dart';
 
 String roleLabel(AppLocalizations l, String role) => switch (role) {
   'owner' => l.roleOwner,
@@ -89,12 +91,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
     // A plain scrolling column (not a lazy list): the page is short, and every
     // section should exist for accessibility tools and tests alike.
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        narrow ? 16 : 32,
-        narrow ? 20 : 32,
-        narrow ? 16 : 32,
-        40,
-      ),
+      padding: pagePadding(context, compact: narrow),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -162,7 +159,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
             constraints: const BoxConstraints(minHeight: 48),
             child: Row(
               children: [
-                const AppIcon(AppIcons.lock, size: 20, color: AppColors.muted),
+                AppIcon(AppIcons.lock, size: 20, color: AppColors.muted),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -192,7 +189,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                     children: [
                       Text(
                         l.changePasswordIntro,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.muted,
                           fontSize: 13,
                           height: 1.5,
@@ -216,6 +213,35 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
       ],
     ),
   );
+
+  /// Light, dark, or as the phone has it. The whole interface changes at once.
+  Widget _appearanceCard(BuildContext context, AppLocalizations l) {
+    final theme = ThemeScope.of(context);
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeading(l.appearanceTitle),
+          const SizedBox(height: 4),
+          Text(
+            l.appearanceHint,
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+          AppSegmented<String>(
+            keyPrefix: 'theme-chip',
+            options: [
+              ('system', l.themeAuto),
+              ('light', l.themeLight),
+              ('dark', l.themeDark),
+            ],
+            value: theme.mode.name,
+            onChanged: (v) => theme.setMode(AppThemeMode.values.byName(v)),
+          ),
+        ],
+      ),
+    );
+  }
 
   /// Opens and closes a section smoothly; with reduced motion it simply appears.
   Widget _gentle(BuildContext context, Widget child) {
@@ -307,7 +333,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                       const SizedBox(height: 4),
                       Text(
                         '${roleLabel(l, membership.role)} · ${membership.businessName}',
-                        style: const TextStyle(color: AppColors.muted),
+                        style: TextStyle(color: AppColors.muted),
                       ),
                     ],
                   ],
@@ -319,6 +345,8 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
         const SizedBox(height: 16),
         _passwordCard(l),
         const SizedBox(height: 16),
+        _appearanceCard(context, l),
+        const SizedBox(height: 16),
         SurfaceCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,7 +355,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
               const SizedBox(height: 4),
               Text(
                 l.languageHint,
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
               ),
               const SizedBox(height: 16),
               AppSegmented<String>(
@@ -339,7 +367,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
               const SizedBox(height: 12),
               Text(
                 l.translationsPending,
-                style: const TextStyle(color: AppColors.muted, height: 1.5),
+                style: TextStyle(color: AppColors.muted, height: 1.5),
               ),
             ],
           ),
@@ -371,10 +399,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                     const SizedBox(height: 4),
                     Text(
                       l.signOutHint,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                     ),
                   ],
                 ),
@@ -384,7 +409,9 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                 onPressed: session.signOut,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.danger,
-                  side: const BorderSide(color: Color(0xFFF3C9C5)),
+                  side: BorderSide(
+                    color: AppColors.danger.withValues(alpha: 0.3),
+                  ),
                 ),
                 icon: const AppIcon(AppIcons.logout),
                 label: Text(l.signOut),
@@ -442,7 +469,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                 const SizedBox(height: 4),
                 Text(
                   l.shopPlaceHint,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
                 ),
                 const SizedBox(height: 8),
                 AsyncSection<List<LocationRecord>>(
@@ -454,7 +481,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                         ListTile(
                           key: ValueKey('location-${item.name}'),
                           contentPadding: EdgeInsets.zero,
-                          leading: const AppIcon(
+                          leading: AppIcon(
                             AppIcons.stock,
                             color: AppColors.blue,
                           ),
@@ -520,10 +547,7 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                   ListTile(
                     key: ValueKey('staff-${member.username}'),
                     contentPadding: EdgeInsets.zero,
-                    leading: const AppIcon(
-                      AppIcons.user,
-                      color: AppColors.blue,
-                    ),
+                    leading: AppIcon(AppIcons.user, color: AppColors.blue),
                     title: Text(
                       member.userId == session.user?.id
                           ? '${member.displayName} (${l.staffYou})'
@@ -715,7 +739,7 @@ class _BusinessFormState extends State<_BusinessForm> {
         const SizedBox(height: 4),
         Text(
           l.currencyFixedNote,
-          style: const TextStyle(color: AppColors.muted, fontSize: 13),
+          style: TextStyle(color: AppColors.muted, fontSize: 13),
         ),
         const SizedBox(height: 16),
         ConstrainedBox(
@@ -749,13 +773,13 @@ class _BusinessFormState extends State<_BusinessForm> {
         const SizedBox(height: 6),
         Text(
           l.timezoneHint,
-          style: const TextStyle(color: AppColors.muted, fontSize: 13),
+          style: TextStyle(color: AppColors.muted, fontSize: 13),
         ),
         if (_error != null && _error!.fields.isEmpty) ...[
           const SizedBox(height: 12),
           Text(
             apiErrorText(l, _error!),
-            style: const TextStyle(color: AppColors.danger),
+            style: TextStyle(color: AppColors.danger),
           ),
         ],
         if (_saved) ...[
@@ -763,7 +787,7 @@ class _BusinessFormState extends State<_BusinessForm> {
           Text(
             l.saved,
             key: const ValueKey('business-saved'),
-            style: const TextStyle(color: AppColors.success),
+            style: TextStyle(color: AppColors.success),
           ),
         ],
         if (widget.canEdit) ...[
@@ -931,7 +955,7 @@ class _LocationDialogState extends State<_LocationDialog> {
                 const SizedBox(height: 12),
                 Text(
                   apiErrorText(l, _error!),
-                  style: const TextStyle(color: AppColors.danger),
+                  style: TextStyle(color: AppColors.danger),
                 ),
               ],
             ],
@@ -1225,10 +1249,7 @@ class _StaffDialogState extends State<_StaffDialog> {
                   if (fieldError(l, _error, 'locations') != null)
                     Text(
                       fieldError(l, _error, 'locations')!,
-                      style: const TextStyle(
-                        color: AppColors.danger,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: AppColors.danger, fontSize: 12),
                     ),
                 ],
               ],
@@ -1273,7 +1294,7 @@ class _StaffDialogState extends State<_StaffDialog> {
                   Text(
                     l.resetCodeRequested,
                     key: const ValueKey('staff-code-sent'),
-                    style: const TextStyle(color: AppColors.success),
+                    style: TextStyle(color: AppColors.success),
                   ),
               ],
               if (_error != null && _error!.fields.isEmpty) ...[
@@ -1281,7 +1302,7 @@ class _StaffDialogState extends State<_StaffDialog> {
                 Text(
                   apiErrorText(l, _error!),
                   key: const ValueKey('staff-error'),
-                  style: const TextStyle(color: AppColors.danger),
+                  style: TextStyle(color: AppColors.danger),
                 ),
               ],
             ],

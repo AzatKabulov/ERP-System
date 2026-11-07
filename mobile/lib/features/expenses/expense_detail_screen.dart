@@ -168,10 +168,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
               ),
               const SizedBox(height: 4),
               Text('${e.categoryName} · ${e.spentOn}'),
-              Text(
-                e.locationName,
-                style: const TextStyle(color: AppColors.muted),
-              ),
+              Text(e.locationName, style: TextStyle(color: AppColors.muted)),
               if (e.description.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(e.description),
@@ -179,14 +176,14 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
               const SizedBox(height: 8),
               Text(
                 '${formatStamp(e.createdAt)} · ${e.createdBy}',
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
               if (e.voided) ...[
                 const SizedBox(height: 8),
                 Text(
                   '${l.expenseVoidedBadge}: ${e.voidReason}',
                   key: const ValueKey('ed-voided'),
-                  style: const TextStyle(color: AppColors.danger),
+                  style: TextStyle(color: AppColors.danger),
                 ),
               ],
             ],
@@ -203,7 +200,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 Text(
                   l.expenseReceiptNone,
                   key: const ValueKey('ed-no-receipt'),
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: AppColors.muted),
                 )
               else
                 FutureBuilder<Uint8List>(
@@ -213,7 +210,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                       return Text(
                         l.expenseReceiptLoadFailed,
                         key: const ValueKey('ed-receipt-failed'),
-                        style: const TextStyle(color: AppColors.danger),
+                        style: TextStyle(color: AppColors.danger),
                       );
                     }
                     if (!snapshot.hasData) {

@@ -164,7 +164,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         children: [
                           Text(
                             widget.locationName,
-                            style: const TextStyle(color: AppColors.muted),
+                            style: TextStyle(color: AppColors.muted),
                           ),
                           if (cart.customer != null)
                             Text(
@@ -215,7 +215,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         children: [
                           Text(
                             l.paidBy,
-                            style: const TextStyle(color: AppColors.muted),
+                            style: TextStyle(color: AppColors.muted),
                           ),
                           const SizedBox(height: 8),
                           Wrap(
@@ -247,7 +247,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         child: Text(
                           _named ?? apiErrorText(l, _error!),
                           key: const ValueKey('checkout-error'),
-                          style: const TextStyle(color: AppColors.danger),
+                          style: TextStyle(color: AppColors.danger),
                         ),
                       ),
                     ],
@@ -262,7 +262,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
                                 l.offlineBanner,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.danger,
                                   fontSize: 12,
                                 ),

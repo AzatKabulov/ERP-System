@@ -1443,5 +1443,10 @@
   "greetingNoName": "Salam!",
   "errorUsePasswordChange": "Öz parolyňyz «Sazlamalar» bölüminde üýtgedilýär.",
   "errorAccountShared": "Bu hasaby siziň dükanyňyzdan daşarda hem ulanýarlar: paroly diňe özi üýtgedip biler.",
-  "stockTabBalances": "Galyndylar"
+  "stockTabBalances": "Galyndylar",
+  "appearanceTitle": "Görnüş",
+  "appearanceHint": "Ýagty, garaňky ýa-da telefonda sazlanyşy ýaly.",
+  "themeAuto": "Telefondaky ýaly",
+  "themeLight": "Ýagty",
+  "themeDark": "Garaňky"
 }

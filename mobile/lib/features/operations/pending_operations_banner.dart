@@ -50,16 +50,16 @@ class PendingOperationsBanner extends StatelessWidget {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        color: const Color(0xFFFFFBEB),
+        color: AppColors.warningTint,
         child: Wrap(
           spacing: 12,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            const AppIcon(AppIcons.clock, size: 18, color: AppColors.warning),
+            AppIcon(AppIcons.clock, size: 18, color: AppColors.warning),
             Text(
               l.pendingBanner(runner.pending.length),
               key: const ValueKey('pending-banner'),
-              style: const TextStyle(color: AppColors.warning, fontSize: 13),
+              style: TextStyle(color: AppColors.warning, fontSize: 13),
             ),
             TextButton(
               key: const ValueKey('pending-review'),
@@ -158,7 +158,7 @@ class _PendingOperationsDialogState extends State<PendingOperationsDialog> {
                     Text(
                       _message!,
                       key: const ValueKey('pending-message'),
-                      style: const TextStyle(color: AppColors.success),
+                      style: TextStyle(color: AppColors.success),
                     ),
                   ],
                   const SizedBox(height: 12),
@@ -182,7 +182,7 @@ class _PendingOperationsDialogState extends State<PendingOperationsDialog> {
                             const SizedBox(height: 4),
                             Text(
                               '${formatStamp(op.createdAt)} · ${_stateText(l, op.state)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.muted,
                                 fontSize: 13,
                               ),

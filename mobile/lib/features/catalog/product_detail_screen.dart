@@ -159,7 +159,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ?p.category?.name,
                             ].join(' · '),
                             key: const ValueKey('pd-meta'),
-                            style: const TextStyle(color: AppColors.muted),
+                            style: TextStyle(color: AppColors.muted),
                           ),
                           const SizedBox(height: 20),
                           Text(
@@ -175,15 +175,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   formatMoney(p.priceTmtMinor!, 'TMT'),
                                 ),
                                 key: const ValueKey('pd-price-tmt'),
-                                style: const TextStyle(color: AppColors.muted),
+                                style: TextStyle(color: AppColors.muted),
                               )
                             else
                               Text(
                                 l.rateMissingNote,
                                 key: const ValueKey('pd-rate-missing'),
-                                style: const TextStyle(
-                                  color: AppColors.warning,
-                                ),
+                                style: TextStyle(color: AppColors.warning),
                               ),
                           ],
                           ProductStockInfo(product: p),

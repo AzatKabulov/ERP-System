@@ -8,6 +8,7 @@ import '../../core/session/session_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
+import '../../widgets/glass.dart';
 import 'password_form.dart';
 import 'password_reset_screen.dart';
 
@@ -231,11 +232,7 @@ class _SignInScreenState extends State<SignInScreen> {
           const SizedBox(height: 8),
           Text(
             l.signInSubtitle,
-            style: const TextStyle(
-              color: AppColors.muted,
-              fontSize: 14,
-              height: 1.5,
-            ),
+            style: TextStyle(color: AppColors.muted, fontSize: 14, height: 1.5),
           ),
           const SizedBox(height: 32),
           if (_testRoles.isNotEmpty) _Notice(text: l.testLoginNotice),
@@ -263,7 +260,7 @@ class _SignInScreenState extends State<SignInScreen> {
             if (session.recentUsernames.isNotEmpty) ...[
               Text(
                 l.recentSignIns,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -328,7 +325,7 @@ class _SignInScreenState extends State<SignInScreen> {
               child: Text(
                 key: const ValueKey('sign-in-error'),
                 apiErrorText(l, _error!),
-                style: const TextStyle(color: AppColors.danger),
+                style: TextStyle(color: AppColors.danger),
               ),
             ),
           ],
@@ -389,7 +386,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final l = strings(context);
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -398,8 +395,16 @@ class _SignInScreenState extends State<SignInScreen> {
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(wide ? 40 : 24),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: FadeUp(child: _form(l)),
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  // on a wide screen the form sits on a pane of glass over the soft light
+                  child: FadeUp(
+                    child: GlassSurface(
+                      radius: AppRadius.dialog + 6,
+                      blur: 26,
+                      padding: const EdgeInsets.all(32),
+                      child: _form(l),
+                    ),
+                  ),
                 ),
               ),
             );
@@ -443,8 +448,8 @@ class _BrandPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = compact
-        ? const BorderRadius.vertical(bottom: Radius.circular(18))
-        : BorderRadius.circular(18);
+        ? const BorderRadius.vertical(bottom: Radius.circular(28))
+        : BorderRadius.circular(28);
     return LayoutBuilder(
       builder: (context, constraints) => Container(
         constraints: BoxConstraints(minHeight: compact ? 220 : 0),
@@ -577,7 +582,7 @@ class _ServerLine extends StatelessWidget {
         Text(
           server.configured ? l.serverLine(server.url) : l.serverNone,
           key: const ValueKey('server-line'),
-          style: const TextStyle(color: AppColors.muted, fontSize: 13),
+          style: TextStyle(color: AppColors.muted, fontSize: 13),
         ),
         TextButton(
           key: const ValueKey('server-change'),
@@ -678,7 +683,7 @@ class _ServerDialogState extends State<ServerDialog> {
               const SizedBox(height: 8),
               Text(
                 l.serverChangeNote,
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
               ),
               if (_problem != null) ...[
                 const SizedBox(height: 12),
@@ -687,7 +692,7 @@ class _ServerDialogState extends State<ServerDialog> {
                   child: Text(
                     _problemText(l, _problem!),
                     key: const ValueKey('server-error'),
-                    style: const TextStyle(color: AppColors.danger),
+                    style: TextStyle(color: AppColors.danger),
                   ),
                 ),
               ],

@@ -152,7 +152,7 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                       child: Text(
                         _errorText(l, _error!),
                         key: const ValueKey('import-error'),
-                        style: const TextStyle(color: AppColors.danger),
+                        style: TextStyle(color: AppColors.danger),
                       ),
                     ),
                     ..._rows(l, _error!.params['errors']),
@@ -172,13 +172,13 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                             Text(
                               l.importNoErrors,
                               key: const ValueKey('import-ok'),
-                              style: const TextStyle(color: AppColors.success),
+                              style: TextStyle(color: AppColors.success),
                             ),
                           if (preview.errors.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Text(
                               l.importErrorsTitle(preview.errorCount),
-                              style: const TextStyle(color: AppColors.danger),
+                              style: TextStyle(color: AppColors.danger),
                             ),
                             for (final e in preview.errors.take(50))
                               Padding(
@@ -194,7 +194,7 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                             if (preview.errorCount > 50)
                               Text(
                                 l.importErrorsMore,
-                                style: const TextStyle(color: AppColors.muted),
+                                style: TextStyle(color: AppColors.muted),
                               ),
                           ],
                         ],
@@ -217,7 +217,7 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                       child: Text(
                         l.importDone(_created!),
                         key: const ValueKey('import-done'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.success,
                           fontWeight: FontWeight.w600,
                         ),

@@ -458,7 +458,7 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
                     border: Border.all(color: AppColors.line),
                   ),
                   child: _photo == null
-                      ? const Column(
+                      ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             AppIcon(
@@ -515,7 +515,7 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
                         entry.isManual
                             ? l.intakeNoBarcode
                             : l.intakeCodeLine(entry.code),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.neutral,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -757,7 +757,7 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
                         ? apiErrorText(l, _saveError! as ApiException)
                         : l.loadFailed,
                     key: const ValueKey('intake-new-error'),
-                    style: const TextStyle(color: AppColors.danger),
+                    style: TextStyle(color: AppColors.danger),
                   ),
                 ),
             ],

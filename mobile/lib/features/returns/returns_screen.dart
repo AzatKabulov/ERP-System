@@ -179,14 +179,14 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                                       ),
                                       Text(
                                         '${l.returnFromSale(saleNumber(r.saleNumber))} · ${r.locationName}',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: AppColors.muted,
                                           fontSize: 13,
                                         ),
                                       ),
                                       Text(
                                         r.reason,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: AppColors.muted,
                                           fontSize: 12,
                                         ),

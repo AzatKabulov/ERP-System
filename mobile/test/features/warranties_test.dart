@@ -228,7 +228,7 @@ void main() {
       await openSale(tester, t.rig);
       await openClaim(tester);
       await openClaimPage(tester, t.rig);
-      expect(find.text('W-0001'), findsWidgets);
+      expect(find.textContaining('W-0001'), findsWidgets);
       await closeWith(tester, 'repair', note: 'Заменили колодки в сервисе');
       final office = t.rig.server.office;
       expect(office.claimsClosed, 1);

@@ -2002,5 +2002,10 @@
   "greetingNoName": "Здравствуйте!",
   "errorUsePasswordChange": "Свой пароль меняется в «Настройках».",
   "errorAccountShared": "Этим аккаунтом пользуются и вне вашего магазина: пароль может сменить только он сам.",
-  "stockTabBalances": "Остатки"
+  "stockTabBalances": "Остатки",
+  "appearanceTitle": "Оформление",
+  "appearanceHint": "Светлая, тёмная или как настроено на телефоне.",
+  "themeAuto": "Как на телефоне",
+  "themeLight": "Светлая",
+  "themeDark": "Тёмная"
 }

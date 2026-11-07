@@ -22,6 +22,7 @@ import 'product_detail_screen.dart';
 import 'product_photo.dart';
 import 'product_stock_info.dart';
 import 'product_form_screen.dart';
+import '../../widgets/glass.dart';
 
 /// The product catalog: search by name, SKU, brand or barcode (typed or scanned),
 /// browse, open, add. Reads only what the server returns for this business.
@@ -285,7 +286,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
           constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface.withValues(
+              alpha: AppColors.isDark ? 0.55 : 0.78,
+            ),
             borderRadius: BorderRadius.circular(AppRadius.control),
             border: Border.all(color: AppColors.line),
           ),
@@ -356,7 +359,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
     );
     final gutter = compact ? 16.0 : 32.0;
     return ListView(
-      padding: EdgeInsets.fromLTRB(gutter, compact ? 20 : 32, gutter, 40),
+      padding: pagePadding(context, compact: compact, gutter: gutter),
       children: [
         PageHead(
           title: l.products,
@@ -575,7 +578,7 @@ class _SkuLine extends StatelessWidget {
     ),
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
-    style: const TextStyle(color: AppColors.muted, fontSize: 13),
+    style: TextStyle(color: AppColors.muted, fontSize: 13),
   );
 }
 
@@ -737,7 +740,7 @@ class _ProductTable extends StatelessWidget {
   final CatalogRepository repository;
   final void Function(Product) onOpen;
 
-  static const _header = TextStyle(
+  static final _header = TextStyle(
     color: AppColors.muted,
     fontSize: 11,
     fontWeight: FontWeight.w700,
@@ -807,7 +810,7 @@ class _ProductTable extends StatelessWidget {
                   horizontal: 16,
                   vertical: 8,
                 ),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(top: BorderSide(color: AppColors.line)),
                 ),
                 child: Row(
@@ -854,7 +857,7 @@ class _ProductTable extends StatelessWidget {
                                 if (p.barcodes.isNotEmpty)
                                   Text(
                                     p.barcodes.first,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: AppFonts.mono,
                                       fontSize: 12,
                                       color: AppColors.muted,

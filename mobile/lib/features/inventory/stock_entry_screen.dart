@@ -271,7 +271,7 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
                         child: Text(
                           l.entryNeedsLines,
                           key: const ValueKey('entry-needs-lines'),
-                          style: const TextStyle(color: AppColors.danger),
+                          style: TextStyle(color: AppColors.danger),
                         ),
                       ),
                     Align(
@@ -308,7 +308,7 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
                         child: Text(
                           apiErrorText(l, _error!),
                           key: const ValueKey('entry-error'),
-                          style: const TextStyle(color: AppColors.danger),
+                          style: TextStyle(color: AppColors.danger),
                         ),
                       ),
                     ],
@@ -323,7 +323,7 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
                                 l.offlineBanner,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.danger,
                                   fontSize: 12,
                                 ),
@@ -412,10 +412,7 @@ class _EntryLineEditorState extends State<_EntryLineEditor> {
                     ),
                     Text(
                       '${line.product.sku} · ${line.product.unit.symbol}',
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                     ),
                   ],
                 ),

@@ -36,7 +36,7 @@ class HelpScreen extends StatelessWidget {
                 children: [
                   Text(
                     l.helpIntro,
-                    style: const TextStyle(color: AppColors.muted, height: 1.5),
+                    style: TextStyle(color: AppColors.muted, height: 1.5),
                   ),
                   const SizedBox(height: 16),
                   for (final (key, icon, title, body) in topics)
@@ -54,7 +54,7 @@ class HelpScreen extends StatelessWidget {
                             leading: Container(
                               width: 36,
                               height: 36,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: AppColors.tint,
                                 shape: BoxShape.circle,
                               ),
@@ -91,7 +91,7 @@ class HelpScreen extends StatelessWidget {
                   Text(
                     l.helpMore,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: AppColors.muted),
                   ),
                   if (onWriteToUs != null) ...[
                     const SizedBox(height: 12),

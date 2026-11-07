@@ -417,7 +417,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                         else
                           Text(
                             l.expenseReceiptNone,
-                            style: const TextStyle(color: AppColors.muted),
+                            style: TextStyle(color: AppColors.muted),
                           ),
                         const SizedBox(height: 8),
                         Wrap(
@@ -458,7 +458,7 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                             child: Text(
                               apiErrorText(l, _error!),
                               key: const ValueKey('ef-error'),
-                              style: const TextStyle(color: AppColors.danger),
+                              style: TextStyle(color: AppColors.danger),
                             ),
                           ),
                         ],

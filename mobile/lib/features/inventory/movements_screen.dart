@@ -169,11 +169,11 @@ class _MovementTile extends StatelessWidget {
                 Text(
                   '${movementTypeLabel(l, m.type)} · ${m.locationName}'
                   '${m.condition == 'sellable' ? '' : ' · ${conditionLabel(l, m.condition)}'}',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
                 ),
                 Text(
                   '${formatStamp(m.createdAt)} · ${m.actorName}',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
                 if (m.reason.isNotEmpty)
                   Text(m.reason, style: const TextStyle(fontSize: 13)),
@@ -196,7 +196,7 @@ class _MovementTile extends StatelessWidget {
               if (canSeeCost && m.unitCostMinor != null)
                 Text(
                   '@ ${formatMoney(m.unitCostMinor!, 'TMT')}',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
             ],
           ),

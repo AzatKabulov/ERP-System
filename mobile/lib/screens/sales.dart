@@ -116,7 +116,7 @@ class _SalesScreenState extends State<SalesScreen> {
                             ),
                             Text(
                               '${p.brand} · ${p.sku}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.muted,
                                 fontSize: 13,
                               ),
@@ -138,10 +138,7 @@ class _SalesScreenState extends State<SalesScreen> {
                       ),
                       Text(
                         '${l.available}: ${widget.store.stock(p) - (widget.store.cart[p.id] ?? 0)}',
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: AppColors.muted, fontSize: 13),
                       ),
                       FilledButton.icon(
                         key: ValueKey('add-${p.id}'),
@@ -173,7 +170,7 @@ class _SalesScreenState extends State<SalesScreen> {
           const SizedBox(height: 8),
           Text(
             locationLabel(l, widget.store.location),
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
           ),
           const SizedBox(height: 20),
           if (widget.store.cart.isEmpty)
@@ -226,7 +223,7 @@ class _SalesScreenState extends State<SalesScreen> {
             ),
           const Divider(),
           const SizedBox(height: 20),
-          Text(l.subtotal, style: const TextStyle(color: AppColors.muted)),
+          Text(l.subtotal, style: TextStyle(color: AppColors.muted)),
           const SizedBox(height: 8),
           Text(
             money(widget.store.cartTotal),
@@ -245,11 +242,7 @@ class _SalesScreenState extends State<SalesScreen> {
           const SizedBox(height: 16),
           Text(
             l.checkoutNotice,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.muted,
-              height: 1.5,
-            ),
+            style: TextStyle(fontSize: 12, color: AppColors.muted, height: 1.5),
           ),
         ],
       ),
@@ -276,7 +269,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   const SizedBox(height: 8),
                   Text(
                     '${locationLabel(l, sale.location)} · ${money(sale.totalMinor)}',
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: AppColors.muted),
                   ),
                   const SizedBox(height: 16),
                   for (final entry in sale.items.entries)
@@ -413,16 +406,10 @@ Future<void> refundDialog(
                     const SizedBox(height: 12),
                     Text(
                       l.refundNotice,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.muted,
-                      ),
+                      style: TextStyle(fontSize: 13, color: AppColors.muted),
                     ),
                     if (error != null)
-                      Text(
-                        error!,
-                        style: const TextStyle(color: AppColors.danger),
-                      ),
+                      Text(error!, style: TextStyle(color: AppColors.danger)),
                   ],
                 ),
               ),

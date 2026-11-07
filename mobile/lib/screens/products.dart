@@ -137,10 +137,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       const SizedBox(height: 6),
                       Text(
                         '${product.sku} · ${product.brand} · ${l.shelf} ${product.shelf}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.muted,
-                        ),
+                        style: TextStyle(fontSize: 13, color: AppColors.muted),
                       ),
                     ],
                   );
@@ -175,7 +172,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           if (widget.inventory && stock < product.minimum)
                             Text(
                               '${l.suggestedOrder}: ${product.target - stock}',
-                              style: const TextStyle(color: AppColors.warning),
+                              style: TextStyle(color: AppColors.warning),
                             ),
                           TextButton(
                             onPressed: () =>
@@ -408,17 +405,11 @@ Future<void> stockDialog(
                     const SizedBox(height: 20),
                     Text(
                       l.stockActionNotice,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.muted,
-                      ),
+                      style: TextStyle(fontSize: 13, color: AppColors.muted),
                     ),
                     if (error != null) ...[
                       const SizedBox(height: 12),
-                      Text(
-                        error!,
-                        style: const TextStyle(color: AppColors.danger),
-                      ),
+                      Text(error!, style: TextStyle(color: AppColors.danger)),
                     ],
                   ],
                 ),

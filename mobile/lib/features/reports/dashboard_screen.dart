@@ -14,6 +14,7 @@ import 'audit_labels.dart';
 import 'onboarding_card.dart';
 import 'reports_models.dart';
 import 'reports_repository.dart';
+import '../../widgets/glass.dart';
 
 String _tm(int minor) => formatMoney(minor, 'TMT');
 
@@ -81,12 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // The shop's name is in the top bar already: only a choice of places needs naming here.
         final place = session.placeSubtitle ?? '';
         return ListView(
-          padding: EdgeInsets.fromLTRB(
-            compact ? 16 : 32,
-            compact ? 20 : 32,
-            compact ? 16 : 32,
-            40,
-          ),
+          padding: pagePadding(context, compact: compact),
           children: [
             FadeUp(
               child: Column(
@@ -453,7 +449,7 @@ class _Figures extends StatelessWidget {
                           ),
                           Text(
                             l.sales,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               color: AppColors.muted,
                             ),
@@ -498,7 +494,7 @@ class _Figures extends StatelessWidget {
                               ),
                               Text(
                                 '${l.dashShareOfSales(paid == 0 ? 0 : (pay[i].total * 100 / paid).round())} · ${_tm(pay[i].total)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
                                   color: AppColors.muted,
                                   fontWeight: FontWeight.w500,
@@ -569,7 +565,7 @@ class _Figures extends StatelessWidget {
           Text(
             l.dashNothing,
             key: const ValueKey('dash-nothing'),
-            style: const TextStyle(color: AppColors.muted),
+            style: TextStyle(color: AppColors.muted),
           ),
         if (salesHero) ...[
           _spotlight(
@@ -753,7 +749,7 @@ class _Figures extends StatelessWidget {
                             horizontal: 20,
                             vertical: 10,
                           ),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             border: Border(
                               top: BorderSide(color: AppColors.line),
                             ),
@@ -792,7 +788,7 @@ class _Figures extends StatelessWidget {
                                             : e.actorName,
                                         formatStamp(e.createdAt),
                                       ),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         color: AppColors.muted,
                                         fontSize: 13,
                                         height: 1.4,

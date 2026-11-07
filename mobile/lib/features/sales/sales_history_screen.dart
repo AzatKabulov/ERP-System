@@ -221,10 +221,7 @@ class _SaleTile extends StatelessWidget {
                         sale.cashierName,
                         if (sale.customerName.isNotEmpty) sale.customerName,
                       ].join(' · '),
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                     ),
                   ],
                 ),
@@ -238,10 +235,7 @@ class _SaleTile extends StatelessWidget {
                   ),
                   Text(
                     _methodText(l, sale.paymentMethod),
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
                   ),
                 ],
               ),
@@ -363,13 +357,13 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     if (line.returnDays == 0) {
       return Text(
         l.returnNotAccepted,
-        style: const TextStyle(color: AppColors.danger, fontSize: 13),
+        style: TextStyle(color: AppColors.danger, fontSize: 13),
       );
     }
     final until = line.returnUntil;
     return Text(
       until == null ? l.returnNoLimit : l.returnUntilLine(until),
-      style: const TextStyle(color: AppColors.muted, fontSize: 13),
+      style: TextStyle(color: AppColors.muted, fontSize: 13),
     );
   }
 
@@ -390,7 +384,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
               const SizedBox(height: 4),
               Text(
                 '${formatStamp(sale.createdAt)} · ${sale.locationName}',
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               ),
               Text(l.cashierLine(sale.cashierName)),
               if (sale.customerName.isNotEmpty)
@@ -430,10 +424,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                           '${formatQuantity(line.quantityMilli, line.unitDecimals)} ${line.unitSymbol}',
                           formatMoney(line.unitPriceMinor, 'TMT'),
                         ),
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: AppColors.muted, fontSize: 13),
                       ),
                       if (line.warrantyMonths > 0)
                         Text(
@@ -446,7 +437,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             '${formatQuantity(line.returnedMilli, line.unitDecimals)} ${line.unitSymbol}',
                           ),
                           key: ValueKey('sd-returned-${line.id}'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.warning,
                             fontSize: 13,
                           ),
@@ -472,7 +463,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                 child: Text(
                   '${l.paidBy}: ${_methodText(l, sale.paymentMethod)}',
                   key: const ValueKey('sd-method'),
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: AppColors.muted),
                 ),
               ),
               if (sale.costTotalMinor != null && sale.profitMinor != null) ...[
@@ -480,19 +471,19 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                 Text(
                   l.saleCostLine(formatMoney(sale.costTotalMinor!, 'TMT')),
                   key: const ValueKey('sd-cost'),
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: AppColors.muted),
                 ),
                 Text(
                   l.saleProfitLine(formatMoney(sale.profitMinor!, 'TMT')),
                   key: const ValueKey('sd-profit'),
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: AppColors.muted),
                 ),
               ] else if (sale.costTotalMinor != null) ...[
                 const Divider(),
                 Text(
                   l.saleProfitUnknown,
                   key: const ValueKey('sd-profit-unknown'),
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: AppColors.muted),
                 ),
               ],
             ],

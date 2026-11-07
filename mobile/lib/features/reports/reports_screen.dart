@@ -13,6 +13,7 @@ import '../shared/async_section.dart';
 import 'activity_view.dart';
 import 'reports_models.dart';
 import 'reports_repository.dart';
+import '../../widgets/glass.dart';
 
 enum ReportTab { summary, sales, stock, returns, expenses, activity }
 
@@ -108,12 +109,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final places = session.membership?.locations ?? const [];
     final tab = _tabs.contains(_tab) ? _tab : ReportTab.summary;
     return ListView(
-      padding: EdgeInsets.fromLTRB(
-        compact ? 16 : 32,
-        compact ? 20 : 32,
-        compact ? 16 : 32,
-        40,
-      ),
+      padding: pagePadding(context, compact: compact),
       children: [
         PageHead(
           title: l.reports,
@@ -487,7 +483,7 @@ class _TopBars extends StatelessWidget {
                             shown[i].name.split(' ').first,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.muted,
                               fontSize: 10,
                             ),
@@ -868,7 +864,7 @@ class _LinePainter extends CustomPainter {
     Offset at, {
     TextAlign align = TextAlign.left,
     FontWeight weight = FontWeight.w500,
-    Color color = AppColors.muted,
+    Color? color,
   }) {
     final painter = TextPainter(
       text: TextSpan(
@@ -877,7 +873,7 @@ class _LinePainter extends CustomPainter {
           fontFamily: AppFonts.ui,
           fontSize: 11,
           fontWeight: weight,
-          color: color,
+          color: color ?? AppColors.muted,
         ),
       ),
       textDirection: TextDirection.ltr,

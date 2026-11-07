@@ -12,6 +12,7 @@ import 'expense_detail_screen.dart';
 import 'expense_form_screen.dart';
 import 'expenses_models.dart';
 import 'expenses_repository.dart';
+import '../../widgets/glass.dart';
 
 String _day(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -152,12 +153,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final l = strings(context);
     final summary = _summary;
     return ListView(
-      padding: EdgeInsets.fromLTRB(
-        compact ? 16 : 32,
-        compact ? 20 : 32,
-        compact ? 16 : 32,
-        40,
-      ),
+      padding: pagePadding(context, compact: compact),
       children: [
         PageHead(
           title: l.expenses,
@@ -284,9 +280,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       decoration: BoxDecoration(
                         border: i == 0
                             ? null
-                            : const Border(
-                                top: BorderSide(color: AppColors.line),
-                              ),
+                            : Border(top: BorderSide(color: AppColors.line)),
                       ),
                       child: _ExpenseRow(expense: _items[i], index: i),
                     ),
@@ -347,7 +341,7 @@ class _ExpenseRow extends StatelessWidget {
               const SizedBox(height: 5),
               Text(
                 [e.categoryName, e.locationName].join(' · '),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 12,
                   height: 1.4,
@@ -364,11 +358,7 @@ class _ExpenseRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (e.attachment != null) ...[
-                  const AppIcon(
-                    AppIcons.attach,
-                    size: 16,
-                    color: AppColors.muted,
-                  ),
+                  AppIcon(AppIcons.attach, size: 16, color: AppColors.muted),
                   const SizedBox(width: 6),
                 ],
                 Text(

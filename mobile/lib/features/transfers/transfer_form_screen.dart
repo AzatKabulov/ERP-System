@@ -329,7 +329,7 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
                         child: Text(
                           l.entryNeedsLines,
                           key: const ValueKey('transfer-needs-lines'),
-                          style: const TextStyle(color: AppColors.danger),
+                          style: TextStyle(color: AppColors.danger),
                         ),
                       ),
                     Align(
@@ -359,7 +359,7 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
                         child: Text(
                           _insufficientText(l) ?? apiErrorText(l, _error!),
                           key: const ValueKey('transfer-error'),
-                          style: const TextStyle(color: AppColors.danger),
+                          style: TextStyle(color: AppColors.danger),
                         ),
                       ),
                     ],
@@ -374,7 +374,7 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
                                 l.offlineBanner,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.danger,
                                   fontSize: 12,
                                 ),

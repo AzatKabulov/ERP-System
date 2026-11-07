@@ -184,7 +184,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColors.line),
                         ),
@@ -220,7 +220,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
                         const SizedBox(height: 5),
                         Text(
                           '${formatStamp(c.events[i].createdAt)} · ${c.events[i].actor}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.muted,
                             fontSize: 12,
                             height: 1.4,
@@ -230,7 +230,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
                           const SizedBox(height: 5),
                           Text(
                             c.events[i].note,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.muted,
                               fontSize: 12,
                               height: 1.4,
@@ -272,7 +272,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
           const SizedBox(height: 8),
           Text(
             '${formatQuantity(c.quantityMilli, c.unitDecimals)} ${c.unitSymbol} · ${saleNumber(c.saleNumber)}',
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: AppFonts.mono,
               letterSpacing: -0.28,
               color: AppColors.muted,
@@ -287,7 +287,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
                   width: 36,
                   height: 36,
                   alignment: Alignment.center,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: AppColors.ink,
                     shape: BoxShape.circle,
                   ),
@@ -319,7 +319,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
                           if (c.warrantyUntil != null)
                             l.warrantyUntilLine(c.warrantyUntil!),
                         ].join(' · '),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.muted,
                           fontSize: 12,
                           height: 1.4,
@@ -334,7 +334,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
             const SizedBox(height: 8),
             Text(
               l.warrantyUntilLine(c.warrantyUntil!),
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
           ],
           if (c.outOfWarranty) ...[
@@ -342,7 +342,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
             Text(
               l.warrantyOutOfWarranty,
               key: const ValueKey('wd-out'),
-              style: const TextStyle(color: AppColors.warning, fontSize: 13),
+              style: TextStyle(color: AppColors.warning, fontSize: 13),
             ),
           ],
           divider,
@@ -452,9 +452,8 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         PageHead(
-          eyebrow: warrantyNumber(c.number),
           title: l.warrantyCaseTitle,
-          subtitle: formatStamp(c.openedAt),
+          subtitle: '${warrantyNumber(c.number)} · ${formatStamp(c.openedAt)}',
           actions: [
             StatusPill(
               key: const ValueKey('wd-status'),
@@ -489,7 +488,7 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
             child: Text(
               apiErrorText(l, _error!),
               key: const ValueKey('wd-error'),
-              style: const TextStyle(color: AppColors.danger),
+              style: TextStyle(color: AppColors.danger),
             ),
           ),
         ],

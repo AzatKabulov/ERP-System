@@ -92,7 +92,7 @@ class _ExchangeRateSectionState extends State<ExchangeRateSection> {
                   Text(
                     l.noRateYet,
                     key: const ValueKey('rate-none'),
-                    style: const TextStyle(color: AppColors.warning),
+                    style: TextStyle(color: AppColors.warning),
                   )
                 else
                   Text(
@@ -104,10 +104,7 @@ class _ExchangeRateSectionState extends State<ExchangeRateSection> {
                   const SizedBox(height: 12),
                   Text(
                     l.rateHistory,
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: AppColors.muted, fontSize: 13),
                   ),
                   for (final entry in rates.skip(1))
                     Text(
@@ -163,7 +160,7 @@ class _ExchangeRateSectionState extends State<ExchangeRateSection> {
               const SizedBox(height: 8),
               Text(
                 apiErrorText(l, _error!),
-                style: const TextStyle(color: AppColors.danger),
+                style: TextStyle(color: AppColors.danger),
               ),
             ],
           ],

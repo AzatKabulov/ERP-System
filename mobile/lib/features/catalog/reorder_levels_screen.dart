@@ -66,7 +66,7 @@ class _ReorderLevelsCardState extends State<ReorderLevelsCard> {
               Text(
                 l.reorderLevelsNone,
                 key: const ValueKey('pd-reorder-none'),
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               ),
             for (final r in levels)
               Text(
@@ -268,7 +268,7 @@ class _ReorderLevelsScreenState extends State<ReorderLevelsScreen> {
                             if (_problem(p.id) != null)
                               Text(
                                 _problem(p.id)!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.danger,
                                   fontSize: 13,
                                 ),
@@ -283,7 +283,7 @@ class _ReorderLevelsScreenState extends State<ReorderLevelsScreen> {
                       child: Text(
                         apiErrorText(l, _error!),
                         key: const ValueKey('rl-error'),
-                        style: const TextStyle(color: AppColors.danger),
+                        style: TextStyle(color: AppColors.danger),
                       ),
                     ),
                   const SizedBox(height: 16),

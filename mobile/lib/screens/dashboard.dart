@@ -23,7 +23,7 @@ class DashboardScreen extends StatelessWidget {
       children: [
         Text(
           l.session,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             color: AppColors.blue,
             fontWeight: FontWeight.w500,
@@ -34,11 +34,7 @@ class DashboardScreen extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           l.welcomeSubtitle,
-          style: const TextStyle(
-            color: AppColors.muted,
-            fontSize: 16,
-            height: 1.5,
-          ),
+          style: TextStyle(color: AppColors.muted, fontSize: 16, height: 1.5),
         ),
         const SizedBox(height: 24),
         AdaptiveGrid(
@@ -151,7 +147,7 @@ class DashboardScreen extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               '${p.sku} · ${p.brand}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.muted,
                                 fontSize: 13,
                               ),
@@ -162,7 +158,7 @@ class DashboardScreen extends StatelessWidget {
                       const SizedBox(width: 12),
                       Text(
                         '${store.stock(p)} / ${p.minimum}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.warning,
                           fontWeight: FontWeight.w600,
                         ),
@@ -217,7 +213,7 @@ class ActivityPanel extends StatelessWidget {
                     children: [
                       Text(
                         activity.reference,
-                        style: const TextStyle(color: AppColors.muted),
+                        style: TextStyle(color: AppColors.muted),
                       ),
                       Text(
                         activity.amountMinor > 0

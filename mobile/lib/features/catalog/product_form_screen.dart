@@ -442,10 +442,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     '${l.unitDecimals}: ${unit.decimalPlaces}',
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
                   ),
                 ),
               const SizedBox(height: 24),
@@ -511,13 +508,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   Text(
                     l.rateMissingNote,
                     key: const ValueKey('pf-rate-missing'),
-                    style: const TextStyle(color: AppColors.warning),
+                    style: TextStyle(color: AppColors.warning),
                   )
                 else if (preview != null)
                   Text(
                     l.priceInTmt(formatMoney(preview, 'TMT')),
                     key: const ValueKey('pf-price-preview'),
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: AppColors.muted),
                   ),
               ],
               if (_canSeeCost) ...[
@@ -646,7 +643,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   child: Text(
                     general,
                     key: const ValueKey('pf-error'),
-                    style: const TextStyle(color: AppColors.danger),
+                    style: TextStyle(color: AppColors.danger),
                   ),
                 ),
               ],

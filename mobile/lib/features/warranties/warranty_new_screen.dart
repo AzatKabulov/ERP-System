@@ -229,7 +229,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
                             s.locationName,
                             if (s.customerName.isNotEmpty) s.customerName,
                           ].join(' · '),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.muted,
                             fontSize: 13,
                           ),
@@ -316,7 +316,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
                   ),
                 ),
                 if (selected)
-                  const AppIcon(AppIcons.checkCircle, color: AppColors.blue),
+                  AppIcon(AppIcons.checkCircle, color: AppColors.blue),
               ],
             ),
           ),
@@ -332,7 +332,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
       if (line.returnableMilli <= 0)
         Text(
           l.returnNothingToReturn,
-          style: const TextStyle(color: AppColors.danger),
+          style: TextStyle(color: AppColors.danger),
         ),
       Semantics(
         container: true,
@@ -380,7 +380,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
           Text(
             l.warrantyOverrideHint,
             key: const ValueKey('wn-override-hint'),
-            style: const TextStyle(color: AppColors.warning),
+            style: TextStyle(color: AppColors.warning),
           ),
           const SizedBox(height: 8),
           Semantics(
@@ -401,7 +401,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
           Text(
             l.warrantyBlocked,
             key: const ValueKey('wn-blocked'),
-            style: const TextStyle(color: AppColors.danger),
+            style: TextStyle(color: AppColors.danger),
           ),
       ],
       if (_error != null) ...[
@@ -411,7 +411,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
           child: Text(
             _errorText(l, _error!),
             key: const ValueKey('wn-error'),
-            style: const TextStyle(color: AppColors.danger),
+            style: TextStyle(color: AppColors.danger),
           ),
         ),
       ],

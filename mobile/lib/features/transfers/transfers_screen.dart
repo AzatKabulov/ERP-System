@@ -225,14 +225,14 @@ class _TransfersScreenState extends State<TransfersScreen> {
                               ),
                               Text(
                                 l.transferRoute(t.fromName, t.toName),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.muted,
                                   fontSize: 13,
                                 ),
                               ),
                               Text(
                                 formatStamp(t.createdAt),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.muted,
                                   fontSize: 12,
                                 ),

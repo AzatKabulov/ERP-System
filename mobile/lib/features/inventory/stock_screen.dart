@@ -27,6 +27,7 @@ import 'movements_screen.dart';
 import 'quantity_input.dart';
 import 'stock_entry_screen.dart';
 import 'stock_labels.dart';
+import '../../widgets/glass.dart';
 
 /// Current stock per product, location and condition, read from the ledger's
 /// balances. Everything shown is what the server returned for this person: only
@@ -259,12 +260,7 @@ class _StockScreenState extends State<StockScreen> {
     // A plain scrolling column, not a lazy list: the tabs and the actions must exist for
     // accessibility tools however large the text is.
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        compact ? 16 : 32,
-        compact ? 20 : 32,
-        compact ? 16 : 32,
-        40,
-      ),
+      padding: pagePadding(context, compact: compact),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -493,7 +489,7 @@ class _StockTable extends StatelessWidget {
   final bool compact;
   final void Function(StockRow)? onOpen;
 
-  static const _header = TextStyle(
+  static final _header = TextStyle(
     color: AppColors.muted,
     fontSize: 11,
     fontWeight: FontWeight.w700,
@@ -525,9 +521,9 @@ class _StockTable extends StatelessWidget {
               color: AppColors.surfaceSoft,
               child: Row(
                 children: [
-                  cell(5, Text(l.productName.toUpperCase(), style: _header)),
+                  cell(4, Text(l.productName.toUpperCase(), style: _header)),
                   cell(
-                    3,
+                    2,
                     Text(l.locationFieldLabel.toUpperCase(), style: _header),
                   ),
                   cell(3, Text(l.conditionLabel.toUpperCase(), style: _header)),
@@ -538,7 +534,7 @@ class _StockTable extends StatelessWidget {
                   ),
                   if (showValue)
                     cell(
-                      2,
+                      3,
                       Text(l.stockColumnValue.toUpperCase(), style: _header),
                       align: Alignment.centerRight,
                     ),
@@ -561,7 +557,7 @@ class _StockTable extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: i == 0 && compact
                       ? null
-                      : const Border(top: BorderSide(color: AppColors.line)),
+                      : Border(top: BorderSide(color: AppColors.line)),
                 ),
                 child: compact
                     ? _CompactRow(row: rows[i])
@@ -594,7 +590,7 @@ class _Identity extends StatelessWidget {
         withLocation
             ? '${row.product.sku} · ${row.locationName}'
             : row.product.sku,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: AppFonts.mono,
           color: AppColors.muted,
           fontSize: 12,
@@ -637,10 +633,13 @@ class _WideRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Expanded(flex: 5, child: _Identity(row: row)),
+      Expanded(flex: 4, child: _Identity(row: row)),
       Expanded(
-        flex: 3,
-        child: Text(row.locationName, style: const TextStyle(fontSize: 13)),
+        flex: 2,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: Text(row.locationName, style: const TextStyle(fontSize: 13)),
+        ),
       ),
       Expanded(
         flex: 3,
@@ -663,7 +662,7 @@ class _WideRow extends StatelessWidget {
       ),
       if (showValue)
         Expanded(
-          flex: 2,
+          flex: 3,
           child: Text(
             row.valueMinor == null ? '' : formatMoney(row.valueMinor!, 'TMT'),
             textAlign: TextAlign.right,
@@ -709,7 +708,7 @@ class _CompactRow extends StatelessWidget {
             if (row.valueMinor != null)
               Text(
                 l.stockValueLabel(formatMoney(row.valueMinor!, 'TMT')),
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             if (row.condition != 'sellable') ...[
               const SizedBox(height: 4),

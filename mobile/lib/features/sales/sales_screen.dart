@@ -26,6 +26,7 @@ import 'document_buttons.dart';
 import 'sales_history_screen.dart';
 import 'sales_models.dart';
 import 'sales_repository.dart';
+import '../../widgets/glass.dart';
 
 /// Recording a sale: find or scan products, build a cart (which reserves no stock), set the
 /// quantity and the price of every line (prices are not fixed: the seller charges what they
@@ -266,15 +267,9 @@ class _SalesScreenState extends State<SalesScreen> {
         final compact = constraints.maxWidth < 600;
         return ListView(
           controller: _scroll,
-          padding: EdgeInsets.fromLTRB(
-            compact ? 16 : 32,
-            compact ? 20 : 32,
-            compact ? 16 : 32,
-            40,
-          ),
+          padding: pagePadding(context, compact: compact),
           children: [
             PageHead(
-              eyebrow: l.sales,
               title: l.salesCashDesk,
               subtitle: session.placeSubtitle,
               actions: [
@@ -445,7 +440,7 @@ class _SalesScreenState extends State<SalesScreen> {
             child: Text(
               _lastAdded!,
               key: const ValueKey('cart-added'),
-              style: const TextStyle(color: AppColors.success, fontSize: 13),
+              style: TextStyle(color: AppColors.success, fontSize: 13),
             ),
           ),
         ),
@@ -532,8 +527,8 @@ class _SalesScreenState extends State<SalesScreen> {
         ? null
         : Container(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: AppColors.glassStrong,
               border: Border(top: BorderSide(color: AppColors.line)),
             ),
             child: Column(
@@ -546,7 +541,7 @@ class _SalesScreenState extends State<SalesScreen> {
                     Expanded(
                       child: Text(
                         l.cartTotalLabel,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.muted,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -558,7 +553,7 @@ class _SalesScreenState extends State<SalesScreen> {
                         formatMoney(cart.totalMinor, 'TMT'),
                         key: const ValueKey('cart-total'),
                         textAlign: TextAlign.end,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: AppFonts.display,
                           fontWeight: FontWeight.w600,
                           fontSize: 32,
@@ -637,7 +632,7 @@ class _SalesScreenState extends State<SalesScreen> {
         children: [
           Row(
             children: [
-              const AppIcon(AppIcons.checkCircle, color: AppColors.success),
+              AppIcon(AppIcons.checkCircle, color: AppColors.success),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -690,72 +685,93 @@ class _ResultTile extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(minHeight: 80),
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.line)),
         ),
-        child: Row(
-          children: [
-            ProductPhoto(
-              product: product,
-              repository: repository,
-              width: 48,
-              height: 48,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    [
-                      product.sku,
-                      ?product.brand?.name,
-                      if (product.onHandMilli != null)
-                        l.inStockHere(
-                          quantityWithUnit(product.onHandMilli!, product.unit),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            // On a narrow screen the price goes under the name, so the name keeps its width.
+            final narrow = box.maxWidth < 520;
+            final price = Text(
+              unit == null ? l.rateMissingNote : formatMoney(unit, 'TMT'),
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: unit == null ? AppColors.warning : null,
+                fontSize: unit == null ? 12 : 14,
+              ),
+            );
+            return Row(
+              children: [
+                ProductPhoto(
+                  product: product,
+                  repository: repository,
+                  width: 48,
+                  height: 48,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
-                    ].join(' · '),
-                    key: ValueKey('sell-meta-${product.sku}'),
-                    style: const TextStyle(
-                      fontFamily: AppFonts.mono,
-                      color: AppColors.muted,
-                      fontSize: 12,
+                      ),
+                      if (narrow) ...[const SizedBox(height: 2), price],
+                      const SizedBox(height: 4),
+                      Text(
+                        [
+                          product.sku,
+                          ?product.brand?.name,
+                          if (product.onHandMilli != null)
+                            l.inStockHere(
+                              quantityWithUnit(
+                                product.onHandMilli!,
+                                product.unit,
+                              ),
+                            ),
+                        ].join(' · '),
+                        key: ValueKey('sell-meta-${product.sku}'),
+                        style: TextStyle(
+                          fontFamily: AppFonts.mono,
+                          color: AppColors.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                if (!narrow) ...[
+                  Flexible(child: price),
+                  const SizedBox(width: 12),
+                ],
+                // the add control: a round tonal button at the end of the row, as in any list of
+                // things to add (the whole row is the target; this is its mark)
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.tint,
+                  ),
+                  child: Center(
+                    child: AppIcon(
+                      AppIcons.plus,
+                      size: 20,
+                      color: AppColors.blue,
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    unit == null ? l.rateMissingNote : formatMoney(unit, 'TMT'),
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: unit == null ? AppColors.warning : null,
-                      fontSize: unit == null ? 12 : 14,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  const AppIcon(AppIcons.plus, size: 20),
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -846,7 +862,7 @@ class _CartLineCardState extends State<_CartLineCard> {
       decoration: BoxDecoration(
         border: widget.first
             ? null
-            : const Border(top: BorderSide(color: AppColors.line)),
+            : Border(top: BorderSide(color: AppColors.line)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -866,7 +882,7 @@ class _CartLineCardState extends State<_CartLineCard> {
                   const SizedBox(height: 5),
                   Text(
                     meta,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: AppFonts.mono,
                       letterSpacing: -0.24,
                       color: AppColors.muted,
@@ -925,7 +941,7 @@ class _CartLineCardState extends State<_CartLineCard> {
                   ExcludeSemantics(
                     child: Text(
                       l.priceFieldLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -956,7 +972,7 @@ class _CartLineCardState extends State<_CartLineCard> {
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 10,
                           ),
-                          prefixIcon: const Padding(
+                          prefixIcon: Padding(
                             padding: EdgeInsets.only(left: 10, right: 4),
                             child: AppIcon(
                               AppIcons.edit,
@@ -979,7 +995,7 @@ class _CartLineCardState extends State<_CartLineCard> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(
+                            borderSide: BorderSide(
                               color: AppColors.blue,
                               width: 2,
                             ),
@@ -993,10 +1009,7 @@ class _CartLineCardState extends State<_CartLineCard> {
                     Text(
                       l.catalogPriceLine(formatMoney(catalogPrice, 'TMT')),
                       textAlign: TextAlign.end,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 12),
                     ),
                   ],
                   if (lineTotal != null) ...[
@@ -1035,7 +1048,7 @@ class _CartLineCardState extends State<_CartLineCard> {
               child: Text(
                 _problemText(problem) ?? '',
                 key: ValueKey('cart-problem-${widget.index}'),
-                style: const TextStyle(color: AppColors.danger, fontSize: 13),
+                style: TextStyle(color: AppColors.danger, fontSize: 13),
               ),
             ),
         ],
@@ -1078,8 +1091,8 @@ class _Stepper extends StatelessWidget {
       height: 44,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.line),
       ),
       child: Row(

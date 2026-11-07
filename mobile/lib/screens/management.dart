@@ -43,7 +43,7 @@ class ManagementScreen extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 12),
-      Text(l.expenseHint, style: const TextStyle(color: AppColors.muted)),
+      Text(l.expenseHint, style: TextStyle(color: AppColors.muted)),
       const SizedBox(height: 24),
       if (store.expenses.isEmpty)
         SurfaceCard(child: EmptyState(title: l.noExpenses)),
@@ -75,7 +75,7 @@ class ManagementScreen extends StatelessWidget {
     return [
       Text(
         l.warrantyHint,
-        style: const TextStyle(color: AppColors.muted, height: 1.5),
+        style: TextStyle(color: AppColors.muted, height: 1.5),
       ),
       const SizedBox(height: 24),
       for (final (id, productId, resolved) in [
@@ -132,14 +132,11 @@ class ManagementScreen extends StatelessWidget {
   List<Widget> _reports(BuildContext context) {
     final l = strings(context);
     return [
-      Text(
-        l.reportHint,
-        style: const TextStyle(color: AppColors.muted, height: 1.5),
-      ),
+      Text(l.reportHint, style: TextStyle(color: AppColors.muted, height: 1.5)),
       const SizedBox(height: 8),
       Text(
         l.reportScope,
-        style: const TextStyle(color: AppColors.muted, fontSize: 13),
+        style: TextStyle(color: AppColors.muted, fontSize: 13),
       ),
       const SizedBox(height: 24),
       AdaptiveGrid(
@@ -225,12 +222,12 @@ class ManagementScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               l.translationsPending,
-              style: const TextStyle(color: AppColors.muted, height: 1.5),
+              style: TextStyle(color: AppColors.muted, height: 1.5),
             ),
             const SizedBox(height: 12),
             Text(
               l.sampleCurrency,
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
           ],
         ),
@@ -245,7 +242,7 @@ class ManagementScreen extends StatelessWidget {
             for (final id in DemoStore.locationIds)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const AppIcon(AppIcons.stock, color: AppColors.blue),
+                leading: AppIcon(AppIcons.stock, color: AppColors.blue),
                 title: Text(locationLabel(l, id)),
                 subtitle: Text(
                   '${l.stockUnits}: ${store.products.fold(0, (sum, p) => sum + store.stock(p, id))}',
@@ -265,7 +262,7 @@ class ManagementScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               l.demoRoleNotice,
-              style: const TextStyle(color: AppColors.muted, height: 1.5),
+              style: TextStyle(color: AppColors.muted, height: 1.5),
             ),
             const SizedBox(height: 16),
             for (final label in [
@@ -276,7 +273,7 @@ class ManagementScreen extends StatelessWidget {
             ])
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const AppIcon(AppIcons.lock, color: AppColors.muted),
+                leading: AppIcon(AppIcons.lock, color: AppColors.muted),
                 title: Text(label),
                 subtitle: Text(l.backendPending),
               ),

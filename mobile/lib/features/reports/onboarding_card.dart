@@ -76,7 +76,7 @@ class _OnboardingCardState extends State<OnboardingCard> {
                 Text(
                   l.onboardProgress('$done', '${steps.length}'),
                   key: const ValueKey('onboarding-progress'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -124,7 +124,7 @@ class _OnboardingCardState extends State<OnboardingCard> {
                         ),
                       ),
                       if (!finished)
-                        const AppIcon(
+                        AppIcon(
                           AppIcons.chevron,
                           size: 18,
                           color: AppColors.muted,

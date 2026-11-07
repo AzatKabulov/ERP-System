@@ -246,7 +246,7 @@ class _RealWorkspaceState extends State<RealWorkspace> {
         if (membership.locations.isEmpty)
           Text(
             l.noLocationsAvailable,
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
           )
         else if (membership.locations.length == 1)
           // One shop: nothing to choose, so just its name (no menu, no arrow). It is the
@@ -323,7 +323,7 @@ class _RealWorkspaceState extends State<RealWorkspace> {
               color: AppColors.dangerTint,
               child: Text(
                 l.offlineBanner,
-                style: const TextStyle(fontSize: 12, color: AppColors.danger),
+                style: TextStyle(fontSize: 12, color: AppColors.danger),
               ),
             ),
           PendingOperationsBanner(

@@ -202,7 +202,7 @@ class _ReturnFormScreenState extends State<ReturnFormScreen> {
                   ),
                   Text(
                     sale.locationName,
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: AppColors.muted),
                   ),
                   const SizedBox(height: 16),
                   if (_lines.isEmpty)
@@ -242,10 +242,7 @@ class _ReturnFormScreenState extends State<ReturnFormScreen> {
                     ),
                     Text(
                       l.returnRefundNote,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                     ),
                   ],
                   if (_error != null) ...[
@@ -255,7 +252,7 @@ class _ReturnFormScreenState extends State<ReturnFormScreen> {
                       child: Text(
                         _errorText(l, _error!),
                         key: const ValueKey('return-error'),
-                        style: const TextStyle(color: AppColors.danger),
+                        style: TextStyle(color: AppColors.danger),
                       ),
                     ),
                   ],
@@ -296,18 +293,18 @@ class _ReturnFormScreenState extends State<ReturnFormScreen> {
           l.returnableLine(
             '${formatQuantity(line.returnableMilli, line.unitDecimals)} ${line.unitSymbol}',
           ),
-          style: const TextStyle(color: AppColors.muted, fontSize: 13),
+          style: TextStyle(color: AppColors.muted, fontSize: 13),
         ),
         if (blocked)
           Text(
             l.returnNotAccepted,
             key: ValueKey('return-blocked-${line.id}'),
-            style: const TextStyle(color: AppColors.danger, fontSize: 13),
+            style: TextStyle(color: AppColors.danger, fontSize: 13),
           )
         else if (until != null)
           Text(
             l.returnUntilLine(until),
-            style: const TextStyle(color: AppColors.warning, fontSize: 13),
+            style: TextStyle(color: AppColors.warning, fontSize: 13),
           ),
         const SizedBox(height: 8),
         Semantics(

@@ -25,7 +25,7 @@ class ErrorPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              const AppIcon(AppIcons.info, color: AppColors.warning),
+              AppIcon(AppIcons.info, color: AppColors.warning),
               const SizedBox(width: 8),
               Expanded(child: Text(message)),
             ],

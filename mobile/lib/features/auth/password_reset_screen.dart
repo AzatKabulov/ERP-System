@@ -107,7 +107,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (_step == _Step.done) ...[
-                      const AppIcon(
+                      AppIcon(
                         AppIcons.checkCircle,
                         color: AppColors.success,
                         size: 40,
@@ -124,16 +124,13 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                     ] else ...[
                       Text(
                         l.resetIntro,
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          height: 1.5,
-                        ),
+                        style: TextStyle(color: AppColors.muted, height: 1.5),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         l.resetNoMailHint,
                         key: const ValueKey('reset-no-mail-hint'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.muted,
                           fontSize: 13,
                           height: 1.5,
@@ -158,7 +155,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                           Text(
                             key: const ValueKey('reset-sent'),
                             l.resetSent,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.success,
                               height: 1.4,
                             ),
@@ -201,7 +198,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                           child: Text(
                             key: const ValueKey('reset-error'),
                             generalError,
-                            style: const TextStyle(color: AppColors.danger),
+                            style: TextStyle(color: AppColors.danger),
                           ),
                         ),
                       ],
