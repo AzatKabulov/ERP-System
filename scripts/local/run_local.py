@@ -242,6 +242,8 @@ def main() -> None:
         POSTGRES_PASSWORD=db["password"],
         POSTGRES_DB="erp",
         PRIVATE_FILES_ROOT=str(data / "private_files"),
+        # the owner console's style files; kept out of the repository
+        ERP_LOCAL_STATIC=str(data / "staticfiles"),
         ERP_LOCAL_WEB_ROOT=str(data / "public" / "web"),
         ERP_LOCAL_DOWNLOADS=str(data / "public" / "downloads"),
         ERP_LOCAL_INSTALL_PAGE=str(ROOT / "infra" / "site" / "install"),
@@ -259,6 +261,8 @@ def main() -> None:
 
     call_command("migrate", interactive=False, verbosity=0)
     call_command("createcachetable", verbosity=0)
+    # without these the owner console (/console/) cannot draw its pages
+    call_command("collectstatic", interactive=False, verbosity=0)
     from apps.accounts.models import User
     from apps.businesses.models import Business
 
