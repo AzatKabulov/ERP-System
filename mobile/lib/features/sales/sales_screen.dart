@@ -936,21 +936,11 @@ class _CartLineCardState extends State<_CartLineCard> {
               final right = Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // The price is the one thing the seller changes on a line, so the box says so:
-                  // a caption, a pencil, a tinted fill and a cobalt edge, never plain text.
-                  ExcludeSemantics(
-                    child: Text(
-                      l.priceFieldLabel,
-                      style: TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
+                  // The price is the one thing the seller changes on a line: a small tinted box
+                  // with the currency after the number, so it reads as "type the price here".
                   SizedBox(
-                    height: 44,
+                    width: 112,
+                    height: 40,
                     child: Semantics(
                       label: l.priceFieldLabel,
                       child: TextField(
@@ -972,17 +962,11 @@ class _CartLineCardState extends State<_CartLineCard> {
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 10,
                           ),
-                          prefixIcon: Padding(
-                            padding: EdgeInsets.only(left: 10, right: 4),
-                            child: AppIcon(
-                              AppIcons.edit,
-                              size: 14,
-                              color: AppColors.blue,
-                            ),
-                          ),
-                          prefixIconConstraints: const BoxConstraints(
-                            minWidth: 28,
-                            minHeight: 28,
+                          suffixText: 'TMT',
+                          suffixStyle: TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),

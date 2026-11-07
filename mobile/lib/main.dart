@@ -13,6 +13,7 @@ import 'core/connectivity/connection_monitor.dart';
 import 'core/operations/pending_operation_store.dart';
 import 'core/session/session_controller.dart';
 import 'core/session/token_stores.dart';
+import 'core/web/web_chrome.dart';
 import 'demo/demo_store.dart';
 import 'features/sales/document_actions.dart';
 import 'features/scanning/barcode_scanner.dart';
@@ -163,6 +164,7 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
       ),
     );
     _theme.addListener(_schemeChanged);
+    syncBrowserChrome(dark: AppColors.isDark);
   }
 
   /// The phone switched between light and dark while the app was open.
@@ -174,6 +176,7 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
       WidgetsBinding.instance.platformDispatcher.platformBrightness,
     );
     final changed = ThemeController.apply(brightness);
+    syncBrowserChrome(dark: AppColors.isDark);
     setState(() {}); // the Material theme follows the chosen mode
     if (!changed) return;
     // every widget reads its colours when it builds: build them all again, in place

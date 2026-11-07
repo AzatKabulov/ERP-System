@@ -20,6 +20,34 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Inventory ERP interface prototype">
   <meta name="theme-color" content="#EEF1F8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script>
+    /* One full-screen surface: the browser's own top area (status bar) and the page behind the app
+       take the app's canvas colour, light or dark, from the very first paint. The app calls this
+       again when the person changes the scheme. */
+    window.erpSetScheme = function (dark) {
+      var color = dark ? '#090C16' : '#EEF1F8';
+      var set = function (name, value) {
+        var m = document.querySelector('meta[name="' + name + '"]');
+        if (m) m.setAttribute('content', value);
+      };
+      set('theme-color', color);
+      // dark: the app is drawn under the status bar (light text); light: the normal bar
+      set('apple-mobile-web-app-status-bar-style', dark ? 'black-translucent' : 'default');
+      document.documentElement.style.background = color;
+      if (document.body) document.body.style.background = color;
+      var splash = document.getElementById('splash');
+      if (splash) splash.style.background = color;
+    };
+    (function () {
+      var mode = null;
+      try { mode = (localStorage.getItem('flutter.theme.mode') || '').replace(/"/g, ''); } catch (e) {}
+      var dark = mode === 'dark' ||
+        (mode === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+      window.erpSetScheme(dark);
+      document.addEventListener('DOMContentLoaded', function () { window.erpSetScheme(dark); });
+    })();
+  </script>
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">

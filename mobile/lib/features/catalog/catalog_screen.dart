@@ -318,45 +318,59 @@ class _CatalogScreenState extends State<CatalogScreen> {
     final category = _categories.where((c) => c.id == _categoryId).firstOrNull;
     // Every filter in one tidy wrap: the category (it opens a list where a new category can be
     // created too), the expiry filters, and the archive. Chosen ones are tinted cobalt.
-    final filters = Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        FilterButton(
-          key: const ValueKey('catalog-category-filter'),
-          caption: l.categoryFilterCaption,
-          value: category?.name ?? l.allCategories,
-          active: category != null,
-          icon: AppIcons.tag,
-          onTap: _pickCategory,
-        ),
-        if (widget.session.can('stock.view'))
-          for (final mode in ['soon', 'expired'])
-            AppPill(
-              key: ValueKey('catalog-expiry-$mode'),
-              label: mode == 'soon'
-                  ? l.expirySoonFilter
-                  : l.expiryExpiredFilter,
-              selected: _expiryFilter == mode,
-              icon: AppIcons.clock,
-              onTap: () {
-                _expiryFilter = _expiryFilter == mode ? null : mode;
-                _load(reset: true);
-              },
+    final filterChips = <Widget>[
+      FilterButton(
+        key: const ValueKey('catalog-category-filter'),
+        caption: l.categoryFilterCaption,
+        value: category?.name ?? l.allCategories,
+        active: category != null,
+        icon: AppIcons.tag,
+        onTap: _pickCategory,
+      ),
+      if (widget.session.can('stock.view'))
+        for (final mode in ['soon', 'expired'])
+          AppPill(
+            key: ValueKey('catalog-expiry-$mode'),
+            label: mode == 'soon' ? l.expirySoonFilter : l.expiryExpiredFilter,
+            selected: _expiryFilter == mode,
+            icon: AppIcons.clock,
+            onTap: () {
+              _expiryFilter = _expiryFilter == mode ? null : mode;
+              _load(reset: true);
+            },
+          ),
+      AppPill(
+        key: const ValueKey('catalog-archived-toggle'),
+        label: l.showArchived,
+        selected: _archived,
+        icon: AppIcons.archive,
+        onTap: () {
+          _archived = !_archived;
+          _load(reset: true);
+        },
+      ),
+    ];
+    // On a phone all of them sit in one row that slides sideways, instead of wrapping into
+    // several rows; on a wide screen they wrap as before.
+    final filters = compact
+        ? SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final chip in filterChips)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: chip,
+                  ),
+              ],
             ),
-        AppPill(
-          key: const ValueKey('catalog-archived-toggle'),
-          label: l.showArchived,
-          selected: _archived,
-          icon: AppIcons.archive,
-          onTap: () {
-            _archived = !_archived;
-            _load(reset: true);
-          },
-        ),
-      ],
-    );
+          )
+        : Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: filterChips,
+          );
     final gutter = compact ? 16.0 : 32.0;
     return ListView(
       padding: pagePadding(context, compact: compact, gutter: gutter),
@@ -364,7 +378,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
         PageHead(
           title: l.products,
           subtitle: _loading && _items.isEmpty ? null : l.productsCount(_count),
-          actions: [if (hasSecondary) more, ?add],
+          // the main button first, the side menu after it
+          actions: [?add, if (hasSecondary) more],
         ),
         const SizedBox(height: 24),
         // Row 1: the search with its camera button, and the way to see the products.

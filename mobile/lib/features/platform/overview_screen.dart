@@ -88,6 +88,7 @@ class _Body extends StatelessWidget {
       accentTint: tint,
       onTap: () => onFilter(filter),
     );
+    final narrow = MediaQuery.sizeOf(context).width < 768;
     final income = data.income.isEmpty
         ? l.pfNoIncome
         : data.income.entries.map((e) => '${e.value} ${e.key}').join(' · ');
@@ -95,7 +96,8 @@ class _Body extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AdaptiveGrid(
-          minimumWidth: 200,
+          minimumWidth: narrow ? 150 : 200,
+          gap: narrow ? 10 : 16,
           maxColumns: 4,
           children: [
             MetricCard(
@@ -145,7 +147,8 @@ class _Body extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         AdaptiveGrid(
-          minimumWidth: 300,
+          minimumWidth: narrow ? 150 : 300,
+          gap: narrow ? 10 : 16,
           maxColumns: 2,
           children: [
             MetricCard(
@@ -171,6 +174,24 @@ class _Body extends StatelessWidget {
               l.pfNothingUrgent,
               key: const ValueKey('pf-nothing-urgent'),
               style: TextStyle(color: AppColors.muted),
+            ),
+          )
+        else if (narrow)
+          // a phone: the clients to call slide sideways like a gallery
+          SizedBox(
+            height: 132,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              itemCount: data.attention.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              itemBuilder: (context, i) => SizedBox(
+                width: 270,
+                child: ClientTile(
+                  row: data.attention[i],
+                  onTap: () => onOpenClient(data.attention[i].id),
+                ),
+              ),
             ),
           )
         else
