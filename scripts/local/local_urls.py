@@ -74,5 +74,7 @@ urlpatterns = [
     *api_urlpatterns,
     re_path(r"^install/(?P<path>.*)$", _site(INSTALL_PAGE)),
     re_path(r"^downloads/(?P<path>.*)$", _site(DOWNLOADS, apk=True)),
+    # Optional locally generated fullscreen artifact; never changes the normal / app.
+    re_path(r"^fs/(?P<path>.*)$", _site(WEB / "fs")),
     re_path(r"^(?P<path>.*)$", _site(WEB)),
 ]

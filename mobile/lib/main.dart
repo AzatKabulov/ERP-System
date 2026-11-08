@@ -24,6 +24,7 @@ import 'screens/workspace.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 import 'widgets/glass.dart';
+import 'widgets/pwa_viewport.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,6 +97,22 @@ class ErpApp extends StatefulWidget {
 }
 
 class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
+  late final bool _fullScreen = fullScreenMode();
+  EdgeInsets _phoneAreas = EdgeInsets.zero;
+  void Function()? _stopViewport;
+
+  void _viewportChanged() {
+    if (!mounted || !_fullScreen) return;
+    final areas = browserSafeAreas();
+    final next = EdgeInsets.fromLTRB(
+      areas.left,
+      areas.top,
+      areas.right,
+      areas.bottom,
+    );
+    if (next != _phoneAreas) setState(() => _phoneAreas = next);
+  }
+
   late final ThemeController _theme = ThemeController(widget.preferences);
   late final bool _demo = widget.store != null || widget.config.demoMode;
   late final DemoStore? _store = _demo ? (widget.store ?? DemoStore()) : null;
@@ -165,6 +182,16 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
     );
     _theme.addListener(_schemeChanged);
     syncBrowserChrome(dark: AppColors.isDark);
+    if (_fullScreen) {
+      final areas = browserSafeAreas();
+      _phoneAreas = EdgeInsets.fromLTRB(
+        areas.left,
+        areas.top,
+        areas.right,
+        areas.bottom,
+      );
+      _stopViewport = observeBrowserViewport(_viewportChanged);
+    }
   }
 
   /// The phone switched between light and dark while the app was open.
@@ -187,6 +214,7 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _stopViewport?.call();
     WidgetsBinding.instance.removeObserver(this);
     _theme.removeListener(_schemeChanged);
     _theme.dispose();
@@ -206,8 +234,8 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
     return MaterialApp(
       title: 'ERP System',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: fullScreenTheme(AppTheme.light, enabled: _fullScreen),
+      darkTheme: fullScreenTheme(AppTheme.dark, enabled: _fullScreen),
       themeMode: _theme.themeMode,
       locale: _locale,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -220,36 +248,47 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      builder: (context, child) => ThemeScope(
-        controller: _theme,
-        // the status bar's icons follow the scheme (dark icons on light, light on dark)
-        child: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: AppColors.isDark
-              ? SystemUiOverlayStyle.light.copyWith(
-                  statusBarColor: Colors.transparent,
-                  systemNavigationBarColor: Colors.transparent,
-                )
-              : SystemUiOverlayStyle.dark.copyWith(
-                  statusBarColor: Colors.transparent,
-                  systemNavigationBarColor: Colors.transparent,
-                ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // the soft light behind every screen, which the frosted layers blur
-              const AmbientField(),
-              ScannerScope(
-                scanner: widget.scanner,
-                child: FilesScope(
-                  picking: widget.picking,
-                  sharing: widget.sharing,
-                  child: DocumentsScope(
-                    actions: widget.documents,
-                    child: child!,
+      builder: (context, child) => PwaViewport(
+        enabled: _fullScreen,
+        insets: _phoneAreas,
+        child: ThemeScope(
+          controller: _theme,
+          // the status bar's icons follow the scheme (dark icons on light, light on dark)
+          child: AnnotatedRegion<SystemUiOverlayStyle>(
+            value: AppColors.isDark
+                ? SystemUiOverlayStyle.light.copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: Colors.transparent,
+                  )
+                : SystemUiOverlayStyle.dark.copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: Colors.transparent,
+                  ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // the soft light behind every screen, which the frosted layers blur
+                const AmbientField(),
+                ScannerScope(
+                  scanner: widget.scanner,
+                  child: FilesScope(
+                    picking: widget.picking,
+                    sharing: widget.sharing,
+                    child: DocumentsScope(
+                      actions: widget.documents,
+                      child: child!,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                if (_fullScreen)
+                  const Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: PwaStatusVeil(),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

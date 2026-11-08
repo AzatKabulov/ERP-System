@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/pwa_viewport.dart';
 import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
@@ -455,6 +456,10 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
+        // In /fs/, the brand paints beneath the clock; only its controls inset.
+        top: !PwaAreas.enabledOf(context),
+        left: !PwaAreas.enabledOf(context),
+        right: !PwaAreas.enabledOf(context),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final wide = constraints.maxWidth >= 768;
@@ -519,6 +524,7 @@ class _BrandPanel extends StatelessWidget {
         : BorderRadius.circular(28);
     return LayoutBuilder(
       builder: (context, constraints) => Container(
+        key: const ValueKey('sign-in-brand-panel'),
         constraints: BoxConstraints(minHeight: compact ? 220 : 0),
         decoration: BoxDecoration(
           gradient: AppGradients.spotlight,
@@ -527,13 +533,13 @@ class _BrandPanel extends StatelessWidget {
         child: ClipRRect(
           borderRadius: radius,
           child: compact
-              ? _content()
+              ? _content(context)
               : SingleChildScrollView(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       minHeight: constraints.maxHeight,
                     ),
-                    child: IntrinsicHeight(child: _content()),
+                    child: IntrinsicHeight(child: _content(context)),
                   ),
                 ),
         ),
@@ -550,7 +556,10 @@ class _BrandPanel extends StatelessWidget {
     ),
   );
 
-  Widget _content() {
+  Widget _content(BuildContext context) {
+    final safe = compact && PwaAreas.enabledOf(context)
+        ? MediaQuery.paddingOf(context)
+        : EdgeInsets.zero;
     return Stack(
       children: [
         Positioned(
@@ -564,7 +573,12 @@ class _BrandPanel extends StatelessWidget {
           child: ExcludeSemantics(child: _glow(420, 0x446A4DFF)),
         ),
         Padding(
-          padding: EdgeInsets.all(compact ? 24 : 40),
+          padding: EdgeInsets.fromLTRB(
+            (compact ? 24 : 40) + safe.left,
+            (compact ? 24 : 40) + safe.top,
+            (compact ? 24 : 40) + safe.right,
+            compact ? 24 : 40,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,

@@ -1,0 +1,72 @@
+[
+  {
+    "name": "chromium-light",
+    "simulatedInsets": true,
+    "paneOrigin": [
+      0,
+      0
+    ],
+    "launchStyle": "black-translucent",
+    "themeSwitch": true,
+    "viewportRepair": true,
+    "scrollChangesTopPixels": true,
+    "topAndBottomTaps": true,
+    "orientationUpdate": true,
+    "errors": []
+  },
+  {
+    "name": "chromium-dark",
+    "simulatedInsets": true,
+    "paneOrigin": [
+      0,
+      0
+    ],
+    "launchStyle": "black-translucent",
+    "themeSwitch": true,
+    "viewportRepair": true,
+    "scrollChangesTopPixels": true,
+    "topAndBottomTaps": true,
+    "orientationUpdate": true,
+    "errors": []
+  },
+  {
+    "name": "chromium-normal",
+    "fullScreen": false,
+    "diagnostic": false
+  },
+  {
+    "name": "webkit-light",
+    "simulatedInsets": true,
+    "paneOrigin": [
+      0,
+      0
+    ],
+    "launchStyle": "black-translucent",
+    "themeSwitch": true,
+    "viewportRepair": true,
+    "scrollChangesTopPixels": true,
+    "topAndBottomTaps": true,
+    "orientationUpdate": true,
+    "errors": []
+  },
+  {
+    "name": "webkit-dark",
+    "simulatedInsets": true,
+    "paneOrigin": [
+      0,
+      0
+    ],
+    "launchStyle": "black-translucent",
+    "themeSwitch": true,
+    "viewportRepair": true,
+    "scrollChangesTopPixels": true,
+    "topAndBottomTaps": true,
+    "orientationUpdate": true,
+    "errors": []
+  },
+  {
+    "name": "webkit-normal",
+    "fullScreen": false,
+    "diagnostic": false
+  }
+]
