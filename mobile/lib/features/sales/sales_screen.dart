@@ -77,6 +77,7 @@ class _SalesScreenState extends State<SalesScreen> {
   String? _lastAdded;
   final _scroll = ScrollController();
   String? _locationId;
+  int _locationVersion = 0;
 
   SessionController get session => widget.session;
   CartController get cart => widget.cart;
@@ -115,6 +116,9 @@ class _SalesScreenState extends State<SalesScreen> {
   void _sessionChanged() {
     final id = session.location?.id;
     if (id != _locationId) {
+      ++_locationVersion;
+      ++_request;
+      _debounce?.cancel();
       _locationId = id;
       cart.clear();
       _done = null;
@@ -141,8 +145,9 @@ class _SalesScreenState extends State<SalesScreen> {
 
   Future<void> _add(Product product) async {
     final l = strings(context);
+    final locationVersion = _locationVersion;
     final available = await _availability(product);
-    if (!mounted) return;
+    if (!mounted || locationVersion != _locationVersion || !_canSell) return;
     setState(() {
       _done = null;
       _lastAdded = l.cartAdded(product.name);
@@ -151,6 +156,7 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   Future<void> _runSearch() async {
+    if (!mounted) return;
     final text = _search.text.trim();
     final request = ++_request;
     setState(() {
@@ -196,7 +202,10 @@ class _SalesScreenState extends State<SalesScreen> {
       _results = const [];
     });
     try {
-      final product = await widget.catalog.lookup(code);
+      final product = await widget.catalog.lookup(
+        code,
+        locationId: _locationId,
+      );
       if (!mounted || request != _request) return;
       setState(() {
         _results = product == null ? const [] : [product];
@@ -681,100 +690,103 @@ class _ResultTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = strings(context);
     final unit = product.priceTmtMinor;
-    return InkWell(
-      key: ValueKey('sell-${product.sku}'),
-      onTap: onAdd,
-      hoverColor: AppColors.surfaceSoft,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 80),
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.line)),
-        ),
-        child: LayoutBuilder(
-          builder: (context, box) {
-            // On a narrow screen the price goes under the name, so the name keeps its width.
-            final narrow = box.maxWidth < 520;
-            final price = Text(
-              unit == null ? l.rateMissingNote : formatMoney(unit, 'TMT'),
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: unit == null ? AppColors.warning : null,
-                fontSize: unit == null ? 12 : 14,
-              ),
-            );
-            return Row(
-              children: [
-                ProductPhoto(
-                  product: product,
-                  repository: repository,
-                  width: 48,
-                  height: 48,
+    return Semantics(
+      button: true,
+      child: InkWell(
+        key: ValueKey('sell-${product.sku}'),
+        onTap: onAdd,
+        hoverColor: AppColors.surfaceSoft,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 80),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: AppColors.line)),
+          ),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              // On a narrow screen the price goes under the name, so the name keeps its width.
+              final narrow = box.maxWidth < 520;
+              final price = Text(
+                unit == null ? l.rateMissingNote : formatMoney(unit, 'TMT'),
+                textAlign: TextAlign.end,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: unit == null ? AppColors.warning : null,
+                  fontSize: unit == null ? 12 : 14,
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+              );
+              return Row(
+                children: [
+                  ProductPhoto(
+                    product: product,
+                    repository: repository,
+                    width: 48,
+                    height: 48,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
-                      if (narrow) ...[const SizedBox(height: 2), price],
-                      const SizedBox(height: 4),
-                      Text(
-                        [
-                          product.sku,
-                          ?product.brand?.name,
-                          if (product.onHandMilli != null)
-                            l.inStockHere(
-                              quantityWithUnit(
-                                product.onHandMilli!,
-                                product.unit,
+                        if (narrow) ...[const SizedBox(height: 2), price],
+                        const SizedBox(height: 4),
+                        Text(
+                          [
+                            product.sku,
+                            ?product.brand?.name,
+                            if (product.onHandMilli != null)
+                              l.inStockHere(
+                                quantityWithUnit(
+                                  product.onHandMilli!,
+                                  product.unit,
+                                ),
                               ),
-                            ),
-                        ].join(' · '),
-                        key: ValueKey('sell-meta-${product.sku}'),
-                        style: TextStyle(
-                          fontFamily: AppFonts.mono,
-                          color: AppColors.muted,
-                          fontSize: 12,
+                          ].join(' · '),
+                          key: ValueKey('sell-meta-${product.sku}'),
+                          style: TextStyle(
+                            fontFamily: AppFonts.mono,
+                            color: AppColors.muted,
+                            fontSize: 12,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                if (!narrow) ...[
-                  Flexible(child: price),
-                  const SizedBox(width: 12),
-                ],
-                // the add control: a round tonal button at the end of the row, as in any list of
-                // things to add (the whole row is the target; this is its mark)
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.tint,
-                  ),
-                  child: Center(
-                    child: AppIcon(
-                      AppIcons.plus,
-                      size: 20,
-                      color: AppColors.blue,
+                      ],
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                  const SizedBox(width: 12),
+                  if (!narrow) ...[
+                    Flexible(child: price),
+                    const SizedBox(width: 12),
+                  ],
+                  // the add control: a round tonal button at the end of the row, as in any list of
+                  // things to add (the whole row is the target; this is its mark)
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.tint,
+                    ),
+                    child: Center(
+                      child: AppIcon(
+                        AppIcons.plus,
+                        size: 20,
+                        color: AppColors.blue,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -943,7 +955,7 @@ class _CartLineCardState extends State<_CartLineCard> {
                   // with the currency after the number, so it reads as "type the price here".
                   SizedBox(
                     width: 112,
-                    height: 40,
+                    height: 48,
                     child: Semantics(
                       label: l.priceFieldLabel,
                       child: TextField(
@@ -1063,19 +1075,23 @@ class _Stepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 44x44 is Apple's minimum comfortable touch target (Android's Material minimum, 48dp, is
-    // close enough not to need a second size here); this is tapped often, adjusting a cart line.
-    Widget button(Key key, AppIconData icon, VoidCallback onTap) => InkWell(
-      key: key,
-      onTap: onTap,
-      child: SizedBox(
-        width: 44,
-        height: 44,
-        child: Center(child: AppIcon(icon, size: 16)),
-      ),
-    );
+    final l = strings(context);
+    Widget button(Key key, AppIconData icon, String name, VoidCallback onTap) =>
+        Semantics(
+          button: true,
+          label: name,
+          child: InkWell(
+            key: key,
+            onTap: onTap,
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(child: AppIcon(icon, size: 16)),
+            ),
+          ),
+        );
     return Container(
-      height: 44,
+      height: 50, // two border pixels around the 48-pixel touch targets
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -1085,7 +1101,12 @@ class _Stepper extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          button(ValueKey('cart-minus-$index'), AppIcons.minus, onMinus),
+          button(
+            ValueKey('cart-minus-$index'),
+            AppIcons.minus,
+            l.remove,
+            onMinus,
+          ),
           SizedBox(
             width: 52,
             child: Semantics(
@@ -1115,7 +1136,12 @@ class _Stepper extends StatelessWidget {
               ),
             ),
           ),
-          button(ValueKey('cart-plus-$index'), AppIcons.plus, onPlus),
+          button(
+            ValueKey('cart-plus-$index'),
+            AppIcons.plus,
+            l.increase,
+            onPlus,
+          ),
         ],
       ),
     );

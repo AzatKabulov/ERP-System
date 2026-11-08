@@ -12,11 +12,17 @@ String reportDay(DateTime d) =>
 /// What a report is about: the days it covers and, optionally, one location.
 @immutable
 class ReportQuery {
-  const ReportQuery({required this.from, required this.to, this.locationId});
+  const ReportQuery({
+    required this.from,
+    required this.to,
+    this.locationId,
+    this.preset,
+  });
 
   final String from;
   final String to;
   final String? locationId;
+  final String? preset;
 
   factory ReportQuery.forPeriod(
     ReportPeriod period, {
@@ -30,31 +36,39 @@ class ReportQuery {
           from: reportDay(today),
           to: reportDay(today),
           locationId: locationId,
+          preset: 'today',
         );
       case ReportPeriod.week:
         return ReportQuery(
           from: reportDay(DateTime(today.year, today.month, today.day - 6)),
           to: reportDay(today),
           locationId: locationId,
+          preset: 'week',
         );
       case ReportPeriod.month:
         return ReportQuery(
           from: reportDay(DateTime(today.year, today.month, 1)),
           to: reportDay(today),
           locationId: locationId,
+          preset: 'month',
         );
       case ReportPeriod.lastMonth:
         return ReportQuery(
           from: reportDay(DateTime(today.year, today.month - 1, 1)),
           to: reportDay(DateTime(today.year, today.month, 0)),
           locationId: locationId,
+          preset: 'last_month',
         );
     }
   }
 
   Map<String, String> toQuery() => {
-    'date_from': from,
-    'date_to': to,
+    if (preset != null)
+      'period': preset!
+    else ...{
+      'date_from': from,
+      'date_to': to,
+    },
     'location': ?locationId,
   };
 
@@ -63,10 +77,11 @@ class ReportQuery {
       other is ReportQuery &&
       other.from == from &&
       other.to == to &&
+      other.preset == preset &&
       other.locationId == locationId;
 
   @override
-  int get hashCode => Object.hash(from, to, locationId);
+  int get hashCode => Object.hash(from, to, locationId, preset);
 }
 
 int _money(Object? v) => parseSignedServerDecimal(v as String?, 2) ?? 0;
@@ -182,6 +197,7 @@ class SalesReport {
     this.withoutCostLines = 0,
     this.costOfGoods,
     this.grossProfit,
+    this.toDay,
   });
 
   final int salesCount;
@@ -196,8 +212,10 @@ class SalesReport {
   final List<PaymentRow> byPayment;
   final List<DayRow> byDay;
   final List<TopProduct> topProducts;
+  final DateTime? toDay;
 
   factory SalesReport.fromJson(Map<String, dynamic> j) => SalesReport(
+    toDay: DateTime.tryParse('${(j['period'] as Map?)?['to'] ?? ''}'),
     salesCount: _int(j['sales_count']),
     revenue: _money(j['revenue']),
     refunds: _money(j['refunds']),

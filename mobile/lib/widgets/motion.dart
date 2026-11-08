@@ -21,11 +21,11 @@ abstract final class AppMotion {
   static bool reduced(BuildContext context) =>
       MediaQuery.disableAnimationsOf(context);
 
-  /// On narrow screens, show data immediately instead of simultaneously fading
+  /// On phone and compact tablet layouts, show data immediately instead of simultaneously fading
   /// the page, staggering cards, relaying out counting numbers and drawing charts.
   /// Press/selection feedback keeps its normal short animation.
   static bool skipEntrance(BuildContext context) =>
-      reduced(context) || MediaQuery.sizeOf(context).width < 768;
+      reduced(context) || MediaQuery.sizeOf(context).width < 1000;
 
   static Duration entrance(BuildContext context, Duration duration) =>
       skipEntrance(context) ? Duration.zero : duration;

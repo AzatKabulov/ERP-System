@@ -176,6 +176,13 @@ jobs:
         run: uv run python manage.py makemigrations --check --dry-run
       - name: Tests
         run: uv run python manage.py test --verbosity 1
+      - name: Deployment safety regressions (fake Docker)
+        run: uv run python ../scripts/qa/test_deploy_safety.py -v
+      - name: Disposable store, concurrent HTTP load and restore drill
+        working-directory: .
+        run: |
+          uv run --project backend --with pixeltable-pgserver==0.6.0 \
+            python scripts/qa/store_readiness.py --output "$RUNNER_TEMP/store-readiness.json"
 
   docker:
     name: Backend container image builds

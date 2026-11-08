@@ -58,11 +58,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return null;
     }
     final today = DateTime.now();
+    // A failure is not swallowed: the charts show a retry, while the figures above stay available.
     return widget.repository.sales(
       ReportQuery(
         from: reportDay(DateTime(today.year, today.month, today.day - 13)),
         to: reportDay(today),
-        locationId: widget.session.location?.id,
+        preset: 'fortnight',
       ),
     );
   }
@@ -122,7 +123,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _trend = _loadTrend();
                           }),
                           compact: compact,
-                          locationName: session.location?.name,
+                          locationName:
+                              (session.membership?.locations.length ?? 0) > 1
+                              ? l.reportAllLocations
+                              : session.location?.name,
                           onOpenReports: session.can('report.view')
                               ? widget.onOpenReports
                               : null,
@@ -202,7 +206,7 @@ class _Figures extends StatelessWidget {
     final report = trend;
     if (report == null) return const [];
     final byDate = {for (final d in report.byDay) d.date: d.revenue};
-    final today = DateTime.now();
+    final today = report.toDay ?? DateTime.now();
     return [
       for (var back = 13; back >= 0; back--)
         () {

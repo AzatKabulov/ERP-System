@@ -41,6 +41,26 @@ def uuid_param(params, name: str) -> uuid.UUID | None:
         raise invalid(name, "Not a valid id") from exc
 
 
+def period_dates(params, business) -> tuple[date | None, date | None]:
+    """Resolve UI presets using the shop's date, independent of the staff device's clock."""
+    preset = params.get("period", "").strip()
+    if not preset:
+        return date_param(params, "date_from"), date_param(params, "date_to")
+    if params.get("date_from") or params.get("date_to"):
+        raise invalid("period", "Choose a preset or explicit dates, not both")
+    today = business.local_today()
+    if preset == "today":
+        return today, today
+    if preset in {"week", "fortnight"}:
+        return today - timedelta(days=6 if preset == "week" else 13), today
+    if preset == "month":
+        return today.replace(day=1), today
+    if preset == "last_month":
+        last = today.replace(day=1) - timedelta(days=1)
+        return last.replace(day=1), last
+    raise invalid("period", "Unknown period")
+
+
 def local_day_bounds(business, first: date | None, last: date | None):
     """`(start, end)` as a half-open range `start <= t < end` covering the calendar days `first`
     to `last` (both included) in the business's time zone. Either side may be None (open)."""

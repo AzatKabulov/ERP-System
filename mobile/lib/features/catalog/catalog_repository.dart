@@ -48,11 +48,11 @@ class CatalogRepository {
       Product.fromJson((await api.get('$_base/products/$id/')).map);
 
   /// Read-only lookup. Null when no active product has this barcode.
-  Future<Product?> lookup(String code) async {
+  Future<Product?> lookup(String code, {String? locationId}) async {
     try {
       final response = await api.get(
         '$_base/barcodes/lookup/',
-        query: {'code': code.trim()},
+        query: {'code': code.trim(), 'location': ?locationId},
       );
       return Product.fromJson(response.map);
     } on ApiException catch (e) {

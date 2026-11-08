@@ -57,8 +57,7 @@ class ReportsRepository {
     final map = (await api.get(
       '$_base/audit/',
       query: {
-        if (period != null) 'date_from': period.from,
-        if (period != null) 'date_to': period.to,
+        if (period != null) ...period.toQuery(),
         if (action != null && action.isNotEmpty) 'action': action,
         if (query.trim().isNotEmpty) 'q': query.trim(),
         'limit': '$limit',

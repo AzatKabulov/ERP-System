@@ -34,6 +34,43 @@ well. Four viewports (390, 800, 1280, 1920 pixels), each in light/dark themes.
 non-local origins and requires the explicit disposable-data flag. It must never
 be aimed at the ordinary test shop or a public deployment.
 
+## Current store acceptance (2026-10-27)
+
+`store_day.js` covers the current app without removed Purchasing screens. Run
+through `scripts/qa/store_readiness.py --browser-script scripts/e2e/store_day.js
+--node /path/to/node`, with `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH` set. The runner
+creates a disposable PostgreSQL shop, exercises the API store/load/restore checks,
+and serves the built `mobile/build/web` on a free loopback port.
+
+The browser completes a real sale and checks stock at phone, tablet portrait,
+tablet landscape and laptop sizes; it checks read failure/retry, current module
+navigation and Russian/Turkmen. `E2E_TIMEZONE=Pacific/Kiritimati` deliberately
+puts the device on a different calendar date from the Ashgabat shop. Preset dates
+must still come from the shop. `E2E_BROWSER=webkit` selects installed Playwright
+WebKit; otherwise Chromium is used. Exact WebKit polygon-mode renderer warnings
+are recorded, while unexpected errors fail. This is not physical-device testing.
+
+The original `real_stack.js` below is a historical workflow: it still uses removed
+Purchasing UI and is not the acceptance entrypoint for the current application.
+
+## Phone photo scanning on HTTP
+
+`phone_photo_scan.js` must use a disposable local shop and a real private-IP HTTP
+origin, such as `E2E_WEB_URL=http://192.168.x.x:8001/`. It asserts the origin is
+insecure (no localhost or browser security bypass), decodes a synthetic EAN-13
+photo, verifies `capture=environment` and gallery selection, checks an unreadable
+photo/retry, then catalog/sales results and receiving quantity entry. No photo,
+stock receipt or sale is posted. Third-party requests are blocked. The existing
+insecure-origin COOP warning is recorded separately from application failures.
+
+Set `ERP_E2E_DISPOSABLE=true`, `E2E_PHOTO_FIXTURE` (PNG with 4006381333931),
+`E2E_BLANK_PHOTO_FIXTURE`, `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH`. Use synthetic
+images only. The script does not establish physical iPhone capture compatibility.
+
+For `scanner_lifecycle.js`, optionally add `E2E_PHOTO_FIXTURE` to test a rejected
+getUserMedia permission request on a secure origin, the photo fallback, preserved
+permission-error classification, camera cleanup and an unchanged sales cart.
+
 ## Current focused receiving and camera checks
 
 Use a fresh disposable local sample server (`run_local.py --data <temporary-folder> --web mobile/build/web --port 8001`). Never point these scripts at the owner's ordinary database. Both require `ERP_E2E_DISPOSABLE=true`, `E2E_WEB_URL`, `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH`.
