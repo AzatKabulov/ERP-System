@@ -11,7 +11,16 @@ class PhotoCache {
   static const _max = 400;
 
   /// Insertion order is use order: the oldest entry goes first.
-  final Map<String, Future<Uint8List?>> _items = {};
+  final Map<String, _PhotoEntry> _items = {};
+
+  /// Read completed bytes synchronously so revisiting a cached tile has no
+  /// FutureBuilder waiting frame. Business/version/size remain part of the key.
+  Uint8List? peek(String key) {
+    final entry = _items.remove(key);
+    if (entry == null) return null;
+    _items[key] = entry;
+    return entry.bytes;
+  }
 
   /// The picture under [key]; [fetch] runs only when it is not here. Several widgets asking at
   /// once share one request. A failed request is forgotten, so the next ask tries again.
@@ -19,16 +28,21 @@ class PhotoCache {
     final hit = _items.remove(key);
     if (hit != null) {
       _items[key] = hit;
-      return hit;
+      return hit.future;
     }
-    final future = fetch().then<Uint8List?>(
-      (bytes) => bytes,
+    final entry = _PhotoEntry();
+    _items[key] = entry;
+    final future = Future<Uint8List?>.sync(fetch).then<Uint8List?>(
+      (bytes) {
+        if (identical(_items[key], entry)) entry.bytes = bytes;
+        return bytes;
+      },
       onError: (Object _) {
-        _items.remove(key);
+        if (identical(_items[key], entry)) _items.remove(key);
         return null;
       },
     );
-    _items[key] = future;
+    entry.future = future;
     while (_items.length > _max) {
       _items.remove(_items.keys.first);
     }
@@ -36,4 +50,9 @@ class PhotoCache {
   }
 
   void clear() => _items.clear();
+}
+
+class _PhotoEntry {
+  late final Future<Uint8List?> future;
+  Uint8List? bytes;
 }

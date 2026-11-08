@@ -7,6 +7,7 @@ import '../../widgets/app_icons.dart';
 import '../../widgets/common.dart';
 import '../../widgets/glass.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'platform_models.dart';
 import 'platform_repository.dart';
 import 'platform_widgets.dart';
@@ -67,6 +68,8 @@ class _NoticesScreenState extends State<NoticesScreen> {
               ),
               const SizedBox(height: 24),
               AsyncSection<List<NoticeRow>>(
+                loadingBuilder: (context) =>
+                    const RecordListSkeleton(rows: 3, rowHeight: 132),
                 key: _list,
                 load: widget.repository.notices,
                 builder: (context, rows) {

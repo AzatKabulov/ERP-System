@@ -10,6 +10,7 @@ import '../../widgets/common.dart';
 import '../catalog/catalog_models.dart';
 import '../catalog/catalog_repository.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 
 String _rateText(String serverRate) {
   final scaled = parseServerDecimal(serverRate, 6);
@@ -83,6 +84,8 @@ class _ExchangeRateSectionState extends State<ExchangeRateSection> {
           SectionHeading(l.exchangeRateTitle),
           const SizedBox(height: 12),
           AsyncSection<List<ExchangeRateEntry>>(
+            loadingBuilder: (context) =>
+                const RecordListSkeleton(rows: 3, inCard: false, rowHeight: 64),
             key: _section,
             load: () => widget.repository.exchangeRates(limit: 6),
             builder: (context, rates) => Column(

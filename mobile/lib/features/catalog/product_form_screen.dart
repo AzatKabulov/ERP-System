@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
@@ -51,7 +52,7 @@ class ProductFormScreen extends StatefulWidget {
 class _ProductFormScreenState extends State<ProductFormScreen> {
   /// The database a suggested name came from (null when the name was typed).
   String? _foundOnline;
-  late final Future<_FormData> _data = _load();
+  late Future<_FormData> _data = _load();
   late final _sku = TextEditingController(text: widget.existing?.sku ?? '');
   late final _name = TextEditingController(text: widget.existing?.name ?? '');
   late final _price = TextEditingController(
@@ -290,14 +291,16 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             future: _data,
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
-                return const Center(child: CircularProgressIndicator());
+                return ProductFormLoadingSkeleton(canSeeCost: _canSeeCost);
               }
               if (snapshot.hasError) {
                 return Padding(
                   padding: const EdgeInsets.all(24),
                   child: ErrorPanel(
                     error: snapshot.error!,
-                    onRetry: () => Navigator.of(context).pop(),
+                    onRetry: () => setState(() {
+                      _data = _load();
+                    }),
                   ),
                 );
               }

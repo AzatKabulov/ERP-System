@@ -15,6 +15,7 @@ import '../returns/returns_models.dart';
 import '../sales/sales_models.dart';
 import '../sales/sales_repository.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import '../workspace/unsaved_work.dart';
 import 'warranties_models.dart';
 import 'warranties_repository.dart';
@@ -195,7 +196,7 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
         if (_searchError != null)
           ErrorPanel(error: _searchError!, onRetry: _find)
         else if (_searching && _found.isEmpty)
-          const Center(child: CircularProgressIndicator())
+          const RecordListSkeleton(rows: 3, rowHeight: 80)
         else if (_found.isEmpty)
           SurfaceCard(
             child: EmptyState(
@@ -249,6 +250,8 @@ class _WarrantyNewScreenState extends State<WarrantyNewScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: AsyncSection<SaleDetail>(
+        loadingBuilder: (context) =>
+            const DetailLoadingSkeleton(inCard: false, actions: false),
         load: () => widget.sales.sale(_saleId!),
         builder: (context, sale) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

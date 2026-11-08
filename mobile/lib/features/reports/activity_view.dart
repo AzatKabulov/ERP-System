@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
 
@@ -192,9 +193,11 @@ class _ActivityViewState extends State<ActivityView> {
             ),
           ),
         if (_loading)
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
+          const RecordListSkeleton(
+            avatar: true,
+            inCard: false,
+            rows: 3,
+            rowHeight: 76,
           ),
         if (!_loading && _items.length < _count)
           Align(

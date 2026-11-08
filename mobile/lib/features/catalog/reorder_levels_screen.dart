@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../inventory/quantity_input.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
 import '../../widgets/app_route.dart';
@@ -56,6 +57,8 @@ class _ReorderLevelsCardState extends State<ReorderLevelsCard> {
     final l = strings(context);
     return SurfaceCard(
       child: AsyncSection<List<ReorderLevel>>(
+        loadingBuilder: (context) =>
+            const RecordListSkeleton(rows: 1, inCard: false, rowHeight: 88),
         key: _section,
         load: () => widget.repository.reorderLevels(widget.product.id),
         builder: (context, levels) => Column(

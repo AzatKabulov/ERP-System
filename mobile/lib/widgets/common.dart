@@ -361,6 +361,7 @@ class PageHead extends StatelessWidget {
     this.actions = const [],
     this.titleKey,
     this.titleWidget,
+    this.subtitleWidget,
   });
   final String title;
   final String? subtitle;
@@ -369,6 +370,9 @@ class PageHead extends StatelessWidget {
 
   /// Replaces the plain title text (for a title with a coloured part).
   final Widget? titleWidget;
+
+  /// A structured subtitle or an initial-read placeholder with the same metrics.
+  final Widget? subtitleWidget;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -387,12 +391,13 @@ class PageHead extends StatelessWidget {
                   height: 1.1,
                 ),
               ),
-          if (subtitle != null) ...[
+          if (subtitle != null || subtitleWidget != null) ...[
             const SizedBox(height: 8),
-            Text(
-              subtitle!,
-              style: TextStyle(color: AppColors.muted, fontSize: 14),
-            ),
+            subtitleWidget ??
+                Text(
+                  subtitle!,
+                  style: TextStyle(color: AppColors.muted, fontSize: 14),
+                ),
           ],
         ],
       );

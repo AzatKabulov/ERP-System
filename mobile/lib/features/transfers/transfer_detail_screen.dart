@@ -12,6 +12,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../inventory/quantity_input.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import '../workspace/unsaved_work.dart';
 import 'transfers_models.dart';
 import 'transfers_repository.dart';
@@ -127,6 +128,7 @@ class _TransferDetailScreenState extends State<TransferDetailScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: AsyncSection<Transfer>(
+                  loadingBuilder: (context) => const DetailLoadingSkeleton(),
                   key: _section,
                   load: () => widget.repository.transfer(widget.transferId),
                   builder: (context, t) => Column(

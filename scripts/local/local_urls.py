@@ -8,6 +8,7 @@ from pathlib import Path
 from django.urls import path, re_path
 from django.utils._os import safe_join
 from django.utils.cache import patch_vary_headers
+from django.utils.http import content_disposition_header
 from django.views.static import serve
 
 from apps.common.local_test_login import LocalTestLogin, local_health
@@ -40,6 +41,9 @@ def _site(root: Path, *, apk: bool = False):
             response["Content-Type"] = (
                 mimetypes.guess_type(original)[0] or "application/octet-stream"
             )
+            # The gzip filename is a transport detail. WebKit treats an inline
+            # `index.html.gz` disposition as a download despite text/html.
+            response["Content-Disposition"] = content_disposition_header(False, Path(original).name)
         if not apk:
             patch_vary_headers(response, ["Accept-Encoding"])
         if apk and path.endswith(".apk"):

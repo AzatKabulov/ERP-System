@@ -15,6 +15,7 @@ import '../returns/return_form_screen.dart';
 import '../returns/returns_models.dart';
 import '../returns/returns_repository.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import '../warranties/warranties_repository.dart';
 import '../warranties/warranties_models.dart';
 import '../warranties/warranty_new_screen.dart';
@@ -133,10 +134,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                 if (_error != null)
                   ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
                 else if (_loading && _items.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
+                  const RecordListSkeleton(rowHeight: 80)
                 else if (_items.isEmpty)
                   SurfaceCard(
                     child: EmptyState(
@@ -343,6 +341,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: AsyncSection<SaleDetail>(
+                loadingBuilder: (context) =>
+                    const DetailLoadingSkeleton(inCard: false),
                 key: _section,
                 load: () => widget.repository.sale(widget.saleId),
                 builder: (context, sale) => _body(context, sale),

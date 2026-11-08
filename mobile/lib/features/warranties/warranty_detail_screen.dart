@@ -14,6 +14,7 @@ import '../../widgets/common.dart';
 import '../returns/returns_models.dart';
 import '../sales/sales_models.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'warranties_models.dart';
 import 'warranties_repository.dart';
 
@@ -136,6 +137,8 @@ class _WarrantyDetailScreenState extends State<WarrantyDetailScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: AsyncSection<WarrantyClaim>(
+                  loadingBuilder: (context) =>
+                      const DetailLoadingSkeleton(inCard: false),
                   key: _section,
                   load: () => widget.repository.claim(widget.claimId),
                   builder: (context, claim) => _body(context, claim),

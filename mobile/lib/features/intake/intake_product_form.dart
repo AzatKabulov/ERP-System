@@ -1,3 +1,4 @@
+import '../../widgets/skeleton.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/api/api_error_text.dart';
@@ -526,7 +527,6 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
                 ),
               ),
               const SizedBox(height: 12),
-              if (_waiting) const LinearProgressIndicator(),
               if (entry.suggesting)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -671,7 +671,9 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
                       ? l.fieldRequired
                       : error('sku') ?? error('barcodes'),
                 ),
-                if (_units.isNotEmpty || _unit != null)
+                if (_waiting && _units.isEmpty && _unit == null)
+                  const SkeletonForm(fields: 1, actions: false)
+                else if (_units.isNotEmpty || _unit != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: LabeledField(

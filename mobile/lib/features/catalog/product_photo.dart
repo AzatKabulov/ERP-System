@@ -8,11 +8,12 @@ import '../../core/api/api_exception.dart';
 import '../../core/files/file_services.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
+import '../../widgets/skeleton.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
 
-/// The picture of a product, or the plain tinted tile with an icon while there is none (or while
-/// it is still being downloaded, or if it cannot be). Pictures come through the repository, which
+/// A bounded image placeholder during download/decoding, or a box icon for missing/failed photos.
+/// Pictures come through the repository, which
 /// keeps each one in memory, so a gallery of thirty products asks the server thirty times at most
 /// and a repeat visit asks nobody. Small ones (`full: false`) serve lists, large ones the
 /// product page.
@@ -53,30 +54,49 @@ class ProductPhoto extends StatelessWidget {
   Widget _icon() =>
       AppIcon(AppIcons.box, size: iconSize, color: AppColors.blue);
 
+  Widget _loading() => SkeletonRegion(
+    // Lists may contain hundreds of photos; avoid a ticker for each thumbnail.
+    animate: false,
+    child: SkeletonBase(
+      width: double.infinity,
+      height: double.infinity,
+      radius: radius,
+    ),
+  );
+
+  Widget _image(Uint8List bytes) => _tile(
+    ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: Image.memory(
+        bytes,
+        key: const ValueKey('product-photo-image'),
+        fit: fit,
+        gaplessPlayback: true,
+        excludeFromSemantics: true,
+        frameBuilder: (_, child, frame, synchronous) =>
+            synchronous || frame != null ? child : _loading(),
+        errorBuilder: (_, _, _) => Center(child: _icon()),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final Widget inner;
     if (product.photoVersion == null) {
       inner = _tile(null);
+    } else if (repository.cachedPhoto(product, full: full) case final bytes?) {
+      inner = _image(bytes);
     } else {
       inner = FutureBuilder<Uint8List?>(
         future: repository.photo(product, full: full),
         builder: (context, snapshot) {
           final bytes = snapshot.data;
-          if (bytes == null) return _tile(null);
-          return _tile(
-            ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
-              child: Image.memory(
-                bytes,
-                key: const ValueKey('product-photo-image'),
-                fit: fit,
-                gaplessPlayback: true,
-                excludeFromSemantics: true,
-                errorBuilder: (_, _, _) => Center(child: _icon()),
-              ),
-            ),
-          );
+          if (snapshot.connectionState != ConnectionState.done &&
+              bytes == null) {
+            return _loading();
+          }
+          return bytes == null ? _tile(null) : _image(bytes);
         },
       );
     }

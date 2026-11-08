@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -377,6 +378,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
         PageHead(
           title: l.products,
           subtitle: _loading && _items.isEmpty ? null : l.productsCount(_count),
+          subtitleWidget: _loading && _items.isEmpty
+              ? const SubtitleLoadingSkeleton()
+              : null,
           // the main button first, the side menu after it
           actions: [?add, if (hasSecondary) more],
         ),
@@ -413,9 +417,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
         if (_error != null)
           ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
         else if (_loading && _items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 32),
-            child: Center(child: CircularProgressIndicator()),
+          CatalogLoadingSkeleton(
+            gallery: _gallery,
+            compact: compact,
+            withStock: widget.session.can('stock.view'),
           )
         else if (_items.isEmpty)
           SurfaceCard(

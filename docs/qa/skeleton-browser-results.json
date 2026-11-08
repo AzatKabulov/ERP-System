@@ -1,0 +1,178 @@
+[
+  {
+    "name": "chromium-390-light",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "chromium-390-dark",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "chromium-800-light",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "chromium-800-dark",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "chromium-1280-light",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": true,
+    "frameP95Ms": 16.700000000000045,
+    "errors": []
+  },
+  {
+    "name": "chromium-1280-dark",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "chromium-1920-light",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "chromium-1920-dark",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "webkit-390-light",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "webkit-390-dark",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "webkit-800-light",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "webkit-800-dark",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "webkit-1280-light",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "webkit-1280-dark",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "webkit-1920-light",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  },
+  {
+    "name": "webkit-1920-dark",
+    "loading": true,
+    "loaded": true,
+    "statusCount": 1,
+    "shellShift": 0,
+    "toolbarShift": 0,
+    "animated": false,
+    "frameP95Ms": null,
+    "errors": []
+  }
+]

@@ -56,6 +56,17 @@ class LocalWebAssetTests(SimpleTestCase):
         self.assertNotIn("Content-Encoding", response)
         self.assertEqual(b"".join(response.streaming_content), self.original)
 
+    def test_compressed_html_keeps_the_inline_html_filename_for_webkit(self):
+        html = b"<!doctype html><html><body>ERP loading QA</body></html>"
+        (self.root / "index.html").write_bytes(html)
+        (self.root / "index.html.gz").write_bytes(gzip.compress(html))
+        response = self.view(self.factory.get("/", HTTP_ACCEPT_ENCODING="gzip"))
+        self.addCleanup(response.close)
+        self.assertEqual(response["Content-Type"], "text/html")
+        self.assertEqual(response["Content-Encoding"], "gzip")
+        self.assertEqual(response["Content-Disposition"], 'inline; filename="index.html"')
+        self.assertEqual(gzip.decompress(b"".join(response.streaming_content)), html)
+
     def test_explicitly_disabled_gzip_is_respected(self):
         response = self.response("br, gzip;q=0")
         self.assertNotIn("Content-Encoding", response)

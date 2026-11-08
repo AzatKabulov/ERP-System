@@ -8,6 +8,7 @@ import '../../core/money/decimal_math.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
 
@@ -40,6 +41,8 @@ class _ToCompleteScreenState extends State<ToCompleteScreen> {
           ),
           const SizedBox(height: 16),
           AsyncSection<List<ToCompleteItem>>(
+            loadingBuilder: (context) =>
+                const RecordListSkeleton(rows: 4, rowHeight: 132),
             key: _section,
             load: widget.repository.toComplete,
             builder: (context, items) {

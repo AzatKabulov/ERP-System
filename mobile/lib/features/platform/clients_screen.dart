@@ -4,6 +4,7 @@ import '../../widgets/app_icons.dart';
 import '../../widgets/common.dart';
 import '../../widgets/glass.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'overview_screen.dart';
 import 'platform_models.dart';
 import 'platform_repository.dart';
@@ -121,6 +122,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
               ),
               const SizedBox(height: 20),
               AsyncSection<List<ClientRow>>(
+                loadingBuilder: (context) =>
+                    const RecordListSkeleton(rows: 4, rowHeight: 112),
                 key: ValueKey('clients-$_filter-$_query'),
                 load: () =>
                     widget.repository.clients(state: _filter, query: _query),

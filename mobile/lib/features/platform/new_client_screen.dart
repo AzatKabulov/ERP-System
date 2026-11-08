@@ -1,3 +1,5 @@
+import '../../widgets/skeleton.dart';
+import '../shared/async_section.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/api/api_exception.dart';
@@ -31,6 +33,8 @@ class _NewClientScreenState extends State<NewClientScreen> {
   String _method = 'cash';
   String _start = ''; // '' = free trial, otherwise a package id
   List<PlanRow> _plans = const [];
+  bool _plansLoading = true;
+  Object? _plansError;
   bool _busy = false;
   ApiException? _error;
   NewClientResult? _result;
@@ -38,11 +42,24 @@ class _NewClientScreenState extends State<NewClientScreen> {
   @override
   void initState() {
     super.initState();
-    widget.repository.plans().then((all) {
+    _loadPlans();
+  }
+
+  Future<void> _loadPlans() async {
+    setState(() {
+      _plansLoading = true;
+      _plansError = null;
+    });
+    try {
+      final all = await widget.repository.plans();
       if (mounted) {
         setState(() => _plans = all.where((p) => p.sellable).toList());
       }
-    }, onError: (_) {});
+    } catch (error) {
+      if (mounted) setState(() => _plansError = error);
+    } finally {
+      if (mounted) setState(() => _plansLoading = false);
+    }
   }
 
   @override
@@ -160,26 +177,34 @@ class _NewClientScreenState extends State<NewClientScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            LabeledField(
-              label: l.pfStartWith,
-              child: DropdownButtonFormField<String>(
-                key: const ValueKey('pf-new-start'),
-                initialValue: _start,
-                items: [
-                  DropdownMenuItem(value: '', child: Text(l.pfFreeTrial)),
-                  for (final p in _plans)
-                    DropdownMenuItem(
-                      value: p.id,
-                      child: Text(
-                        p.price == null
-                            ? p.name
-                            : '${p.name} · ${p.price} ${p.currency}',
+            if (_plansError != null)
+              ErrorPanel(error: _plansError!, onRetry: _loadPlans),
+            if (_plansLoading)
+              const SkeletonForm(fields: 1, actions: false)
+            else
+              LabeledField(
+                label: l.pfStartWith,
+                child: DropdownButtonFormField<String>(
+                  key: const ValueKey('pf-new-start'),
+                  isExpanded: true,
+                  initialValue: _start,
+                  items: [
+                    DropdownMenuItem(value: '', child: Text(l.pfFreeTrial)),
+                    for (final p in _plans)
+                      DropdownMenuItem(
+                        value: p.id,
+                        child: Text(
+                          p.price == null
+                              ? p.name
+                              : '${p.name} · ${p.price} ${p.currency}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                ],
-                onChanged: _busy ? null : (v) => setState(() => _start = v!),
+                  ],
+                  onChanged: _busy ? null : (v) => setState(() => _start = v!),
+                ),
               ),
-            ),
             if (_start.isNotEmpty) ...[
               const SizedBox(height: 14),
               _field(
