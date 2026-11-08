@@ -11,6 +11,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../sales/sales_models.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import '../workspace/unsaved_work.dart';
 import 'returns_models.dart';
 import 'returns_repository.dart';
@@ -105,6 +106,8 @@ class _ReturnDetailScreenState extends State<ReturnDetailScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: AsyncSection<SaleReturnDoc>(
+                  loadingBuilder: (context) =>
+                      const DetailLoadingSkeleton(inCard: false),
                   key: _section,
                   load: () => widget.repository.returnDoc(widget.returnId),
                   builder: (context, doc) => _body(context, doc),

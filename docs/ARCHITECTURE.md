@@ -1,5 +1,16 @@
 # Architecture
 
+## Opt-in iPhone fullscreen web preview (2026-11-08)
+
+The `/fs/` artifact opts in with `window.erpFullScreen`. A root MediaQuery merges
+browser CSS safe areas with native viewPadding without resizing/translating the
+Flutter view; backgrounds paint to y=0 and controls receive the insets. The scope
+sits above Navigator so pushed routes and overlays share the geometry. The normal
+host and native app keep their existing path. A separate artifact builder leaves
+the normal web build untouched; nothing is deployed automatically. See
+[IPHONE_FULLSCREEN.md](IPHONE_FULLSCREEN.md) for the audit, verification limits
+and mandatory installed-iPhone acceptance steps before enabling this on `/`.
+
 ## Receiving usability and dated batches — 2026-10-26
 
 - Manual draft entries have a persisted internal identity and bypass barcode/online lookup. A missing article number becomes a stable generated SKU on save, with an empty barcode list. Existing products use the shared name picker. Draft input, optional warranty months and receipt expiry survive restart; catalog writes retain the existing permission checks.

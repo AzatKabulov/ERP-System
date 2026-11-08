@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import 'common.dart';
 import 'glass.dart';
 import 'motion.dart';
+import 'pwa_viewport.dart';
 
 /// The order is the order of the side menu and of the "More" list, and starts with the four
 /// pages of the phone's bottom bar in the same order as the bar.
@@ -382,6 +383,9 @@ class _AppShellState extends State<AppShell> {
     required bool showRole,
   }) {
     final safeTop = MediaQuery.paddingOf(context).top;
+    final safeSides = PwaAreas.enabledOf(context)
+        ? MediaQuery.paddingOf(context)
+        : EdgeInsets.zero;
     final title = Text(
       pageLabel(l, widget.page),
       maxLines: 1,
@@ -447,6 +451,7 @@ class _AppShellState extends State<AppShell> {
             ],
           );
     return GlassSurface(
+      key: const ValueKey('app-top-layer'),
       radius: 0,
       blur: 26,
       shadow: false,
@@ -461,9 +466,9 @@ class _AppShellState extends State<AppShell> {
           children: [
             Padding(
               padding: EdgeInsets.fromLTRB(
-                phone ? 12 : 28,
+                (phone ? 12 : 28) + safeSides.left,
                 safeTop + (phone ? 6 : 10),
-                phone ? 4 : 28,
+                (phone ? 4 : 28) + safeSides.right,
                 phone ? 6 : 10,
               ),
               child: ConstrainedBox(
@@ -714,8 +719,12 @@ class _AppShellState extends State<AppShell> {
           ),
           if (showBar)
             Positioned(
-              left: _barGap,
-              right: _barGap,
+              left:
+                  _barGap +
+                  (PwaAreas.enabledOf(context) ? media.padding.left : 0),
+              right:
+                  _barGap +
+                  (PwaAreas.enabledOf(context) ? media.padding.right : 0),
               bottom: _barGap + math.max(media.padding.bottom - 4, 0),
               child: _bottomBar(l),
             ),

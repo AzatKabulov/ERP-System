@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/app_icons.dart';
 import '../../widgets/common.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'support_repository.dart';
 
 /// Writing to us and reading our answers. Only an owner or a manager may write (a seller tells
@@ -237,6 +238,8 @@ class _SupportScreenState extends State<SupportScreen> {
                       ),
                     const SizedBox(height: 20),
                     AsyncSection<List<SupportRequest>>(
+                      loadingBuilder: (context) =>
+                          const RecordListSkeleton(rows: 3, rowHeight: 132),
                       key: _section,
                       load: widget.repository.list,
                       builder: (context, requests) {

@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../inventory/stock_labels.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'activity_view.dart';
 import 'reports_models.dart';
 import 'reports_repository.dart';
@@ -204,6 +205,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final repo = widget.repository;
     return switch (tab) {
       ReportTab.summary => AsyncSection<ReportSummary>(
+        loadingBuilder: (context) => const ReportLoadingSkeleton(metrics: 9),
         load: () => repo.summary(q),
         builder: (context, s) => _SummaryView(
           summary: s,
@@ -211,6 +213,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
       ),
       ReportTab.sales => AsyncSection<SalesReport>(
+        loadingBuilder: (context) =>
+            const ReportLoadingSkeleton(metrics: 5, chart: true),
         load: () => repo.sales(q),
         builder: (context, r) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -218,6 +222,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
       ),
       ReportTab.stock => AsyncSection<StockReport>(
+        loadingBuilder: (context) => const ReportLoadingSkeleton(metrics: 4),
         load: () => repo.stock(q),
         builder: (context, r) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -225,6 +230,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
       ),
       ReportTab.returns => AsyncSection<ReturnsReport>(
+        loadingBuilder: (context) => const ReportLoadingSkeleton(metrics: 3),
         load: () => repo.returns(q),
         builder: (context, r) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -232,6 +238,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
       ),
       ReportTab.expenses => AsyncSection<ExpensesReport>(
+        loadingBuilder: (context) => const ReportLoadingSkeleton(metrics: 2),
         load: () => repo.expenses(q),
         builder: (context, r) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -304,9 +311,7 @@ class _SummaryView extends StatefulWidget {
 }
 
 class _SummaryViewState extends State<_SummaryView> {
-  late final Future<SalesReport?>? _sales = widget.sales == null
-      ? null
-      : widget.sales!().then<SalesReport?>((r) => r).catchError((_) => null);
+  late Future<SalesReport>? _sales = widget.sales?.call();
 
   @override
   Widget build(BuildContext context) {
@@ -341,11 +346,24 @@ class _SummaryViewState extends State<_SummaryView> {
           ],
         ),
         if (_sales != null)
-          FutureBuilder<SalesReport?>(
+          FutureBuilder<SalesReport>(
             future: _sales,
             builder: (context, snapshot) {
-              final report = snapshot.data;
-              if (report == null) return const SizedBox.shrink();
+              if (snapshot.hasError) {
+                return ErrorPanel(
+                  error: snapshot.error!,
+                  onRetry: () => setState(() {
+                    _sales = widget.sales?.call();
+                  }),
+                );
+              }
+              if (!snapshot.hasData) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: ChartsLoadingSkeleton(),
+                );
+              }
+              final report = snapshot.data!;
               return Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: _Charts(report: report),

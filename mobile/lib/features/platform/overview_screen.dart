@@ -6,6 +6,7 @@ import '../../widgets/app_icons.dart';
 import '../../widgets/common.dart';
 import '../../widgets/glass.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'platform_models.dart';
 import 'platform_repository.dart';
 import 'platform_widgets.dart';
@@ -43,6 +44,8 @@ class PlatformOverviewScreen extends StatelessWidget {
               PageHead(title: l.pfOverview, subtitle: l.pfPlatform),
               const SizedBox(height: 24),
               AsyncSection<Overview>(
+                loadingBuilder: (context) =>
+                    const PlatformOverviewLoadingSkeleton(),
                 load: repository.overview,
                 builder: (context, data) => _Body(
                   data: data,

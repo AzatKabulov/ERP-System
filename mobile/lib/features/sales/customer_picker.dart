@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -239,10 +240,7 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
     final l = strings(context);
     if (_error != null) return ErrorPanel(error: _error!, onRetry: _run);
     if (_loading && _items.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(24),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return const RecordListSkeleton(inCard: false, rowHeight: 72);
     }
     if (_items.isEmpty) {
       return Padding(

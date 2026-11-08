@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'pwa_viewport.dart';
 
 /// Frosted glass: what is behind it is blurred and lightened, the surface is a translucent veil
 /// of the palette's glass colour, and its edge catches light (a thin rim that is brightest at
@@ -110,6 +111,7 @@ class AmbientField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => RepaintBoundary(
+    key: const ValueKey('ambient-field-paint'),
     child: DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -170,10 +172,13 @@ EdgeInsets pagePadding(
 }) {
   final chrome = ChromeInsets.maybeOf(context);
   final side = gutter ?? (compact ? 16 : 32);
+  final safe = PwaAreas.enabledOf(context)
+      ? MediaQuery.paddingOf(context)
+      : EdgeInsets.zero;
   return EdgeInsets.fromLTRB(
-    side,
+    side + safe.left,
     (chrome?.top ?? 0) + (compact ? 16 : 28),
-    side,
+    side + safe.right,
     (chrome?.bottom ?? 0) + 32,
   );
 }

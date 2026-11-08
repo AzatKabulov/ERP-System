@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
@@ -41,8 +42,7 @@ class ExpenseFormScreen extends StatefulWidget {
 }
 
 class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
-  late final Future<List<ExpenseCategory>> _loaded = widget.repository
-      .categories();
+  late Future<List<ExpenseCategory>> _loaded = widget.repository.categories();
   List<ExpenseCategory> _categories = const [];
   late String? _categoryId = widget.existing?.categoryId;
   late String? _locationId =
@@ -244,11 +244,13 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                   if (snapshot.hasError) {
                     return ErrorPanel(
                       error: snapshot.error!,
-                      onRetry: () => setState(() {}),
+                      onRetry: () => setState(() {
+                        _loaded = widget.repository.categories();
+                      }),
                     );
                   }
                   if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const FormLoadingSkeleton(fields: 5, maxWidth: 640);
                   }
                   if (_categories.isEmpty) {
                     _categories = [...snapshot.data!];

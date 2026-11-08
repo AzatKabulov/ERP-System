@@ -46,6 +46,10 @@ class FakeServer {
   bool reachable = true;
   Future<void>? externalWait;
 
+  /// Controlled read gates for loading tests. They never change production API behavior.
+  final Map<String, Future<void>> readWaits = {};
+  final List<String> readPaths = [];
+
   /// The next N operation POSTs are performed, then the answer is lost.
   int dropResponseAfterCommit = 0;
 
@@ -377,6 +381,10 @@ class FakeServer {
   }
 
   Future<http.Response> _handle(http.Request request) async {
+    if (request.method == 'GET') {
+      readPaths.add(request.url.path);
+      await readWaits[request.url.path];
+    }
     if (!reachable) throw http.ClientException('offline');
     if (request.url.path.endsWith('/barcodes/info/')) await externalWait;
     final host = request.url.origin;

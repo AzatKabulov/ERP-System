@@ -1,5 +1,39 @@
 # Real-stack browser run
 
+## Fullscreen PWA preview checks
+
+`fullscreen.js` tests the opt-in `/fs/` artifact in mobile Chromium and WebKit,
+in both themes, using simulated safe areas. It checks the full-size Flutter view,
+cover-viewport repair, actual rendered scroll changes, runtime themes, touch
+coordinates near top/bottom, a pushed Help page and orientation changes. Normal
+mode is checked separately. It requires the same disposable localhost flags and
+Playwright toolchain paths as the loading script. Generate the separate artifact
+with `python3 scripts/build_fullscreen_preview.py` after the release web build;
+serve it locally at `/fs/`. No deploy is performed. Screenshots/results default
+to `/tmp/erp-fullscreen-browser`. See `docs/IPHONE_FULLSCREEN.md` for physical
+installed-iPhone checks that this harness cannot establish.
+
+## Skeleton loading checks
+
+`loading.js` uses the production web build and a disposable localhost sample API
+(with PostgreSQL). It seeds one synthetic product through the real API, holds a
+real catalog response, and checks initial loading, one localized status,
+completion, unchanged navigation/search bounds, horizontal overflow and browser
+errors. It saves before/after screenshots and JSON results. It also samples
+animation frame intervals for one desktop case; this is diagnostic, not a
+physical-device FPS guarantee.
+
+```sh
+ERP_E2E_DISPOSABLE=true E2E_WEB_URL=http://127.0.0.1:8001/ node scripts/e2e/loading.js
+```
+
+Set `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH` for your installed browser/toolchain.
+Set `E2E_WEBKIT=true` to run the same matrix in installed Playwright WebKit as
+well. Four viewports (390, 800, 1280, 1920 pixels), each in light/dark themes.
+`E2E_OUTPUT_DIR` defaults to `/tmp/erp-skeleton-browser`. The script refuses
+non-local origins and requires the explicit disposable-data flag. It must never
+be aimed at the ordinary test shop or a public deployment.
+
 ## Current focused receiving and camera checks
 
 Use a fresh disposable local sample server (`run_local.py --data <temporary-folder> --web mobile/build/web --port 8001`). Never point these scripts at the owner's ordinary database. Both require `ERP_E2E_DISPOSABLE=true`, `E2E_WEB_URL`, `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH`.

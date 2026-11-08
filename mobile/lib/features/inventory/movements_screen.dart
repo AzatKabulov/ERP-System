@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
 
@@ -84,10 +85,7 @@ class _MovementsScreenState extends State<MovementsScreen> {
         if (_error != null)
           ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
         else if (_loading && _items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 32),
-            child: Center(child: CircularProgressIndicator()),
-          )
+          const RecordListSkeleton(rowHeight: 96)
         else if (_items.isEmpty)
           SurfaceCard(
             child: EmptyState(

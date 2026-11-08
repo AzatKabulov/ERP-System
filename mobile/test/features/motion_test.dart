@@ -40,6 +40,7 @@ void main() {
             Reveal(
               index: 8,
               child: AsyncSection<int>(
+                loadingBuilder: (_) => const SizedBox(height: 80),
                 load: () async => ++loads,
                 builder: (_, _) =>
                     CountUp(value: 30000, format: (n) => '${n.round()}'),
@@ -64,6 +65,7 @@ void main() {
         host(
           Reveal(
             child: AsyncSection<int>(
+              loadingBuilder: (_) => const SizedBox(height: 80),
               load: () async => ++loads,
               builder: (_, value) => Text('loaded $value'),
             ),

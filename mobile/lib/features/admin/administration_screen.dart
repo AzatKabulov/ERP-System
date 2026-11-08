@@ -11,6 +11,7 @@ import '../../widgets/common.dart';
 import '../guide/coach_guide.dart';
 import '../../widgets/motion.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import '../../theme/theme_controller.dart';
 import '../auth/password_form.dart';
 import '../catalog/catalog_repository.dart';
@@ -475,6 +476,11 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                 SectionHeading(l.adminBusinessProfile),
                 const SizedBox(height: 12),
                 AsyncSection<BusinessInfo>(
+                  loadingBuilder: (context) => const FormLoadingSkeleton(
+                    fields: 5,
+                    actions: false,
+                    padding: 0,
+                  ),
                   key: _business,
                   load: repo.business,
                   builder: (context, info) => _BusinessForm(
@@ -510,6 +516,12 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                 ),
                 const SizedBox(height: 8),
                 AsyncSection<List<LocationRecord>>(
+                  loadingBuilder: (context) => const RecordListSkeleton(
+                    rows: 1,
+                    avatar: true,
+                    inCard: false,
+                    rowHeight: 72,
+                  ),
                   key: _locations,
                   load: () => repo.locations(),
                   builder: (context, items) => Column(
@@ -576,6 +588,12 @@ class _RealAdministrationScreenState extends State<RealAdministrationScreen> {
                 : null,
           ),
           AsyncSection<List<StaffRecord>>(
+            loadingBuilder: (context) => const RecordListSkeleton(
+              rows: 4,
+              avatar: true,
+              inCard: false,
+              rowHeight: 72,
+            ),
             key: _staff,
             load: repo.staff,
             builder: (context, items) => Column(

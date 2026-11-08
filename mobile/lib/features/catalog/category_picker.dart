@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/api/api_error_text.dart';
@@ -186,10 +187,7 @@ class _CategoryPickerDialogState extends State<_CategoryPickerDialog> {
               const SizedBox(height: 8),
               Flexible(
                 child: _loading
-                    ? const Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
+                    ? const RecordListSkeleton(inCard: false, rowHeight: 48)
                     : _loadError != null
                     ? ErrorPanel(error: _loadError!, onRetry: _load)
                     : ListView(

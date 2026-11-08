@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
 
@@ -316,9 +317,14 @@ class _CountScreenState extends State<CountScreen> {
               constraints: const BoxConstraints(maxWidth: 820),
               child: _loadError != null
                   ? ErrorPanel(error: _loadError!, onRetry: _load)
-                  : _loading || doc == null
-                  ? const Center(child: CircularProgressIndicator())
-                  : _body(context, doc),
+                  : doc == null
+                  ? const FormLoadingSkeleton(fields: 3, maxWidth: 820)
+                  : Stack(
+                      children: [
+                        _body(context, doc),
+                        if (_loading) const LinearProgressIndicator(),
+                      ],
+                    ),
             ),
           ),
         ),

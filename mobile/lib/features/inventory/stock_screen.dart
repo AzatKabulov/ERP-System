@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -415,9 +416,9 @@ class _StockScreenState extends State<StockScreen> {
         if (_error != null)
           ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
         else if (_loading && _items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 32),
-            child: Center(child: CircularProgressIndicator()),
+          StockLoadingSkeleton(
+            compact: compact,
+            withValue: session.can('stock.cost.view'),
           )
         else if (_items.isEmpty)
           SurfaceCard(

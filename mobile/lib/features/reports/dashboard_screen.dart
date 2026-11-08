@@ -9,6 +9,7 @@ import '../../widgets/charts.dart';
 import '../../widgets/common.dart';
 import '../../widgets/motion.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import '../../widgets/app_shell.dart';
 import 'audit_labels.dart';
 import 'onboarding_card.dart';
@@ -48,9 +49,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  /// The last two weeks of sales, for the line and the comparison with yesterday. Quiet: a
-  /// failure just leaves the line out.
-  late final Future<SalesReport?> _trend = _loadTrend();
+  /// Independently load the last two weeks; metrics remain available if charts fail.
+  late Future<SalesReport?> _trend = _loadTrend();
 
   Future<SalesReport?> _loadTrend() async {
     if (!widget.session.can('report.view') ||
@@ -58,17 +58,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return null;
     }
     final today = DateTime.now();
-    try {
-      return await widget.repository.sales(
-        ReportQuery(
-          from: reportDay(DateTime(today.year, today.month, today.day - 13)),
-          to: reportDay(today),
-          locationId: widget.session.location?.id,
-        ),
-      );
-    } catch (_) {
-      return null;
-    }
+    return widget.repository.sales(
+      ReportQuery(
+        from: reportDay(DateTime(today.year, today.month, today.day - 13)),
+        to: reportDay(today),
+        locationId: widget.session.location?.id,
+      ),
+    );
   }
 
   @override
@@ -97,12 +93,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   if (session.can('dashboard.view'))
                     AsyncSection<Dashboard>(
+                      loadingBuilder: (context) => DashboardLoadingSkeleton(
+                        compact: compact,
+                        metrics: [
+                          session.can('sales.view'),
+                          session.can('sales.cost.view'),
+                          session.can('expense.view'),
+                          session.can('sales.view') &&
+                              session.can('stock.cost.view'),
+                          session.can('stock.view'),
+                          session.can('warranty.view'),
+                        ].where((allowed) => allowed).length,
+                        hero:
+                            session.can('sales.view') ||
+                            session.can('stock.cost.view'),
+                      ),
                       load: widget.repository.dashboard,
                       builder: (context, d) => FutureBuilder<SalesReport?>(
                         future: _trend,
                         builder: (context, trend) => _Figures(
                           dashboard: d,
                           trend: trend.data,
+                          trendLoading:
+                              session.can('report.view') &&
+                              trend.connectionState != ConnectionState.done,
+                          trendError: trend.error,
+                          retryTrend: () => setState(() {
+                            _trend = _loadTrend();
+                          }),
                           compact: compact,
                           locationName: session.location?.name,
                           onOpenReports: session.can('report.view')
@@ -129,6 +147,9 @@ class _Figures extends StatelessWidget {
     required this.dashboard,
     required this.trend,
     required this.compact,
+    required this.trendLoading,
+    this.trendError,
+    this.retryTrend,
     this.locationName,
     this.onOpenReports,
     this.onOpenToComplete,
@@ -139,6 +160,9 @@ class _Figures extends StatelessWidget {
   final ValueChanged<AppPage>? onGo;
   final Dashboard dashboard;
   final SalesReport? trend;
+  final bool trendLoading;
+  final Object? trendError;
+  final VoidCallback? retryTrend;
   final bool compact;
   final String? locationName;
   final VoidCallback? onOpenReports;
@@ -681,7 +705,12 @@ class _Figures extends StatelessWidget {
             text: l.dashWithoutCostNote(_tm(d.withoutCostMonth!)),
           ),
         ],
-        if (trend != null) ...[
+        if (trendLoading && trend == null) ...[
+          const SizedBox(height: 16),
+          const ChartsLoadingSkeleton(),
+        ] else if (trendError != null)
+          ErrorPanel(error: trendError!, onRetry: retryTrend!)
+        else if (trend != null) ...[
           const SizedBox(height: 16),
           _charts(context, trend!),
         ],

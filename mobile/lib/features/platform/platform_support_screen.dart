@@ -7,6 +7,7 @@ import '../../widgets/app_icons.dart';
 import '../../widgets/common.dart';
 import '../../widgets/glass.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'platform_models.dart';
 import 'platform_repository.dart';
 import 'platform_widgets.dart';
@@ -81,6 +82,8 @@ class _PlatformSupportScreenState extends State<PlatformSupportScreen> {
               ),
               const SizedBox(height: 20),
               AsyncSection<List<TicketRow>>(
+                loadingBuilder: (context) =>
+                    const RecordListSkeleton(rows: 4, rowHeight: 112),
                 key: ValueKey('tickets-$_status-$_reload'),
                 load: () => widget.repository.tickets(status: _status),
                 builder: (context, rows) {
@@ -244,7 +247,7 @@ class _TicketScreenState extends State<TicketScreen> {
           ? Center(
               child: _loadError != null
                   ? ErrorPanel(error: _loadError!, onRetry: _load)
-                  : const CircularProgressIndicator(),
+                  : const PageLoadingSkeleton(maxWidth: 680),
             )
           : ListView(
               padding: const EdgeInsets.all(16),

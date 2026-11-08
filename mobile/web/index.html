@@ -20,55 +20,11 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Inventory ERP interface prototype">
   <meta name="theme-color" content="#EEF1F8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <script>
     /* One full-screen surface: the browser's own top area (status bar) and the page behind the app
        take the app's canvas colour, light or dark, from the very first paint. The app calls this
        again when the person changes the scheme. */
-    /* How far the phone's clock / camera area and home bar reach into the page. Flutter on the web
-       does not read these itself, so the app asks (see lib/core/web/). */
-    var erpProbe = function (side) {
-      var d = document.createElement('div');
-      d.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding-' + side +
-        ':env(safe-area-inset-' + side + ',0px)';
-      document.documentElement.appendChild(d);
-      var v = parseFloat(getComputedStyle(d)['padding' + side.charAt(0).toUpperCase() + side.slice(1)]) || 0;
-      d.remove();
-      return v;
-    };
-    var erpSafe = { top: 0, bottom: 0 };
-    var erpMeasure = function () { erpSafe.top = erpProbe('top'); erpSafe.bottom = erpProbe('bottom'); };
-    window.addEventListener('resize', erpMeasure);
-    window.addEventListener('orientationchange', erpMeasure);
-    document.addEventListener('DOMContentLoaded', erpMeasure);
-    window.erpSafeTop = function () { return erpSafe.top; };
-    window.erpSafeBottom = function () { return erpSafe.bottom; };
-    /* The full-screen test copy (/fs/) sets this to true; the normal app never does. */
-    window.erpFullScreen = false;
-    /* Full screen needs `viewport-fit=cover`, but Flutter replaces the page's viewport tag with its
-       own at start-up. Without it the phone gives Flutter a shorter page than the area Flutter
-       draws in: the picture is stretched and taps land lower than they look. So put it back as
-       soon as Flutter adds its tag, then measure the phone's areas again and tell Flutter. */
-    if (window.erpFullScreen) {
-      var erpCover = function () {
-        var changed = false;
-        document.querySelectorAll('meta[name="viewport"]').forEach(function (m) {
-          var c = m.getAttribute('content') || '';
-          if (c.indexOf('viewport-fit') < 0) {
-            m.setAttribute('content', c + ', viewport-fit=cover');
-            changed = true;
-          }
-        });
-        if (changed) {
-          setTimeout(function () {
-            erpMeasure();
-            window.dispatchEvent(new Event('resize'));
-            if (window.visualViewport) window.visualViewport.dispatchEvent(new Event('resize'));
-          }, 60);
-        }
-      };
-      new MutationObserver(erpCover).observe(document.head, { childList: true });
-      erpCover();
-    }
     window.erpSetScheme = function (dark) {
       var color = dark ? '#090C16' : '#EEF1F8';
       var set = function (name, value) {
@@ -76,6 +32,7 @@
         if (m) m.setAttribute('content', value);
       };
       set('theme-color', color);
+      // The status-bar style is NOT changed here: only the opt-in /fs/ copy draws under the status bar.
       document.documentElement.style.background = color;
       if (document.body) document.body.style.background = color;
       var splash = document.getElementById('splash');

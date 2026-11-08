@@ -10,6 +10,7 @@ import '../../widgets/common.dart';
 import '../../widgets/glass.dart';
 import '../auth/password_form.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import 'platform_models.dart';
 import 'platform_repository.dart';
 import 'platform_widgets.dart';
@@ -259,6 +260,11 @@ class _PackagesCardState extends State<_PackagesCard> {
           ),
           const SizedBox(height: 12),
           AsyncSection<List<PlanRow>>(
+            loadingBuilder: (context) => const RecordListSkeleton(
+              rows: 3,
+              inCard: false,
+              rowHeight: 112,
+            ),
             key: _list,
             load: widget.repository.plans,
             builder: (context, plans) => Column(

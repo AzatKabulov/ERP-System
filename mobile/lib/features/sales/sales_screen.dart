@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -367,9 +368,10 @@ class _SalesScreenState extends State<SalesScreen> {
         child: ErrorPanel(error: _searchError!, onRetry: _runSearch),
       );
     } else if (_searching && _results.isEmpty) {
-      results = const Padding(
-        padding: EdgeInsets.all(24),
-        child: Center(child: CircularProgressIndicator()),
+      results = const RecordListSkeleton(
+        avatar: true,
+        inCard: false,
+        rowHeight: 80,
       );
     } else if (_search.text.trim().isEmpty && _results.isEmpty) {
       results = EmptyState(

@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/api/api_exception.dart';
@@ -463,7 +464,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
           ? Center(
               child: _loadError != null
                   ? ErrorPanel(error: _loadError!, onRetry: _load)
-                  : const CircularProgressIndicator(),
+                  : const PageLoadingSkeleton(maxWidth: 760),
             )
           : ListView(
               padding: const EdgeInsets.all(16),

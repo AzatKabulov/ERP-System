@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -140,10 +141,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                 if (_error != null)
                   ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
                 else if (_loading && _items.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
+                  const RecordListSkeleton()
                 else if (_items.isEmpty)
                   SurfaceCard(
                     child: EmptyState(

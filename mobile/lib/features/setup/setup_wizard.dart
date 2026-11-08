@@ -1,3 +1,4 @@
+import '../shared/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/api/api_client.dart';
@@ -454,7 +455,7 @@ class _SetupWizardState extends State<SetupWizard> {
                 ),
                 Expanded(
                   child: _loading
-                      ? const Center(child: CircularProgressIndicator())
+                      ? const FormLoadingSkeleton(fields: 5, maxWidth: 560)
                       : SingleChildScrollView(
                           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                           child: Column(

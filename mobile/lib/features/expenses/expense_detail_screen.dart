@@ -1,3 +1,4 @@
+import '../../widgets/skeleton.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import '../../core/session/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../shared/async_section.dart';
+import '../shared/loading_skeletons.dart';
 import '../workspace/unsaved_work.dart';
 import 'expense_form_screen.dart';
 import 'expenses_models.dart';
@@ -136,6 +138,8 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: AsyncSection<Expense>(
+                  loadingBuilder: (context) =>
+                      const DetailLoadingSkeleton(inCard: false, items: false),
                   key: _section,
                   load: () => widget.repository.expense(widget.expenseId),
                   builder: (context, e) => _body(context, e),
@@ -145,6 +149,34 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _receiptBox(Widget child) => LayoutBuilder(
+    builder: (context, box) {
+      final width = box.maxWidth.clamp(0.0, 480.0);
+      return SizedBox(width: width, height: width * 3 / 4, child: child);
+    },
+  );
+
+  Widget _receiptFailure(AttachmentRef attachment) {
+    final l = strings(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.expenseReceiptLoadFailed,
+          key: const ValueKey('ed-receipt-failed'),
+          style: TextStyle(color: AppColors.danger),
+        ),
+        TextButton(
+          key: const ValueKey('ed-receipt-retry'),
+          onPressed: () => setState(() {
+            _receipt = widget.repository.attachmentBytes(attachment.id);
+          }),
+          child: Text(l.retry),
+        ),
+      ],
     );
   }
 
@@ -208,27 +240,38 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                   future: _receipt,
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      return Text(
-                        l.expenseReceiptLoadFailed,
-                        key: const ValueKey('ed-receipt-failed'),
-                        style: TextStyle(color: AppColors.danger),
-                      );
+                      return _receiptFailure(attachment);
                     }
                     if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (attachment.isImage)
+                            _receiptBox(
+                              const SkeletonRegion(child: SkeletonImage()),
+                            ),
+                          const SizedBox(height: 8),
+                          const SkeletonRegion(child: SkeletonButton()),
+                        ],
+                      );
                     }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (attachment.isImage)
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 360),
-                            child: Image.memory(
+                          _receiptBox(
+                            Image.memory(
                               snapshot.data!,
                               key: const ValueKey('ed-receipt-image'),
                               fit: BoxFit.contain,
+                              frameBuilder: (_, child, frame, synchronous) =>
+                                  synchronous || frame != null
+                                  ? child
+                                  : const SkeletonRegion(
+                                      child: SkeletonImage(),
+                                    ),
                               errorBuilder: (_, _, _) =>
-                                  Text(l.expenseReceiptLoadFailed),
+                                  _receiptFailure(attachment),
                             ),
                           ),
                         const SizedBox(height: 8),

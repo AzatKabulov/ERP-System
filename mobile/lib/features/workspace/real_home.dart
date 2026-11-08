@@ -1,3 +1,4 @@
+import '../../widgets/skeleton.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -117,7 +118,10 @@ class _RealHomeState extends State<RealHome> with WidgetsBindingObserver {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(),
+                const SizedBox(
+                  width: 240,
+                  child: SkeletonCard(avatar: true, lines: 2),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   l.checkingSession,

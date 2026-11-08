@@ -1,3 +1,5 @@
+import '../../widgets/skeleton.dart';
+import '../shared/async_section.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/api/api_exception.dart';
@@ -93,6 +95,8 @@ class _ActionDialogState extends State<_ActionDialog> {
   String? _planId;
   DateTime? _newEnd;
   List<PlanRow> _plans = const [];
+  bool _plansLoading = true;
+  Object? _plansError;
   _Step _step = _Step.form;
   bool _busy = false;
   ApiException? _error;
@@ -123,6 +127,10 @@ class _ActionDialogState extends State<_ActionDialog> {
   }
 
   Future<void> _loadPlans() async {
+    setState(() {
+      _plansLoading = true;
+      _plansError = null;
+    });
     try {
       final all = await widget.repository.plans();
       if (!mounted) return;
@@ -130,8 +138,10 @@ class _ActionDialogState extends State<_ActionDialog> {
         _plans = all.where((p) => p.sellable).toList();
         _planId ??= _plans.isEmpty ? null : _plans.first.id;
       });
-    } on ApiException catch (e) {
-      if (mounted) setState(() => _error = e);
+    } catch (error) {
+      if (mounted) setState(() => _plansError = error);
+    } finally {
+      if (mounted) setState(() => _plansLoading = false);
     }
   }
 
@@ -299,29 +309,39 @@ class _ActionDialogState extends State<_ActionDialog> {
   Widget _form(AppLocalizations l) {
     final children = <Widget>[];
     if (action == PlatformAction.renew) {
+      if (_plansError != null) {
+        children.add(ErrorPanel(error: _plansError!, onRetry: _loadPlans));
+      }
       children.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: LabeledField(
-            label: l.pfFieldPackage,
-            child: DropdownButtonFormField<String>(
-              key: const ValueKey('pf-field-plan'),
-              initialValue: _planId,
-              items: [
-                for (final p in _plans)
-                  DropdownMenuItem(
-                    value: p.id,
-                    child: Text(
-                      p.price == null
-                          ? p.name
-                          : '${p.name} · ${p.price} ${p.currency}',
-                    ),
+        _plansLoading
+            ? const SkeletonForm(fields: 1, actions: false)
+            : Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: LabeledField(
+                  label: l.pfFieldPackage,
+                  child: DropdownButtonFormField<String>(
+                    key: const ValueKey('pf-field-plan'),
+                    isExpanded: true,
+                    initialValue: _planId,
+                    items: [
+                      for (final p in _plans)
+                        DropdownMenuItem(
+                          value: p.id,
+                          child: Text(
+                            p.price == null
+                                ? p.name
+                                : '${p.name} · ${p.price} ${p.currency}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: _busy
+                        ? null
+                        : (v) => setState(() => _planId = v),
                   ),
-              ],
-              onChanged: _busy ? null : (v) => setState(() => _planId = v),
-            ),
-          ),
-        ),
+                ),
+              ),
       );
     }
     if (action == PlatformAction.extend) {

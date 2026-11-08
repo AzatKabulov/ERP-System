@@ -161,21 +161,24 @@ class CatalogRepository {
 
   /// The picture of [product] (a small one for lists, the larger one for the product page), or
   /// null when it has none. Downloaded once and kept in memory while its version stays the same.
+  String _photoKey(Product product, bool full) =>
+      '$businessId/${product.id}/${product.photoVersion}/${full ? 'full' : 'thumb'}';
+
+  Uint8List? cachedPhoto(Product product, {bool full = false}) =>
+      PhotoCache.instance.peek(_photoKey(product, full));
+
   Future<Uint8List?> photo(Product product, {bool full = false}) {
     final version = product.photoVersion;
     if (version == null) return Future.value(null);
     final size = full ? 'full' : 'thumb';
-    return PhotoCache.instance.load(
-      '$businessId/${product.id}/$version/$size',
-      () async {
-        final response = await api.download(
-          '$_base/products/${product.id}/photo/',
-          query: {'size': size},
-          accept: 'image/jpeg',
-        );
-        return response.bytes;
-      },
-    );
+    return PhotoCache.instance.load(_photoKey(product, full), () async {
+      final response = await api.download(
+        '$_base/products/${product.id}/photo/',
+        query: {'size': size},
+        accept: 'image/jpeg',
+      );
+      return response.bytes;
+    });
   }
 
   /// Sets (or replaces) the product's picture. The server makes it small and clean.
