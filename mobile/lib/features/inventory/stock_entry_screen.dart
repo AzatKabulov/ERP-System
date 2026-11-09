@@ -498,6 +498,8 @@ class _EntryLineEditorState extends State<_EntryLineEditor> {
                         widget.onChanged();
                       },
                       decoration: InputDecoration(
+                        helperText: l.unitCostHelp,
+                        helperMaxLines: 4,
                         errorText: widget.costError,
                         errorMaxLines: 3,
                       ),

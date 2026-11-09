@@ -6,6 +6,38 @@ applications. This review uses the actual pinned Flutter 3.47.6 client, Django
 API and Caddy configuration. Changes are on `codex/web-performance`; the owner
 requested commit and push, with no deployment or app release.
 
+## Repository freshness correction
+
+The initial optimization commit `8e48ce1` used local `d25a3f0` (the fullscreen
+preview and loading changes). GitHub `main` and `feature/premium-design` already
+contained Azat's later merge `d757536` from 2026-11-08. The missing synchronization
+was identified during the owner's review on 2026-11-09 and corrected by merging
+that main into `codex/web-performance`, preserving both histories. Only PLAN's
+two added sections conflicted; both were kept.
+
+All 56 upstream-changed files outside the five overlapping documentation files
+match main exactly, including backend/dependency security fixes, phone photo
+scanning, sales/report corrections, guide behavior and backup/restore scripts.
+Relative to current main, the resulting branch changes only the 19 optimization,
+test, fixture and documentation files, including the new integration evidence.
+Main and deployment remain unchanged.
+
+The combined code passes **589 Flutter tests**, **945 backend tests** on a new
+PostgreSQL 18.4 cluster, 11 fake-Docker safety tests, Flutter analysis/formatting,
+backend Ruff check/format, Django configuration/migration checks and the release
+web build. Backend checks do not access the ordinary local shop. Production/CI
+PostgreSQL 16 and physical-device acceptance remain separate checks.
+
+The original `baseline.json`, `candidate.json`, `responsive.json`, 574-test result
+and CPU-work comparison below are retained as historical evidence for the old
+base. They must not be presented as a latest-main before/after benchmark.
+Final integration evidence is recorded in [integration.json](integration.json).
+The integrated release passes lazy-photo and pagination checks at desktop
+1440/Russian/light/list, tablet 1024/Turkmen/dark/table and phone
+390/Russian/light/gallery, with 14, 9 and 6 initial photo requests respectively
+and no unexpected browser warnings/errors. These three smoke cases do not
+re-establish the earlier CPU-work comparison against a latest-main baseline.
+
 ## Findings and changes
 
 1. **The wide catalog table eagerly built every loaded product.** Its single

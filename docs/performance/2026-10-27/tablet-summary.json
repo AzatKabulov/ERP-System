@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-27",
+  "protocol": "300 synthetic products without photos; 4x CPU slowdown; warmed routes; 3 rounds of Products, Sales, Stock, Overview, Products; 1200ms observation per visit; semantics enabled; all baseline runs then candidate runs; no concurrent builds/tests",
+  "limits": "Fixed-order local synthetic control, not randomized device FPS, cold load, production capacity or a significance claim. Landscape behavior was kept after a mixed exploratory 1200-width candidate. Final threshold is below 1000.",
+  "measurements": [
+    {
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "browser": "155.0.8059.86",
+      "cpu_rate": 4,
+      "before": {
+        "bundle_sha256": "9d43865eee9837f410b80abf8091c72e35266fb0973f8097d6d2e066e9671bf9",
+        "evidence_sha256": "c8d60a5d85e48bb0e20281642b3cf720ca203503259fc12ac92bbfa744b14723",
+        "round_cpu_ms": [
+          1420.43,
+          1451.71,
+          1529.84
+        ],
+        "median_cpu_ms": 1451.71,
+        "long_tasks": 8,
+        "long_task_ms": 610,
+        "max_task_ms": 211,
+        "median_callback_p95_ms": 16.8
+      },
+      "after": {
+        "bundle_sha256": "4f243d09f9aa657e6a3c3a0ce30f5cfd552fe38546388c037831932919909353",
+        "evidence_sha256": "c1f889c15b5996f3d1053295008aabf575c6505eeee112349a262903f7cb11ba",
+        "round_cpu_ms": [
+          1074.31,
+          1008.1,
+          997.72
+        ],
+        "median_cpu_ms": 1008.1,
+        "long_tasks": 2,
+        "long_task_ms": 105,
+        "max_task_ms": 55,
+        "median_callback_p95_ms": 16.8
+      },
+      "median_cpu_change_percent": -30.56
+    },
+    {
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      },
+      "browser": "155.0.8059.86",
+      "cpu_rate": 4,
+      "before": {
+        "bundle_sha256": "9d43865eee9837f410b80abf8091c72e35266fb0973f8097d6d2e066e9671bf9",
+        "evidence_sha256": "a23835f6775770df88282785ea1a434e4d94655e866320f3095ea90953ea73ad",
+        "round_cpu_ms": [
+          1396.24,
+          1275.92,
+          1325.29
+        ],
+        "median_cpu_ms": 1325.29,
+        "long_tasks": 6,
+        "long_task_ms": 335,
+        "max_task_ms": 65,
+        "median_callback_p95_ms": 16.8
+      },
+      "after": {
+        "bundle_sha256": "4f243d09f9aa657e6a3c3a0ce30f5cfd552fe38546388c037831932919909353",
+        "evidence_sha256": "a3af322f110181226ae4efc40198b2d1851ca3aaa01d514370e2b703bb184521",
+        "round_cpu_ms": [
+          1432.95,
+          1358.57,
+          1417.19
+        ],
+        "median_cpu_ms": 1417.19,
+        "long_tasks": 8,
+        "long_task_ms": 468,
+        "max_task_ms": 68,
+        "median_callback_p95_ms": 16.8
+      },
+      "median_cpu_change_percent": 6.93
+    }
+  ]
+}

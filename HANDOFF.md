@@ -4,6 +4,27 @@ Last updated 2026-11-09. Read [AGENTS.md](AGENTS.md) first, then this file, then
 
 ## Web optimization follow-up — 2026-11-09
 
+**Freshness correction (owner review, 2026-11-09):** the original optimization
+commit `8e48ce1` started from local `d25a3f0`, missing the already available
+`d757536` on both `main` and `feature/premium-design`. The optimization branch
+now incorporates that latest main by merge, preserving its scanner, store/report,
+guide and backup/security fixes. The only merge conflict was two added PLAN
+sections; both were retained. All 56 upstream-changed files outside the five
+overlapping documentation files match main byte for byte. The final comparison
+to main contains only the 19 optimization/test/report files (including the new
+integration evidence). On the combined
+code: **589 Flutter tests and 945 backend tests pass**, analysis/formatting and
+release web build pass, Django checks and migration check pass, and 11 fake-Docker
+deployment-safety tests pass. Backend tests use a fresh PostgreSQL 18.4 cluster;
+the existing shop is untouched. Earlier 574-test and performance results below
+describe the pre-merge control, not a measurement of the current main baseline.
+Details and final browser evidence: [integration review](docs/performance/2026-11-09/README.md#repository-freshness-correction).
+The merged release also passes catalog pagination/lazy-photo checks at desktop
+1440 (RU/light/list), tablet 1024 (TK/dark/table) and phone 390 (RU/light/gallery),
+with no unexpected browser warnings/errors. Initial photo requests are 14, 9 and
+6 respectively. These checks do not establish a new before/after speed comparison.
+No merge into main or deployment is part of this correction.
+
 Owner authorized applicable improvements from Azat's optimization checklist.
 Branch `codex/web-performance`: catalog table rows are lazy slivers within
 one decorated surface; gallery/phone list rows also use builders as pages grow.
@@ -88,6 +109,80 @@ Owner request: look for flaws in the logic and make the system production ready.
 Verified: **783 backend tests passed before the changes and 788 after them** (the 5 new ones; PostgreSQL, this PC), Ruff check and format clean, `makemigrations --check` clean. The Flutter app was not changed and its tests were not rerun. Nothing was deployed.
 
 Known and left alone (decisions or small risks, for the owner): sales take batches in receipt order (FIFO), not earliest-expiry-first, as the owner decided; goods awaiting inspection from two different returns share one FIFO queue, so an inspection can move another return's batch at its cost (totals stay right, the split by condition can differ by cost); the sign-in limit is per address and user name, so a many-address attack on one user name is not capped; idempotency records and audit events are never pruned (small for a shop, worth a retention rule later); no error-reporting service is connected (monitoring, PLAN 10.1); quick-tunnel mode probably makes all visitors share one rate-limit address (see the checklist).
+
+# From main (merged 2026-11-08)
+
+## Production preparation and store acceptance (2026-10-27)
+
+The owner requested whole-store testing and smoother, understandable laptop,
+phone and especially Android tablet workflows. The tablet model and catalogue/
+staff size are unknown. The website remains the local test service; this is not
+a production deployment. The authoritative current findings and remaining release
+gates are in [PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).
+
+- Fixed sales barcode quantities showing all permitted locations as “here,” and
+  delayed cart additions surviving a location switch. Regression tests cover both.
+  Cart quantity actions now have actual 48 × 48 touch targets and localized button
+  labels; search results have a button role.
+- Compact layouts below 1000 pixels use immediate data/chart display while keeping
+  press feedback. The retained 820 × 1180 control measured 30.56% less median CPU
+  work (1451.71 → 1008.10 ms across five warm visits); longest task 211 → 55 ms.
+  Wide/landscape results varied, so their entrance behavior is retained. This is
+  synthetic local evidence, not tablet FPS. [Protocol](docs/performance/2026-10-27/README.md).
+- Fixed business-day report/dashboard comparisons when a device is on a different
+  date. Presets resolve on the server in the business timezone, including exports
+  and activity; charts use the returned period. Dashboard trend and headline cover
+  the same permitted locations and label all-locations totals accordingly.
+- Updated only security-affected DRF 3.18.1 → 3.18.3 and Pillow 12.3.0 → 13.0.0,
+  retaining the lockfile. Image opening explicitly allows JPEG/PNG/WebP. The
+  production dependency audit reports no known vulnerabilities after the updates;
+  this does not constitute a penetration test.
+- Backup/restore resolves this project's API files mount instead of the first
+  similarly named Docker volume. Backups use private permissions, serialize jobs,
+  pause a running API across both snapshots, validate temporary archives and
+  restart the API even on failure. Restore preflights archive integrity and the
+  mount before replacing records. Deployment health retains verified TLS.
+- **785 backend tests pass** on isolated PostgreSQL 18.4, **458 Flutter tests pass**,
+  analysis/formatting and the release web build pass. **11 fake-Docker safety tests**
+  and ShellCheck pass. CI retains PostgreSQL 16 and now also runs the disposable
+  HTTP store/load/restore check and deployment safety regressions.
+- Current UI acceptance passes in **Chromium and WebKit**, each at 390 × 844,
+  768 × 1024, 1024 × 768 and 1440 × 900. Each case completes a real sale and checks
+  stock, forces a read failure then retries, visits current modules and switches
+  Russian/Turkmen. Final cases deliberately use Pacific/Kiritimati device time
+  against the Ashgabat business. WebKit's exact polygon-mode extension warning is
+  recorded separately; unexpected browser errors still fail.
+- `scripts/qa/store_readiness.py` creates only a fresh disposable shop. Receiving,
+  sales at manual prices, returns, transfers, counts, warranty repair, private
+  expense files, report arithmetic and invalid/unauthorized operations pass over
+  real HTTP. Forty competing sales take exactly 37 available units (three stock
+  conflicts); eight simultaneous retries create one sale. All 120 mixed concurrent
+  reads succeed. Stock reconciliation passes before and after browser actions.
+- A dump restores to a second disposable database with all **57** table content
+  digests/counts equal. The private receipt file's hash matches after file restore;
+  the restored stock ledger reconciles. This proves local data recovery, not the
+  actual Docker/remote-storage recovery schedule, hardware compatibility or a
+  production capacity/SLA. The existing local shop also passed read-only ledger
+  reconciliation without changing its business records.
+- The running port-8000 website was updated with the final bundle and dependency
+  fixes; original product/sale/receipt/return/expense counts are unchanged and the
+  ledger still reconciles. Laptop, Wi-Fi HTTP and certificate-verified HTTPS health
+  and website requests return 200. Existing downloads and the public phone test CA
+  were preserved. The disposable performance server was stopped.
+
+Local evidence: `/tmp/erp-readiness-backend-final.log`,
+`/tmp/erp-readiness-flutter-final.log`, `/tmp/erp-readiness-deploy-final.log`,
+`/tmp/erp-readiness-chromium-final.log`, `/tmp/erp-readiness-webkit-final.log`.
+These files contain synthetic test evidence and are not committed. Older branch
+and prototype descriptions below are historical; current publication is on `main`.
+
+## Phone scan button and HTTP photo capture (2026-10-26)
+
+- Root cause: scanner availability was equated with a secure origin for live video, so ordinary HTTP Wi-Fi pages hid the scan action entirely. The real scanner now always offers a workflow: HTTPS/loopback/native retains live capture; insecure web origins open explicit photo capture/gallery and decode locally with the already bundled WASM reader. The shared search camera button also has its own accessible button semantics.
+- Photo capture uses the existing image_picker interface (`image/*`, `capture=environment`), with no new dependency. No image is uploaded. Unreadable/invalid/oversized images offer retry/manual entry; multiple distinct codes require explicit selection; cancellation or a late result after leaving changes nothing. Existing stock confirmation and explicit sales cart selection are retained.
+- Live-camera error panels also offer the photo route. Switching closes the camera session and suppresses late video detections. The web stream adapter now uses a native JavaScript promise continuation so permission rejections retain their `NotAllowedError` identity instead of being wrapped by a Dart Future round-trip. The browser regression verifies denied permission, successful photo fallback, ended tracks and an unchanged cart, as well as ordinary live scanning and early exits.
+- The running local web build was replaced with existing records and APK downloads preserved. The public test certificate was restored after the web-folder replacement. HTTP photo scanning needs no custom certificate; a live iPhone camera view still needs trusted HTTPS and browser permission.
+- **451 Flutter tests pass**, including seven focused photo-scanner tests in Russian/Turkmen covering cancellation, duplicate submission, retry, multiple codes, oversized input and route disposal. Flutter analysis and full formatting pass; the release web build succeeds. The real private-IP HTTP browser check passed photo/gallery capture, an unreadable image then retry, catalog/sales search and the receiving quantity form, with no stock/sale posted or image uploaded. It asserts the page really is insecure and blocks third-party origins. Chromium's existing COOP-header warning on HTTP is explicitly recorded; other application errors still fail the run. Physical iPhone photo-picker behavior remains unverified.
 
 ## Manual receiving, stock visibility, expiry and local role login (2026-10-26)
 

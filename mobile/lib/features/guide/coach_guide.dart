@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -18,7 +19,7 @@ class GuideStep {
 
 /// The first-time tips on each page, with arrows, "Next" and "Skip".
 class Guides {
-  /// Off in widget tests, so a tip never covers the screen a test is looking at.
+  /// Off in widget tests, so a tip never covers the screen under test.
   static bool enabled = true;
 
   static String _key(String id) => 'guide.$id.done';
@@ -66,7 +67,8 @@ class _GuideOnceState extends State<GuideOnce> {
   }
 
   Future<void> _start() async {
-    await Future<void>.delayed(const Duration(milliseconds: 900));
+    // let the page finish arriving (its own animations) before pointing at anything on it
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
     await showGuide(context, widget.steps);
     await Guides.markSeen(widget.preferences, widget.id);
@@ -86,26 +88,30 @@ Future<void> showGuide(BuildContext context, List<GuideStep> steps) =>
       pageBuilder: (_, _, _) => _GuideOverlay(steps: steps),
     );
 
-Element? _find(String name) {
-  Element? found;
-  void visit(Element e) {
-    if (found != null) return;
-    final key = e.widget.key;
-    if (key is ValueKey<String> && key.value == name) {
-      final box = e.renderObject;
-      if (box is RenderBox &&
-          box.attached &&
-          box.hasSize &&
-          !box.size.isEmpty) {
-        found = e;
-        return;
+/// The element of the first of [names] that is on screen (it keeps that key and has a size).
+Element? _find(List<String> names) {
+  for (final name in names) {
+    Element? found;
+    void visit(Element e) {
+      if (found != null) return;
+      final key = e.widget.key;
+      if (key is ValueKey<String> && key.value == name) {
+        final box = e.renderObject;
+        if (box is RenderBox &&
+            box.attached &&
+            box.hasSize &&
+            !box.size.isEmpty) {
+          found = e;
+          return;
+        }
       }
+      e.visitChildren(visit);
     }
-    e.visitChildren(visit);
-  }
 
-  WidgetsBinding.instance.rootElement?.visitChildren(visit);
-  return found;
+    WidgetsBinding.instance.rootElement?.visitChildren(visit);
+    if (found != null) return found;
+  }
+  return null;
 }
 
 class _GuideOverlay extends StatefulWidget {
@@ -117,62 +123,134 @@ class _GuideOverlay extends StatefulWidget {
 }
 
 class _GuideOverlayState extends State<_GuideOverlay> {
-  /// The steps that have something to point at, with where it is.
-  final List<(GuideStep, Rect)> _shown = [];
+  /// The steps that have something to point at (checked when the tips start).
+  late final List<GuideStep> _steps = [
+    for (final s in widget.steps)
+      if (_find(s.targets) != null) s,
+  ];
   int _index = 0;
-  bool _ready = false;
+  Element? _target;
+  Rect? _rect;
+  bool _scrolling = false;
+  bool _closed = false;
+
+  /// The tips' own drawing area. Where a control is, and how much room there is, are both
+  /// measured against this, never against the window, so the two always agree.
+  final _area = GlobalKey();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
-  }
-
-  Future<void> _measure() async {
-    for (final step in widget.steps) {
-      Element? target;
-      for (final name in step.targets) {
-        target = _find(name);
-        if (target != null) break;
-      }
-      if (target == null) continue;
-      try {
-        await Scrollable.ensureVisible(
-          target,
-          alignment: 0.4,
-          duration: const Duration(milliseconds: 150),
-        );
-      } on Object {
-        // not inside a scroll view: it is where it is
-      }
-      final box = target.renderObject;
-      if (box is! RenderBox || !box.attached) continue;
-      final rect = box.localToGlobal(Offset.zero) & box.size;
-      _shown.add((step, rect));
-    }
-    if (!mounted) return;
-    if (_shown.isEmpty) {
-      Navigator.of(context).pop();
+    if (_steps.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _close());
       return;
     }
-    setState(() => _ready = true);
+    _enter();
+    _follow();
+  }
+
+  void _close() {
+    if (_closed || !mounted) return;
+    _closed = true;
+    Navigator.of(context).pop();
+  }
+
+  /// Finds this step's control now (not earlier: the page may have moved since), brings it into
+  /// view, and starts pointing at it.
+  Future<void> _enter() async {
+    final step = _steps[_index];
+    final target = _find(step.targets);
+    if (target == null) {
+      _next();
+      return;
+    }
+    _target = target;
+    _rect = null;
+    _scrolling = true;
+    try {
+      await Scrollable.ensureVisible(
+        target,
+        alignment: 0.4,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    } on Object {
+      // not inside a scroll view: it is where it is
+    }
+    _scrolling = false;
+  }
+
+  /// Every frame: where the control is now. The tip follows it if the page still moves.
+  void _follow() {
+    if (_closed || !mounted) return;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (_closed || !mounted) return;
+      final target = _target;
+      if (target != null && !_scrolling) {
+        final box = target.mounted ? target.renderObject : null;
+        if (box is RenderBox && box.attached && box.hasSize) {
+          final area = _area.currentContext?.findRenderObject();
+          if (area is RenderBox && area.attached) {
+            final rect =
+                area.globalToLocal(box.localToGlobal(Offset.zero)) & box.size;
+            if (rect != _rect) setState(() => _rect = rect);
+          }
+        } else {
+          // the control went away (the page changed): look for it again, or move on
+          final again = _find(_steps[_index].targets);
+          if (again == null) {
+            _next();
+          } else {
+            _target = again;
+          }
+        }
+      }
+      _follow();
+    });
   }
 
   void _next() {
-    if (_index >= _shown.length - 1) {
-      Navigator.of(context).pop();
-    } else {
-      setState(() => _index++);
+    if (_index >= _steps.length - 1) {
+      _close();
+      return;
     }
+    setState(() {
+      _index++;
+      _rect = null;
+      _target = null;
+    });
+    _enter();
+  }
+
+  void _back() {
+    if (_index == 0) return;
+    setState(() {
+      _index--;
+      _rect = null;
+      _target = null;
+    });
+    _enter();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_ready) return const SizedBox.expand();
+    if (_steps.isEmpty) return const SizedBox.expand();
+    final rect = _rect;
+    return SizedBox.expand(
+      key: _area,
+      child: rect == null
+          ? const SizedBox.shrink()
+          : LayoutBuilder(
+              builder: (context, box) => _tip(context, box.biggest, rect),
+            ),
+    );
+  }
+
+  Widget _tip(BuildContext context, Size screen, Rect rect) {
     final l = strings(context);
-    final screen = MediaQuery.sizeOf(context);
-    final (step, rect) = _shown[_index];
+    final step = _steps[_index];
     final hole = rect.inflate(6);
+    // the tip goes on the side of the control that has more room
     final below = hole.center.dy < screen.height * 0.5;
     final width = (screen.width - 32).clamp(0.0, 330.0);
     final left = (hole.center.dx - width / 2).clamp(
@@ -180,7 +258,7 @@ class _GuideOverlayState extends State<_GuideOverlay> {
       screen.width - width - 16,
     );
     final arrowX = (hole.center.dx - left).clamp(24.0, width - 24);
-    final last = _index == _shown.length - 1;
+    final last = _index == _steps.length - 1;
     final card = Material(
       key: const ValueKey('guide-card'),
       color: Colors.transparent,
@@ -212,11 +290,11 @@ class _GuideOverlayState extends State<_GuideOverlay> {
               ),
             ),
             const SizedBox(height: 14),
-            if (_shown.length > 1)
+            if (_steps.length > 1)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  l.suStepOf(_index + 1, _shown.length),
+                  l.suStepOf(_index + 1, _steps.length),
                   style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
               ),
@@ -227,9 +305,15 @@ class _GuideOverlayState extends State<_GuideOverlay> {
               children: [
                 TextButton(
                   key: const ValueKey('guide-skip'),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: _close,
                   child: Text(l.suSkip),
                 ),
+                if (_index > 0)
+                  TextButton(
+                    key: const ValueKey('guide-back'),
+                    onPressed: _back,
+                    child: Text(l.pfBack),
+                  ),
                 FilledButton(
                   key: const ValueKey('guide-next'),
                   onPressed: _next,

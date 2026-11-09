@@ -1,5 +1,11 @@
 # Performance improvements — 2026-10-22
 
+Freshness correction (2026-11-09): the initial optimization branch missed main's
+`d757536`. It now includes that main; 589 Flutter and 945 backend tests pass on
+the combined code. The 30 → 14 comparison below is historical evidence from the
+old-base control, not a new comparison against latest main. See the
+[integration review](performance/2026-11-09/README.md#repository-freshness-correction).
+
 Follow-up (2026-11-09): the wide catalog table now builds nearby rows lazily;
 gallery and compact list widgets also use builders as pages accumulate. The
 encoded-photo cache now retains at most 16 MiB as well as 400 entries. A local

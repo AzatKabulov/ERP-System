@@ -1,5 +1,4 @@
 import 'package:erp_system/core/money/decimal_math.dart';
-import 'package:erp_system/features/reports/reports_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -30,6 +29,33 @@ Iterable<({String path, Map<String, String> query})> asked(
 
 void main() {
   group('dashboard', () {
+    testWidgets(
+      'comparison follows the report business day rather than the device clock',
+      (tester) async {
+        final rig = RealRig();
+        rig.server.reports.periodEnd = '2000-01-02';
+        rig.server.reports.salesDays = [
+          {
+            'date': '2000-01-01',
+            'count': 1,
+            'revenue': '240.00',
+            'refunds': '0.00',
+          },
+          {
+            'date': '2000-01-02',
+            'count': 2,
+            'revenue': '300.00',
+            'refunds': '0.00',
+          },
+        ];
+        await rig.launchSignedIn(tester);
+        expect(find.text('+25% ко вчера'), findsOneWidget);
+        expect(asked(rig, 'reports/sales/').last.query, {
+          'period': 'fortnight',
+        });
+      },
+    );
+
     testWidgets(
       'the owner sees today, the month, costs, stock and recent activity',
       (tester) async {
@@ -164,33 +190,25 @@ void main() {
       final rig = RealRig();
       await openReports(tester, rig);
       var last = asked(rig, 'reports/summary/').last.query;
-      final now = DateTime.now();
-      expect(last['date_from'], reportDay(DateTime(now.year, now.month, 1)));
-      expect(last['date_to'], reportDay(now));
+      expect(last['period'], 'month');
+      expect(last.containsKey('date_from'), isFalse);
+      expect(last.containsKey('date_to'), isFalse);
       expect(last.containsKey('location'), isFalse);
 
       await tapKey(tester, 'reports-period-week');
       await settle(tester);
       last = asked(rig, 'reports/summary/').last.query;
-      expect(
-        last['date_from'],
-        reportDay(DateTime(now.year, now.month, now.day - 6)),
-      );
+      expect(last['period'], 'week');
 
       await tapKey(tester, 'reports-period-today');
       await settle(tester);
       last = asked(rig, 'reports/summary/').last.query;
-      expect(last['date_from'], reportDay(now));
-      expect(last['date_to'], reportDay(now));
+      expect(last['period'], 'today');
 
       await tapKey(tester, 'reports-period-lastMonth');
       await settle(tester);
       last = asked(rig, 'reports/summary/').last.query;
-      expect(
-        last['date_from'],
-        reportDay(DateTime(now.year, now.month - 1, 1)),
-      );
-      expect(last['date_to'], reportDay(DateTime(now.year, now.month, 0)));
+      expect(last['period'], 'last_month');
 
       await tapKey(tester, 'reports-location');
       await settle(tester, ms: 400);
@@ -289,7 +307,8 @@ void main() {
       await settle(tester);
       final shared = rig.sharing.shared.single;
       final q = asked(rig, 'reports/sales/export/').single.query;
-      expect(shared.name, 'sales-${q['date_from']}-${q['date_to']}.csv');
+      expect(shared.name, 'sales-month.csv');
+      expect(q['period'], 'month');
       expect(shared.mimeType, 'text/csv');
       expect(shared.bytes.take(3).toList(), [0xEF, 0xBB, 0xBF]);
       expect(find.text('Файл отчёта готов.'), findsOneWidget);
@@ -367,14 +386,10 @@ void main() {
     testWidgets('follows the chosen period', (tester) async {
       final rig = RealRig();
       await openReports(tester, rig, tab: 'activity');
-      final now = DateTime.now();
-      expect(
-        asked(rig, 'audit/').last.query['date_from'],
-        reportDay(DateTime(now.year, now.month, 1)),
-      );
+      expect(asked(rig, 'audit/').last.query['period'], 'month');
       await tapKey(tester, 'reports-period-today');
       await settle(tester);
-      expect(asked(rig, 'audit/').last.query['date_from'], reportDay(now));
+      expect(asked(rig, 'audit/').last.query['period'], 'today');
     });
 
     testWidgets('is only offered with the audit right', (tester) async {

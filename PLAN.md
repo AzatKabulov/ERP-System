@@ -6,10 +6,24 @@
   use builders for gallery/compact rows, and bound retained photo-cache bytes.
   Regression tests and a local release-browser comparison are recorded in
   [the review](docs/performance/2026-11-09/README.md).
+- [x] Correct the outdated starting point by merging latest main `d757536` into
+  the optimization branch; preserve upstream changes and revalidate the combined
+  client/backend. No merge into main or deployment.
 - [ ] Physical-device and shop-network measurements remain part of phone/pilot
   acceptance; no production deployment was performed for these improvements.
 
+## Production preparation review (owner, 2026-10-27)
+
+Android tablets remain the primary device; model and shop size are unknown. See
+[production readiness](docs/PRODUCTION_READINESS.md) for confirmed fixes, automated
+store/load/recovery evidence and release blockers. A disposable restore drill is
+complete; production hosting, off-machine recovery, physical tablet acceptance,
+release signing and language review remain open. Do not mark Phase 10 complete
+from synthetic tests or a local web build.
+
 ## Phone web parity and receiving follow-up (owner, 2026-10-26)
+
+- [x] Keep scanning available on insecure phone web origins using local photo decoding; retain live video on trusted origins and existing receiving/sales confirmation behavior.
 
 - [x] Manual name-only receiving without a barcode; optional warranty and batch expiry; permitted stock totals on product search/detail; soon/expired catalog filters.
 - [x] Serialized camera cleanup with actual browser track-state verification, including late startup after closing.

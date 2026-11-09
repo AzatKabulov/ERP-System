@@ -9,7 +9,10 @@ if (process.env.ERP_E2E_DISPOSABLE !== 'true' || !process.env.PERF_OUT) {
 (async () => {
   const browser = await L.launch();
   try {
-    const {page, problems} = await L.newPage(browser, {width:390,height:844});
+    const viewport = {width:Number(process.env.PERF_WIDTH || 390), height:Number(process.env.PERF_HEIGHT || 844)};
+    if (!Number.isInteger(viewport.width) || !Number.isInteger(viewport.height) ||
+        viewport.width < 320 || viewport.height < 320) throw Error('Use viewport dimensions of at least 320 pixels.');
+    const {page, problems} = await L.newPage(browser, viewport);
     await L.boot(page);
     await L.clickLabel(page, 'Войти', {which:'last',wait:300});
     await L.clickLabel(page, 'Владелец', {wait:1200});
@@ -56,8 +59,8 @@ if (process.env.ERP_E2E_DISPOSABLE !== 'true' || !process.env.PERF_OUT) {
       console.log(JSON.stringify({round,taskWorkMs:visits.reduce((a,v)=>a+v.taskWorkMs,0),longTaskMs:visits.reduce((a,v)=>a+v.longTaskMs,0),longTasks:visits.reduce((a,v)=>a+v.longTasks,0)}));
     }
     const bundle = await (await page.request.get(new URL('/main.dart.js',L.URL).href)).body();
-    const result={browser:browser.version(),viewport:{width:390,height:844},cpuRate:4,
-      scenario:'Warm phone navigation: Products, Sales, Stock, Overview, Products; 300 synthetic products; 1200ms per visit; semantics enabled',
+    const result={browser:browser.version(),viewport,cpuRate:4,
+      scenario:'Warm responsive navigation: Products, Sales, Stock, Overview, Products; 300 synthetic products; 1200ms per visit; semantics enabled',
       bundleSha256:crypto.createHash('sha256').update(bundle).digest('hex'),samples,problems};
     fs.writeFileSync(process.env.PERF_OUT,JSON.stringify(result,null,2));
     if (problems.length) throw Error(problems.join('\n'));

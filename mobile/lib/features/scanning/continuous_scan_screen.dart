@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../widgets/common.dart';
 import 'scanner_session.dart';
 import 'scan_screen.dart' show ScanErrorPanel;
+import 'photo_scan_screen.dart';
 
 /// Full-screen camera that stays open while a box is counted in. Each item shown to the camera
 /// is passed to [onCode] once: a code is counted again only after nothing was read for a moment
@@ -51,6 +53,7 @@ class _ContinuousScanScreenState extends State<ContinuousScanScreen> {
 
   late final _session = ScannerSession(_controller);
   bool _closing = false;
+  bool _photoMode = false;
 
   @override
   void initState() {
@@ -65,6 +68,12 @@ class _ContinuousScanScreenState extends State<ContinuousScanScreen> {
     _closing = true;
     unawaited(_session.close());
     Navigator.of(context).pop(code);
+  }
+
+  void _usePhoto() {
+    _closing = true;
+    unawaited(_session.close());
+    setState(() => _photoMode = true);
   }
 
   @override
@@ -95,6 +104,13 @@ class _ContinuousScanScreenState extends State<ContinuousScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_photoMode) {
+      return PhotoScanScreen(
+        onCode: widget.onCode,
+        changes: widget.changes,
+        status: widget.status,
+      );
+    }
     final l = strings(context);
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -139,6 +155,7 @@ class _ContinuousScanScreenState extends State<ContinuousScanScreen> {
                 denied:
                     error.errorCode == MobileScannerErrorCode.permissionDenied,
                 onManual: () => _close(),
+                onPhoto: kIsWeb ? _usePhoto : null,
               ),
             ),
             Positioned(

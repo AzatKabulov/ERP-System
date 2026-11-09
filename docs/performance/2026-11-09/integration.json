@@ -1,0 +1,89 @@
+{
+  "original_base": "d25a3f0e6c7b71fbc086c5105f63e0e78e7424f9",
+  "upstream_main": "d757536d33ff692ceb5951e83d4e531cbb98bfaf",
+  "upstream_premium": "d757536d33ff692ceb5951e83d4e531cbb98bfaf",
+  "upstream_changed_files_preserved_exactly": 56,
+  "overlapping_documentation_files": 5,
+  "checks": {
+    "flutter_tests": 589,
+    "backend_tests": 945,
+    "postgresql": "18.4 (fresh disposable cluster)",
+    "deployment_safety_tests": 11,
+    "flutter_analysis": "passed",
+    "dart_format": "passed",
+    "backend_ruff": "passed",
+    "django_check": "passed",
+    "missing_migrations": "none",
+    "release_web_build": "passed"
+  },
+  "catalog_browser_cases": [
+    {
+      "browser": "156.0.8078.80",
+      "viewport": {
+        "width": 1024,
+        "height": 900
+      },
+      "language": "tk",
+      "scheme": "dark",
+      "view": "list",
+      "cpuRate": 4,
+      "scenario": "Fresh catalog visit, first 30 of 300 synthetic products with photos; then scroll and load next page",
+      "bundleSha256": "7375c850ef7f5137d6ae4c5e5b1bcac1ca43b1f3a2edab0fcbca05f2ed3e6e08",
+      "samples": [
+        {
+          "round": 0,
+          "initialPhotoRequests": 9,
+          "afterPagingPhotoRequests": 41,
+          "taskWorkMs": 394.184
+        }
+      ]
+    },
+    {
+      "browser": "156.0.8078.80",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "language": "ru",
+      "scheme": "light",
+      "view": "list",
+      "cpuRate": 4,
+      "scenario": "Fresh catalog visit, first 30 of 300 synthetic products with photos; then scroll and load next page",
+      "bundleSha256": "7375c850ef7f5137d6ae4c5e5b1bcac1ca43b1f3a2edab0fcbca05f2ed3e6e08",
+      "samples": [
+        {
+          "round": 0,
+          "initialPhotoRequests": 14,
+          "afterPagingPhotoRequests": 45,
+          "taskWorkMs": 420.899
+        }
+      ]
+    },
+    {
+      "browser": "156.0.8078.80",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "language": "ru",
+      "scheme": "light",
+      "view": "gallery",
+      "cpuRate": 4,
+      "scenario": "Fresh catalog visit, first 30 of 300 synthetic products with photos; then scroll and load next page",
+      "bundleSha256": "7375c850ef7f5137d6ae4c5e5b1bcac1ca43b1f3a2edab0fcbca05f2ed3e6e08",
+      "samples": [
+        {
+          "round": 0,
+          "initialPhotoRequests": 6,
+          "afterPagingPhotoRequests": 38,
+          "taskWorkMs": 387.64799999999997
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Original before/after performance comparison predates this integration.",
+    "Integrated browser cases verify lazy loading and pagination, not a new before/after timing improvement.",
+    "No production deployment, main update, physical-device check or PostgreSQL 16 run."
+  ]
+}

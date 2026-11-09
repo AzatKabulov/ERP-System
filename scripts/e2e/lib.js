@@ -2,7 +2,7 @@
 // Flutter web draws to a canvas, so the run drives the accessibility tree: it enables
 // semantics, finds nodes by their label, clicks their centre and types into the real
 // <input> elements. Nothing here is part of the app.
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '/opt/node-tools/node_modules/playwright');
+const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || '/opt/node-tools/node_modules/playwright');
 const URL = process.env.E2E_WEB_URL || 'http://127.0.0.1:8080/';
 const IGNORE = [/software WebGL/i, /GPU stall due to ReadPixels/i];
 const results = [];
@@ -110,7 +110,8 @@ async function boot(page) {
   await enableSemantics(page);
 }
 async function newPage(browser, viewport = { width: 1440, height: 900 }) {
-  const ctx = await browser.newContext({ viewport });
+  const ctx = await browser.newContext({ viewport,
+    ...(process.env.E2E_TIMEZONE ? {timezoneId:process.env.E2E_TIMEZONE} : {}) });
   const page = await ctx.newPage();
   const problems = [];
   page.on('console', (m) => {
@@ -122,6 +123,7 @@ async function newPage(browser, viewport = { width: 1440, height: 900 }) {
   return { ctx, page, problems };
 }
 async function launch() {
+  if (process.env.E2E_BROWSER === 'webkit') return webkit.launch({headless:true});
   return chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium', headless: true, args: ['--no-sandbox'] });
 }
 module.exports = { URL, results, check, enableSemantics, text, waitText, expectText, expectNoText, clickLabel, fill, boot, newPage, launch };

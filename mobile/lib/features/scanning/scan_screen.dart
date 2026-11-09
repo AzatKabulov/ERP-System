@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../widgets/common.dart';
 import 'scanner_session.dart';
+import 'photo_scan_screen.dart';
 
 /// Full-screen camera view. Returns the first code it reads. If the camera cannot
 /// be used it explains why and offers to type the code instead.
@@ -33,6 +35,7 @@ class _ScanScreenState extends State<ScanScreen> {
     ],
   );
   bool _done = false;
+  bool _photoMode = false;
 
   late final _session = ScannerSession(_controller);
   bool _closing = false;
@@ -50,6 +53,12 @@ class _ScanScreenState extends State<ScanScreen> {
     _closing = true;
     unawaited(_session.close());
     Navigator.of(context).pop(code);
+  }
+
+  void _usePhoto() {
+    _done = true;
+    unawaited(_session.close());
+    setState(() => _photoMode = true);
   }
 
   @override
@@ -73,6 +82,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_photoMode) return const PhotoScanScreen();
     final l = strings(context);
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -114,6 +124,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 denied:
                     error.errorCode == MobileScannerErrorCode.permissionDenied,
                 onManual: () => _close(),
+                onPhoto: kIsWeb ? _usePhoto : null,
               ),
             ),
             Positioned(
@@ -143,10 +154,12 @@ class ScanErrorPanel extends StatelessWidget {
     super.key,
     required this.denied,
     required this.onManual,
+    this.onPhoto,
   });
 
   final bool denied;
   final VoidCallback onManual;
+  final VoidCallback? onPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -168,6 +181,15 @@ class ScanErrorPanel extends StatelessWidget {
                 style: const TextStyle(color: Colors.white, height: 1.5),
               ),
               const SizedBox(height: 20),
+              if (onPhoto != null) ...[
+                PrimaryButton(
+                  key: const ValueKey('scan-error-photo'),
+                  label: l.photoScanChoose,
+                  icon: AppIcons.image,
+                  onPressed: onPhoto,
+                ),
+                const SizedBox(height: 12),
+              ],
               PrimaryButton(
                 key: const ValueKey('scan-error-manual'),
                 label: l.enterManually,

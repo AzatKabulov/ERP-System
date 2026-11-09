@@ -110,6 +110,32 @@ void main() {
       },
     );
 
+    testWidgets('on a phone every tip sits next to the control it is about', (
+      tester,
+    ) async {
+      final rig = RealRig();
+      await rig.launch(tester, size: const Size(393, 800));
+      Guides.enabled = true;
+      await rig.signIn(tester);
+      await settle(tester, ms: 3000);
+      for (final tab in ['tab-sales', 'tab-products', 'tab-inventory']) {
+        final card = tester.getRect(key('guide-card'));
+        final target = tester.getRect(key(tab));
+        // the tab bar is at the bottom: the tip is above it, over the right tab
+        expect(card.bottom, lessThanOrEqualTo(target.top + 1), reason: tab);
+        expect(card.left, lessThanOrEqualTo(target.right), reason: tab);
+        expect(card.right, greaterThanOrEqualTo(target.left), reason: tab);
+        await tester.tap(key('guide-next'));
+        await settle(tester, ms: 600);
+      }
+      // the last tip points at the help button at the top: the tip is below it
+      final help = tester.getRect(key('help-button'));
+      expect(
+        tester.getRect(key('guide-card')).top,
+        greaterThanOrEqualTo(help.bottom - 1),
+      );
+    });
+
     testWidgets('can be switched on again from Settings', (tester) async {
       final rig = RealRig();
       await rig.launch(tester, prefsValues: {'guide.dashboard.done': true});

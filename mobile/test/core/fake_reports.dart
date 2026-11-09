@@ -48,6 +48,8 @@ class FakeReports {
   /// Net sales the profit leaves out, and how many sale lines that is (no known cost yet).
   String withoutCost = '0.00';
   int withoutCostLines = 0;
+  String? periodEnd;
+  List<Map<String, dynamic>>? salesDays;
 
   Map<String, dynamic> summary() => {
     'revenue': '540.00',
@@ -68,6 +70,7 @@ class FakeReports {
   };
 
   Map<String, dynamic> sales() => {
+    if (periodEnd != null) 'period': {'to': periodEnd},
     'sales_count': 3,
     'revenue': '540.00',
     'refunds': '120.00',
@@ -83,20 +86,22 @@ class FakeReports {
       {'method': 'cash', 'count': 2, 'total': '300.00'},
       {'method': 'card', 'count': 1, 'total': '240.00'},
     ],
-    'by_day': [
-      {
-        'date': '2026-10-06',
-        'count': 1,
-        'revenue': '240.00',
-        'refunds': '0.00',
-      },
-      {
-        'date': '2026-10-07',
-        'count': 2,
-        'revenue': '300.00',
-        'refunds': '120.00',
-      },
-    ],
+    'by_day':
+        salesDays ??
+        [
+          {
+            'date': '2026-10-06',
+            'count': 1,
+            'revenue': '240.00',
+            'refunds': '0.00',
+          },
+          {
+            'date': '2026-10-07',
+            'count': 2,
+            'revenue': '300.00',
+            'refunds': '120.00',
+          },
+        ],
     'top_products': [
       {
         'product': 'p-seed-1',

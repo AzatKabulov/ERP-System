@@ -443,6 +443,13 @@
   "scanTorch": "Fonar",
   "cameraDenied": "Kamera elýeterli däl. Sazlamalarda rugsat beriň ýa-da ştrih-kody el bilen giriziň.",
   "cameraUnavailable": "Bu enjamda kamera ýok.",
+  "photoScanHint": "Ştrih-koduň tutuşlygyna düşýän aýdyň suratyny alyň. Kod awtomatik okalar. Surat enjamda işlenýär we serwere iberilmeýär.",
+  "photoScanTake": "Ştrih-kody surata almak",
+  "photoScanChoose": "Ştrih-koduň suratyny saýlamak",
+  "photoScanReading": "Ştrih-kod okalýar…",
+  "photoScanNotFound": "Ştrih-kod tapylmady. Ýalpyldysyz, has ýakyndan surata alyň ýa-da kody el bilen giriziň.",
+  "photoScanFailed": "Suraty okap bolmady. Başga surat saýlaň ýa-da kody el bilen giriziň.",
+  "photoScanMultiple": "Suratda birnäçe kod bar. Gerekli kody saýlaň:",
   "enterManually": "El bilen girizmek",
   "scannedCode": "Okalan kod: {code}",
   "errorBarcodeNotFound": "Bu ştrih-kodly haryt tapylmady.",
@@ -471,7 +478,7 @@
   "conditionDamaged": "Zaýalanan",
   "conditionInspection": "Barlaga garaşýar",
   "conditionInTransit": "Ýolda",
-  "unitCostLabel": "Birligiň öz bahasy, TMT",
+  "unitCostLabel": "Bir sany üçin satyn alyş bahasy, TMT",
   "addLineProduct": "Haryt goşmak",
   "removeLine": "Setiri aýyrmak",
   "directionIn": "Giriş",
@@ -1786,5 +1793,6 @@
   "guSalesCheckout": "Hemmesi saýlanda şu ýere basyň: satuw geçirilýär we çek peýda bolýar. Haryt setirindäki bahany üýtgedip bolýar.",
   "guStockMore": "Bu ýerde «Haryt galyndysyny girizmek» (başlanda bir gezek) we «Düzediş» (tapawut tapsaňyz).",
   "guStockIntake": "Täze haryt geldimi? Ony şu ýerde kabul ediň.",
-  "guStockSearch": "Harydyň nirede we näçe barlygyny görmek üçin ony tapyň."
+  "guStockSearch": "Harydyň nirede we näçe barlygyny görmek üçin ony tapyň.",
+  "unitCostHelp": "Bir sany üçin näçe töländigi. Bu satuw bahasy däl: satuw bahasy üýtgemeýär, ony haryt kartasynda üýtgedýärler."
 }

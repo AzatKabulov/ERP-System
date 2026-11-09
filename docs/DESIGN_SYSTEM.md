@@ -6,6 +6,13 @@ Status: Implemented in the Flutter app. The structure and module list come from 
 
 Calm, precise and expensive-looking: a **cool, luminous field** (pale blue-grey in the light scheme, ink-blue in the dark one) with three soft pools of colour behind **frosted glass** panes, deep navy-ink text, **cobalt** for action and selection, and a small set of accents that each have one job. The one deep surface (the spotlight and the sign-in panel) runs navy into cobalt. Motion explains state: things arrive, switches glide, figures count up.
 
+Phone/tablet performance update (2026-10-27): below a 1000-pixel viewport, data and
+charts appear immediately. Skip decorative page fades, staggered card arrivals,
+counting figures and chart draw-in; keep short press/selection feedback. The
+compact-tablet path showed lower navigation work in the local CPU-throttled
+control; wider layouts retain their entrance behavior. Palette,
+typography, layout and available features stay consistent with the wide interface.
+
 The brand mark (a blue-to-violet square with an "E") is kept and the interface is built around it. No gold or brass anywhere.
 
 Where glass is used, and where it is not:
