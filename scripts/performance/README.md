@@ -1,5 +1,35 @@
 # Reproducible navigation experiment
 
+## Catalog photo-download control (2026-11-09)
+
+Start `sample_server.py` with `--photos` and a fresh marked data folder to give
+its 300 synthetic products generated pictures. Use the same fixture for both
+release bundles. `catalog_benchmark.js` requires a loopback URL, the fixture's
+marker, explicit output and the existing Playwright/Chromium installations:
+
+```sh
+ERP_E2E_DISPOSABLE=true E2E_WEB_URL=http://127.0.0.1:8001/ \
+PERF_SAMPLE_DATA=local-data/performance/new-run/server \
+PERF_OUT=local-data/performance/new-run/catalog.json \
+PLAYWRIGHT_MODULE=/path/to/node_modules/playwright \
+CHROMIUM_PATH=/path/to/chromium \
+node scripts/performance/catalog_benchmark.js
+```
+
+It opens three fresh browser contexts at 1440 × 1000 with CPU 4×, signs in through
+the local sample-role chooser, visits the list, records initial photo requests
+and CDP task work, then scrolls and verifies a successful second page and more
+photos. Authentication and setting the synthetic owner's profile language are
+outside capture; guides are marked seen in each test context. JSON contains
+counts, timings and the bundle hash; screenshots contain
+only the sample shop. Set `PERF_ASSERT_LAZY=true` for the optimized build to reject
+eager fetching of all 30 photos. Optional `PERF_WIDTH`, `PERF_HEIGHT`,
+`PERF_LANGUAGE=ru|tk`, `PERF_SCHEME=light|dark`, `PERF_VIEW=list|gallery` and
+`PERF_SAMPLES` select responsive checks. No stock or financial commands are sent.
+See [results and limitations](../../docs/performance/2026-11-09/README.md).
+
+## Navigation controls
+
 For the later phone-layout control, use `phone_benchmark.js` with
 `ERP_E2E_DISPOSABLE=true`, `E2E_WEB_URL`, `PERF_OUT` (output JSON file),
 `PLAYWRIGHT_MODULE` and `CHROMIUM_PATH`. It uses local sample-role login, warms

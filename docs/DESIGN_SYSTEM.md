@@ -124,6 +124,10 @@ Material chips are themed to the design: a pill with a hairline; the selected ch
 | Reports | Page head, period chips and place filter, tabs, metric cards; the sales tab also draws revenue by day from the report's own rows |
 | Settings | Tabs (account, shop, staff); cards per area; **Appearance** (theme) and language |
 
+Catalog tables keep a single glass surface with the shared radius, rim and shadow;
+their rows are built only near the viewport, like the gallery and phone list.
+Scrolling does not create a separate shadow or blur per table row.
+
 Imports show a preview, errors and a clear apply step. Recovery screens stay separate from ordinary stock operations.
 
 ## Interaction States

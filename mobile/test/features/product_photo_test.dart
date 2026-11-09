@@ -43,6 +43,50 @@ void main() {
   setUp(() => PhotoCache.instance.clear());
 
   group('pictures in the catalog', () {
+    for (final locale in ['ru', 'tk']) {
+      testWidgets('a wide table downloads only nearby pictures in $locale', (
+        tester,
+      ) async {
+        final rig = RealRig();
+        (rig.server.me['user'] as Map)['preferred_language'] = locale;
+        for (var i = 0; i < 30; i++) {
+          hasPicture(
+            rig,
+            seedProduct(rig.server, sku: 'TABLE-$i', name: 'Ýag süzgüji Ё $i'),
+          );
+        }
+        await rig.launch(
+          tester,
+          prefsValues: {'catalog_view': 'list', 'language': locale},
+        );
+        await rig.signIn(tester);
+        await tapKey(tester, 'nav-products');
+        await settle(tester);
+        expect(find.text(locale == 'tk' ? 'Harytlar' : 'Товары'), findsWidgets);
+        final initial = rig.server.photoDownloads.length;
+        expect(initial, greaterThan(0));
+        expect(initial, lessThan(20));
+        expect(key('product-TABLE-29'), findsNothing);
+        final scrollable = find
+            .descendant(
+              of: key('catalog-scroll'),
+              matching: find.byType(Scrollable),
+            )
+            .first;
+        await tester.scrollUntilVisible(
+          key('product-TABLE-29'),
+          500,
+          scrollable: scrollable,
+        );
+        await settle(tester);
+        expect(rig.server.photoDownloads.length, greaterThan(initial));
+        await tapKey(tester, 'product-TABLE-29');
+        await settle(tester);
+        expect(key('pd-name'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
     testWidgets('a phone gallery only downloads pictures near the viewport', (
       tester,
     ) async {
@@ -63,7 +107,7 @@ void main() {
       expect(key('product-LAZY-29'), findsNothing);
       final scrollable = find
           .descendant(
-            of: find.byType(ListView).last,
+            of: key('catalog-scroll'),
             matching: find.byType(Scrollable),
           )
           .first;
@@ -324,7 +368,7 @@ void main() {
             200,
             scrollable: find
                 .descendant(
-                  of: find.byType(ListView).last,
+                  of: key('catalog-scroll'),
                   matching: find.byType(Scrollable),
                 )
                 .first,

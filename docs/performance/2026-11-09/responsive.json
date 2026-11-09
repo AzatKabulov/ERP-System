@@ -1,0 +1,107 @@
+[
+  {
+    "browser": "156.0.8078.80",
+    "viewport": {
+      "width": 1024,
+      "height": 900
+    },
+    "language": "ru",
+    "scheme": "light",
+    "view": "gallery",
+    "cpuRate": 4,
+    "scenario": "Fresh catalog visit, first 30 of 300 synthetic products with photos; then scroll and load next page",
+    "bundleSha256": "8d82f27437c1f66a2d95d5c6c2abef5f07cc23b1003bf4f133a87b61442cd472",
+    "samples": [
+      {
+        "round": 0,
+        "initialPhotoRequests": 12,
+        "afterPagingPhotoRequests": 48,
+        "taskWorkMs": 426.949
+      }
+    ]
+  },
+  {
+    "browser": "156.0.8078.80",
+    "viewport": {
+      "width": 1024,
+      "height": 900
+    },
+    "language": "tk",
+    "scheme": "dark",
+    "view": "list",
+    "cpuRate": 4,
+    "scenario": "Fresh catalog visit, first 30 of 300 synthetic products with photos; then scroll and load next page",
+    "bundleSha256": "8d82f27437c1f66a2d95d5c6c2abef5f07cc23b1003bf4f133a87b61442cd472",
+    "samples": [
+      {
+        "round": 0,
+        "initialPhotoRequests": 9,
+        "afterPagingPhotoRequests": 41,
+        "taskWorkMs": 380.02799999999996
+      }
+    ]
+  },
+  {
+    "browser": "156.0.8078.80",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "language": "tk",
+    "scheme": "dark",
+    "view": "list",
+    "cpuRate": 4,
+    "scenario": "Fresh catalog visit, first 30 of 300 synthetic products with photos; then scroll and load next page",
+    "bundleSha256": "8d82f27437c1f66a2d95d5c6c2abef5f07cc23b1003bf4f133a87b61442cd472",
+    "samples": [
+      {
+        "round": 0,
+        "initialPhotoRequests": 14,
+        "afterPagingPhotoRequests": 45,
+        "taskWorkMs": 422.17199999999997
+      }
+    ]
+  },
+  {
+    "browser": "156.0.8078.80",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "language": "ru",
+    "scheme": "light",
+    "view": "gallery",
+    "cpuRate": 4,
+    "scenario": "Fresh catalog visit, first 30 of 300 synthetic products with photos; then scroll and load next page",
+    "bundleSha256": "8d82f27437c1f66a2d95d5c6c2abef5f07cc23b1003bf4f133a87b61442cd472",
+    "samples": [
+      {
+        "round": 0,
+        "initialPhotoRequests": 6,
+        "afterPagingPhotoRequests": 38,
+        "taskWorkMs": 376.243
+      }
+    ]
+  },
+  {
+    "browser": "156.0.8078.80",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "language": "tk",
+    "scheme": "dark",
+    "view": "list",
+    "cpuRate": 4,
+    "scenario": "Fresh catalog visit, first 30 of 300 synthetic products with photos; then scroll and load next page",
+    "bundleSha256": "8d82f27437c1f66a2d95d5c6c2abef5f07cc23b1003bf4f133a87b61442cd472",
+    "samples": [
+      {
+        "round": 0,
+        "initialPhotoRequests": 5,
+        "afterPagingPhotoRequests": 37,
+        "taskWorkMs": 351.325
+      }
+    ]
+  }
+]

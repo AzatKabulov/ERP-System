@@ -460,6 +460,15 @@ Provider availability and API connectivity must be tested from the pilot's netwo
 
 ### Development Today
 
+The catalog uses one `CustomScrollView`: table rows, phone tiles and gallery rows
+are built by sliver delegates near the viewport. The wide table keeps one decorated
+surface without laying out every loaded row. `PhotoCache` retains at most 400
+entries and 16 MiB of encoded image bytes, evicting least recently used entries;
+an oversized image is delivered without retaining it. Decoded images and active
+widgets have separate lifetimes, so this is not a process-memory limit. Cache
+clearing still prevents older in-flight downloads from repopulating it after
+sign-out. See [the November web review](performance/2026-11-09/README.md).
+
 The local launcher prepares gzip sidecars for public web resources once at startup and serves them only when the client accepts gzip and the sidecar is at least as new as the original. Content types and conditional revalidation are retained; private API files and APKs are excluded. The client keeps animation child trees stable and renders catalog gallery rows lazily. Measurements and regression checks are recorded in [PERFORMANCE.md](PERFORMANCE.md).
 
 The Codex and Claude Code cloud environments run the Flutter development workflow, the backend tests and an internal web smoke server. They are not the production hosting environment. Setup/run commands are in [README.md](../README.md) and `AGENTS.md`. Pull requests and pushes run CI (`.github/workflows/ci.yml`): the Flutter checks and a debug APK build (the only place Android compiles when the cloud VM cannot download the Android SDK), the backend checks against a PostgreSQL service, and a container image build. `backend/Dockerfile`, `infra/docker-compose.yml` and `infra/README.md` describe how to run the API; they do not deploy anything by themselves.

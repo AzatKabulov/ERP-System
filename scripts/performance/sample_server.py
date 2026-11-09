@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--data", type=Path, required=True)
 parser.add_argument("--web", type=Path, required=True)
 parser.add_argument("--port", type=int, default=8001)
+parser.add_argument("--photos", action="store_true", help="Add synthetic product photos")
 args = parser.parse_args()
 data = args.data.resolve()
 marker = data / ".performance-sample"
@@ -61,6 +62,29 @@ def prepare(*values):
             )
     if Product.objects.filter(business=business).count() != 300:
         raise RuntimeError("Performance fixture changed; use a fresh disposable folder.")
+    if args.photos:
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image, ImageDraw
+
+        from apps.catalog.photos import set_photo
+
+        for index, product in enumerate(Product.objects.filter(business=business).order_by("sku")):
+            if hasattr(product, "photo"):
+                continue
+            image = Image.new("RGB", (320, 240), (230, 235, 255))
+            draw = ImageDraw.Draw(image)
+            draw.rectangle((40, 40, 280, 200), fill=(40, 60 + index % 120, 190))
+            draw.text((60, 100), f"TEST {index:04d}", fill="white")
+            encoded = BytesIO()
+            image.save(encoded, "PNG")
+            set_photo(
+                business,
+                owner,
+                product,
+                SimpleUploadedFile("fixture.png", encoded.getvalue(), content_type="image/png"),
+            )
     return original_extract(*values)
 
 

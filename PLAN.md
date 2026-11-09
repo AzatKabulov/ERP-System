@@ -1,5 +1,14 @@
 # Delivery Plan
 
+## Web performance follow-up (owner, 2026-11-09)
+
+- [x] Adapt Azat's checklist to Flutter Web; fix eager catalog-table rendering,
+  use builders for gallery/compact rows, and bound retained photo-cache bytes.
+  Regression tests and a local release-browser comparison are recorded in
+  [the review](docs/performance/2026-11-09/README.md).
+- [ ] Physical-device and shop-network measurements remain part of phone/pilot
+  acceptance; no production deployment was performed for these improvements.
+
 ## Phone web parity and receiving follow-up (owner, 2026-10-26)
 
 - [x] Manual name-only receiving without a barcode; optional warranty and batch expiry; permitted stock totals on product search/detail; soon/expired catalog filters.

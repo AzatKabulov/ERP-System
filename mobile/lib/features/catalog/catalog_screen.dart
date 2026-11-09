@@ -372,144 +372,158 @@ class _CatalogScreenState extends State<CatalogScreen> {
             children: filterChips,
           );
     final gutter = compact ? 16.0 : 32.0;
-    return ListView(
-      padding: pagePadding(context, compact: compact, gutter: gutter),
-      children: [
-        PageHead(
-          title: l.products,
-          subtitle: _loading && _items.isEmpty ? null : l.productsCount(_count),
-          subtitleWidget: _loading && _items.isEmpty
-              ? const SubtitleLoadingSkeleton()
-              : null,
-          // the main button first, the side menu after it
-          actions: [?add, if (hasSecondary) more],
+    final leading = <Widget>[
+      PageHead(
+        title: l.products,
+        subtitle: _loading && _items.isEmpty ? null : l.productsCount(_count),
+        subtitleWidget: _loading && _items.isEmpty
+            ? const SubtitleLoadingSkeleton()
+            : null,
+        // the main button first, the side menu after it
+        actions: [?add, if (hasSecondary) more],
+      ),
+      const SizedBox(height: 24),
+      // Row 1: the search with its camera button, and the way to see the products.
+      if (compact) ...[
+        search,
+        const SizedBox(height: 12),
+        Align(alignment: Alignment.centerLeft, child: toggle),
+      ] else
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: search),
+            const SizedBox(width: 12),
+            toggle,
+          ],
         ),
-        const SizedBox(height: 24),
-        // Row 1: the search with its camera button, and the way to see the products.
-        if (compact) ...[
-          search,
-          const SizedBox(height: 12),
-          Align(alignment: Alignment.centerLeft, child: toggle),
-        ] else
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: search),
-              const SizedBox(width: 12),
-              toggle,
+      const SizedBox(height: 14),
+      filters,
+      const SizedBox(height: 20),
+      if (_items.any(
+        (p) => p.expiryStatus == 'soon' || p.expiryStatus == 'expired',
+      ))
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: NoticeBanner(
+            key: const ValueKey('catalog-expiry-alert'),
+            text: l.expiryAttention,
+            icon: AppIcons.warning,
+            tone: StatusTone.warning,
+          ),
+        ),
+      if (_error != null)
+        ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
+      else if (_loading && _items.isEmpty)
+        CatalogLoadingSkeleton(
+          gallery: _gallery,
+          compact: compact,
+          withStock: widget.session.can('stock.view'),
+        )
+      else if (_items.isEmpty)
+        SurfaceCard(
+          child: _scannedCode != null && _canManage
+              ? Column(
+                  children: [
+                    EmptyState(
+                      title: l.errorBarcodeNotFound,
+                      subtitle: l.scannedCode(_scannedCode!),
+                      icon: AppIcons.qr,
+                    ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('catalog-add-scanned'),
+                      onPressed: () => _add(barcode: _scannedCode),
+                      icon: const AppIcon(AppIcons.plus),
+                      label: Text(l.addProduct),
+                    ),
+                  ],
+                )
+              : searching
+              ? EmptyState(title: l.noResults, subtitle: l.noResultsHint)
+              : EmptyState(
+                  key: const ValueKey('catalog-empty'),
+                  title: l.noProducts,
+                  subtitle: l.noProductsHint,
+                  icon: AppIcons.overview,
+                  action: _canManage
+                      ? PrimaryButton(
+                          key: const ValueKey('catalog-empty-add'),
+                          label: l.addProduct,
+                          icon: AppIcons.plus,
+                          onPressed: () => _add(),
+                        )
+                      : null,
+                ),
+        ),
+    ];
+    final hasItems = _error == null && _items.isNotEmpty;
+    final columns = ((width - gutter * 2 + 16) / 186).floor().clamp(2, 5);
+    return CustomScrollView(
+      key: const ValueKey('catalog-scroll'),
+      slivers: [
+        SliverPadding(
+          padding: pagePadding(context, compact: compact, gutter: gutter),
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              SliverList.list(children: leading),
+              if (hasItems)
+                if (!_gallery && !compact)
+                  SliverPadding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    sliver: _ProductTable(
+                      products: _items,
+                      repository: widget.repository,
+                      onOpen: _open,
+                    ),
+                  )
+                else
+                  SliverList.builder(
+                    itemCount: _gallery
+                        ? (_items.length + columns - 1) ~/ columns
+                        : _items.length,
+                    itemBuilder: (context, index) {
+                      if (_gallery) return _galleryRow(index, columns);
+                      final product = _items[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _ProductTile(
+                          product: product,
+                          repository: widget.repository,
+                          onTap: () => _open(product),
+                        ),
+                      );
+                    },
+                  ),
+              if (hasItems && _items.length < _count)
+                SliverToBoxAdapter(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton(
+                      key: const ValueKey('catalog-load-more'),
+                      onPressed: _loading ? null : () => _load(reset: false),
+                      child: Text(l.loadMore),
+                    ),
+                  ),
+                ),
             ],
           ),
-        const SizedBox(height: 14),
-        filters,
-        const SizedBox(height: 20),
-        if (_items.any(
-          (p) => p.expiryStatus == 'soon' || p.expiryStatus == 'expired',
-        ))
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: NoticeBanner(
-              key: const ValueKey('catalog-expiry-alert'),
-              text: l.expiryAttention,
-              icon: AppIcons.warning,
-              tone: StatusTone.warning,
-            ),
-          ),
-        if (_error != null)
-          ErrorPanel(error: _error!, onRetry: () => _load(reset: true))
-        else if (_loading && _items.isEmpty)
-          CatalogLoadingSkeleton(
-            gallery: _gallery,
-            compact: compact,
-            withStock: widget.session.can('stock.view'),
-          )
-        else if (_items.isEmpty)
-          SurfaceCard(
-            child: _scannedCode != null && _canManage
-                ? Column(
-                    children: [
-                      EmptyState(
-                        title: l.errorBarcodeNotFound,
-                        subtitle: l.scannedCode(_scannedCode!),
-                        icon: AppIcons.qr,
-                      ),
-                      OutlinedButton.icon(
-                        key: const ValueKey('catalog-add-scanned'),
-                        onPressed: () => _add(barcode: _scannedCode),
-                        icon: const AppIcon(AppIcons.plus),
-                        label: Text(l.addProduct),
-                      ),
-                    ],
-                  )
-                : searching
-                ? EmptyState(title: l.noResults, subtitle: l.noResultsHint)
-                : EmptyState(
-                    key: const ValueKey('catalog-empty'),
-                    title: l.noProducts,
-                    subtitle: l.noProductsHint,
-                    icon: AppIcons.overview,
-                    action: _canManage
-                        ? PrimaryButton(
-                            key: const ValueKey('catalog-empty-add'),
-                            label: l.addProduct,
-                            icon: AppIcons.plus,
-                            onPressed: () => _add(),
-                          )
-                        : null,
-                  ),
-          )
-        else ...[
-          if (_gallery)
-            ..._galleryRows(width - (compact ? 32 : 64))
-          else if (compact)
-            for (final product in _items)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _ProductTile(
-                  product: product,
-                  repository: widget.repository,
-                  onTap: () => _open(product),
-                ),
-              )
-          else
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _ProductTable(
-                products: _items,
-                repository: widget.repository,
-                onOpen: _open,
-              ),
-            ),
-          if (_items.length < _count)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton(
-                key: const ValueKey('catalog-load-more'),
-                onPressed: _loading ? null : () => _load(reset: false),
-                child: Text(l.loadMore),
-              ),
-            ),
-        ],
+        ),
       ],
     );
   }
 
-  // Each row is a separate lazy ListView child. One giant gallery child builds,
-  // intrinsically lays out and downloads pictures for every offscreen product.
-  Iterable<Widget> _galleryRows(double contentWidth) sync* {
-    final columns = ((contentWidth + 16) / 186).floor().clamp(2, 5);
-    for (var start = 0; start < _items.length; start += columns) {
-      yield Padding(
-        key: start == 0 ? const ValueKey('catalog-gallery') : null,
-        padding: const EdgeInsets.only(bottom: 16),
-        child: _ProductGalleryRow(
-          products: _items.skip(start).take(columns).toList(),
-          columns: columns,
-          onOpen: _open,
-          repository: widget.repository,
-        ),
-      );
-    }
-  }
+  // Build and lay out only the gallery rows near the viewport, including after
+  // several pages have been loaded. Each row retains equal-height cards.
+  Widget _galleryRow(int index, int columns) => Padding(
+    key: index == 0 ? const ValueKey('catalog-gallery') : null,
+    padding: const EdgeInsets.only(bottom: 16),
+    child: _ProductGalleryRow(
+      products: _items.skip(index * columns).take(columns).toList(),
+      columns: columns,
+      onOpen: _open,
+      repository: widget.repository,
+    ),
+  );
 }
 
 class _ProductTile extends StatelessWidget {
@@ -748,7 +762,7 @@ class _MenuRow extends StatelessWidget {
   );
 }
 
-/// The list view of the catalog on a wide screen: a header row and one row per product.
+/// A single decorated table, with only nearby rows built and laid out.
 class _ProductTable extends StatelessWidget {
   const _ProductTable({
     required this.products,
@@ -778,48 +792,71 @@ class _ProductTable extends StatelessWidget {
       flex: flex,
       child: Align(alignment: align, child: child),
     );
-    return SurfaceCard(
-      padding: 0,
-      child: Column(
-        key: const ValueKey('catalog-table'),
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            color: AppColors.surfaceSoft,
-            child: Row(
-              children: [
-                cell(60, Text(l.sku.toUpperCase(), style: _header)),
-                cell(128, Text(l.productName.toUpperCase(), style: _header)),
-                cell(53, Text(l.category.toUpperCase(), style: _header)),
-                cell(
-                  53,
-                  Text(l.price.toUpperCase(), style: _header),
-                  align: Alignment.centerRight,
-                ),
-                if (showStock) ...[
-                  cell(
-                    53,
-                    Text(l.productColumnStock.toUpperCase(), style: _header),
-                    align: Alignment.centerRight,
-                  ),
-                  cell(
-                    53,
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16),
-                      child: Text(
-                        l.productColumnStatus.toUpperCase(),
-                        style: _header,
-                      ),
+    final radius = BorderRadius.circular(AppRadius.card);
+    return DecoratedSliver(
+      key: const ValueKey('catalog-table'),
+      decoration: BoxDecoration(
+        color: AppColors.glass,
+        borderRadius: radius,
+        border: Border.all(color: AppColors.glassEdge),
+        boxShadow: AppShadows.card,
+      ),
+      sliver: SliverList.builder(
+        itemCount: products.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return ClipRRect(
+              borderRadius: BorderRadius.vertical(top: radius.topLeft),
+              child: Container(
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                color: AppColors.surfaceSoft,
+                child: Row(
+                  children: [
+                    cell(60, Text(l.sku.toUpperCase(), style: _header)),
+                    cell(
+                      128,
+                      Text(l.productName.toUpperCase(), style: _header),
                     ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          for (final p in products)
-            InkWell(
+                    cell(53, Text(l.category.toUpperCase(), style: _header)),
+                    cell(
+                      53,
+                      Text(l.price.toUpperCase(), style: _header),
+                      align: Alignment.centerRight,
+                    ),
+                    if (showStock) ...[
+                      cell(
+                        53,
+                        Text(
+                          l.productColumnStock.toUpperCase(),
+                          style: _header,
+                        ),
+                        align: Alignment.centerRight,
+                      ),
+                      cell(
+                        53,
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: Text(
+                            l.productColumnStatus.toUpperCase(),
+                            style: _header,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }
+          final p = products[index - 1];
+          return Material(
+            type: MaterialType.transparency,
+            borderRadius: index == products.length
+                ? BorderRadius.vertical(bottom: radius.bottomLeft)
+                : BorderRadius.zero,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
               key: ValueKey('product-${p.sku}'),
               onTap: () => onOpen(p),
               hoverColor: AppColors.surfaceSoft,
@@ -923,7 +960,8 @@ class _ProductTable extends StatelessWidget {
                 ),
               ),
             ),
-        ],
+          );
+        },
       ),
     );
   }

@@ -1,0 +1,33 @@
+{
+  "browser": "156.0.8078.80",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "language": "ru",
+  "scheme": "light",
+  "view": "list",
+  "cpuRate": 4,
+  "scenario": "Fresh catalog visit, first 30 of 300 synthetic products with photos; then scroll and load next page",
+  "bundleSha256": "290ff7c18edcc37e03f269ebd690c37bc9fe19bc6c744fd9c0d67a84444bc7d5",
+  "samples": [
+    {
+      "round": 0,
+      "initialPhotoRequests": 30,
+      "afterPagingPhotoRequests": 60,
+      "taskWorkMs": 512.446
+    },
+    {
+      "round": 1,
+      "initialPhotoRequests": 30,
+      "afterPagingPhotoRequests": 60,
+      "taskWorkMs": 525.63
+    },
+    {
+      "round": 2,
+      "initialPhotoRequests": 30,
+      "afterPagingPhotoRequests": 60,
+      "taskWorkMs": 510.35600000000005
+    }
+  ]
+}

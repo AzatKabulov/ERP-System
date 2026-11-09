@@ -14,9 +14,9 @@ import 'catalog_repository.dart';
 
 /// A bounded image placeholder during download/decoding, or a box icon for missing/failed photos.
 /// Pictures come through the repository, which
-/// keeps each one in memory, so a gallery of thirty products asks the server thirty times at most
-/// and a repeat visit asks nobody. Small ones (`full: false`) serve lists, large ones the
-/// product page.
+/// shares concurrent downloads and retains recent pictures within its memory
+/// budget. Evicted pictures are fetched again when needed. Small ones
+/// (`full: false`) serve lists, large ones the product page.
 class ProductPhoto extends StatelessWidget {
   const ProductPhoto({
     super.key,

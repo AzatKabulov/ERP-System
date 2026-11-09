@@ -1,5 +1,13 @@
 # Performance improvements — 2026-10-22
 
+Follow-up (2026-11-09): the wide catalog table now builds nearby rows lazily;
+gallery and compact list widgets also use builders as pages accumulate. The
+encoded-photo cache now retains at most 16 MiB as well as 400 entries. A local
+release-browser control reduced initial wide-table photo requests from **30 to
+14** at 1440 × 1000. The 574 Flutter tests pass. See the
+[review, raw results and limits](performance/2026-11-09/README.md). This is not a
+physical-device FPS or production-network claim; nothing was deployed.
+
 Phone web follow-up (2026-10-26): narrow screens now skip overlapping decorative
 entrance animation, and scanning loads its pinned fallback decoder from the app
 origin. The final release comparison measured **13.0% less main-thread navigation

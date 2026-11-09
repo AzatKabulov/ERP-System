@@ -1,6 +1,30 @@
 # Handoff
 
-Last updated 2026-11-07. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+Last updated 2026-11-09. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+
+## Web optimization follow-up — 2026-11-09
+
+Owner authorized applicable improvements from Azat's optimization checklist.
+Branch `codex/web-performance`: catalog table rows are lazy slivers within
+one decorated surface; gallery/phone list rows also use builders as pages grow.
+The photo cache now has a 16 MiB encoded-byte budget alongside its 400-entry
+limit, preserving coalescing, retries and clear/logout races. No backend business
+rules, dependencies or stock/money workflows changed. The owner requested commit
+and push on 2026-11-09, explicitly excluding deployment. No app release or
+deployment; the pre-existing local Android helper and guide remain untouched.
+
+Verified: **574 Flutter tests pass**, Flutter analysis/formatting pass, release
+web build succeeds; Python fixture Ruff checks and browser-script syntax pass.
+The wide-table regression failed on the old implementation (30 photo requests);
+final RU/TK cases pass with both preferences and profile language set. A Chrome release control against a separate
+300-product PostgreSQL sample shop measured **30 → 14 initial thumbnail
+requests** at 1440 × 1000 in all three runs per variant. See
+[review, raw metrics and limits](docs/performance/2026-11-09/README.md).
+Release-browser checks also passed at 390/1024/1440 widths across Russian,
+Turkmen and both themes, including gallery/list/table pagination; screenshots
+were inspected. The disposable sample API/database was stopped afterward.
+Physical Android/iPhone performance, live-server timing and backend/stock E2E
+were not revalidated by this frontend change.
 
 ## State on 2026-11-07: subscriptions built, premium redesign deployed
 

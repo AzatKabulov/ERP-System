@@ -53,10 +53,7 @@ Future<void> openCatalog(WidgetTester tester, RealRig rig) async {
 
 /// The catalog's own list (the navigation drawer is a list too, and comes first).
 Finder get pageScrollable => find
-    .descendant(
-      of: find.byType(ListView).last,
-      matching: find.byType(Scrollable),
-    )
+    .descendant(of: key('catalog-scroll'), matching: find.byType(Scrollable))
     .first;
 
 Future<void> typeSearch(WidgetTester tester, String text) async {

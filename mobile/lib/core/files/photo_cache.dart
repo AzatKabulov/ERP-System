@@ -1,14 +1,20 @@
 import 'dart:typed_data';
 
-/// Pictures the app has already downloaded, kept in memory so a list, a gallery or a search asks
-/// for each picture once. A key names the business, the product, the picture's version and the
-/// size, so a new picture is a new key and an old one is never shown by mistake. Nothing is
-/// written to the device, and everything is forgotten when the person signs out.
+/// Recent downloads shared by lists, galleries and searches within entry and byte
+/// budgets. Keys include business, product, version and size, so replacement
+/// pictures cannot reuse old bytes. Nothing is written to the device, and
+/// everything is forgotten when the person signs out.
 class PhotoCache {
-  PhotoCache._();
-  static final PhotoCache instance = PhotoCache._();
+  PhotoCache({this.maxEntries = 400, this.maxBytes = 16 * 1024 * 1024})
+    : assert(maxEntries > 0),
+      assert(maxBytes > 0);
+  static final PhotoCache instance = PhotoCache();
 
-  static const _max = 400;
+  final int maxEntries;
+
+  /// Encoded image bytes only; Flutter manages decoded images separately.
+  final int maxBytes;
+  int _bytes = 0;
 
   /// Insertion order is use order: the oldest entry goes first.
   final Map<String, _PhotoEntry> _items = {};
@@ -34,7 +40,17 @@ class PhotoCache {
     _items[key] = entry;
     final future = Future<Uint8List?>.sync(fetch).then<Uint8List?>(
       (bytes) {
-        if (identical(_items[key], entry)) entry.bytes = bytes;
+        if (identical(_items[key], entry)) {
+          if (bytes != null && bytes.lengthInBytes > maxBytes) {
+            // Still deliver the photo to its caller, without emptying the cache
+            // of smaller reusable thumbnails to retain one oversized image.
+            _items.remove(key);
+          } else {
+            entry.bytes = bytes;
+            _bytes += bytes?.lengthInBytes ?? 0;
+            _trim();
+          }
+        }
         return bytes;
       },
       onError: (Object _) {
@@ -43,13 +59,21 @@ class PhotoCache {
       },
     );
     entry.future = future;
-    while (_items.length > _max) {
-      _items.remove(_items.keys.first);
-    }
+    _trim();
     return future;
   }
 
-  void clear() => _items.clear();
+  void _trim() {
+    while (_items.length > maxEntries || _bytes > maxBytes) {
+      final removed = _items.remove(_items.keys.first)!;
+      _bytes -= removed.bytes?.lengthInBytes ?? 0;
+    }
+  }
+
+  void clear() {
+    _items.clear();
+    _bytes = 0;
+  }
 }
 
 class _PhotoEntry {
