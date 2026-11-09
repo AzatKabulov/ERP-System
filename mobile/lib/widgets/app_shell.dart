@@ -454,6 +454,7 @@ class _AppShellState extends State<AppShell> {
       key: const ValueKey('app-top-layer'),
       radius: 0,
       blur: 26,
+      mobileBlur: 10,
       shadow: false,
       rim: false,
       child: DecoratedBox(
@@ -644,6 +645,7 @@ class _AppShellState extends State<AppShell> {
       key: const ValueKey('phone-navigation'),
       radius: 30,
       blur: 28,
+      mobileBlur: 10,
       child: SizedBox(
         height: _barHeight,
         child: Padding(

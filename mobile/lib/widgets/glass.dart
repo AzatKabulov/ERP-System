@@ -22,6 +22,7 @@ class GlassSurface extends StatelessWidget {
     this.rim = true,
     this.padding,
     this.tint,
+    this.mobileBlur,
   });
 
   final Widget child;
@@ -48,9 +49,18 @@ class GlassSurface extends StatelessWidget {
   /// A wash of colour over the veil (an emphasised card).
   final Color? tint;
 
+  /// The blur used on narrow devices. Backdrop blur is substantially more expensive
+  /// while scrolling on phones, where the translucent veil and rim still preserve
+  /// the glass treatment without needing the desktop radius.
+  final double? mobileBlur;
+
   @override
   Widget build(BuildContext context) {
     final corners = borderRadius ?? BorderRadius.circular(radius);
+    final narrow = MediaQuery.sizeOf(context).shortestSide < 600;
+    final effectiveBlur = narrow
+        ? (mobileBlur ?? blur.clamp(0, 14).toDouble())
+        : blur;
     final fill = strong ? AppColors.glassStrong : AppColors.glass;
     Widget veil = DecoratedBox(
       decoration: BoxDecoration(
@@ -59,9 +69,12 @@ class GlassSurface extends StatelessWidget {
       ),
       child: padding == null ? child : Padding(padding: padding!, child: child),
     );
-    if (blur > 0) {
+    if (effectiveBlur > 0) {
       veil = BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        filter: ImageFilter.blur(
+          sigmaX: effectiveBlur,
+          sigmaY: effectiveBlur,
+        ),
         child: veil,
       );
     }

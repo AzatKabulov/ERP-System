@@ -2,6 +2,19 @@
 
 Last updated 2026-11-09. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
 
+## Phone glass performance follow-up — 2026-11-10
+
+- Narrow devices now cap `BackdropFilter` blur in `GlassSurface`; the phone
+  top and bottom bars use an explicit lower radius while wider layouts keep
+  their existing values. The translucent veil and rim remain, so this is a
+  paint-cost reduction rather than a visual redesign.
+- `flutter analyze --no-pub lib/widgets/glass.dart lib/widgets/app_shell.dart`
+  passed. The focused Flutter test could not start because the installed
+  Flutter/Dart toolchain is older than the repository's pinned dependency
+  artifacts (`objective_c` kernel format mismatch); no test result is claimed.
+- Physical Android/iPhone measurements are still required to confirm scroll
+  smoothness and frame pacing.
+
 ## Web optimization follow-up — 2026-11-09
 
 **Freshness correction (owner review, 2026-11-09):** the original optimization

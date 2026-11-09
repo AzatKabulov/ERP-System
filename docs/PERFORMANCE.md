@@ -14,6 +14,13 @@ release-browser control reduced initial wide-table photo requests from **30 to
 [review, raw results and limits](performance/2026-11-09/README.md). This is not a
 physical-device FPS or production-network claim; nothing was deployed.
 
+Phone glass follow-up (2026-11-10): narrow devices keep the translucent veil and
+rim, but cap `BackdropFilter` blur to a smaller radius. The phone top bar and
+bottom navigation use an explicit lower radius; tablets and wider layouts retain
+their existing blur values. This targets scroll and navigation paint cost without
+removing the premium glass treatment. A physical-device comparison is still
+required before claiming a frame-rate improvement.
+
 Phone web follow-up (2026-10-26): narrow screens now skip overlapping decorative
 entrance animation, and scanning loads its pinned fallback decoder from the app
 origin. The final release comparison measured **13.0% less main-thread navigation
