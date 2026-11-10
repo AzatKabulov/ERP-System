@@ -89,7 +89,7 @@ were not revalidated by this frontend change.
 ## Subscription direction and open corrections (2026-11-06; the plan is now built, see the section above)
 
 - **New direction:** one shared system sold to many stores by subscription. Plan: [docs/SAAS_PLATFORM_PLAN.md](docs/SAAS_PLATFORM_PLAN.md), built since (decisions D1-D8 are still open where noted there). Usability rules and review: [docs/USABILITY.md](docs/USABILITY.md), whose fixes are mostly built (its status line lists what is not).
-- **Live server:** https://erp.kemalysh.dev on a free 1 GB Oracle VM (168.107.87.98), deployed by upload from uncommitted local work, not from git. Nightly backups run (4 of 4) but stay on that VM, and no restore has been tried. No email service is configured.
+- **Live server:** https://erp.kemalysh.dev on a free 1 GB Oracle VM (address and access kept private: ask the owner), deployed by upload from uncommitted local work, not from git. Nightly backups run (4 of 4) but stay on that VM, and no restore has been tried. No email service is configured.
 - **Corrections to the 2026-11-02 mobile round:** the iPhone clipping is **not confirmed fixed** (the check was desktop Chromium at 393 px; see USABILITY.md item 21). The Android APK has not been run on any device or emulator, so the adaptive icon, native splash and system bars are unverified. The owner was told passwords can be changed in Settings; that screen did not exist then and has been built since.
 - The `ROLE_PICKER` build flag assumes logins equal role names, so it must be off before a second store exists.
 
