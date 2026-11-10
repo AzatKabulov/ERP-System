@@ -108,6 +108,18 @@ The previous web files are in `~/web-before.tgz` on the server. Unpack them into
 - A new shop created through "Новый клиент" waits for its owner's first-sign-in answers. That is expected.
 - Never run `docker compose down -v`: it deletes the database volume.
 
+## For coding agents (Codex, Claude Code)
+
+Use these rules when an agent does the deploy. The owner has to say "deploy" in the session for each release.
+
+- Do not deploy, push to `main`, or touch the server without that approval. Reading, building and testing are always fine.
+- Do not print or commit the key, passwords, authenticator keys or `.env` values.
+- Never run `docker compose down -v`, and never run `restore.sh` without the owner's explicit yes.
+- Run the checks in sections 1 and 2 and stop on any failure. Make the backup in section 3 and stop if it does not report success.
+- Ask the owner for `<SERVER_IP>`, `<KEY_FILE>` and the user name privately. Do not guess them.
+- Before finishing, check the `main.dart.js` checksum against your local build (`md5sum mobile/build/web/main.dart.js` vs `curl -s https://erp.kemalysh.dev/main.dart.js | md5sum`). If they differ, report it.
+- Report back: the commit deployed, the backup name, each check result, the health output, and any warnings from the logs. No secrets in the report.
+
 ## Who to ask
 
 The owner (Azat) gives access and keys. Do not share the server with anyone not on the team.
