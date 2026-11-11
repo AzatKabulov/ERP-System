@@ -124,11 +124,8 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) Navigator.of(context).pop(_changed);
-      },
+    return AppRouteResult<bool>(
+      result: _changed,
       child: Scaffold(
         appBar: AppBar(title: Text(l.expenseDetailTitle)),
         body: SafeArea(

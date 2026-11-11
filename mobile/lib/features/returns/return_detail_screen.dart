@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_route.dart';
 import '../../widgets/app_icons.dart';
 
 import '../../core/api/api_error_text.dart';
@@ -92,11 +93,8 @@ class _ReturnDetailScreenState extends State<ReturnDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) Navigator.of(context).pop(_changed);
-      },
+    return AppRouteResult<bool>(
+      result: _changed,
       child: Scaffold(
         appBar: AppBar(title: Text(l.returnsTitle)),
         body: SafeArea(

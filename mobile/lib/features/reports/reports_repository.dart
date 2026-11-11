@@ -1,12 +1,15 @@
 import 'dart:typed_data';
 
 import '../../core/api/api_client.dart';
+import '../../core/session/session_controller.dart';
+import 'dart:async';
 import 'reports_models.dart';
 
 /// Reports, the dashboard and the activity history over the API. Everything here only reads:
 /// nothing changes stock or money, so plain requests are enough.
 class ReportsRepository {
-  ReportsRepository(this.api, this.businessId);
+  ReportsRepository(this.api, this.businessId, {this.session});
+  final SessionController? session;
 
   final ApiClient api;
   final String businessId;
@@ -44,8 +47,14 @@ class ReportsRepository {
     return response.bytes ?? Uint8List(0);
   }
 
-  Future<Dashboard> dashboard() async =>
-      Dashboard.fromJson((await api.get('$_base/dashboard/')).map);
+  Future<Dashboard> dashboard() async {
+    final scope = session?.dashboardScope;
+    final response =
+        await (session?.takeStartupDashboard() ?? api.get('$_base/dashboard/'));
+    final dashboard = Dashboard.fromJson(response.map);
+    if (scope != null) unawaited(session!.cacheDashboard(response.map, scope));
+    return dashboard;
+  }
 
   Future<AuditPage> audit({
     ReportQuery? period,

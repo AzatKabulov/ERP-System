@@ -1,3 +1,4 @@
+import 'widgets/app_navigation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -113,6 +114,8 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
     if (next != _phoneAreas) setState(() => _phoneAreas = next);
   }
 
+  final AppNavigation _navigation = AppNavigation();
+
   late final ThemeController _theme = ThemeController(widget.preferences);
   late final bool _demo = widget.store != null || widget.config.demoMode;
   late final DemoStore? _store = _demo ? (widget.store ?? DemoStore()) : null;
@@ -214,6 +217,7 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _navigation.dispose();
     _stopViewport?.call();
     WidgetsBinding.instance.removeObserver(this);
     _theme.removeListener(_schemeChanged);
@@ -231,7 +235,27 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    _navigation.home = _demo
+        ? Workspace(
+            store: _store!,
+            languageCode: _locale.languageCode,
+            onLanguageChanged: _changeLanguage,
+          )
+        : RealHome(
+            session: _session,
+            api: _api,
+            monitor: _monitor,
+            preferences: widget.preferences,
+            languageCode: _locale.languageCode,
+            onLanguageChanged: _changeLanguage,
+            onServerLanguage: _applyLanguage,
+            server: _server,
+            pendingStore: widget.pendingStore,
+            onSessionEnded: _navigation.reset,
+          );
+    return MaterialApp.router(
+      routerDelegate: _navigation,
+      routeInformationParser: const AppRouteParser(),
       title: 'ERP System',
       debugShowCheckedModeBanner: false,
       theme: fullScreenTheme(AppTheme.light, enabled: _fullScreen),
@@ -292,25 +316,6 @@ class _ErpAppState extends State<ErpApp> with WidgetsBindingObserver {
           ),
         ),
       ),
-      // The browser address holds the pushed pages' names; a reload starts at the first page.
-      initialRoute: '/',
-      home: _demo
-          ? Workspace(
-              store: _store!,
-              languageCode: _locale.languageCode,
-              onLanguageChanged: _changeLanguage,
-            )
-          : RealHome(
-              session: _session,
-              api: _api,
-              monitor: _monitor,
-              preferences: widget.preferences,
-              languageCode: _locale.languageCode,
-              onLanguageChanged: _changeLanguage,
-              onServerLanguage: _applyLanguage,
-              server: _server,
-              pendingStore: widget.pendingStore,
-            ),
     );
   }
 }

@@ -1,5 +1,48 @@
 # Architecture
 
+## Secure progressive startup and browser history (2026-11-11)
+
+Startup uses the existing secure token store for a server-scoped access token
+and a versioned snapshot (at most 64 KiB of UTF-8 JSON). A valid-looking local
+JWT avoids a redundant refresh round trip; it does not establish authority.
+Every API request still verifies the token and the user's server-side session
+version, membership, permissions and subscription.
+
+The snapshot's identity can immediately paint a **locked** home shell. A fresh
+`GET /me/` is required before navigation/actions or cached private figures are
+available. With a previous scope, the dashboard GET starts alongside `/me/`;
+its answer is consumed only if the confirmed scope matches. Scope includes the
+origin, user, membership, business, role, permissions, permitted locations,
+password-change/operator state, and subscription state/end date. Dashboard
+snapshots expire after ten minutes; identity snapshots after 24 hours. Missing,
+corrupt, oversized or expired snapshots use ordinary progressive loading.
+Fresh figures replace cached figures in place, with a localized saved-time
+notice while revalidation is pending. The independent trend starts eagerly.
+Only overlapping identical GETs coalesce; successful mutations advance the
+read revision. There is no persistent catalog/stock cache or queued offline sale.
+
+Logout and server/account changes clear tokens/snapshots and invalidate pending
+requests. Session generations prevent an old restore/refresh/read from replacing
+a new account. Refreshes coalesce within the same generation. Device storage
+operations are serialized. Resume rechecks the server profile; a scope change
+clears photos and closes pushed pages. Offline startup keeps the shell locked
+with retry. Runtime assets must already be available; this is not an offline
+PWA shell or an offline stock workflow.
+
+`MaterialApp.router` owns one in-memory Navigator through `AppNavigation`, using
+Flutter's multi-entry browser history. Existing `appRoute` callers remain intact.
+Browser Back pops the current stack without recreating `RealHome`. In-app pops
+replace their transient URL instead of adding stale history. Reloaded/forward
+URLs cannot reconstruct a private page or issue a command; they enter the root.
+`AppRouteResult` returns a changed flag without disabling Cupertino edge-back.
+Actual unsaved forms retain their `PopScope` confirmation. Every pushed page has
+its own opaque ambient field, so translucent cards do not reveal the old page.
+Below a 600-pixel shortest side the shell/default glass uses no backdrop filter;
+the veil, rim/shadows and static ambient field retain the surface styling. Wide
+glass keeps its existing blur. Phone skeletons have no continuous ticker.
+
+Evidence and limits: [startup/navigation review](performance/2026-11-11/README.md).
+
 ## Opt-in iPhone fullscreen web preview (2026-11-08)
 
 The `/fs/` artifact opts in with `window.erpFullScreen`. A root MediaQuery merges

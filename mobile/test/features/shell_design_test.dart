@@ -1,10 +1,36 @@
 import 'package:erp_system/widgets/common.dart';
+import 'package:erp_system/widgets/glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/real_rig.dart';
 
 void main() {
+  testWidgets(
+    'phone shell has no backdrop filters while wide glass keeps blur',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final rig = RealRig();
+      await rig.launch(tester, size: const Size(390, 844));
+      await rig.signIn(tester);
+      expect(find.byType(GlassSurface), findsWidgets);
+      expect(find.byType(BackdropFilter), findsNothing);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(size: Size(1440, 1000)),
+            child: const GlassSurface(child: Text('wide surface')),
+          ),
+        ),
+      );
+      await settle(tester);
+      expect(find.byType(BackdropFilter), findsOneWidget);
+    },
+  );
+
   group('navigation follows the width', () {
     testWidgets(
       'a phone has a bottom bar of four modules and a labelled More tab for the rest',

@@ -94,11 +94,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final l = strings(context);
     final p = _product;
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) Navigator.of(context).pop(_changed);
-      },
+    return AppRouteResult<bool>(
+      result: _changed,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l.productCardTitle),

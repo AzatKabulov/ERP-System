@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:erp_system/core/money/decimal_math.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,6 +30,25 @@ Iterable<({String path, Map<String, String> query})> asked(
 
 void main() {
   group('dashboard', () {
+    testWidgets('a malformed saved dashboard falls back to fresh data', (
+      tester,
+    ) async {
+      final rig = RealRig();
+      await rig.launchSignedIn(tester);
+      const origin = 'https://api.example.test';
+      final raw =
+          jsonDecode((await rig.tokens.readStartupSnapshot(origin))!) as Map;
+      raw['dashboard'] = {'sales_today': 'corrupt'};
+      await rig.tokens.writeStartupSnapshot(origin, jsonEncode(raw));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await rig.launch(tester);
+      await settle(tester);
+      expect(key('dash-sales-today'), findsOneWidget);
+      expect(find.text(tm(30000)), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets(
       'comparison follows the report business day rather than the device clock',
       (tester) async {

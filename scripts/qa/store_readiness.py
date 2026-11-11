@@ -81,6 +81,18 @@ def main():
 
     for command in ("migrate", "createcachetable", "create_sample_business"):
         call_command(command, stdout=io.StringIO(), verbosity=0)
+    # New shops have one place. This throwaway legacy fixture additionally
+    # exercises retained transfer/FIFO/location-isolation services; no public
+    # create-location endpoint or real shop is changed.
+    from apps.businesses.models import Business, Location, Membership
+
+    fixture_business = Business.objects.get(name="Sample Auto Parts (test data)")
+    legacy_warehouse = Location.objects.create(
+        business=fixture_business, name="QA legacy warehouse", kind=Location.Kind.WAREHOUSE
+    )
+    Membership.objects.get(business=fixture_business, user__username="warehouse").locations.set(
+        [legacy_warehouse]
+    )
     with connections["default"].cursor() as cursor:
         cursor.execute("SHOW server_version")
         database_version = cursor.fetchone()[0]
@@ -91,7 +103,12 @@ def main():
         def log_message(self, *values):
             pass
 
-    server = ThreadedWSGIServer(("127.0.0.1", 0), QuietHandler)
+    class ReadinessServer(ThreadedWSGIServer):
+        # The probe opens 12 clients together; the development server's default
+        # accept backlog can reset sockets before Django handles them on macOS.
+        request_queue_size = 64
+
+    server = ReadinessServer(("127.0.0.1", 0), QuietHandler)
     server.daemon_threads = True
     server.set_app(get_wsgi_application())
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -157,8 +174,8 @@ def main():
         base = f"/api/v1/businesses/{me['memberships'][0]['business']['id']}"
         today = datetime.now(ZoneInfo(api(base + "/")["timezone"])).date()
         locations = api(base + "/locations/")["results"]
-        store = next(x["id"] for x in locations if x["name"] == "Main store")
-        warehouse = next(x["id"] for x in locations if x["name"] == "Warehouse")
+        store = next(x["id"] for x in locations if x["kind"] == "store")
+        warehouse = str(legacy_warehouse.pk)
         unit = next(x["id"] for x in api(base + "/units/")["results"] if x["symbol"] == "шт")
         product = post(
             base + "/products/",

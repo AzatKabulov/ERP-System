@@ -2,9 +2,14 @@
 // Runs only against a disposable synthetic shop; never saves tokens or payloads.
 const fs = require('node:fs');
 const crypto = require('node:crypto');
+const path = require('node:path');
 const L = require('../e2e/lib');
 if (process.env.ERP_E2E_DISPOSABLE !== 'true' || !process.env.PERF_OUT) {
   throw Error('Set ERP_E2E_DISPOSABLE=true, E2E_WEB_URL and PERF_OUT.');
+}
+if (!['localhost','127.0.0.1'].includes(new URL(L.URL).hostname) ||
+    !fs.existsSync(path.join(process.env.PERF_SAMPLE_DATA || '', '.performance-sample'))) {
+  throw Error('Use a marked loopback performance fixture.');
 }
 (async () => {
   const browser = await L.launch();
@@ -13,6 +18,16 @@ if (process.env.ERP_E2E_DISPOSABLE !== 'true' || !process.env.PERF_OUT) {
     if (!Number.isInteger(viewport.width) || !Number.isInteger(viewport.height) ||
         viewport.width < 320 || viewport.height < 320) throw Error('Use viewport dimensions of at least 320 pixels.');
     const {page, problems} = await L.newPage(browser, viewport);
+    await page.context().addInitScript(() => {
+      for (const id of ['dashboard','products','sales','inventory'])
+        localStorage.setItem(`flutter.guide.${id}.done`, 'true');
+      localStorage.setItem('flutter.language', JSON.stringify('ru'));
+    });
+    const login = await page.request.post(new URL('/api/v1/local-test-login/',L.URL).href,{data:{role:'owner'}});
+    const {access} = await login.json();
+    const language = await page.request.patch(new URL('/api/v1/me/',L.URL).href,
+      {headers:{Authorization:`Bearer ${access}`},data:{preferred_language:'ru'}});
+    if (!language.ok()) throw Error('Could not set sample profile language.');
     await L.boot(page);
     await L.clickLabel(page, 'Войти', {which:'last',wait:300});
     await L.clickLabel(page, 'Владелец', {wait:1200});

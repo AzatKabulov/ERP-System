@@ -1,0 +1,130 @@
+{
+  "browser": "26.5",
+  "scheme": "dark",
+  "note": "20 same-document browser-back and 5 mixed in-app/browser-back cycles, iPhone viewport/UA; not physical Safari edge gesture or GPU FPS.",
+  "samples": [
+    {
+      "round": 0,
+      "backObservedMs": 472,
+      "historyBefore": 3,
+      "historyOpen": 4
+    },
+    {
+      "round": 1,
+      "backObservedMs": 46,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 2,
+      "backObservedMs": 43,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 3,
+      "backObservedMs": 12,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 4,
+      "backObservedMs": 13,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 5,
+      "backObservedMs": 42,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 6,
+      "backObservedMs": 13,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 7,
+      "backObservedMs": 57,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 8,
+      "backObservedMs": 11,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 9,
+      "backObservedMs": 12,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 10,
+      "backObservedMs": 12,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 11,
+      "backObservedMs": 11,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 12,
+      "backObservedMs": 12,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 13,
+      "backObservedMs": 10,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 14,
+      "backObservedMs": 13,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 15,
+      "backObservedMs": 12,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 16,
+      "backObservedMs": 44,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 17,
+      "backObservedMs": 13,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 18,
+      "backObservedMs": 29,
+      "historyBefore": 4,
+      "historyOpen": 4
+    },
+    {
+      "round": 19,
+      "backObservedMs": 12,
+      "historyBefore": 4,
+      "historyOpen": 4
+    }
+  ],
+  "documentRequests": 0,
+  "authenticationRequests": 0,
+  "errors": []
+}

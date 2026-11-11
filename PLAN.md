@@ -1,5 +1,21 @@
 # Delivery Plan
 
+## Startup and mobile navigation (owner, 2026-11-10; verified 2026-11-11)
+
+- [x] Continue from Azat's latest main, including his subsequent documentation
+  changes; preserve the existing phone glass/catalog optimizations.
+- [x] Implement secure progressive startup, bounded scoped overview snapshots,
+  parallel independent reads, failure/race handling and browser/native back
+  navigation with opaque detail pages and still phone skeletons.
+- [x] Validate with 611 Flutter tests, analysis/formatting and a release web build.
+- [x] Measure before/after release startup and phone-layout work; pass both
+  browser engines' back/failure controls and disposable stock/load/restore checks.
+- [ ] Physical iPhone/PWA gestures, presented-frame smoothness and shop-network
+  timing remain acceptance work. The 10×/60 FPS targets are not device results.
+
+Evidence and limits: [startup/navigation review](docs/performance/2026-11-11/README.md).
+Owner requested a push to main, **no deployment**; this does not complete Phase 10.
+
 ## Web performance follow-up (owner, 2026-11-09)
 
 - [x] Adapt Azat's checklist to Flutter Web; fix eager catalog-table rendering,

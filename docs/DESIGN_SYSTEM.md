@@ -13,6 +13,17 @@ compact-tablet path showed lower navigation work in the local CPU-throttled
 control; wider layouts retain their entrance behavior. Palette,
 typography, layout and available features stay consistent with the wide interface.
 
+Startup/navigation follow-up (2026-11-11): below a 600-pixel shortest side,
+skeletons keep their layout and localized loading status but remain still;
+desktop pulse and reduced-motion behavior remain. Narrow default glass and bars
+keep their veil, rim, shadows and colors without backdrop blur; wide glass keeps
+its existing radii. The cached identity shell is
+locked until the server confirms access. Recent saved overview figures carry a
+localized timestamp during refresh. Pushed pages own an opaque ambient canvas
+under their glass, preventing the previous page from showing through during a
+transition. Read-only detail pages keep interactive iOS back; dirty forms keep
+their existing confirmation. These controls need physical-device frame testing.
+
 The brand mark (a blue-to-violet square with an "E") is kept and the interface is built around it. No gold or brass anywhere.
 
 Where glass is used, and where it is not:

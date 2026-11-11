@@ -1794,5 +1794,15 @@
   "guStockMore": "Bu ýerde «Haryt galyndysyny girizmek» (başlanda bir gezek) we «Düzediş» (tapawut tapsaňyz).",
   "guStockIntake": "Täze haryt geldimi? Ony şu ýerde kabul ediň.",
   "guStockSearch": "Harydyň nirede we näçe barlygyny görmek üçin ony tapyň.",
-  "unitCostHelp": "Bir sany üçin näçe töländigi. Bu satuw bahasy däl: satuw bahasy üýtgemeýär, ony haryt kartasynda üýtgedýärler."
+  "unitCostHelp": "Bir sany üçin näçe töländigi. Bu satuw bahasy däl: satuw bahasy üýtgemeýär, ony haryt kartasynda üýtgedýärler.",
+  "startupChecking": "Birikme barlanýar. Dükanyň maglumatlary giriş barlanandan soň görkeziler.",
+  "startupOffline": "Serwer bilen aragatnaşyk ýok. Internete birigip, gaýtadan synanyşyň.",
+  "cachedOverview": "{time} wagtynda saklanan maglumatlar. Täzelenýär…",
+  "@cachedOverview": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

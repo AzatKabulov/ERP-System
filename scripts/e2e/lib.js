@@ -43,7 +43,7 @@ async function expectNoText(page, name, regex) {
 // click a semantics node whose label (aria-label or text) equals/matches; a control below or
 // above the visible part of a scrolling page is scrolled into view first, as a person would
 async function clickLabel(page, label, opts = {}) {
-  const { which = 'first', exact = true, wait = 900, role = null } = opts;
+  const { which = 'first', exact = true, wait = 900, role = null, bottomInset = 12 } = opts;
   const find = () => page.evaluate(([label, which, exact, role]) => {
     const re = exact ? null : new RegExp(label);
     const nodes = [...document.querySelectorAll('flt-semantics')].filter((n) => {
@@ -62,7 +62,7 @@ async function clickLabel(page, label, opts = {}) {
   let box = await find();
   if (!box) throw new Error(`no accessible element labelled "${label}"`);
   const view = page.viewportSize();
-  for (let i = 0; i < 12 && (box.y > view.height - 12 || box.y < 0); i++) {
+  for (let i = 0; i < 12 && (box.y > view.height - bottomInset || box.y < 0); i++) {
     await page.mouse.move(view.width / 2, view.height / 2);
     await page.mouse.wheel(0, box.y < 0 ? -500 : Math.min(500, box.y - view.height / 2));
     await page.waitForTimeout(500);
@@ -84,7 +84,10 @@ async function fill(page, labelRegex, value) {
     }, labelRegex);
     if (!box) throw new Error(`no text field labelled /${labelRegex}/`);
     const view = page.viewportSize();
-    if (box.y > view.height - 40 || box.y < 60) {
+    // The phone's floating tabs cover the bottom part of the canvas. A field
+    // can be inside the DOM viewport yet still be behind a navigation button.
+    const bottomClearance = view.width < 768 ? 140 : 40;
+    if (box.y > view.height - bottomClearance || box.y < 60) {
       // below (or above) the visible part of a scrolling page: scroll like a person would
       await page.mouse.move(view.width / 2, view.height / 2);
       await page.mouse.wheel(0, box.y < 60 ? -500 : Math.min(500, box.y - view.height / 2));

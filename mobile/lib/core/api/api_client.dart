@@ -13,6 +13,11 @@ abstract class TokenStore {
   Future<String?> readRefreshToken();
   Future<void> writeRefreshToken(String token);
   Future<void> clear();
+  Future<String?> readAccessToken(String server);
+  Future<void> writeAccessToken(String server, String token);
+  Future<String?> readStartupSnapshot(String server);
+  Future<void> writeStartupSnapshot(String server, String value);
+  Future<void> clearStartupSnapshot();
 }
 
 @immutable
@@ -88,11 +93,25 @@ class ApiClient {
 
   String? _access;
   Future<void>? _refreshing;
+  int _refreshGeneration = -1;
+  int _generation = 0;
+  int _readRevision = 0;
+  final Map<String, Future<ApiResponse>> _reads = {};
+
+  int get sessionGeneration => _generation;
 
   bool get hasAccessToken => _access != null;
 
-  Future<ApiResponse> get(String path, {Map<String, String>? query}) =>
-      send('GET', path, query: query);
+  Future<ApiResponse> get(String path, {Map<String, String>? query}) {
+    final key = '$_generation/$_readRevision/$path/${jsonEncode(query)}';
+    return _reads.putIfAbsent(key, () {
+      late final Future<ApiResponse> future;
+      future = send('GET', path, query: query).whenComplete(() {
+        if (identical(_reads[key], future)) _reads.remove(key);
+      });
+      return future;
+    });
+  }
 
   /// Downloads a file (a PDF receipt, a CSV, a receipt photo): the answer's
   /// [ApiResponse.bytes]. [accept] says what kind of file is expected.
@@ -128,6 +147,9 @@ class ApiClient {
     String password, {
     String? otpToken,
   }) async {
+    final generation = ++_generation;
+    _access = null;
+    _reads.clear();
     final response = await send(
       'POST',
       '/api/v1/auth/login/',
@@ -139,20 +161,63 @@ class ApiClient {
       authenticated: false,
     );
     final data = response.map;
-    await _adopt(data['access'] as String, data['refresh'] as String);
+    if (generation != _generation) throw _expired();
+    await tokens.clearStartupSnapshot();
+    await _adopt(
+      data['access'] as String,
+      data['refresh'] as String,
+      generation: generation,
+    );
     return data;
   }
 
   /// Uses the stored refresh token to obtain a session. False when there is none
   /// or it is no longer valid; throws only when the server cannot be reached.
   Future<bool> restoreSession() async {
-    if (await tokens.readRefreshToken() == null) return false;
+    final generation = _generation;
+    final refresh = await tokens.readRefreshToken();
+    if (refresh == null) return false;
     try {
+      final access = await tokens.readAccessToken(baseUrl);
+      final accessClaims = _claims(access);
+      final refreshClaims = _claims(refresh);
+      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (generation != _generation) return false;
+      // This is a latency hint, never authorization. Every API read still
+      // verifies signature, revocation, membership and permissions on the server.
+      if (accessClaims?['token_type'] == 'access' &&
+          accessClaims?['exp'] is num &&
+          (accessClaims!['exp'] as num) > now + 30 &&
+          refreshClaims?['token_type'] == 'refresh' &&
+          refreshClaims?['exp'] is num &&
+          (refreshClaims!['exp'] as num) > now &&
+          accessClaims['user_id'] != null &&
+          accessClaims['user_id'] == refreshClaims['user_id']) {
+        _access = access;
+        return true;
+      }
       await _refresh();
       return true;
     } on ApiException catch (e) {
-      if (e.kind == ApiErrorKind.unauthorized || e.isDefinitive) return false;
+      if (e.kind == ApiErrorKind.unauthorized || e.code == 'token_not_valid') {
+        return false;
+      }
       rethrow;
+    }
+  }
+
+  static Map<String, dynamic>? _claims(String? token) {
+    try {
+      if (token == null || token.split('.').length != 3) return null;
+      return (jsonDecode(
+                utf8.decode(
+                  base64Url.decode(base64Url.normalize(token.split('.')[1])),
+                ),
+              )
+              as Map)
+          .cast<String, dynamic>();
+    } catch (_) {
+      return null;
     }
   }
 
@@ -162,6 +227,8 @@ class ApiClient {
   /// Points the client at another server. Tokens belong to the server that issued them, so they
   /// are forgotten here (without telling either server).
   Future<void> switchServer(String baseUrl) async {
+    _generation++;
+    _reads.clear();
     final trimmed = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
         : baseUrl;
@@ -172,9 +239,14 @@ class ApiClient {
 
   /// Revokes the refresh token on the server (best effort) and forgets all tokens.
   Future<void> logout() async {
-    final refresh = await tokens.readRefreshToken();
+    final generation = ++_generation;
+    _reads.clear();
     _access = null;
-    await tokens.clear();
+    final reading = tokens.readRefreshToken();
+    final clearing = tokens.clear();
+    final refresh = await reading;
+    await clearing;
+    if (generation != _generation) return;
     if (refresh == null) return;
     try {
       await send(
@@ -190,9 +262,14 @@ class ApiClient {
 
   /// Adopts a fresh token pair, e.g. after a password change.
   Future<void> adoptTokens(String access, String refresh) =>
-      _adopt(access, refresh);
+      _adopt(access, refresh, generation: ++_generation);
 
-  Future<void> _adopt(String access, String refresh) async {
+  Future<void> _adopt(
+    String access,
+    String refresh, {
+    required int generation,
+  }) async {
+    if (generation != _generation) throw _expired();
     try {
       await tokens.writeRefreshToken(refresh);
     } catch (_) {
@@ -202,6 +279,13 @@ class ApiClient {
         code: 'session_storage_unavailable',
       );
     }
+    if (generation != _generation) throw _expired();
+    try {
+      await tokens.writeAccessToken(baseUrl, access);
+    } catch (_) {
+      // A missing optional access cache only costs a refresh next launch.
+    }
+    if (generation != _generation) throw _expired();
     _access = access;
   }
 
@@ -216,8 +300,16 @@ class ApiClient {
     String? accept,
     ApiUpload? upload,
   }) async {
+    final generation = _generation;
+    final accessAtStart = _access;
+    if (authenticated &&
+        _refreshGeneration == _generation &&
+        _refreshing != null) {
+      await _refreshing;
+    }
+    if (authenticated && generation != _generation) throw _expired();
     try {
-      return await _once(
+      final response = await _once(
         method,
         path,
         query,
@@ -228,14 +320,27 @@ class ApiClient {
         accept,
         upload,
       );
+      if (authenticated && generation != _generation && method == 'GET') {
+        throw _expired();
+      }
+      if (method != 'GET') _readRevision++;
+      return response;
     } on ApiException catch (e) {
+      if (authenticated && generation != _generation) {
+        // A command may already have committed. Preserve its real result (and
+        // unknown-outcome errors), but never retry it as a different account.
+        if (method == 'GET') throw _expired();
+        rethrow;
+      }
       if (e.status == 402 && e.code.startsWith('subscription_')) {
         onSubscriptionBlocked?.call();
       }
       if (authenticated &&
           e.kind == ApiErrorKind.unauthorized &&
           await tokens.readRefreshToken() != null) {
-        await _refresh(); // may throw: session over, or server unreachable
+        if (generation != _generation) throw _expired();
+        if (_access == null || _access == accessAtStart) await _refresh();
+        if (generation != _generation) throw _expired();
         return _once(
           method,
           path,
@@ -253,12 +358,23 @@ class ApiClient {
   }
 
   /// One refresh at a time: requests that fail together wait for the same one.
-  Future<void> _refresh() => _refreshing ??= _doRefresh().whenComplete(() {
-    _refreshing = null;
-  });
+  Future<void> _refresh() {
+    if (_refreshGeneration == _generation && _refreshing != null) {
+      return _refreshing!;
+    }
+    _refreshGeneration = _generation;
+    late final Future<void> future;
+    future = _doRefresh().whenComplete(() {
+      if (identical(_refreshing, future)) _refreshing = null;
+    });
+    _refreshing = future;
+    return future;
+  }
 
   Future<void> _doRefresh() async {
+    final generation = _generation;
     final refresh = await tokens.readRefreshToken();
+    if (generation != _generation) throw _expired();
     if (refresh == null) throw _expired();
     try {
       final response = await _once(
@@ -273,9 +389,14 @@ class ApiClient {
         null,
       );
       final data = response.map;
-      await _adopt(data['access'] as String, data['refresh'] as String);
+      await _adopt(
+        data['access'] as String,
+        data['refresh'] as String,
+        generation: generation,
+      );
     } on ApiException catch (e) {
-      if (e.isDefinitive) {
+      if (generation != _generation) throw _expired();
+      if (e.kind == ApiErrorKind.unauthorized || e.code == 'token_not_valid') {
         // The server says this refresh token is dead: the session is over.
         _access = null;
         await tokens.clear();

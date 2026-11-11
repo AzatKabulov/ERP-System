@@ -33,6 +33,7 @@ class _SkeletonRegionState extends State<SkeletonRegion>
   void _sync() {
     final animate =
         widget.animate &&
+        MediaQuery.sizeOf(context).shortestSide >= 600 &&
         !_nested &&
         TickerMode.valuesOf(context).enabled &&
         !MediaQuery.disableAnimationsOf(context);

@@ -1,5 +1,18 @@
 # Product Requirements Document
 
+## Startup performance clarification (owner, 2026-11-10)
+
+Returning users should see a lightweight home shell immediately from securely
+saved identity, while the server checks their session in the background.
+Private shop figures and actions require a fresh confirmation of membership,
+permissions and subscription. A small, recent overview snapshot may then render
+while fresh figures load. An offline launch offers a locked shell and retry;
+stock-changing actions still require the server. This request does not authorize
+offline sales or change the pending broader offline proposal. Back navigation
+must preserve the current app and unsaved-form confirmations rather than replay
+startup. A 10× faster start and smooth 60 Hz presentation are targets to measure,
+not hardware acceptance claims.
+
 ## One business is one shop; warranty register; categories (owner decisions, 2026-10-31)
 
 - **One shop per business.** The warehouse of a Turkmen shop is a back room of the shop, so a business has exactly one location (its name is the shop's name, e.g. "Авто Запчасти"). A business cannot add another location (the server answers `single_location`): otherwise one licence could run several shops. Moving goods between places and the place switcher therefore disappear from the app while there is one place; the transfer code stays on the server, unused. This replaces the multi-location scope of the earlier sections.

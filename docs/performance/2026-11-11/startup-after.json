@@ -1,0 +1,217 @@
+{
+  "browser": "157.0.8103.40",
+  "note": "Desktop browser with iPhone UA/viewport; added API latency only. Cold has empty resources/no session; warm reload uses the same context and secure session. HTTP cache enabled at 0ms; Playwright routing disables it in the 600ms control (static assets still use fast loopback). FirstHome may be a locked identity/skeleton shell. VerifiedHome requires server profile; HomeData requires money text. InteractiveProbe includes real product-tab click and destination semantics, not universal TTI. Not hardware FPS.",
+  "sha256": "191fd53ed58ce1e3f17f14c5c804ceecef4052a90f5e3d3652a23e83c1b0ea7d",
+  "runs": [
+    {
+      "apiLatencyMs": 0,
+      "httpCache": "enabled",
+      "sample": 0,
+      "cold": {
+        "firstFrameMs": 313,
+        "signInObservedMs": 404
+      },
+      "firstHomeMs": 170,
+      "verifiedHomeMs": 268,
+      "homeDataMs": 276,
+      "interactiveProbeMs": 357,
+      "inputResponseMs": 81,
+      "firstFrameMs": 162.5,
+      "apiWallMs": 121,
+      "summedApiMs": 129,
+      "requests": [
+        {
+          "path": "/api/v1/businesses/:id/dashboard/",
+          "startMs": 155,
+          "endMs": 215
+        },
+        {
+          "path": "/api/v1/me/",
+          "startMs": 155,
+          "endMs": 215
+        },
+        {
+          "path": "/api/v1/businesses/:id/reports/sales/",
+          "startMs": 267,
+          "endMs": 276
+        }
+      ],
+      "problems": []
+    },
+    {
+      "apiLatencyMs": 0,
+      "httpCache": "enabled",
+      "sample": 1,
+      "cold": {
+        "firstFrameMs": 295.30000001192093,
+        "signInObservedMs": 377
+      },
+      "firstHomeMs": 172,
+      "verifiedHomeMs": 266,
+      "homeDataMs": 274,
+      "interactiveProbeMs": 355,
+      "inputResponseMs": 81,
+      "firstFrameMs": 164.89999997615814,
+      "apiWallMs": 118,
+      "summedApiMs": 130,
+      "requests": [
+        {
+          "path": "/api/v1/businesses/:id/dashboard/",
+          "startMs": 156,
+          "endMs": 217
+        },
+        {
+          "path": "/api/v1/me/",
+          "startMs": 156,
+          "endMs": 217
+        },
+        {
+          "path": "/api/v1/businesses/:id/reports/sales/",
+          "startMs": 266,
+          "endMs": 274
+        }
+      ],
+      "problems": []
+    },
+    {
+      "apiLatencyMs": 0,
+      "httpCache": "enabled",
+      "sample": 2,
+      "cold": {
+        "firstFrameMs": 292.39999997615814,
+        "signInObservedMs": 376
+      },
+      "firstHomeMs": 175,
+      "verifiedHomeMs": 267,
+      "homeDataMs": 275,
+      "interactiveProbeMs": 356,
+      "inputResponseMs": 81,
+      "firstFrameMs": 167.69999998807907,
+      "apiWallMs": 114,
+      "summedApiMs": 128,
+      "requests": [
+        {
+          "path": "/api/v1/businesses/:id/dashboard/",
+          "startMs": 160,
+          "endMs": 220
+        },
+        {
+          "path": "/api/v1/me/",
+          "startMs": 160,
+          "endMs": 220
+        },
+        {
+          "path": "/api/v1/businesses/:id/reports/sales/",
+          "startMs": 266,
+          "endMs": 274
+        }
+      ],
+      "problems": []
+    },
+    {
+      "apiLatencyMs": 600,
+      "httpCache": "disabled by latency routing",
+      "sample": 0,
+      "cold": {
+        "firstFrameMs": 310.39999997615814,
+        "signInObservedMs": 392
+      },
+      "firstHomeMs": 180,
+      "verifiedHomeMs": 849,
+      "homeDataMs": 857,
+      "interactiveProbeMs": 940,
+      "inputResponseMs": 83,
+      "firstFrameMs": 174,
+      "apiWallMs": 1303,
+      "summedApiMs": 1932,
+      "requests": [
+        {
+          "path": "/api/v1/businesses/:id/dashboard/",
+          "startMs": 168,
+          "endMs": 857
+        },
+        {
+          "path": "/api/v1/me/",
+          "startMs": 168,
+          "endMs": 788
+        },
+        {
+          "path": "/api/v1/businesses/:id/reports/sales/",
+          "startMs": 848,
+          "endMs": 1471
+        }
+      ],
+      "problems": []
+    },
+    {
+      "apiLatencyMs": 600,
+      "httpCache": "disabled by latency routing",
+      "sample": 1,
+      "cold": {
+        "firstFrameMs": 308.5,
+        "signInObservedMs": 394
+      },
+      "firstHomeMs": 185,
+      "verifiedHomeMs": 854,
+      "homeDataMs": 872,
+      "interactiveProbeMs": 957,
+      "inputResponseMs": 85,
+      "firstFrameMs": 179.4000000357628,
+      "apiWallMs": 1293,
+      "summedApiMs": 1923,
+      "requests": [
+        {
+          "path": "/api/v1/businesses/:id/dashboard/",
+          "startMs": 172,
+          "endMs": 863
+        },
+        {
+          "path": "/api/v1/me/",
+          "startMs": 172,
+          "endMs": 792
+        },
+        {
+          "path": "/api/v1/businesses/:id/reports/sales/",
+          "startMs": 853,
+          "endMs": 1465
+        }
+      ],
+      "problems": []
+    },
+    {
+      "apiLatencyMs": 600,
+      "httpCache": "disabled by latency routing",
+      "sample": 2,
+      "cold": {
+        "firstFrameMs": 307.10000002384186,
+        "signInObservedMs": 394
+      },
+      "firstHomeMs": 189,
+      "verifiedHomeMs": 856,
+      "homeDataMs": 872,
+      "interactiveProbeMs": 957,
+      "inputResponseMs": 85,
+      "firstFrameMs": 180.69999998807907,
+      "apiWallMs": 1303,
+      "summedApiMs": 1933,
+      "requests": [
+        {
+          "path": "/api/v1/businesses/:id/dashboard/",
+          "startMs": 176,
+          "endMs": 864
+        },
+        {
+          "path": "/api/v1/me/",
+          "startMs": 176,
+          "endMs": 797
+        },
+        {
+          "path": "/api/v1/businesses/:id/reports/sales/",
+          "startMs": 855,
+          "endMs": 1479
+        }
+      ],
+      "problems": []
+    }
+  ]
+}

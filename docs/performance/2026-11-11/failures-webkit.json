@@ -1,0 +1,8 @@
+{
+  "browser": "26.5",
+  "offlineApi": "locked shell, no private figures",
+  "reconnect": "passed",
+  "revocation": "signed out and cache removed",
+  "errors": [],
+  "note": "API offline with runtime assets available; not first-ever offline PWA installation or physical-device acceptance."
+}

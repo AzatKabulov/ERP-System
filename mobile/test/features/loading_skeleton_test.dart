@@ -42,6 +42,21 @@ Widget host(
 void main() {
   tearDown(() => AppColors.use(AppPalette.light));
 
+  testWidgets('phone skeleton has no continuous animation work', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      host(const SkeletonRegion(child: SkeletonCard()), reduced: false),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.hasRunningAnimations, isFalse);
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
   for (final language in ['ru', 'tk']) {
     testWidgets(
       'one localized status hides nested decorative bones ($language)',

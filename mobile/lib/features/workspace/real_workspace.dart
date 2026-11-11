@@ -222,9 +222,13 @@ class _RealWorkspaceState extends State<RealWorkspace> {
   Widget _page0(MembershipInfo membership, AppPage page) {
     return switch (page) {
       AppPage.dashboard => DashboardScreen(
-        key: ValueKey('dashboard-${membership.id}-$_reloadCounter'),
+        key: ValueKey('dashboard-${session.dashboardScope}-$_reloadCounter'),
         session: session,
-        repository: ReportsRepository(widget.api, membership.businessId),
+        repository: ReportsRepository(
+          widget.api,
+          membership.businessId,
+          session: session,
+        ),
         onOpenReports: () => setState(() => _page = AppPage.reports),
         onGo: (page) => setState(() => _page = page),
         onOpenToComplete: session.can('catalog.manage')

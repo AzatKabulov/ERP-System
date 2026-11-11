@@ -1,6 +1,47 @@
 # Handoff
 
-Last updated 2026-11-09. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+Last updated 2026-11-11. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+
+## Secure startup and mobile back navigation — 2026-11-11
+
+Owner authorized implementation, tests/load controls and a push to **main**,
+explicitly excluding deployment. Work started from Azat's `5a465d9`; his newer
+documentation commits through `f67b76c` were incorporated before finalizing.
+The pre-existing local Android helper/guide are excluded from this change.
+
+- Securely retain optional access and a bounded startup snapshot. Paint a locked
+  identity/skeleton shell immediately; verify `/me/` before private figures or
+  business actions. Prefetch the dashboard concurrently, validate the exact
+  confirmed scope, then revalidate cached figures in place. Expired access still
+  refreshes; offline startup remains locked with retry. No offline stock writes.
+- Start the trend independently; coalesce overlapping GETs. Generations prevent
+  old account/session work from applying after logout or a switch. Commands
+  retain their real success/unknown outcomes and operation identities.
+- Router-backed browser history keeps Back inside the current application.
+  Detail results no longer veto Cupertino edge-back. Unsaved forms still ask.
+  Pushed pages have opaque ambient backgrounds; narrow skeletons have no ticker.
+  Phone default glass/bars use the same veil/rim/shadows without backdrop blur;
+  wide glass retains its existing blur. The real phone-sized test view asserts
+  zero backdrop filters in the shell.
+- **611 Flutter tests pass**, full analysis and formatting pass, release web
+  build passes on pinned Flutter 3.47.6. New checks include restored access,
+  revoked/expired sessions, offline retry, malformed/oversized/expired snapshots,
+  permission/subscription changes, overlapping refreshes/reads, logout races,
+  dirty-form confirmation, iOS edge gesture and 100 route cycles.
+- Final real-stack sale/read-retry/localization checks pass at four phone/tablet/
+  desktop sizes. Disposable concurrent sales/retries/reads and a second-database
+  restore reconcile. Chromium/WebKit offline/reconnect/revocation and 25 mixed
+  back cycles per engine pass without document reload or reauthentication.
+- A three-repeat high-latency control (+600 ms per startup API request) measured
+  first shell **1476 → 185 ms**, permitted figures **2145 → 872 ms**; warm phone
+  navigation main-thread work at CPU 4× fell about 14%. Cold sign-in did not
+  improve. See the report for exact boundaries, raw data and limitations.
+
+See [the review and final browser/load evidence](docs/performance/2026-11-11/README.md)
+for measurements, complete file groups and remaining limits. Physical iPhone/PWA
+gesture/frame timing, Android hardware and live-server performance remain
+unverified; synthetic controls do not establish 60 FPS or a guaranteed 10× start.
+Turkmen additions need fluent review. No deployment or release publication.
 
 ## Phone glass performance follow-up — 2026-11-10
 

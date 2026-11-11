@@ -1,4 +1,7 @@
 import '../../widgets/skeleton.dart';
+import '../../widgets/app_shell.dart';
+import '../../widgets/glass.dart';
+import '../shared/loading_skeletons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -33,6 +36,7 @@ class RealHome extends StatefulWidget {
     required this.onServerLanguage,
     required this.server,
     this.pendingStore,
+    this.onSessionEnded,
   });
 
   final SessionController session;
@@ -48,6 +52,7 @@ class RealHome extends StatefulWidget {
 
   /// Injectable for tests; defaults to a `SharedPreferences`-backed store.
   final PendingOperationStore? pendingStore;
+  final VoidCallback? onSessionEnded;
 
   @override
   State<RealHome> createState() => _RealHomeState();
@@ -56,6 +61,7 @@ class RealHome extends StatefulWidget {
 class _RealHomeState extends State<RealHome> with WidgetsBindingObserver {
   OperationRunner? _runner;
   final _unsaved = UnsavedWork();
+  String? _lastScope;
 
   SessionController get session => widget.session;
 
@@ -79,6 +85,11 @@ class _RealHomeState extends State<RealHome> with WidgetsBindingObserver {
   void _sessionChanged() {
     final user = session.user;
     if (session.status == SessionStatus.signedIn && user != null) {
+      final scope = session.dashboardScope;
+      if (_lastScope != null && _lastScope != scope) {
+        widget.onSessionEnded?.call();
+      }
+      _lastScope = scope;
       if (_runner?.userId != user.id) {
         _runner?.dispose();
         final runner = OperationRunner(
@@ -95,8 +106,10 @@ class _RealHomeState extends State<RealHome> with WidgetsBindingObserver {
         unawaited(runner.start());
       }
     } else if (_runner != null) {
+      widget.onSessionEnded?.call();
       _runner!.dispose();
       _runner = null;
+      _lastScope = null;
     }
     if (mounted) setState(() {});
   }
@@ -105,6 +118,9 @@ class _RealHomeState extends State<RealHome> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(_runner?.recover());
+      if (session.status == SessionStatus.signedIn) {
+        unawaited(session.refreshProfile().catchError((Object _) {}));
+      }
     }
   }
 
@@ -113,6 +129,45 @@ class _RealHomeState extends State<RealHome> with WidgetsBindingObserver {
     final l = strings(context);
     switch (session.status) {
       case SessionStatus.restoring:
+        if (session.hasPreview) {
+          return AppShell(
+            pages: const [AppPage.dashboard],
+            page: AppPage.dashboard,
+            onNavigate: (_) {},
+            languageCode: widget.languageCode,
+            onLanguageChanged: widget.onLanguageChanged,
+            userName: session.previewName ?? '',
+            locationControl: Text(session.previewBusiness ?? ''),
+            body: LayoutBuilder(
+              builder: (context, box) => ListView(
+                key: const ValueKey('startup-preview'),
+                padding: pagePadding(context, compact: box.maxWidth < 600),
+                children: [
+                  PageHead(title: l.welcomeUser(session.previewName ?? '')),
+                  const SizedBox(height: 16),
+                  Text(
+                    session.serverUnreachable
+                        ? l.startupOffline
+                        : l.startupChecking,
+                  ),
+                  if (session.serverUnreachable)
+                    TextButton.icon(
+                      key: const ValueKey('startup-retry'),
+                      onPressed: () => unawaited(session.restore()),
+                      icon: const Icon(Icons.refresh),
+                      label: Text(l.retry),
+                    ),
+                  const SizedBox(height: 16),
+                  DashboardLoadingSkeleton(
+                    compact: box.maxWidth < 600,
+                    metrics: 4,
+                    hero: true,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         return Scaffold(
           body: Center(
             child: Column(

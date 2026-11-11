@@ -1,5 +1,38 @@
 # Reproducible navigation experiment
 
+## Startup and browser-back controls (2026-11-11)
+
+Use the same marked loopback sample server and frozen release builds described
+below. `startup_benchmark.js` measures three fresh contexts per 0/600 ms added
+API-latency scenario: cold sign-in, returning locked shell, verified navigation,
+first figures, a product-tab interaction and startup-request start/end times.
+It records no headers, tokens or payloads. `startup_scenarios.js` checks API
+offline/retry and revoked-session cache removal, with runtime assets available.
+`navigation_stress.js` checks 20 browser-back and five mixed in-app/browser-back
+cycles without document loads or authentication requests. Both Chromium and
+`E2E_BROWSER=webkit` are supported for the failure/navigation controls.
+
+```sh
+ERP_E2E_DISPOSABLE=true E2E_WEB_URL=http://127.0.0.1:8001/ \
+PERF_SAMPLE_DATA=local-data/performance/new-run/server \
+PERF_OUT=local-data/performance/new-run/startup.json \
+PLAYWRIGHT_MODULE=/path/to/node_modules/playwright \
+CHROMIUM_PATH=/path/to/chromium \
+node scripts/performance/startup_benchmark.js
+```
+
+Change the script/output for the two scenario controls. `PERF_SAMPLES` overrides
+the startup repeat count. On macOS use `COPYFILE_DISABLE=1 tar ...` when saving
+builds, so AppleDouble entries do not fail the archive safety checks. After
+`switch_build.py`, prepare gzip assets with
+`compress_web_assets` from `scripts/local/run_local.py` using the pinned backend
+Python, just as the sample launcher does. Keep builds/tests idle while timing;
+do not compare compressed and uncompressed bundles. The phone navigation
+benchmark now also requires `PERF_SAMPLE_DATA` and a loopback URL; it marks the
+separately-tested onboarding guides as seen and sets the synthetic profile to RU.
+None of these observations establish real-device FPS, Safari/PWA gesture
+acceptance or offline installation. See [results and limits](../../docs/performance/2026-11-11/README.md).
+
 ## Catalog photo-download control (2026-11-09)
 
 Start `sample_server.py` with `--photos` and a fresh marked data folder to give

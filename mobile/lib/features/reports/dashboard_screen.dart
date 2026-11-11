@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import '../../core/format/format_stamp.dart';
 import '../../core/money/decimal_math.dart';
@@ -50,7 +51,35 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   /// Independently load the last two weeks; metrics remain available if charts fail.
-  late Future<SalesReport?> _trend = _loadTrend();
+  late Future<SalesReport?> _trend;
+  Dashboard? _cached;
+  bool _fresh = false;
+
+  Future<Dashboard> _loadDashboard() async {
+    final value = await widget.repository.dashboard();
+    _fresh = true;
+    return value;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      final raw = widget.session.cachedDashboard;
+      if (raw != null) _cached = Dashboard.fromJson(raw);
+    } catch (_) {
+      // A damaged or older snapshot cannot break an otherwise valid session.
+    }
+    _trend = _startTrend();
+  }
+
+  Future<SalesReport?> _startTrend() {
+    final future = _loadTrend();
+    // A dashboard failure can delay mounting its chart FutureBuilder. Observe
+    // the independent error now; keep the original failed future for its retry UI.
+    unawaited(future.then<void>((_) {}, onError: (Object _) {}));
+    return future;
+  }
 
   Future<SalesReport?> _loadTrend() async {
     if (!widget.session.can('report.view') ||
@@ -94,6 +123,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   if (session.can('dashboard.view'))
                     AsyncSection<Dashboard>(
+                      initialData: _cached,
                       loadingBuilder: (context) => DashboardLoadingSkeleton(
                         compact: compact,
                         metrics: [
@@ -109,30 +139,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             session.can('sales.view') ||
                             session.can('stock.cost.view'),
                       ),
-                      load: widget.repository.dashboard,
+                      load: _loadDashboard,
                       builder: (context, d) => FutureBuilder<SalesReport?>(
                         future: _trend,
-                        builder: (context, trend) => _Figures(
-                          dashboard: d,
-                          trend: trend.data,
-                          trendLoading:
-                              session.can('report.view') &&
-                              trend.connectionState != ConnectionState.done,
-                          trendError: trend.error,
-                          retryTrend: () => setState(() {
-                            _trend = _loadTrend();
-                          }),
-                          compact: compact,
-                          locationName:
-                              (session.membership?.locations.length ?? 0) > 1
-                              ? l.reportAllLocations
-                              : session.location?.name,
-                          onOpenReports: session.can('report.view')
-                              ? widget.onOpenReports
-                              : null,
-                          onOpenToComplete: widget.onOpenToComplete,
-                          session: session,
-                          onGo: widget.onGo,
+                        builder: (context, trend) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (!_fresh && session.dashboardCachedAt != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: NoticeBanner(
+                                  text: l.cachedOverview(
+                                    formatStamp(session.dashboardCachedAt!),
+                                  ),
+                                ),
+                              ),
+                            _Figures(
+                              dashboard: d,
+                              trend: trend.data,
+                              trendLoading:
+                                  session.can('report.view') &&
+                                  trend.connectionState != ConnectionState.done,
+                              trendError: trend.error,
+                              retryTrend: () => setState(() {
+                                _trend = _startTrend();
+                              }),
+                              compact: compact,
+                              locationName:
+                                  (session.membership?.locations.length ?? 0) >
+                                      1
+                                  ? l.reportAllLocations
+                                  : session.location?.name,
+                              onOpenReports: session.can('report.view')
+                                  ? widget.onOpenReports
+                                  : null,
+                              onOpenToComplete: widget.onOpenToComplete,
+                              session: session,
+                              onGo: widget.onGo,
+                            ),
+                          ],
                         ),
                       ),
                     ),

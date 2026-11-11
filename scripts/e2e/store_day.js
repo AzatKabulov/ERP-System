@@ -31,7 +31,7 @@ const viewports = process.env.E2E_VIEWPORTS ? JSON.parse(process.env.E2E_VIEWPOR
   };
   const me = await api('/api/v1/me/');
   const base = `/api/v1/businesses/${me.memberships[0].business.id}`;
-  const store = (await api(`${base}/locations/`)).results.find(l => l.name === 'Main store').id;
+  const store = (await api(`${base}/locations/`)).results.find(l => l.kind === 'store').id;
   const unit = (await api(`${base}/units/`)).results.find(u => u.symbol === 'шт').id;
   const browser = await L.launch();
   const results = [];
@@ -48,6 +48,19 @@ const viewports = process.env.E2E_VIEWPORTS ? JSON.parse(process.env.E2E_VIEWPOR
       const {ctx,page,problems} = await L.newPage(browser, {width,height});
       active = page;
       page.setDefaultTimeout(15000);
+      await ctx.addInitScript(({user,business,location}) => {
+        for (const id of ['dashboard','products','sales','inventory'])
+          localStorage.setItem(`flutter.guide.${id}.done`, 'true');
+        localStorage.setItem('flutter.language', JSON.stringify('ru'));
+        localStorage.setItem(`flutter.session.${user}.business`, JSON.stringify(business));
+        localStorage.setItem(`flutter.session.${user}.location`, JSON.stringify(location));
+      }, {user:me.user.id,business:me.memberships[0].business.id,location:store});
+      // Language follows the real profile; each viewport starts consistently.
+      const languageResponse = await fetch(new URL('/api/v1/me/', L.URL), {
+        method:'PATCH', headers:{Authorization:`Bearer ${access}`, 'Content-Type':'application/json'},
+        body:JSON.stringify({preferred_language:'ru'}),
+      });
+      assert.equal(languageResponse.status, 200);
       let failSearch = false;
       await page.route('**/api/v1/businesses/*/products/?**', async route => {
         if (failSearch) await route.fulfill({status:503, contentType:'application/json',
@@ -57,12 +70,10 @@ const viewports = process.env.E2E_VIEWPORTS ? JSON.parse(process.env.E2E_VIEWPOR
       await L.boot(page);
       await L.clickLabel(page, ru.signInAction || 'Войти', {which:'last', wait:350});
       await L.clickLabel(page, 'Владелец', {wait:1200});
-      // The previous viewport saved Turkmen on the user's real profile.
-      await L.clickLabel(page, 'RU', {role:'button',wait:500});
       const nav = async label => {
         // Less frequent phone modules live in the drawer.
         if (width < 768 && ![ru.dashboard,ru.products,ru.sales,ru.inventory].includes(label)) {
-          await L.clickLabel(page, ru.menu, {role:'button',wait:400});
+          await L.clickLabel(page, ru.navMore, {which:'last',role:'button',wait:400});
         }
         await L.clickLabel(page, label, {role:'button',wait:700});
       };
@@ -71,11 +82,23 @@ const viewports = process.env.E2E_VIEWPORTS ? JSON.parse(process.env.E2E_VIEWPOR
       await delay(600);
       assert.match(await L.text(page), /В наличии здесь: 50 шт/);
       const result = page.getByRole('button', {name:new RegExp(sku)});
-      await result.first().click();
-      await delay(700);
+      // Flutter semantics can place this row under the floating phone tabs.
+      // Scroll the real canvas before tapping; DOM scrollIntoView is insufficient.
+      for (let scroll = 0; scroll < 10; scroll++) {
+        const box = await result.first().boundingBox();
+        assert(box, 'Sales result has no accessible bounds');
+        if (box.y + box.height / 2 < height - 140) break;
+        await page.mouse.move(width / 2, height / 2);
+        await page.mouse.wheel(0, 250);
+        await delay(250);
+      }
+      await page.screenshot({path:path.join(out, `${width}-before-add.png`)});
+      // Use the shared canvas helper: locator.click() can DOM-scroll Flutter's
+      // semantics while a search input is focused, moving its hit coordinates.
+      await L.clickLabel(page, sku, {exact:false,role:'button',wait:700});
       await L.fill(page, '^Количество$', '2');
       await L.fill(page, '^Цена за единицу', '123,45');
-      await L.clickLabel(page, ru.toPayment, {role:'button',wait:700});
+      await L.clickLabel(page, ru.toPayment, {role:'button',wait:700,bottomInset:width<768?140:12});
       assert.match(await L.text(page), /246,90/);
       const before = (await api(`${base}/sales/`)).count;
       await L.clickLabel(page, ru.completeSale, {role:'button',wait:1100});
@@ -100,7 +123,12 @@ const viewports = process.env.E2E_VIEWPORTS ? JSON.parse(process.env.E2E_VIEWPOR
       // date must not compare today's total to that same day as "yesterday".
       assert.doesNotMatch(await L.text(page), /ко вчера/);
       // Switch language with the real selector and visit primary routes in Turkmen.
-      await L.clickLabel(page, 'TM', {role:'button',wait:650});
+      if (width < 768) {
+        await nav(ru.administration);
+        await L.clickLabel(page, ru.languageTurkmen, {wait:650,bottomInset:140});
+      } else {
+        await L.clickLabel(page, 'TM', {role:'button',wait:650});
+      }
       for (const label of [tk.products,tk.sales,tk.inventory,tk.dashboard]) {
         await L.clickLabel(page, label, {role:'button',wait:700});
       }

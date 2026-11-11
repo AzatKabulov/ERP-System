@@ -1,0 +1,54 @@
+[
+  {
+    "width": 390,
+    "height": 844,
+    "browser": "157.0.8103.40",
+    "language": [
+      "ru",
+      "tk"
+    ],
+    "sale": "passed",
+    "readRecovery": "passed",
+    "modules": "passed",
+    "engineWarnings": []
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "browser": "157.0.8103.40",
+    "language": [
+      "ru",
+      "tk"
+    ],
+    "sale": "passed",
+    "readRecovery": "passed",
+    "modules": "passed",
+    "engineWarnings": []
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "browser": "157.0.8103.40",
+    "language": [
+      "ru",
+      "tk"
+    ],
+    "sale": "passed",
+    "readRecovery": "passed",
+    "modules": "passed",
+    "engineWarnings": []
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "browser": "157.0.8103.40",
+    "language": [
+      "ru",
+      "tk"
+    ],
+    "sale": "passed",
+    "readRecovery": "passed",
+    "modules": "passed",
+    "engineWarnings": []
+  }
+]

@@ -52,10 +52,12 @@ class AsyncSection<T> extends StatefulWidget {
     required this.load,
     required this.builder,
     required this.loadingBuilder,
+    this.initialData,
   });
   final Future<T> Function() load;
   final Widget Function(BuildContext context, T data) builder;
   final WidgetBuilder loadingBuilder;
+  final T? initialData;
 
   @override
   State<AsyncSection<T>> createState() => AsyncSectionState<T>();
@@ -63,8 +65,8 @@ class AsyncSection<T> extends StatefulWidget {
 
 class AsyncSectionState<T> extends State<AsyncSection<T>> {
   late Future<T> _future = _read();
-  T? _data;
-  bool _hasData = false;
+  late T? _data = widget.initialData;
+  late bool _hasData = widget.initialData != null;
   int _generation = 0;
 
   Future<T> _read() async {

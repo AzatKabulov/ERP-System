@@ -1,0 +1,74 @@
+{
+  "method": "Median of 3 contexts per latency/variant. Semantics boundaries, not physical FPS/TTI. 0ms HTTP cache enabled; 600ms API routing disables HTTP cache for both bundles.",
+  "baseline_source": "5a465d9 (same application as f67b76c)",
+  "before_sha256": "bbdf1afd354956804c885ff06f48f8117d13032c29e8a849a821d205da152a60",
+  "after_sha256": "191fd53ed58ce1e3f17f14c5c804ceecef4052a90f5e3d3652a23e83c1b0ea7d",
+  "latencies": [
+    {
+      "addedApiLatencyMs": 0,
+      "before": {
+        "firstFrameMs": 159.10000002384186,
+        "firstHomeMs": 245,
+        "verifiedHomeMs": 251,
+        "homeDataMs": 280,
+        "interactiveProbeMs": 370,
+        "inputResponseMs": 90,
+        "apiWallMs": 127,
+        "summedApiMs": 55,
+        "startupRequests": 4
+      },
+      "after": {
+        "firstFrameMs": 164.89999997615814,
+        "firstHomeMs": 172,
+        "verifiedHomeMs": 267,
+        "homeDataMs": 275,
+        "interactiveProbeMs": 356,
+        "inputResponseMs": 81,
+        "apiWallMs": 118,
+        "summedApiMs": 129,
+        "startupRequests": 3
+      }
+    },
+    {
+      "addedApiLatencyMs": 600,
+      "before": {
+        "firstFrameMs": 161.80000001192093,
+        "firstHomeMs": 1476,
+        "verifiedHomeMs": 1486,
+        "homeDataMs": 2145,
+        "interactiveProbeMs": 2233,
+        "inputResponseMs": 88,
+        "apiWallMs": 2605,
+        "summedApiMs": 2500,
+        "startupRequests": 4
+      },
+      "after": {
+        "firstFrameMs": 179.4000000357628,
+        "firstHomeMs": 185,
+        "verifiedHomeMs": 854,
+        "homeDataMs": 872,
+        "interactiveProbeMs": 957,
+        "inputResponseMs": 85,
+        "apiWallMs": 1303,
+        "summedApiMs": 1932,
+        "startupRequests": 3
+      }
+    }
+  ],
+  "coldSignInMedianMs": {
+    "before": 377.0,
+    "after": 393.0
+  },
+  "cpu4Navigation": {
+    "before": {
+      "medianTaskWorkPerFiveNavigationsMs": 941.5,
+      "totalLongTasks": 1,
+      "medianWindowCallbackGapP95Ms": 16.799999999999272
+    },
+    "after": {
+      "medianTaskWorkPerFiveNavigationsMs": 810.49,
+      "totalLongTasks": 0,
+      "medianWindowCallbackGapP95Ms": 16.799999999999272
+    }
+  }
+}
