@@ -225,8 +225,10 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
       _warrantyMonths != null &&
       _warrantyMonths! >= 0 &&
       _warrantyMonths! <= 120;
-  bool get _waiting =>
-      _loading || _productLoading || entry.state == IntakeEntryState.lookingUp;
+  bool get _searchPending =>
+      !entry.isManual &&
+      (entry.state == IntakeEntryState.lookingUp || entry.suggesting);
+  bool get _waiting => _loading || _productLoading || _searchPending;
 
   Future<void> _save() async {
     if (_busy || _waiting) return;
@@ -423,7 +425,7 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
     // the labels of the three money fields run to two lines: give all three the same room
     final priceLabelHeight = available >= 520 ? 34.0 : 0.0;
     Widget grid(List<Widget> children, {int columns = 2}) {
-      final cols = available >= 520 ? columns : (available >= 340 ? 2 : 1);
+      final cols = available >= 560 ? columns.clamp(1, 2) : 1;
       final width = (available - 12 * (cols - 1)) / cols;
       return Wrap(
         spacing: 12,
@@ -488,95 +490,135 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
         title: Text(l.intakeFormTitle),
         content: SizedBox(
           width: 600,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // what was scanned, as a small tag
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceSoft,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppIcon(
-                      entry.isManual ? AppIcons.keyboard : AppIcons.scan,
-                      size: 16,
-                      color: AppColors.neutral,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        entry.isManual
-                            ? l.intakeNoBarcode
-                            : l.intakeCodeLine(entry.code),
-                        style: TextStyle(
-                          color: AppColors.neutral,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+          child: _searchPending
+              ? Semantics(
+                  liveRegion: true,
+                  child: Padding(
+                    key: const ValueKey('intake-search-loading'),
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
+                        Text(
+                          l.intakeOnlineLoading,
+                          textAlign: TextAlign.center,
                         ),
+                      ],
+                    ),
+                  ),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // what was scanned, as a small tag
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceSoft,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppIcon(
+                            entry.isManual ? AppIcons.keyboard : AppIcons.scan,
+                            size: 16,
+                            color: AppColors.neutral,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              entry.isManual
+                                  ? l.intakeNoBarcode
+                                  : l.intakeCodeLine(entry.code),
+                              style: TextStyle(
+                                color: AppColors.neutral,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (entry.suggesting)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(l.intakeOnlineLoading),
-                ),
-              if (!_known && entry.suggestion != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(l.intakeOnlineSource(entry.suggestion!.source)),
-                ),
-              if (entry.state == IntakeEntryState.lookupFailed) ...[
-                Text(l.intakeLookupFailed),
-                TextButton(
-                  onPressed: _busy
-                      ? null
-                      : () => widget.controller.retryLookup(entry),
-                  child: Text(l.retry),
-                ),
-              ],
-              if (_loadError != null) ...[
-                Text(l.loadFailed),
-                TextButton(
-                  onPressed: _busy
-                      ? null
-                      : () {
-                          _loadUnits();
-                          if (_known) _loadProduct(entry.product!.id);
-                        },
-                  child: Text(l.retry),
-                ),
-              ],
-              if (!widget.canManage && !_known)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(l.intakeCatalogPermission),
-                ),
-              section(l.intakeSectionProduct),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (photoTile != null) ...[
-                    // the label row of a field is about 21 px: line the tile up with the input
-                    Padding(
-                      padding: const EdgeInsets.only(top: 21),
-                      child: photoTile,
-                    ),
-                    const SizedBox(width: 14),
-                  ],
-                  Expanded(
-                    child: field(
+                    const SizedBox(height: 12),
+                    if (entry.suggesting)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(l.intakeOnlineLoading),
+                      ),
+                    if (!_known &&
+                        !entry.isManual &&
+                        !entry.suggesting &&
+                        !entry.suggestionFailed &&
+                        entry.suggestion == null &&
+                        entry.state == IntakeEntryState.notFound)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(l.intakeOnlineNotFound),
+                      ),
+                    if (!_known && entry.suggestionFailed) ...[
+                      Text(l.intakeOnlineUnavailable),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          key: const ValueKey('intake-online-retry'),
+                          onPressed: _busy || entry.suggesting
+                              ? null
+                              : () => widget.controller.retrySuggestion(entry),
+                          child: Text(l.retry),
+                        ),
+                      ),
+                    ],
+                    if (!_known && entry.suggestion != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          l.intakeOnlineSource(entry.suggestion!.source),
+                        ),
+                      ),
+                    if (entry.state == IntakeEntryState.lookupFailed) ...[
+                      Text(l.intakeLookupFailed),
+                      TextButton(
+                        onPressed: _busy
+                            ? null
+                            : () => widget.controller.retryLookup(entry),
+                        child: Text(l.retry),
+                      ),
+                    ],
+                    if (_loadError != null) ...[
+                      Text(l.loadFailed),
+                      TextButton(
+                        onPressed: _busy
+                            ? null
+                            : () {
+                                _loadUnits();
+                                if (_known) _loadProduct(entry.product!.id);
+                              },
+                        child: Text(l.retry),
+                      ),
+                    ],
+                    if (!widget.canManage && !_known)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(l.intakeCatalogPermission),
+                      ),
+                    section(l.intakeSectionProduct),
+                    if (photoTile != null) ...[
+                      Text(
+                        l.productPhotoChoose,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      photoTile,
+                    ],
+                    field(
                       'intake-new-name',
                       l.productName,
                       _name,
@@ -586,184 +628,189 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
                           ? l.fieldRequired
                           : error('name'),
                     ),
-                  ),
-                ],
-              ),
-              section(l.intakeSectionPrices),
-              grid(columns: 3, [
-                field(
-                  'intake-edit-qty',
-                  l.quantity,
-                  _quantity,
-                  'quantity',
-                  numeric: true,
-                  labelHeight: priceLabelHeight,
-                  errorText: _submitted && _qty == null
-                      ? l.fieldQuantityPrecision
-                      : null,
-                ),
-                if (widget.canCost)
-                  field(
-                    'intake-edit-cost',
-                    l.intakeCostLabel,
-                    _cost,
-                    'cost',
-                    numeric: true,
-                    labelHeight: priceLabelHeight,
-                    errorText:
-                        _submitted &&
-                            _cost.text.trim().isNotEmpty &&
-                            _costMinor == null
-                        ? l.validAmount
-                        : null,
-                  ),
-                if (widget.canManage)
-                  field(
-                    'intake-new-price',
-                    l.intakeSellingPrice(_existing?.priceCurrency ?? 'TMT'),
-                    _price,
-                    'price',
-                    enabled: !_waiting,
-                    numeric: true,
-                    labelHeight: priceLabelHeight,
-                    helper: _known ? l.intakeKeepPrice : null,
-                    errorText:
-                        _submitted &&
-                            _price.text.trim().isNotEmpty &&
-                            _priceMinor == null
-                        ? l.validAmount
-                        : error('price_amount'),
-                  ),
-              ]),
-              section(l.intakeSectionMore),
-              grid([
-                // the category: type it, or open the list (where a new one can be created)
-                field(
-                  'intake-new-category',
-                  l.categoryLabel,
-                  _category,
-                  'category',
-                  enabled: _editable,
-                  errorText: error('category'),
-                  suffix: IconButton(
-                    key: const ValueKey('intake-category-pick'),
-                    tooltip: l.categoryPickerTitle,
-                    onPressed: _editable && !_busy ? _pickCategory : null,
-                    icon: const AppIcon(AppIcons.tag, size: 20),
-                  ),
-                ),
-                field(
-                  'intake-new-brand',
-                  l.brandLabel,
-                  _brand,
-                  'brand',
-                  enabled: _editable,
-                  errorText: error('brand'),
-                ),
-                field(
-                  'intake-new-sku',
-                  entry.isManual ? l.intakeArticleOptional : l.productSku,
-                  _sku,
-                  'sku',
-                  enabled: _editable,
-                  errorText:
-                      _submitted && !entry.isManual && _sku.text.trim().isEmpty
-                      ? l.fieldRequired
-                      : error('sku') ?? error('barcodes'),
-                ),
-                if (_waiting && _units.isEmpty && _unit == null)
-                  const SkeletonForm(fields: 1, actions: false)
-                else if (_units.isNotEmpty || _unit != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: LabeledField(
-                      label: l.unitLabel,
-                      child: DropdownButtonFormField<String>(
-                        key: ValueKey('intake-new-unit-${_unit?.id}'),
-                        initialValue: _unit?.id,
-                        isExpanded: true,
-                        items: [
-                          for (final unit in (_known ? [_unit!] : _units))
-                            DropdownMenuItem(
-                              value: unit.id,
-                              child: Text('${unit.name} (${unit.symbol})'),
-                            ),
-                        ],
-                        onChanged: _known || _busy
-                            ? null
-                            : (id) {
-                                setState(
-                                  () => _unit = _units.firstWhere(
-                                    (u) => u.id == id,
-                                  ),
-                                );
-                                _change('unit', id!);
-                              },
+                    section(l.intakeSectionPrices),
+                    grid(columns: 3, [
+                      field(
+                        'intake-edit-qty',
+                        l.quantity,
+                        _quantity,
+                        'quantity',
+                        numeric: true,
+                        labelHeight: priceLabelHeight,
+                        errorText: _submitted && _qty == null
+                            ? l.fieldQuantityPrecision
+                            : null,
                       ),
-                    ),
-                  ),
-                if (widget.canManage)
-                  field(
-                    'intake-warranty-months',
-                    l.intakeWarrantyMonths,
-                    _warranty,
-                    'warranty_months',
-                    enabled: _editable,
-                    numeric: true,
-                    errorText: _submitted && !_warrantyValid
-                        ? l.fieldOutOfRange
-                        : error('warranty_months'),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: LabeledField(
-                    label: l.expiryDateOptional,
-                    child: TextField(
-                      key: const ValueKey('intake-expiry-date'),
-                      controller: _expiryText,
-                      enabled: !_busy,
-                      keyboardType: TextInputType.datetime,
-                      onChanged: (value) => _change('expiry_date', value),
-                      decoration: InputDecoration(
-                        hintText: l.expiryDateFormat,
+                      if (widget.canCost)
+                        field(
+                          'intake-edit-cost',
+                          l.intakeCostLabel,
+                          _cost,
+                          'cost',
+                          numeric: true,
+                          labelHeight: priceLabelHeight,
+                          errorText:
+                              _submitted &&
+                                  _cost.text.trim().isNotEmpty &&
+                                  _costMinor == null
+                              ? l.validAmount
+                              : null,
+                        ),
+                      if (widget.canManage)
+                        field(
+                          'intake-new-price',
+                          l.intakeSellingPrice(
+                            _existing?.priceCurrency ?? 'TMT',
+                          ),
+                          _price,
+                          'price',
+                          enabled: !_waiting,
+                          numeric: true,
+                          labelHeight: priceLabelHeight,
+                          helper: _known ? l.intakeKeepPrice : null,
+                          errorText:
+                              _submitted &&
+                                  _price.text.trim().isNotEmpty &&
+                                  _priceMinor == null
+                              ? l.validAmount
+                              : error('price_amount'),
+                        ),
+                    ]),
+                    section(l.intakeSectionMore),
+                    grid([
+                      // the category: type it, or open the list (where a new one can be created)
+                      field(
+                        'intake-new-category',
+                        l.categoryLabel,
+                        _category,
+                        'category',
+                        enabled: _editable,
+                        errorText: error('category'),
+                        suffix: IconButton(
+                          key: const ValueKey('intake-category-pick'),
+                          tooltip: l.categoryPickerTitle,
+                          onPressed: _editable && !_busy ? _pickCategory : null,
+                          icon: const AppIcon(AppIcons.tag, size: 20),
+                        ),
+                      ),
+                      field(
+                        'intake-new-brand',
+                        l.brandLabel,
+                        _brand,
+                        'brand',
+                        enabled: _editable,
+                        errorText: error('brand'),
+                      ),
+                      field(
+                        'intake-new-sku',
+                        entry.isManual ? l.intakeArticleOptional : l.productSku,
+                        _sku,
+                        'sku',
+                        enabled: _editable,
                         errorText:
                             _submitted &&
-                                _expiryText.text.trim().isNotEmpty &&
-                                _expiryDate == null
-                            ? l.expiryDateInvalid
-                            : null,
-                        suffixIcon: _expiryText.text.isEmpty
-                            ? null
-                            : IconButton(
-                                key: const ValueKey('intake-expiry-clear'),
-                                tooltip: l.clearExpiryDate,
-                                onPressed: _busy
-                                    ? null
-                                    : () {
-                                        _expiryText.clear();
-                                        _change('expiry_date', '');
-                                      },
-                                icon: const AppIcon(AppIcons.close),
-                              ),
+                                !entry.isManual &&
+                                _sku.text.trim().isEmpty
+                            ? l.fieldRequired
+                            : error('sku') ?? error('barcodes'),
                       ),
-                    ),
-                  ),
+                      if (_waiting && _units.isEmpty && _unit == null)
+                        const SkeletonForm(fields: 1, actions: false)
+                      else if (_units.isNotEmpty || _unit != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: LabeledField(
+                            label: l.unitLabel,
+                            child: DropdownButtonFormField<String>(
+                              key: ValueKey('intake-new-unit-${_unit?.id}'),
+                              initialValue: _unit?.id,
+                              isExpanded: true,
+                              items: [
+                                for (final unit in (_known ? [_unit!] : _units))
+                                  DropdownMenuItem(
+                                    value: unit.id,
+                                    child: Text(
+                                      '${unit.name} (${unit.symbol})',
+                                    ),
+                                  ),
+                              ],
+                              onChanged: _known || _busy
+                                  ? null
+                                  : (id) {
+                                      setState(
+                                        () => _unit = _units.firstWhere(
+                                          (u) => u.id == id,
+                                        ),
+                                      );
+                                      _change('unit', id!);
+                                    },
+                            ),
+                          ),
+                        ),
+                      if (widget.canManage)
+                        field(
+                          'intake-warranty-months',
+                          l.intakeWarrantyMonths,
+                          _warranty,
+                          'warranty_months',
+                          enabled: _editable,
+                          numeric: true,
+                          errorText: _submitted && !_warrantyValid
+                              ? l.fieldOutOfRange
+                              : error('warranty_months'),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: LabeledField(
+                          label: l.expiryDateOptional,
+                          child: TextField(
+                            key: const ValueKey('intake-expiry-date'),
+                            controller: _expiryText,
+                            enabled: !_busy,
+                            keyboardType: TextInputType.datetime,
+                            onChanged: (value) => _change('expiry_date', value),
+                            decoration: InputDecoration(
+                              hintText: l.expiryDateFormat,
+                              errorText:
+                                  _submitted &&
+                                      _expiryText.text.trim().isNotEmpty &&
+                                      _expiryDate == null
+                                  ? l.expiryDateInvalid
+                                  : null,
+                              suffixIcon: _expiryText.text.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      key: const ValueKey(
+                                        'intake-expiry-clear',
+                                      ),
+                                      tooltip: l.clearExpiryDate,
+                                      onPressed: _busy
+                                          ? null
+                                          : () {
+                                              _expiryText.clear();
+                                              _change('expiry_date', '');
+                                            },
+                                      icon: const AppIcon(AppIcons.close),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 4),
+                    if (_saveError != null)
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          _saveError is ApiException
+                              ? apiErrorText(l, _saveError! as ApiException)
+                              : l.loadFailed,
+                          key: const ValueKey('intake-new-error'),
+                          style: TextStyle(color: AppColors.danger),
+                        ),
+                      ),
+                  ],
                 ),
-              ]),
-              const SizedBox(height: 4),
-              if (_saveError != null)
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    _saveError is ApiException
-                        ? apiErrorText(l, _saveError! as ApiException)
-                        : l.loadFailed,
-                    key: const ValueKey('intake-new-error'),
-                    style: TextStyle(color: AppColors.danger),
-                  ),
-                ),
-            ],
-          ),
         ),
         actions: [
           TextButton(

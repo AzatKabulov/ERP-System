@@ -307,12 +307,22 @@ abstract final class AppTheme {
       iconTheme: IconThemeData(color: AppColors.ink, size: 20),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(
+            backgroundColor: Colors.transparent,
+          ),
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(
+            backgroundColor: Colors.transparent,
+          ),
+          TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(
+            backgroundColor: Colors.transparent,
+          ),
+          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(
+            backgroundColor: Colors.transparent,
+          ),
+          TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(
+            backgroundColor: Colors.transparent,
+          ),
         },
       ),
       actionIconTheme: ActionIconThemeData(
@@ -341,6 +351,10 @@ abstract final class AppTheme {
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
+        constraints: const BoxConstraints(minHeight: 52),
+        alignLabelWithHint: true,
+        errorMaxLines: 3,
+        helperMaxLines: 3,
         filled: true,
         // a field is a little more solid than the glass it sits on, in both schemes
         fillColor: AppColors.isDark
@@ -454,8 +468,8 @@ abstract final class AppTheme {
                 : AppColors.line,
           ),
         ),
-        shape: const StadiumBorder(),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         labelStyle: ui(13, FontWeight.w600, height: 1.2).copyWith(
           color: WidgetStateColor.resolveWith(
             (states) => states.contains(WidgetState.selected)

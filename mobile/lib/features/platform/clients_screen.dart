@@ -105,20 +105,18 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
+              FilterSelect<String>(
+                fieldKey: const ValueKey('pf-state-filter'),
+                value: _filter,
+                width: double.infinity,
+                leading: AppIcons.filter,
+                items: [
                   for (final (value, label) in filters)
-                    AppPill(
-                      key: ValueKey(
-                        'pf-filter-${value.isEmpty ? 'all' : value}',
-                      ),
-                      label: label,
-                      selected: _filter == value,
-                      onTap: () => _setFilter(value),
-                    ),
+                    DropdownMenuItem(value: value, child: Text(label)),
                 ],
+                onChanged: (value) {
+                  if (value != null) _setFilter(value);
+                },
               ),
               const SizedBox(height: 20),
               AsyncSection<List<ClientRow>>(

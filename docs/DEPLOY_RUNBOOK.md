@@ -104,7 +104,7 @@ The previous web files are in `~/web-before.tgz` on the server. Unpack them into
 
 - The web app is not built on the server. You must run `flutter build web` on your machine and upload the result (step 4).
 - `scripts/deploy/update.sh` pulls from git on the server but does not build the web app; use the steps above for a full release.
-- Turn the test-login switch off before real customers: remove `ERP_PUBLIC_TEST_LOGIN` from `infra/.env` and restart the API.
+- Password-free test login is development-only. Set `ERP_PUBLIC_TEST_LOGIN=false` for production and restart the API; `check --deploy` now reports `erp.E001` for an enabled switch outside development, and the login view refuses it. Existing test-issued sessions need to be revoked before admitting real customers.
 - A new shop created through "Новый клиент" waits for its owner's first-sign-in answers. That is expected.
 - Never run `docker compose down -v`: it deletes the database volume.
 

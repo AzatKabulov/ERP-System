@@ -653,6 +653,7 @@ class FilterSelect<T> extends StatelessWidget {
             child: DropdownButton<T>(
               key: fieldKey,
               isExpanded: true,
+              dropdownColor: AppColors.surface,
               value: value,
               hint: hint,
               items: items,
@@ -668,6 +669,32 @@ class FilterSelect<T> extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    ),
+  );
+}
+
+/// A readable group of related fields. No backdrop blur is needed in a form.
+class FormSection extends StatelessWidget {
+  const FormSection({super.key, required this.title, required this.children});
+  final String title;
+  final List<Widget> children;
+  @override
+  Widget build(BuildContext context) => SurfaceCard(
+    flat: true,
+    padding: 20,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(height: 20),
+        ...children,
       ],
     ),
   );
@@ -1216,10 +1243,9 @@ class AppPill extends StatelessWidget {
         decoration: ShapeDecoration(
           color: selected
               ? AppColors.blue.withValues(alpha: AppColors.isDark ? 0.22 : 0.1)
-              : AppColors.surface.withValues(
-                  alpha: AppColors.isDark ? 0.5 : 0.7,
-                ),
-          shape: StadiumBorder(
+              : AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
             side: BorderSide(
               color: selected
                   ? AppColors.blue.withValues(alpha: 0.6)
@@ -1230,11 +1256,11 @@ class AppPill extends StatelessWidget {
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
-            customBorder: const StadiumBorder(),
+            borderRadius: BorderRadius.circular(12),
             onTap: onTap,
             hoverColor: AppColors.blue.withValues(alpha: 0.05),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 36),
+              constraints: const BoxConstraints(minHeight: 44),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Row(
@@ -1290,17 +1316,20 @@ class FilterButton extends StatelessWidget {
   final AppIconData? icon;
 
   @override
-  Widget build(BuildContext context) => AppPill(
-    label: '$caption: $value',
-    selected: active,
-    onTap: onTap,
-    icon: icon,
-    trailing: Padding(
-      padding: const EdgeInsets.only(left: 6),
-      child: AppIcon(
-        AppIcons.chevronDown,
-        size: 16,
-        color: active ? AppColors.blue : AppColors.neutral,
+  Widget build(BuildContext context) => Tooltip(
+    message: caption,
+    child: AppPill(
+      label: value,
+      selected: active,
+      onTap: onTap,
+      icon: icon,
+      trailing: Padding(
+        padding: const EdgeInsets.only(left: 6),
+        child: AppIcon(
+          AppIcons.chevronDown,
+          size: 16,
+          color: active ? AppColors.blue : AppColors.neutral,
+        ),
       ),
     ),
   );
@@ -1426,6 +1455,7 @@ class MetricCard extends StatelessWidget {
     this.icon,
     this.accent,
     this.accentTint,
+    this.alignWithPeers = false,
   });
   final String label;
   final String value;
@@ -1435,6 +1465,7 @@ class MetricCard extends StatelessWidget {
   final AppIconData? icon;
   final Color? accent;
   final Color? accentTint;
+  final bool alignWithPeers;
 
   @override
   Widget build(BuildContext context) => SurfaceCard(
@@ -1446,79 +1477,95 @@ class MetricCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    height: 1.35,
-                  ),
-                ),
-              ),
-              if (icon != null) ...[
-                const SizedBox(width: 10),
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: accentTint ?? AppColors.tint,
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: Center(
-                    child: AppIcon(
-                      icon!,
-                      size: 18,
-                      color: accent ?? AppColors.blue,
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: alignWithPeers
+                  ? MediaQuery.textScalerOf(context).scale(14) * 1.35 * 3
+                  : 0,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      height: 1.35,
                     ),
                   ),
                 ),
+                if (icon != null) ...[
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: accentTint ?? AppColors.tint,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Center(
+                      child: AppIcon(
+                        icon!,
+                        size: 18,
+                        color: accent ?? AppColors.blue,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
           const SizedBox(height: 16),
-          AnimatedSwitcher(
-            duration: AppMotion.of(context, AppMotion.base),
-            switchInCurve: AppMotion.arrive,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween(
-                  begin: const Offset(0, 0.25),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
+          SizedBox(
+            height: alignWithPeers
+                ? MediaQuery.textScalerOf(context).scale(26) * 1.2
+                : null,
+            width: alignWithPeers ? double.infinity : null,
+            child: AnimatedSwitcher(
+              duration: AppMotion.of(context, AppMotion.base),
+              switchInCurve: AppMotion.arrive,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween(
+                    begin: const Offset(0, 0.25),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
               ),
-            ),
-            layoutBuilder: (current, previous) => Stack(
-              alignment: Alignment.centerLeft,
-              children: [...previous, ?current],
-            ),
-            child: FittedBox(
-              key: ValueKey(value),
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                value,
-                softWrap: false,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                  letterSpacing: -0.5,
-                  color: AppColors.ink,
-                  fontFeatures: AppFonts.tabular,
+              layoutBuilder: (current, previous) => Stack(
+                alignment: Alignment.centerLeft,
+                children: [...previous, ?current],
+              ),
+              child: FittedBox(
+                key: ValueKey(value),
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  softWrap: false,
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                    letterSpacing: -0.5,
+                    color: AppColors.ink,
+                    fontFeatures: AppFonts.tabular,
+                  ),
                 ),
               ),
             ),
           ),
-          if (meta != null) ...[
+          if (meta != null || alignWithPeers) ...[
             const SizedBox(height: 8),
-            Text(meta!, style: TextStyle(color: AppColors.muted, fontSize: 13)),
+            Text(
+              meta ?? ' ',
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
+            ),
           ],
         ],
       ),

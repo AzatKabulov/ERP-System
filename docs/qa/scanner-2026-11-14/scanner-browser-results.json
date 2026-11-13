@@ -1,0 +1,14 @@
+{
+  "viewport": [
+    390,
+    844
+  ],
+  "camera": "not exercised; decoded code entered through existing input",
+  "enrichment": "synthetic HTTP replies",
+  "loading": true,
+  "foundPrefill": true,
+  "quantity50": true,
+  "unknownCodeRetained": true,
+  "unavailableRetryPreservesName": true,
+  "automaticStockWrite": false
+}

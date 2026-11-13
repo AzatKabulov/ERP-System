@@ -54,7 +54,8 @@ void main() {
         final rig = RealRig();
         await rig.launchSignedIn(tester);
         expect(key('welcome'), findsOneWidget);
-        expect(find.text('Здравствуйте, Aman Ataýew!'), findsOneWidget);
+        expect(find.text('Здравствуйте, Aman Ataýew!'), findsNothing);
+        expect(find.text('Обзор'), findsWidgets);
         expect(rig.tokens.token, 'refresh-1');
         expect(find.text(demoBanner), findsNothing);
       },
@@ -92,7 +93,8 @@ void main() {
       (rig.server.me['user'] as Map)['preferred_language'] = 'tk';
       await rig.launch(tester);
       await rig.signIn(tester);
-      expect(find.text('Salam, Aman Ataýew!'), findsOneWidget);
+      expect(find.text('Salam, Aman Ataýew!'), findsNothing);
+      expect(find.text('Syn'), findsWidgets);
       expect(rig.prefs.getString('language'), 'tk');
     });
 

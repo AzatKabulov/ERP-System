@@ -1,3 +1,4 @@
+import '../../core/feedback/confirmation_feedback.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
 
@@ -83,6 +84,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future<void> _confirm() async {
     if (_busy) return;
+    prepareSaleConfirmation();
     final cart = widget.cart;
     final repo = widget.repository;
     final body = repo.saleBody(

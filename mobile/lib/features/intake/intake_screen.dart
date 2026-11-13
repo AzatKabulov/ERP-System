@@ -105,6 +105,7 @@ class _IntakeScreenState extends State<IntakeScreen> {
     if (online && !_wasOnline) {
       for (final e in _ctl.entries) {
         if (e.state == IntakeEntryState.lookupFailed) _ctl.retryLookup(e);
+        if (e.suggestionFailed) _ctl.retrySuggestion(e);
       }
     }
     _wasOnline = online;
@@ -543,7 +544,11 @@ class _EntryCard extends StatelessWidget {
                             ? switch (entry.state) {
                                 IntakeEntryState.lookingUp => l.intakeLookingUp,
                                 IntakeEntryState.notFound =>
-                                  entry.suggestion == null
+                                  entry.suggesting
+                                      ? l.intakeOnlineLoading
+                                      : entry.suggestionFailed
+                                      ? l.intakeOnlineUnavailable
+                                      : entry.suggestion == null
                                       ? l.intakeUnknown
                                       : l.intakeFoundOnline(
                                           entry.suggestion!.displayName,

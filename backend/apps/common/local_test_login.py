@@ -66,7 +66,7 @@ def _enabled(request):
     from urllib.parse import urlsplit
 
     if getattr(settings, "PUBLIC_TEST_LOGIN", False):
-        return True  # the owner switched it on for a test server (settings.py)
+        return settings.DJANGO_ENV == "development"
     return (
         getattr(settings, "LOCAL_TEST_LOGIN_ENABLED", False)
         and settings.DJANGO_ENV == "development"

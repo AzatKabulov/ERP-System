@@ -1,0 +1,84 @@
+{
+  "source_base": "a6118a7",
+  "publication": "local only; no push or deploy",
+  "flutter_tests": 620,
+  "backend_tests": 950,
+  "analysis": "passed",
+  "web_build": "passed",
+  "android_debug_build_and_signature": "passed",
+  "store": {
+    "database_version": "18.4",
+    "store_workflows": "passed",
+    "sale_race": {
+      "201": 37,
+      "409": 3
+    },
+    "duplicate_retries": 8,
+    "mixed_reads": {
+      "requests": 120,
+      "concurrency": 12,
+      "p50_ms": 48.11,
+      "p95_ms": 78.4,
+      "max_ms": 88.46
+    },
+    "restore": {
+      "tables": 66,
+      "private_files": 1
+    }
+  },
+  "platform_visual_checks": [
+    {
+      "width": 390,
+      "dark": false,
+      "overview": "passed",
+      "documentFits": true
+    },
+    {
+      "width": 390,
+      "dark": true,
+      "overview": "passed",
+      "documentFits": true
+    },
+    {
+      "width": 820,
+      "dark": false,
+      "overview": "passed",
+      "documentFits": true
+    },
+    {
+      "width": 820,
+      "dark": true,
+      "overview": "passed",
+      "documentFits": true
+    },
+    {
+      "width": 1440,
+      "dark": false,
+      "overview": "passed",
+      "documentFits": true
+    },
+    {
+      "width": 1440,
+      "dark": true,
+      "overview": "passed",
+      "documentFits": true
+    }
+  ],
+  "backend_dependency_audit": {
+    "packages": 24,
+    "known_vulnerabilities": 0
+  },
+  "static_security_scan": {
+    "scope": "backend/apps and backend/config; tests/migrations excluded",
+    "findings": "one low-severity hardcoded test fixture password in apps/common/testing.py; reviewed as non-production"
+  },
+  "source_secret_scan": {
+    "scope": "tracked working-tree text files up to 2MB; three high-confidence token/key patterns; not full Git history",
+    "findings": []
+  },
+  "history_secret_scan": {
+    "scope": "all locally available Git refs; added diff lines; three high-confidence token/private-key signatures",
+    "commits": 175,
+    "findings": []
+  }
+}

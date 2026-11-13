@@ -192,8 +192,8 @@ class _ReturnFormScreenState extends State<ReturnFormScreen> {
             constraints: const BoxConstraints(maxWidth: 760),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: FormSection(
+                title: l.returnNew,
                 children: [
                   Text(
                     l.returnFromSale(saleNumber(sale.number)),

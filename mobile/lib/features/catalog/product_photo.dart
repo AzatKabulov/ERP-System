@@ -9,6 +9,7 @@ import '../../core/files/file_services.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/skeleton.dart';
+import '../../widgets/motion.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
 
@@ -29,6 +30,7 @@ class ProductPhoto extends StatelessWidget {
     this.fit = BoxFit.cover,
     this.iconSize = 28,
     this.radius = 12,
+    this.placeholderLabel,
   });
 
   final Product product;
@@ -42,13 +44,35 @@ class ProductPhoto extends StatelessWidget {
   final BoxFit fit;
   final double iconSize;
   final double radius;
+  final String? placeholderLabel;
 
   Widget _tile(Widget? child) => DecoratedBox(
     decoration: BoxDecoration(
-      color: AppColors.tint,
+      color: AppColors.surfaceSoft,
       borderRadius: BorderRadius.circular(radius),
     ),
-    child: child ?? Center(child: _icon()),
+    child:
+        child ??
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _icon(),
+              if (placeholderLabel != null) ...[
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    placeholderLabel!,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    style: TextStyle(color: AppColors.muted, fontSize: 11),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
   );
 
   Widget _icon() =>
@@ -64,7 +88,7 @@ class ProductPhoto extends StatelessWidget {
     ),
   );
 
-  Widget _image(Uint8List bytes) => _tile(
+  Widget _image(Uint8List bytes, BuildContext context) => _tile(
     ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: Image.memory(
@@ -73,8 +97,10 @@ class ProductPhoto extends StatelessWidget {
         fit: fit,
         gaplessPlayback: true,
         excludeFromSemantics: true,
-        frameBuilder: (_, child, frame, synchronous) =>
-            synchronous || frame != null ? child : _loading(),
+        frameBuilder: (_, child, frame, synchronous) => AnimatedSwitcher(
+          duration: AppMotion.of(context, const Duration(milliseconds: 180)),
+          child: synchronous || frame != null ? child : _loading(),
+        ),
         errorBuilder: (_, _, _) => Center(child: _icon()),
       ),
     ),
@@ -86,7 +112,7 @@ class ProductPhoto extends StatelessWidget {
     if (product.photoVersion == null) {
       inner = _tile(null);
     } else if (repository.cachedPhoto(product, full: full) case final bytes?) {
-      inner = _image(bytes);
+      inner = _image(bytes, context);
     } else {
       inner = FutureBuilder<Uint8List?>(
         future: repository.photo(product, full: full),
@@ -96,7 +122,7 @@ class ProductPhoto extends StatelessWidget {
               bytes == null) {
             return _loading();
           }
-          return bytes == null ? _tile(null) : _image(bytes);
+          return bytes == null ? _tile(null) : _image(bytes, context);
         },
       );
     }
@@ -192,6 +218,48 @@ class _ProductPhotoSectionState extends State<ProductPhotoSection> {
     }
   }
 
+  Future<void> _view() => showDialog<void>(
+    context: context,
+    builder: (dialog) => Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      backgroundColor: AppColors.surface,
+      child: SizedBox(
+        width: 760,
+        height: MediaQuery.sizeOf(dialog).height * .8,
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                key: const ValueKey('photo-viewer-close'),
+                tooltip: strings(dialog).close,
+                onPressed: () => Navigator.pop(dialog),
+                icon: const AppIcon(AppIcons.close),
+              ),
+            ),
+            Expanded(
+              child: InteractiveViewer(
+                key: const ValueKey('photo-viewer'),
+                minScale: 1,
+                maxScale: 4,
+                child: Center(
+                  child: ProductPhoto(
+                    product: widget.product,
+                    repository: widget.repository,
+                    full: true,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
@@ -203,20 +271,43 @@ class _ProductPhotoSectionState extends State<ProductPhotoSection> {
         children: [
           SectionHeading(l.productPhotoTitle),
           const SizedBox(height: 12),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
-              child: ProductPhoto(
-                key: ValueKey('pd-photo-${widget.product.photoVersion}'),
-                product: widget.product,
-                repository: widget.repository,
-                full: true,
-                aspectRatio: 4 / 3,
-                fit: BoxFit.contain,
-                iconSize: 56,
+          Semantics(
+            button: has,
+            label: has ? l.productPhotoOpen : l.productPhotoNone,
+            child: InkWell(
+              key: const ValueKey('pd-photo-open'),
+              onTap: has ? () => _view() : null,
+              borderRadius: BorderRadius.circular(18),
+              child: Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceSoft,
+                  border: Border.all(color: AppColors.line),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: ProductPhoto(
+                    key: ValueKey('pd-photo-${widget.product.photoVersion}'),
+                    product: widget.product,
+                    repository: widget.repository,
+                    full: true,
+                    aspectRatio: 4 / 3,
+                    fit: BoxFit.contain,
+                    iconSize: 48,
+                  ),
+                ),
               ),
             ),
           ),
+          if (has)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                l.productPhotoZoomHint,
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
+              ),
+            ),
           if (!has && widget.canEdit) ...[
             const SizedBox(height: 8),
             Text(
@@ -227,40 +318,55 @@ class _ProductPhotoSectionState extends State<ProductPhotoSection> {
           ],
           if (widget.canEdit) ...[
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (camera)
-                  FilledButton.icon(
-                    key: const ValueKey('pd-photo-take'),
-                    onPressed: _busy ? null : () => _pick(camera: true),
-                    icon: const AppIcon(AppIcons.camera),
-                    label: Text(l.productPhotoTake),
+                if (camera) ...[
+                  Expanded(
+                    child: FilledButton.icon(
+                      key: const ValueKey('pd-photo-take'),
+                      onPressed: _busy ? null : () => _pick(camera: true),
+                      icon: const AppIcon(AppIcons.camera, size: 18),
+                      label: Text(
+                        l.productPhotoTake,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
-                OutlinedButton.icon(
-                  key: const ValueKey('pd-photo-choose'),
-                  onPressed: _busy ? null : () => _pick(camera: false),
-                  icon: const AppIcon(AppIcons.image),
-                  label: Text(
-                    has ? l.productPhotoChange : l.productPhotoChoose,
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('pd-photo-choose'),
+                    onPressed: _busy ? null : () => _pick(camera: false),
+                    icon: const AppIcon(AppIcons.image, size: 18),
+                    label: Text(
+                      has ? l.productPhotoChange : l.productPhotoChoose,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-                if (has)
-                  TextButton.icon(
-                    key: const ValueKey('pd-photo-remove'),
-                    onPressed: _busy ? null : _remove,
-                    icon: const AppIcon(AppIcons.trash),
-                    label: Text(l.productPhotoRemove),
-                  ),
-                if (_busy)
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
               ],
             ),
+            if (has) const SizedBox(height: 8),
+            if (has)
+              Align(
+                alignment: Alignment.center,
+                child: TextButton.icon(
+                  key: const ValueKey('pd-photo-remove'),
+                  onPressed: _busy ? null : _remove,
+                  icon: AppIcon(
+                    AppIcons.trash,
+                    color: AppColors.danger,
+                    size: 18,
+                  ),
+                  label: Text(
+                    l.productPhotoRemove,
+                    style: TextStyle(color: AppColors.danger),
+                  ),
+                ),
+              ),
+            if (_busy) const LinearProgressIndicator(),
           ],
           if (_error != null) ...[
             const SizedBox(height: 8),

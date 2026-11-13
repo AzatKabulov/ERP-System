@@ -65,6 +65,13 @@ The Flutter app under `mobile/` uses the real backend by default; the in-memory 
 - Test long product names, empty catalogs, large values, and validation failures. Scanning must have a usable manual-entry fallback.
 - Do not promise scanner or printer compatibility without validating the selected hardware and platform.
 
+## Barcode Lookup Regression Rules
+
+- Before changing scanner enrichment, provider integrations, caching or receiving, read the barcode section and acceptance checklist in `docs/ARCHITECTURE.md`. The incident and local verification are recorded in `docs/BARCODE_LOOKUP_RELIABILITY.md`.
+- Keep a genuine unknown product distinct from an incomplete search: timeouts, unavailable providers, malformed responses and quota exhaustion must not become a cached "not found". Preserve retry and entered form data.
+- Keep shop-catalog lookup first, reviewed exact-code suggestions, manual entry for unknown or unlabelled goods, and manual prices. A lookup must never create products or change stock by itself. Do not redesign pages or move existing scan/manual controls as part of a lookup fix without an explicit design request.
+- Preserve the automated regressions in `backend/apps/catalog/tests/test_barcode_info.py`, `mobile/test/features/barcode_info_test.dart` and `mobile/test/features/intake_form_test.dart`. Run them for affected changes, extend them for new failure cases, and retain the full checks required by this file. Report backend, shared-client, APK build and deployed-web status separately; local passing tests do not establish hardware compatibility or automotive catalog coverage.
+
 ## Localization Rules
 
 - Implement Russian and Turkmen as first-release requirements, not optional later translations.

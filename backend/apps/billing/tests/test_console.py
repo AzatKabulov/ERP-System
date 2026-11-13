@@ -422,6 +422,27 @@ class CreateOperatorCommandTests(TestCase):
         self.assertNotEqual(TOTPDevice.objects.get(user__username="boss").key, first)
         self.assertEqual(TOTPDevice.objects.filter(user__username="boss").count(), 1)
 
+    def test_replacing_authenticator_revokes_existing_access_and_refresh_tokens(self):
+        from rest_framework.test import APIClient
+
+        from apps.accounts.services import issue_tokens
+
+        self.run_command("boss")
+        user = User.objects.get(username="boss")
+        tokens = issue_tokens(user)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION="Bearer " + tokens["access"])
+        self.assertEqual(client.get("/api/v1/me/").status_code, 200)
+        self.run_command("boss", "--new-key")
+        self.assertEqual(client.get("/api/v1/me/").status_code, 401)
+        client.credentials()
+        self.assertEqual(
+            client.post(
+                "/api/v1/auth/refresh/", {"refresh": tokens["refresh"]}, format="json"
+            ).status_code,
+            401,
+        )
+
     def test_an_operator_has_no_access_to_any_store(self):
         self.run_command("boss")
         business = make_business("Shop")

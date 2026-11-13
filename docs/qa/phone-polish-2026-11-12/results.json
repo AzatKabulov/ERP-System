@@ -1,0 +1,87 @@
+{
+  "date_client": "2026-11-12",
+  "publication": "local only; no commit/push/deploy",
+  "flutter_tests": 627,
+  "analysis": "passed",
+  "formatting": "passed",
+  "web_release_build": "passed",
+  "android_debug_build": "passed",
+  "android_signature": "verified; same local Android Debug key",
+  "android_apk": {
+    "file": "erp-2026-11-12-premium-debug.apk",
+    "bytes": 222094351,
+    "sha256": "fae7ea86623794ae96d09cc8e2be3e7a9d10b17c8d75f3c44978780532094398"
+  },
+  "native_emulator": {
+    "install_update": "passed",
+    "launch": "passed",
+    "phone_geometry": "1080x2400, 440dpi",
+    "touch_swipe_to_cashdesk": "passed",
+    "more_menu": "passed",
+    "business_writes": "none; read-only launch/navigation",
+    "audible_feedback": "not verified; emulator muted",
+    "physical_haptics": "not verified"
+  },
+  "browser": {
+    "engine": "Chromium",
+    "earlier_workflow_sizes": [
+      [
+        390,
+        844
+      ],
+      [
+        768,
+        1024
+      ],
+      [
+        1024,
+        768
+      ],
+      [
+        1440,
+        900
+      ]
+    ],
+    "final_visual_workflow_sizes": [
+      [
+        390,
+        844
+      ],
+      [
+        820,
+        1180
+      ]
+    ],
+    "languages": [
+      "ru",
+      "tk"
+    ],
+    "confirmation_requests": "exactly one after confirmed sale",
+    "photo_upload_and_viewer": "passed with generated QA image; no customer photos exported"
+  },
+  "store_load_restore": {
+    "database_version": "18.4",
+    "store_workflows": "passed",
+    "sale_race": {
+      "201": 37,
+      "409": 3
+    },
+    "duplicate_retries": 8,
+    "mixed_reads": {
+      "requests": 120,
+      "concurrency": 12,
+      "p50_ms": 51.01,
+      "p95_ms": 76.45,
+      "max_ms": 86.83
+    },
+    "restore": {
+      "tables": 66,
+      "private_files": 5
+    }
+  },
+  "limits": [
+    "No physical phone/tablet audio, haptics or frame-rate acceptance",
+    "Direct native audio debugger probe could not evaluate source expressions; not counted as a passing sound test",
+    "No new backend changes in this phone-polish task"
+  ]
+}

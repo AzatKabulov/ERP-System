@@ -327,317 +327,347 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              LabeledField(
-                label: l.productSku,
-                child: TextField(
-                  key: const ValueKey('pf-sku'),
-                  controller: _sku,
-                  enabled: !_saving,
-                  autocorrect: false,
-                  onChanged: (_) => _touch(),
-                  decoration: InputDecoration(errorText: _fieldText('sku')),
-                ),
-              ),
-              const SizedBox(height: 16),
-              LabeledField(
-                label: l.productName,
-                child: TextField(
-                  key: const ValueKey('pf-name'),
-                  controller: _name,
-                  enabled: !_saving,
-                  onChanged: (_) => _touch(),
-                  decoration: InputDecoration(
-                    errorText: _fieldText('name'),
-                    helperText: _foundOnline == null
-                        ? null
-                        : l.productFoundOnline(_foundOnline!),
-                    helperMaxLines: 3,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
+              FormSection(
+                title: l.intakeSectionProduct,
                 children: [
-                  _wide(
-                    NamedRefPicker(
-                      key: const ValueKey('pf-category'),
-                      label: l.categoryLabel,
-                      items: _categories,
-                      value: _categoryId,
-                      enabled: !_saving,
-                      errorText: _fieldText('category'),
-                      onChanged: (v) {
-                        _categoryId = v;
-                        _touch();
-                      },
-                      onAddNew: () async {
-                        final created = await showCreateNamedDialog(
-                          context,
-                          title: l.addCategory,
-                          create: widget.repository.createCategory,
-                        );
-                        if (created != null) {
-                          _categories = [..._categories, created];
-                        }
-                        return created;
-                      },
-                    ),
-                  ),
-                  _wide(
-                    NamedRefPicker(
-                      key: const ValueKey('pf-brand'),
-                      label: l.brandLabel,
-                      items: _brands,
-                      value: _brandId,
-                      enabled: !_saving,
-                      errorText: _fieldText('brand'),
-                      onChanged: (v) {
-                        _brandId = v;
-                        _touch();
-                      },
-                      onAddNew: () async {
-                        final created = await showCreateNamedDialog(
-                          context,
-                          title: l.addBrand,
-                          create: widget.repository.createBrand,
-                        );
-                        if (created != null) _brands = [..._brands, created];
-                        return created;
-                      },
-                    ),
-                  ),
-                  _wide(
-                    NamedRefPicker(
-                      key: const ValueKey('pf-unit'),
-                      label: l.unitLabel,
-                      allowNone: false,
-                      items: [
-                        for (final u in _units)
-                          NamedRef(id: u.id, name: '${u.name} (${u.symbol})'),
-                      ],
-                      value: _unitId,
-                      enabled: !_saving,
-                      errorText: _fieldText('unit'),
-                      onChanged: (v) {
-                        _unitId = v;
-                        _touch();
-                      },
-                      onAddNew: () async {
-                        final created = await showCreateUnitDialog(
-                          context,
-                          widget.repository,
-                        );
-                        if (created == null) return null;
-                        _units = [..._units, created];
-                        return NamedRef(
-                          id: created.id,
-                          name: '${created.name} (${created.symbol})',
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              if (unit != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    '${l.unitDecimals}: ${unit.decimalPlaces}',
-                    style: TextStyle(color: AppColors.muted, fontSize: 12),
-                  ),
-                ),
-              const SizedBox(height: 24),
-              Text(
-                l.priceLabel,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 16,
-                runSpacing: 12,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 220,
-                    child: LabeledField(
-                      label: l.priceLabel,
-                      child: TextField(
-                        key: const ValueKey('pf-price'),
-                        controller: _price,
-                        enabled: !_saving,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[0-9.,  ]'),
-                          ),
-                        ],
-                        onChanged: (_) => _touch(),
-                        decoration: InputDecoration(
-                          errorText: _fieldText('price_amount'),
-                          errorMaxLines: 3,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SegmentedButton<String>(
-                    key: const ValueKey('pf-currency'),
-                    segments: const [
-                      ButtonSegment(
-                        value: 'TMT',
-                        label: Text('TMT', key: ValueKey('pf-currency-tmt')),
-                      ),
-                      ButtonSegment(
-                        value: 'USD',
-                        label: Text('USD', key: ValueKey('pf-currency-usd')),
-                      ),
-                    ],
-                    selected: {_currency},
-                    onSelectionChanged: _saving
-                        ? null
-                        : (s) {
-                            _currency = s.first;
-                            _touch();
-                          },
-                  ),
-                ],
-              ),
-              if (_currency == 'USD') ...[
-                const SizedBox(height: 8),
-                if (_rate == null)
-                  Text(
-                    l.rateMissingNote,
-                    key: const ValueKey('pf-rate-missing'),
-                    style: TextStyle(color: AppColors.warning),
-                  )
-                else if (preview != null)
-                  Text(
-                    l.priceInTmt(formatMoney(preview, 'TMT')),
-                    key: const ValueKey('pf-price-preview'),
-                    style: TextStyle(color: AppColors.muted),
-                  ),
-              ],
-              if (_canSeeCost) ...[
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: 320,
-                  child: LabeledField(
-                    label: l.defaultCostLabel,
+                  LabeledField(
+                    label: l.productSku,
                     child: TextField(
-                      key: const ValueKey('pf-cost'),
-                      controller: _cost,
+                      key: const ValueKey('pf-sku'),
+                      controller: _sku,
                       enabled: !_saving,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
+                      autocorrect: false,
+                      onChanged: (_) => _touch(),
+                      decoration: InputDecoration(errorText: _fieldText('sku')),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  LabeledField(
+                    label: l.productName,
+                    child: TextField(
+                      key: const ValueKey('pf-name'),
+                      controller: _name,
+                      enabled: !_saving,
                       onChanged: (_) => _touch(),
                       decoration: InputDecoration(
-                        errorText: _fieldText('default_purchase_cost'),
-                        errorMaxLines: 3,
+                        errorText: _fieldText('name'),
+                        helperText: _foundOnline == null
+                            ? null
+                            : l.productFoundOnline(_foundOnline!),
+                        helperMaxLines: 3,
                       ),
                     ),
                   ),
-                ),
-              ],
-              const SizedBox(height: 24),
-              Text(
-                l.barcodesLabel,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: [
+                      _wide(
+                        NamedRefPicker(
+                          key: const ValueKey('pf-category'),
+                          label: l.categoryLabel,
+                          items: _categories,
+                          value: _categoryId,
+                          enabled: !_saving,
+                          errorText: _fieldText('category'),
+                          onChanged: (v) {
+                            _categoryId = v;
+                            _touch();
+                          },
+                          onAddNew: () async {
+                            final created = await showCreateNamedDialog(
+                              context,
+                              title: l.addCategory,
+                              create: widget.repository.createCategory,
+                            );
+                            if (created != null) {
+                              _categories = [..._categories, created];
+                            }
+                            return created;
+                          },
+                        ),
+                      ),
+                      _wide(
+                        NamedRefPicker(
+                          key: const ValueKey('pf-brand'),
+                          label: l.brandLabel,
+                          items: _brands,
+                          value: _brandId,
+                          enabled: !_saving,
+                          errorText: _fieldText('brand'),
+                          onChanged: (v) {
+                            _brandId = v;
+                            _touch();
+                          },
+                          onAddNew: () async {
+                            final created = await showCreateNamedDialog(
+                              context,
+                              title: l.addBrand,
+                              create: widget.repository.createBrand,
+                            );
+                            if (created != null) {
+                              _brands = [..._brands, created];
+                            }
+                            return created;
+                          },
+                        ),
+                      ),
+                      _wide(
+                        NamedRefPicker(
+                          key: const ValueKey('pf-unit'),
+                          label: l.unitLabel,
+                          allowNone: false,
+                          items: [
+                            for (final u in _units)
+                              NamedRef(
+                                id: u.id,
+                                name: '${u.name} (${u.symbol})',
+                              ),
+                          ],
+                          value: _unitId,
+                          enabled: !_saving,
+                          errorText: _fieldText('unit'),
+                          onChanged: (v) {
+                            _unitId = v;
+                            _touch();
+                          },
+                          onAddNew: () async {
+                            final created = await showCreateUnitDialog(
+                              context,
+                              widget.repository,
+                            );
+                            if (created == null) return null;
+                            _units = [..._units, created];
+                            return NamedRef(
+                              id: created.id,
+                              name: '${created.name} (${created.symbol})',
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (unit != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        '${l.unitDecimals}: ${unit.decimalPlaces}',
+                        style: TextStyle(color: AppColors.muted, fontSize: 12),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 8),
-              if (_barcodes.isNotEmpty)
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final code in _barcodes)
-                      InputChip(
-                        key: ValueKey('pf-barcode-chip-$code'),
-                        label: Text(code),
-                        onDeleted: _saving
+              const SizedBox(height: 20),
+              FormSection(
+                title: l.intakeSectionPrices,
+                children: [
+                  Text(
+                    l.priceLabel,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 12,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 220,
+                        child: LabeledField(
+                          label: l.priceLabel,
+                          child: TextField(
+                            key: const ValueKey('pf-price'),
+                            controller: _price,
+                            enabled: !_saving,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9.,  ]'),
+                              ),
+                            ],
+                            onChanged: (_) => _touch(),
+                            decoration: InputDecoration(
+                              errorText: _fieldText('price_amount'),
+                              errorMaxLines: 3,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SegmentedButton<String>(
+                        key: const ValueKey('pf-currency'),
+                        segments: const [
+                          ButtonSegment(
+                            value: 'TMT',
+                            label: Text(
+                              'TMT',
+                              key: ValueKey('pf-currency-tmt'),
+                            ),
+                          ),
+                          ButtonSegment(
+                            value: 'USD',
+                            label: Text(
+                              'USD',
+                              key: ValueKey('pf-currency-usd'),
+                            ),
+                          ),
+                        ],
+                        selected: {_currency},
+                        onSelectionChanged: _saving
                             ? null
-                            : () {
-                                _barcodes.remove(code);
+                            : (s) {
+                                _currency = s.first;
                                 _touch();
                               },
                       ),
+                    ],
+                  ),
+                  if (_currency == 'USD') ...[
+                    const SizedBox(height: 8),
+                    if (_rate == null)
+                      Text(
+                        l.rateMissingNote,
+                        key: const ValueKey('pf-rate-missing'),
+                        style: TextStyle(color: AppColors.warning),
+                      )
+                    else if (preview != null)
+                      Text(
+                        l.priceInTmt(formatMoney(preview, 'TMT')),
+                        key: const ValueKey('pf-price-preview'),
+                        style: TextStyle(color: AppColors.muted),
+                      ),
                   ],
-                ),
-              const SizedBox(height: 8),
-              BarcodeInput(
-                fieldKey: const ValueKey('pf-barcode'),
-                controller: _barcodeEntry,
-                label: l.barcodeFieldLabel,
-                enabled: !_saving,
-                errorText: _fieldText('barcodes'),
-                onSubmitted: (_) => _addBarcode(),
-                // scanning only fills the draft of THIS form; nothing is saved yet
-                onScanned: _addBarcode,
+                  if (_canSeeCost) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: 320,
+                      child: LabeledField(
+                        label: l.defaultCostLabel,
+                        child: TextField(
+                          key: const ValueKey('pf-cost'),
+                          controller: _cost,
+                          enabled: !_saving,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (_) => _touch(),
+                          decoration: InputDecoration(
+                            errorText: _fieldText('default_purchase_cost'),
+                            errorMaxLines: 3,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  key: const ValueKey('pf-barcode-add'),
-                  onPressed: _saving ? null : _addBarcode,
-                  icon: const AppIcon(AppIcons.plus),
-                  label: Text(l.addBarcode),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: 260,
-                child: LabeledField(
-                  label: l.warrantyMonthsLabel,
-                  child: TextField(
-                    key: const ValueKey('pf-warranty-months'),
-                    controller: _warrantyMonths,
+              const SizedBox(height: 20),
+              FormSection(
+                title: l.intakeSectionMore,
+                children: [
+                  Text(
+                    l.barcodesLabel,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_barcodes.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final code in _barcodes)
+                          InputChip(
+                            key: ValueKey('pf-barcode-chip-$code'),
+                            label: Text(code),
+                            onDeleted: _saving
+                                ? null
+                                : () {
+                                    _barcodes.remove(code);
+                                    _touch();
+                                  },
+                          ),
+                      ],
+                    ),
+                  const SizedBox(height: 8),
+                  BarcodeInput(
+                    fieldKey: const ValueKey('pf-barcode'),
+                    controller: _barcodeEntry,
+                    label: l.barcodeFieldLabel,
                     enabled: !_saving,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: (_) => _touch(),
-                    decoration: InputDecoration(
-                      errorText: _fieldText('warranty_months'),
+                    errorText: _fieldText('barcodes'),
+                    onSubmitted: (_) => _addBarcode(),
+                    // scanning only fills the draft of THIS form; nothing is saved yet
+                    onScanned: _addBarcode,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      key: const ValueKey('pf-barcode-add'),
+                      onPressed: _saving ? null : _addBarcode,
+                      icon: const AppIcon(AppIcons.plus),
+                      label: Text(l.addBarcode),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              LabeledField(
-                label: l.warrantyTermsLabel,
-                child: TextField(
-                  key: const ValueKey('pf-warranty-terms'),
-                  controller: _warrantyTerms,
-                  enabled: !_saving,
-                  minLines: 2,
-                  maxLines: 5,
-                  onChanged: (_) => _touch(),
-                  decoration: InputDecoration(
-                    errorText: _fieldText('warranty_terms'),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: 260,
-                child: LabeledField(
-                  label: l.productReturnDays,
-                  child: TextField(
-                    key: const ValueKey('pf-return-days'),
-                    controller: _returnDays,
-                    enabled: !_saving,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: (_) => _touch(),
-                    decoration: InputDecoration(
-                      helperText: l.productReturnDaysHint,
-                      helperMaxLines: 3,
-                      errorText: _fieldText('return_days'),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: 260,
+                    child: LabeledField(
+                      label: l.warrantyMonthsLabel,
+                      child: TextField(
+                        key: const ValueKey('pf-warranty-months'),
+                        controller: _warrantyMonths,
+                        enabled: !_saving,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        onChanged: (_) => _touch(),
+                        decoration: InputDecoration(
+                          errorText: _fieldText('warranty_months'),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  LabeledField(
+                    label: l.warrantyTermsLabel,
+                    child: TextField(
+                      key: const ValueKey('pf-warranty-terms'),
+                      controller: _warrantyTerms,
+                      enabled: !_saving,
+                      minLines: 2,
+                      maxLines: 5,
+                      onChanged: (_) => _touch(),
+                      decoration: InputDecoration(
+                        errorText: _fieldText('warranty_terms'),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: 260,
+                    child: LabeledField(
+                      label: l.productReturnDays,
+                      child: TextField(
+                        key: const ValueKey('pf-return-days'),
+                        controller: _returnDays,
+                        enabled: !_saving,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        onChanged: (_) => _touch(),
+                        decoration: InputDecoration(
+                          helperText: l.productReturnDaysHint,
+                          helperMaxLines: 3,
+                          errorText: _fieldText('return_days'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               if (general != null) ...[
                 const SizedBox(height: 16),

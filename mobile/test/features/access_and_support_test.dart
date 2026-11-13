@@ -354,13 +354,13 @@ void main() {
       expect(key('support-new'), findsOneWidget);
     });
 
-    testWidgets('a phone has the help one tap away in the top bar', (
-      tester,
-    ) async {
+    testWidgets('a phone keeps help and shop context in More', (tester) async {
       final rig = RealRig();
       await rig.launch(tester, size: _phone);
       await rig.signIn(tester);
-      await tester.tap(key('help-button'));
+      await tester.tap(key('tab-more'));
+      await settle(tester);
+      await tester.tap(key('more-help'));
       await settle(tester);
       expect(key('help-sell'), findsOneWidget);
     });
@@ -469,7 +469,8 @@ void main() {
       final rig = RealRig();
       (rig.server.me['user'] as Map)['full_name'] = '';
       await rig.launchSignedIn(tester);
-      expect(find.text('Здравствуйте!'), findsOneWidget);
+      expect(find.text('Здравствуйте!'), findsNothing);
+      expect(find.text('Обзор'), findsWidgets);
     });
 
     testWidgets('an empty stock page offers the first steps, not filters', (

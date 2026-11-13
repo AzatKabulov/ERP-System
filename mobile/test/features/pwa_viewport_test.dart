@@ -145,10 +145,12 @@ void main() {
         );
         final bar = tester.getRect(key('app-top-layer'));
         expect(bar.top, 0);
-        expect(bar.height, greaterThanOrEqualTo(59 + 60));
-        final topControl = tester.getRect(key('help-button'));
-        expect(topControl.top, greaterThanOrEqualTo(59));
-        await tester.tapAt(topControl.center);
+        expect(bar.height, 59);
+        expect(key('help-button'), findsNothing);
+        await tester.tap(key('tab-more'));
+        await settle(tester);
+        await tester.tap(key('more-help'));
+        await settle(tester);
         expect(topTaps, 1);
         final bottomControl = tester.getRect(key('tab-products'));
         expect(bottomControl.bottom, lessThanOrEqualTo(844 - 34 + 4));

@@ -257,8 +257,8 @@ class _ExpenseFormScreenState extends State<ExpenseFormScreen> {
                   }
                   return SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    child: FormSection(
+                      title: l.expenseAddButton,
                       children: [
                         KeyedSubtree(
                           // a category added on the spot must show in the box

@@ -389,9 +389,39 @@ Owner: a product may be added without a price and goods may arrive without a cos
 
 ### Barcode names from open databases (implemented, 2026-10-14)
 
-- **Where it runs.** On the server, never in the app: `apps/catalog/lookup.py` asks Open Beauty Facts, then Open Products Facts and Open Food Facts (fixed https addresses, no redirects, 4 s each) for a valid GTIN (8, 12, 13 or 14 digits with a correct check digit; anything else is refused with `validation_error` before a request is made). Only the digits leave the server. Hits are cached for 30 days and misses for 3 in the shared database cache; a network failure is not cached and is reported as `unavailable`. `ERP_BARCODE_LOOKUP=false` sends nothing out. Route: `GET .../barcodes/info/?code=` (any member, 120 requests a minute per user).
-- **In the app.** On an unknown code the intake line asks in the background (scanning never waits) and shows "found online: <name>" with **Add** (one tap: the piece unit, the code as article number and barcode) and **Change name**; the catalog's new-product form fills the name when it was opened from a scanned code and the field is still empty. Nothing is saved by a suggestion. A miss, a failure or a code that is not a GTIN changes nothing: the person types the name. Once a product has the barcode, the same code is found in the catalog and the internet is not asked again.
-- **Limits.** The databases are free and volunteer-run: many local goods are not in them. A name is a starting point; brand and size are added only when the name lacks them.
+- **Where it runs.** On the server, never in the app: `apps/catalog/lookup.py` asks Open Beauty Facts, then Open Products Facts and Open Food Facts (fixed https addresses, no redirects, 4 s each) for a valid GTIN (8, 12, 13 or 14 digits with a correct check digit; anything else is refused with `validation_error` before a request is made). Only the digits leave the server. Hits are cached for 30 days and complete misses for five minutes in the shared database cache; any unresolved source failure is not cached and is reported as `unavailable`. A fourth fallback, UPCitemdb public trial, is enabled by `ERP_BARCODE_LOOKUP_UPCITEMDB` (default true). A shared-cache admission gate limits this fallback to one request per 11 seconds and 100/day across the deployment; provider throttling/quota exhaustion remains an incomplete search, not a product miss. Only exact matching GTIN/EAN/UPC metadata is accepted; offers and prices are discarded. The cache namespace also includes provider configuration. A fifth fallback, GTINHub (`ERP_BARCODE_LOOKUP_GTINHUB`, default true), is capped to its no-key tier of ten requests/day. Successful cache entries share the standard 14-digit zero-padded GTIN representation; nonzero carton indicators are preserved. Localized product names can be used when the generic name is missing. The remaining-request budget is ten seconds, and individual socket timeouts are capped to its remaining time; exhaustion stays unavailable. No paid account or automotive catalog license is configured. `ERP_BARCODE_LOOKUP=false` sends nothing out. Route: `GET .../barcodes/info/?code=` (any member, 120 requests a minute per user).
+- **In the app.** Shop-catalog lookup is first. For an unknown GTIN, the server requests external suggestions. The existing receiving dialog shows a localized loading state before review fields appear. Found metadata may prefill name, brand and category; the worker reviews it, enters quantity and prices, and explicitly saves. A definitive miss permits manual naming; a failed or incomplete search shows unavailable/retry. Retry retains entered or cleared fields. Other intake lines and the catalog's scanned-product form use the same shared repository; a suggestion never creates a product or posts stock. Existing saved barcode mappings are resolved through the shop's server without another external search; this does not imply offline operation.
+- **Limits.** The three open Facts sources are volunteer-built; UPCitemdb and GTINHub are additional general catalogs with trial quotas. None establishes complete automotive or Chinese-parts coverage. Suggestions require review; do not infer compatibility or manufacturer part numbers from similar names.
+
+#### Barcode change acceptance checklist (owner, 2026-11-14)
+
+Preserve these behaviors when changing providers, receiving, caching, networking
+or shared client code. The incident is documented in
+[the barcode reliability review](BARCODE_LOOKUP_RELIABILITY.md).
+
+1. Distinguish **found**, **definitively unknown** and **unavailable/incomplete**.
+   One provider's ordinary miss does not make another provider's timeout a miss.
+   Quota exhaustion, malformed responses and transport failures remain retryable;
+   do not negative-cache them. Version/invalidate old false-negative cache keys
+   when changing lookup semantics. Document bounded hit/miss lifetimes.
+2. Match returned identifiers to the scanned identifier, allowing valid standard
+   UPC/EAN/GTIN zero-padding equivalence. Never silently attach a similar product,
+   article number or incompatible part. Internal/non-GTIN codes still work with
+   saved shop mappings and manual entry; do not send arbitrary text to GTIN APIs.
+3. Search the permitted shop catalog first. Preserve tenant isolation; only public
+   barcode data goes to providers. Preserve verified HTTPS, fixed provider hosts,
+   request/response bounds, quotas, server-side credentials and the lookup-off flag.
+4. Preserve existing scan/manual entry points and field positions. Loading must
+   resolve to review, manual entry or a recoverable error. Retry, late responses
+   and language changes must not erase entered/cleared fields. Manual naming
+   remains available for used goods without a barcode. No auto-filled prices,
+   automatic product creation, automatic receipt or stock change from scanning.
+5. Run the PostgreSQL barcode tests and affected Flutter tests listed in AGENTS.md;
+   cover provider failure/recovery, partial failure, malformed data, quota, real
+   misses, exact matches, stale negative caches, loading and draft retention.
+   Preserve broader required checks. Separate synthetic tests, real provider
+   availability, hardware validation, packaged builds and deployment evidence.
+
 
 ### Returns and reordering (implemented)
 
@@ -608,3 +638,11 @@ Backend checks must cover cross-business and role denial, atomic rollback, concu
 | Distribution channel, app identifiers, Android/Apple signing | Mobile release |
 
 These decisions do not block documenting the architecture or continuing the foundation. The relevant workflow must resolve them before it is finalized for release.
+
+
+Barcode receiving follow-up (2026-11-14): the existing review dialog shows a
+live loading state until shop lookup and optional external enrichment complete;
+its field positions, manual-entry route and inventory coordination remain.
+Unavailable enrichment is visible with a retry, retaining entered draft values.
+Existing saved products are looked up in the shop first; there is no offline
+catalog/stock mode implied by skipping another external-provider request.

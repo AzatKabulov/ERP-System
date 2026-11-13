@@ -46,7 +46,7 @@ void main() {
   });
 
   testWidgets(
-    'a late internet answer does not replace typed or cleared fields or prices',
+    'barcode search finishes before review fields appear and money stays manual',
     (tester) async {
       final t = intakeRig();
       final wait = Completer<void>();
@@ -58,12 +58,20 @@ void main() {
       };
       await openIntake(tester, t.rig);
       await scanByKeyboard(tester, code, review: true);
+      expect(key('intake-search-loading'), findsOneWidget);
+      expect(key('intake-new-name'), findsNothing);
+      expect(t.rig.server.productWrites, 0);
+      wait.complete();
+      await settle(tester);
+      expect(key('intake-search-loading'), findsNothing);
+      expect(value(tester, 'intake-new-name'), 'Online brand Online name');
+      expect(value(tester, 'intake-new-price'), '');
+      expect(value(tester, 'intake-edit-cost'), '');
       await tester.enterText(key('intake-new-name'), 'My filter');
       await tester.enterText(key('intake-new-brand'), 'Temporary');
       await tester.enterText(key('intake-new-brand'), '');
       await tester.enterText(key('intake-new-price'), '120');
       await tester.enterText(key('intake-edit-cost'), '75');
-      wait.complete();
       await settle(tester);
       expect(value(tester, 'intake-new-name'), 'My filter');
       expect(value(tester, 'intake-new-brand'), '');
@@ -71,6 +79,19 @@ void main() {
       expect(value(tester, 'intake-new-price'), '120');
       expect(value(tester, 'intake-edit-cost'), '75');
       expect(t.rig.server.productWrites, 0);
+    },
+  );
+
+  testWidgets(
+    'an unknown scanned code is retained for manual review without stock changes',
+    (tester) async {
+      final t = intakeRig();
+      await openIntake(tester, t.rig);
+      await scanByKeyboard(tester, code, review: true);
+      expect(find.textContaining('Товар не найден.'), findsOneWidget);
+      expect(value(tester, 'intake-new-sku'), code);
+      expect(t.rig.server.productWrites, 0);
+      expect(t.rig.server.ledger.intakesPosted, 0);
     },
   );
 

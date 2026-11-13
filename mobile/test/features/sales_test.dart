@@ -554,11 +554,21 @@ void main() {
       await tapKey(tester, 'cart-customer');
       await settle(tester, ms: 600);
       await tapKey(tester, 'customer-new');
-      await tester.enterText(key('customer-name'), 'Иван Петров');
+      await tester.enterText(key('customer-name'), 'Иван');
+      await tester.enterText(key('customer-surname'), 'Петров');
+      await tester.enterText(key('customer-phone'), '+993 65 123456');
       await tapKey(tester, 'customer-save');
       await settle(tester, ms: 600);
       expect(t.rig.server.ledger.customers.single['name'], 'Иван Петров');
+      expect(t.rig.server.ledger.customers.single['phone'], '+993 65 123456');
       expect(find.text('Иван Петров'), findsWidgets);
+      await checkout(tester);
+      await confirm(tester);
+      expect(t.rig.server.ledger.sales.single['customer_name'], 'Иван Петров');
+      expect(
+        t.rig.server.ledger.sales.single['customer_phone'],
+        '+993 65 123456',
+      );
     });
   });
 
@@ -623,6 +633,7 @@ void main() {
       final t = deskRig();
       await sellOne(tester, t.rig);
       await tapKey(tester, 'sale-new');
+      await settle(tester);
       expect(key('sale-done'), findsNothing);
       expect(key('cart-empty'), findsOneWidget);
     });
@@ -766,6 +777,8 @@ void main() {
       await checkout(tester);
       await confirm(tester);
       expect(t.rig.server.ledger.sales.single['total'], 3000);
+      await tapKey(tester, 'sale-new');
+      await settle(tester);
       await tapKey(tester, 'sales-history');
       await settle(tester);
       await tapKey(tester, 'sale-S-000001');
@@ -795,6 +808,8 @@ void main() {
       await checkout(tester);
       await confirm(tester);
       expect(t.rig.server.ledger.sales.single['total'], 7000);
+      await tapKey(tester, 'sale-new');
+      await settle(tester);
       await tapKey(tester, 'sales-history');
       await settle(tester);
       await tapKey(tester, 'sale-S-000001');

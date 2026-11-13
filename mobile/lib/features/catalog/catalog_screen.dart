@@ -721,16 +721,18 @@ class _ProductCard extends StatelessWidget {
           ProductPhoto(
             product: p,
             repository: repository,
-            aspectRatio: 4 / 3,
+            aspectRatio: 1,
+            fit: BoxFit.contain,
+            placeholderLabel: strings(context).productPhotoNone,
             iconSize: 32,
           ),
           const SizedBox(height: 12),
           Text(
             p.name,
-            maxLines: 2,
+            maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               fontSize: 15,
               height: 1.3,
             ),

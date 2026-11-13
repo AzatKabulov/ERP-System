@@ -1,0 +1,28 @@
+[
+  {
+    "width": 390,
+    "height": 844,
+    "browser": "157.0.8103.51",
+    "language": [
+      "ru",
+      "tk"
+    ],
+    "sale": "passed",
+    "readRecovery": "passed",
+    "modules": "passed",
+    "engineWarnings": []
+  },
+  {
+    "width": 820,
+    "height": 1180,
+    "browser": "157.0.8103.51",
+    "language": [
+      "ru",
+      "tk"
+    ],
+    "sale": "passed",
+    "readRecovery": "passed",
+    "modules": "passed",
+    "engineWarnings": []
+  }
+]

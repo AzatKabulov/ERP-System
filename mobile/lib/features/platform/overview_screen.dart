@@ -4,6 +4,7 @@ import '../../core/format/format_stamp.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_icons.dart';
 import '../../widgets/common.dart';
+import '../../widgets/charts.dart';
 import '../../widgets/glass.dart';
 import '../shared/async_section.dart';
 import '../shared/loading_skeletons.dart';
@@ -75,98 +76,160 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = strings(context);
     int n(String key) => data.counts[key] ?? 0;
-    Widget count(
-      String keyName,
-      String label,
-      String filter,
-      AppIconData icon, {
-      Color? accent,
-      Color? tint,
-    }) => MetricCard(
-      key: ValueKey('pf-count-$keyName'),
-      label: label,
-      value: '${n(keyName)}',
-      icon: icon,
-      accent: accent,
-      accentTint: tint,
-      onTap: () => onFilter(filter),
-    );
-    final narrow = MediaQuery.sizeOf(context).width < 768;
+    final states = [
+      ('active', l.pfCountActive, AppColors.emerald),
+      ('trial', l.pfCountTrial, AppColors.blue),
+      ('expiring', l.pfCountExpiring, AppColors.amber),
+      ('grace', l.pfCountGrace, AppColors.warning),
+      ('read_only', l.pfCountReadOnly, AppColors.rose),
+      ('suspended', l.pfCountSuspended, AppColors.muted),
+      ('free', l.pfCountFree, AppColors.violet),
+    ];
     final income = data.income.isEmpty
         ? l.pfNoIncome
         : data.income.entries.map((e) => '${e.value} ${e.key}').join(' · ');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AdaptiveGrid(
-          minimumWidth: narrow ? 150 : 200,
-          gap: narrow ? 10 : 16,
-          maxColumns: 4,
-          children: [
-            MetricCard(
-              key: const ValueKey('pf-total'),
-              label: l.pfTotalClients,
-              value: '${data.total}',
-              icon: AppIcons.user,
-              featured: true,
-              onTap: () => onFilter(''),
-            ),
-            count('active', l.pfCountActive, 'active', AppIcons.checkCircle),
-            count('trial', l.pfCountTrial, 'trial', AppIcons.clock),
-            count(
-              'expiring',
-              l.pfCountExpiring,
-              'expiring',
-              AppIcons.warning,
-              accent: AppColors.warning,
-              tint: AppColors.warningTint,
-            ),
-            count(
-              'grace',
-              l.pfCountGrace,
-              'grace',
-              AppIcons.warning,
-              accent: AppColors.warning,
-              tint: AppColors.warningTint,
-            ),
-            count(
-              'read_only',
-              l.pfCountReadOnly,
-              'read_only',
-              AppIcons.lock,
-              accent: AppColors.danger,
-              tint: AppColors.dangerTint,
-            ),
-            count(
-              'suspended',
-              l.pfCountSuspended,
-              'suspended',
-              AppIcons.block,
-              accent: AppColors.danger,
-              tint: AppColors.dangerTint,
-            ),
-            count('free', l.pfCountFree, 'free', AppIcons.tag),
-          ],
+        SurfaceCard(
+          flat: true,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final chart = Semantics(
+                label: '${l.pfTotalClients}: ${data.total}',
+                child: DonutChart(
+                  slices: [
+                    for (final state in states.where(
+                      (s) => s.$1 != 'trial' && s.$1 != 'expiring',
+                    ))
+                      DonutSlice(n(state.$1), state.$3),
+                  ],
+                  center: InkWell(
+                    key: const ValueKey('pf-total'),
+                    onTap: () => onFilter(''),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${data.total}',
+                          style: const TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          l.pfTotalClients,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  size: 190,
+                ),
+              );
+              final legend = Column(
+                children: [
+                  Text(
+                    l.pfCountExplanation,
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
+                  ),
+                  for (final state in states)
+                    InkWell(
+                      key: ValueKey('pf-count-${state.$1}'),
+                      onTap: () => onFilter(state.$1),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: state.$3,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(child: Text(state.$2)),
+                            const SizedBox(width: 12),
+                            Text(
+                              '${n(state.$1)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const AppIcon(AppIcons.chevron, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
+              return box.maxWidth < 560
+                  ? Column(
+                      children: [chart, const SizedBox(height: 20), legend],
+                    )
+                  : Row(
+                      children: [
+                        chart,
+                        const SizedBox(width: 40),
+                        Expanded(child: legend),
+                      ],
+                    );
+            },
+          ),
         ),
-        const SizedBox(height: 16),
-        AdaptiveGrid(
-          minimumWidth: narrow ? 150 : 300,
-          gap: narrow ? 10 : 16,
-          maxColumns: 2,
-          children: [
-            MetricCard(
-              key: const ValueKey('pf-income'),
-              label: l.pfIncomeMonth,
-              value: income,
-              icon: AppIcons.receipt,
-            ),
-            MetricCard(
-              key: const ValueKey('pf-new'),
-              label: l.pfNewClients30,
-              value: '${data.new30}',
-              icon: AppIcons.personAdd,
-            ),
-          ],
+        const SizedBox(height: 20),
+        SurfaceCard(
+          flat: true,
+          child: Wrap(
+            spacing: 40,
+            runSpacing: 24,
+            children: [
+              Column(
+                key: const ValueKey('pf-income'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.pfIncomeMonth,
+                    style: TextStyle(color: AppColors.muted),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    income,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                key: const ValueKey('pf-new'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.pfNewClients30,
+                    style: TextStyle(color: AppColors.muted),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${data.new30}',
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 28),
         SectionHeading(l.pfNeedsAttention),
@@ -177,24 +240,6 @@ class _Body extends StatelessWidget {
               l.pfNothingUrgent,
               key: const ValueKey('pf-nothing-urgent'),
               style: TextStyle(color: AppColors.muted),
-            ),
-          )
-        else if (narrow)
-          // a phone: the clients to call slide sideways like a gallery
-          SizedBox(
-            height: 132,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              itemCount: data.attention.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 10),
-              itemBuilder: (context, i) => SizedBox(
-                width: 270,
-                child: ClientTile(
-                  row: data.attention[i],
-                  onTap: () => onOpenClient(data.attention[i].id),
-                ),
-              ),
             ),
           )
         else

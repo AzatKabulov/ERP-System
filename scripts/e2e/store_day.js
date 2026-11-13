@@ -43,6 +43,12 @@ const viewports = process.env.E2E_VIEWPORTS ? JSON.parse(process.env.E2E_VIEWPOR
       const product = await api(`${base}/products/`, {sku,
         name:`${sku} Тормозные колодки ÄŇŞ — длинное название запчасти`, unit,
         price_amount:'125.50', price_currency:'TMT', barcodes:[], warranty_months:12});
+      if (process.env.E2E_PHOTO_FIXTURE) {
+        const picture = new FormData();
+        picture.append('file', new Blob([fs.readFileSync(process.env.E2E_PHOTO_FIXTURE)], {type:'image/png'}), 'qa-filter.png');
+        const uploaded = await fetch(new URL(`${base}/products/${product.id}/photo/`, L.URL), {method:'POST', headers:{Authorization:`Bearer ${access}`}, body:picture});
+        assert.ok(uploaded.ok, `fixture photo upload: ${uploaded.status}`);
+      }
       await api(`${base}/intakes/`, {location:store,
         lines:[{product:product.id, quantity:'50', unit_cost:'60.25'}]});
       const {ctx,page,problems} = await L.newPage(browser, {width,height});
@@ -70,10 +76,20 @@ const viewports = process.env.E2E_VIEWPORTS ? JSON.parse(process.env.E2E_VIEWPOR
       await L.boot(page);
       await L.clickLabel(page, ru.signInAction || 'Войти', {which:'last', wait:350});
       await L.clickLabel(page, 'Владелец', {wait:1200});
+      if ((await L.text(page)).includes(ru.onboardHide)) {
+        await L.clickLabel(page, ru.onboardHide, {role:'button',wait:500});
+      }
+      await page.screenshot({path:path.join(out, `${width}-dashboard.png`)});
+      await page.evaluate(() => {
+        window.erpConfirmationCount = 0;
+        const play = window.erpPlayConfirmationSound;
+        window.erpPlayConfirmationSound = () => { window.erpConfirmationCount++; play?.(); };
+      });
       const nav = async label => {
         // Less frequent phone modules live in the drawer.
         if (width < 768 && ![ru.dashboard,ru.products,ru.sales,ru.inventory].includes(label)) {
           await L.clickLabel(page, ru.navMore, {which:'last',role:'button',wait:400});
+          await page.screenshot({path:path.join(out, `${width}-more.png`)});
         }
         await L.clickLabel(page, label, {role:'button',wait:700});
       };
@@ -98,14 +114,30 @@ const viewports = process.env.E2E_VIEWPORTS ? JSON.parse(process.env.E2E_VIEWPOR
       await L.clickLabel(page, sku, {exact:false,role:'button',wait:700});
       await L.fill(page, '^Количество$', '2');
       await L.fill(page, '^Цена за единицу', '123,45');
+      await L.clickLabel(page, ru.customerChoose, {role:'button',wait:500});
+      await L.clickLabel(page, ru.customerNew, {role:'button',wait:300});
+      await L.fill(page, '^Имя$', 'Aýgül');
+      await L.fill(page, '^Фамилия', 'Şäher');
+      await L.fill(page, '^Телефон', '+993 65 123456');
+      await L.clickLabel(page, ru.save, {role:'button',wait:600,bottomInset:12});
+      assert.match(await L.text(page), /Aýgül Şäher/);
+      await page.screenshot({path:path.join(out, `${width}-cart.png`)});
       await L.clickLabel(page, ru.toPayment, {role:'button',wait:700,bottomInset:width<768?140:12});
       assert.match(await L.text(page), /246,90/);
       const before = (await api(`${base}/sales/`)).count;
       await L.clickLabel(page, ru.completeSale, {role:'button',wait:1100});
       assert.match(await L.text(page), /Продажа S-\d+ оформлена/);
-      assert.equal((await api(`${base}/sales/`)).count, before + 1);
+      assert.equal(await page.evaluate(() => window.erpConfirmationCount), 1, 'one confirmation sound request per committed sale');
+      const savedSales = await api(`${base}/sales/`);
+      assert.equal(savedSales.count, before + 1);
+      const savedSale = await api(`${base}/sales/${savedSales.results[0].id}/`);
+      assert.equal(savedSale.customer_name, 'Aýgül Şäher');
+      assert.equal(savedSale.customer_phone, '+993 65 123456');
       assert.equal((await api(`${base}/products/${product.id}/?location=${store}`)).stock.on_hand, '48.000');
       await page.screenshot({path:path.join(out, `${width}-sale.png`)});
+      // Receipt actions now live in a confirmation sheet. Start the next sale
+      // before returning to the catalog, as a cashier would.
+      await L.clickLabel(page, ru.newSaleAction, {role:'button',wait:600});
       // A failed read must show an error/retry, then recover with the same search.
       await nav(ru.products);
       failSearch = true;
@@ -114,9 +146,19 @@ const viewports = process.env.E2E_VIEWPORTS ? JSON.parse(process.env.E2E_VIEWPOR
       assert.match(await L.text(page), new RegExp(ru.retry));
       failSearch = false;
       await L.clickLabel(page, ru.retry, {role:'button',wait:800});
+      await page.screenshot({path:path.join(out, `${width}-catalog.png`)});
       assert.match(await L.text(page), /Остаток: 48 шт/);
+      if (process.env.E2E_PHOTO_FIXTURE) {
+        await L.clickLabel(page, sku, {exact:false,role:'button',wait:700});
+        await page.screenshot({path:path.join(out, `${width}-photo-actions.png`)});
+        await L.clickLabel(page, ru.productPhotoOpen, {role:'button',wait:600});
+        await page.screenshot({path:path.join(out, `${width}-photo-viewer.png`)});
+        await L.clickLabel(page, ru.close, {role:'button',wait:500});
+        await L.clickLabel(page, 'Назад', {role:'button',wait:600});
+      }
       for (const label of [ru.inventory,ru.expenses,ru.warranties,ru.reports,ru.administration,ru.dashboard]) {
         await nav(label);
+        if (label === ru.inventory) await page.screenshot({path:path.join(out, `${width}-stock.png`)});
         assert.doesNotMatch(await L.text(page), /RenderFlex|Exception|Internal server error/);
       }
       // Every sale in this fresh fixture is today in the shop. A device on tomorrow's

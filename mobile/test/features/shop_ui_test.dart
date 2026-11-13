@@ -53,7 +53,7 @@ void main() {
           rig.server.categoriesData.map((c) => c['name']),
           contains('Фильтры'),
         );
-        expect(find.textContaining('Категория: Фильтры'), findsOneWidget);
+        expect(find.textContaining('Фильтры'), findsOneWidget);
       },
     );
 
@@ -67,12 +67,12 @@ void main() {
       await settle(tester, ms: 300);
       await tapKey(tester, 'category-Тормоза');
       await settle(tester, ms: 300);
-      expect(find.textContaining('Категория: Тормоза'), findsOneWidget);
+      expect(find.textContaining('Тормоза'), findsOneWidget);
       await tapKey(tester, 'catalog-category-filter');
       await settle(tester, ms: 300);
       await tapKey(tester, 'category-all');
       await settle(tester, ms: 300);
-      expect(find.textContaining('Категория: Все категории'), findsOneWidget);
+      expect(find.textContaining('Все категории'), findsOneWidget);
     });
 
     testWidgets('typing a name that exists offers no duplicate', (

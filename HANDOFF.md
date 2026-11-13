@@ -1,6 +1,170 @@
+## Scanner release candidate — 2026-11-14
+
+- Expanded enrichment to five documented HTTPS sources: the three Facts catalogs,
+  UPCitemdb public tier (100/day) and GTINHub no-key tier (10/day). Both extra
+  quotas are shared across the deployment. Source failures/quotas remain
+  unavailable and retryable; complete misses are cached for five minutes.
+- Canonical GTIN success caching, localized-name fallbacks and a remaining
+  upstream-request budget improve repeat lookup and avoid an unbounded chain.
+  No paid accounts, automotive catalogs or compatibility inference were added.
+- Existing scan/manual buttons and form field positions remain. Receiving shows
+  search first, preserves the barcode for unknown goods, and retains entered
+  data during retry. No external price autofill or stock writes from a scan.
+- Validation: **634 Flutter tests**, clean analysis/format, **968 PostgreSQL
+  backend tests**, 37 focused barcode tests, web release and debug APK builds.
+  Real-API phone/tablet store-day checks passed in RU/TK. Focused browser receiving
+  passed loading, metadata review, 50 units, unknown barcode retention and
+  HTTP-200 unavailable/retry preserving typed names. Browser enrichment replies
+  were synthetic; decoded codes were entered through the existing input.
+  Concurrent stock/idempotency tests and a disposable DB/private-file restore
+  passed. Evidence: [scanner QA](docs/qa/scanner-2026-11-14/).
+- New APK: `local-data/android-builds/erp-2026-11-14-scanner-debug.apk`, version
+  0.1.0+2, same local debug certificate as the previous APK. Device camera,
+  sound/haptics and broad Chinese/automotive coverage remain unverified.
+- Existing GitHub Actions/Release APK workflow is reused; CI now includes
+  codex/** branches. Installers/signing keys are ignored, not source commits.
+  GitHub connector confirms Write access; the Mac's saved Git HTTPS credential
+  returned 403, so source publication uses the authorized connector.
+- QA screenshots remain local after automatic privacy review rejected screenshot
+  upload; code and synthetic test reports are shared separately.
+- Deployment/publication results will be appended after verification. A verified
+  consistent server backup and source/web/image rollback copies already exist.
+  The public password-free test-login switch must be disabled with the prepared
+  production protections; existing normal accounts/data are preserved.
+
+## Barcode maintenance guardrails — 2026-11-14 (documentation only)
+
+- Added permanent barcode regression rules to AGENTS.md and an acceptance
+  checklist to ARCHITECTURE.md. Corrected the obsolete description that treated
+  lookup failures as ordinary unknown products. Preserve scan/manual controls,
+  exact-code review, manual prices, draft retention and business isolation.
+- Documented required affected tests and separate reporting of backend changes,
+  shared client source, APK artifacts, deployed website and hardware evidence.
+- Reviewed document links/consistency and whitespace; no application source was
+  changed and no tests/builds were rerun for this documentation-only request.
+  Previous barcode evidence remains 632 Flutter / 29 PostgreSQL tests. Nothing
+  committed, pushed or deployed; November 12 APK still precedes barcode changes.
+
+## Barcode lookup follow-up — 2026-11-14 (local only)
+
+- Fixed hidden enrichment failures and three-day partial-failure misses. Cache
+  complete misses for five minutes; unresolved failures stay retryable. New
+  namespace avoids inheriting stale negatives; malformed upstream JSON is safe.
+- Added exact-code UPCitemdb public trial fallback after the existing three
+  sources. Shared admission gate: 1/11 seconds and 100/day; throttling is not a
+  product miss. No paid account; disable via `ERP_BARCODE_LOOKUP_UPCITEMDB=false`.
+  No offers/prices are imported. Automotive supplier/TecDoc integration remains
+  proposed, not implemented, licensed or coverage-validated.
+- Existing receiving form displays search first, then the existing fields.
+  Existing scan/manual controls and field layout remain. Failed enrichment has
+  retry without losing typed data; shop-first lookup still uses the server.
+- Validation: **632 Flutter tests**, clean analysis, **29 PostgreSQL barcode
+  API tests**, Ruff and whitespace checks pass. Direct Mac requests found the
+  CeraVe control in Open Beauty Facts and UPCitemdb. This is not a physical
+  camera test or evidence for the user's particular Old Spice code.
+- Details: [barcode review](docs/BARCODE_LOOKUP_RELIABILITY.md).
+  No new APK/web artifact was delivered for this follow-up; previous APK remains
+  the November 12 build. Backend and client changes are local, not deployed,
+  committed or pushed. Preserve the prior usability/security edits.
+
+## Customer and overlay follow-up — 2026-11-12 (local only)
+
+- Strong-glass menus and confirmation dialogs are opaque in both schemes; no
+  underlying text or backdrop blur. Platform client states use one dropdown;
+  shared filters use opaque fills, smaller corner radii and concise values.
+- Photo camera/replace share a row; delete is separately centered beneath.
+- Cash-desk customer creation now has first name, optional surname and phone,
+  autofill, phone/name search caption, responsive scroll/wrapped actions and
+  save-time close protection. Creation is hidden without `customer.manage`.
+  Existing Customer, sale snapshots and warranty contacts are reused unchanged;
+  no schema migration. Anonymous purchases and existing full names still work.
+- Android replaces the acknowledgement beep with an original bundled PCM chime,
+  preloaded through SoundPool with lifecycle cleanup and graceful audio failure.
+  Web has a matching ascending confirmation style. Trigger remains after the
+  server confirms the sale, once; no sound on rejected/unknown outcomes.
+- Validation: **632 Flutter tests passed**, analysis/format clean, release web
+  and Android debug builds passed. **115 PostgreSQL sales/warranty tests passed**.
+  Real-browser phone 390×844 and tablet 820×1180 passed contact entry, confirmed
+  sale snapshots, stock, read failure/retry and Russian/Turkmen navigation.
+  Disposable HTTP load: 40 competing sales sell exactly 37 available units;
+  eight same-key retries create one sale; 120 reads succeed. Database/private
+  file restore and reconciliation passed. No production stock was changed.
+- Evidence: [review](docs/CUSTOMER_AND_OVERLAY_POLISH.md),
+  [synthetic screenshots and results](docs/qa/contacts-overlays-2026-11-12/).
+- Test APK: `local-data/android-builds/erp-2026-11-12-contacts-ui-debug.apk`.
+  Debug signing only. Real phone sound/volume/silent behavior, haptics and
+  camera/gallery acceptance remain unverified; Turkmen needs fluent review.
+  Nothing committed, pushed, deployed or published for this follow-up.
+
 # Handoff
 
-Last updated 2026-11-11. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+Last updated 2026-11-12. Read [AGENTS.md](AGENTS.md) first, then this file, then [PLAN.md](PLAN.md). Contains no secrets.
+
+## Local phone UI polish — 2026-11-12
+
+Owner's screenshots addressed on the same branch; **no push/deploy**. Aligned
+metric cards even with large totals; centred cart inputs and non-wrapping currency.
+Phone store header/greeting removed, with shop context/help in More. Opaque sliding
+navigation supports dragging without press ripples/changing shadows. Adjacent
+scan/manual receiving; uncropped square gallery photos, clearer names/placeholders
+and zoom viewer. Confirmed sales open a receipt half-sheet with animated check,
+print/share/new sale and best-effort haptic/sound feedback; unknown outcomes stay
+silent. Transitions honor reduced motion; receipt errors stay inside the sheet.
+
+**627 Flutter tests pass**, analysis/formatting clean, web/Android builds and APK
+signature pass. Disposable store/load/restore and Chromium RU/TK workflows pass
+at phone/tablet/laptop sizes, with final visual checks at 390×844 and 820×1180.
+Android emulator update/launch/touch-drag/More checks pass without stock writes.
+Physical audio/haptics/FPS are unverified (muted emulator). See
+[PHONE_UI_POLISH.md](docs/PHONE_UI_POLISH.md) and its evidence.
+APK: `local-data/android-builds/erp-2026-11-12-premium-debug.apk`.
+
+## Local usability/security review — 2026-11-11
+
+On `codex/usability-and-security`, based on fetched `a6118a7`; **no push or deploy**.
+Shared navigation now preserves the ambient gradient during Material transitions;
+compact glass below 1100 logical pixels has no backdrop filter. Grouped forms,
+separate receiving photo/name rows, simpler RU/TK tips, **Касса / Kassa** navigation
+and a graphical platform overview replace the previous crowded layout. New-client
+creation blocks Back while saving and confirms discarding edits. Production
+password-free test login is refused and flagged by `check --deploy`; replacing an
+operator authenticator revokes old access/refresh sessions atomically.
+
+Fresh checks: **620 Flutter / 950 backend tests**, clean analysis/format/lint,
+release web and signed-debug APK builds. Disposable HTTP store/load/restore checks
+and Chromium store flows at four sizes / RU+TK pass; the platform overview passes
+at three sizes in both themes. No real store was written to. Backend dependency
+audit: 24 locked packages, no known advisories; Bandit finding is a test password.
+Source/history signature scan finds no private-key/GitHub/AWS matches in 175 commits.
+See [the review and limits](docs/USABILITY_SECURITY_REVIEW.md) and its evidence.
+
+**Still required:** disabling the running public server's test-login configuration
+and revoking test-issued sessions before real customer use (not deployed here),
+physical tablet/camera/printer/FPS acceptance and fluent Turkmen/user review.
+Local APK: `local-data/android-builds/erp-2026-11-11-usability-debug.apk`.
+
+## Live deployment — 2026-11-11
+
+Owner explicitly authorized deployment after the optimization push. Deployed
+`main` **a6118a7** by the documented source/web/fullscreen archive workflow.
+Backup **20261111-092018-3764992** succeeded (60K database, 232K private files).
+Previous normal/fullscreen web files are retained in
+`web-before-a6118a7-20261111-092150.tgz` on the server; no restore was run.
+
+Fresh required checks passed: **945 backend / 611 Flutter tests**, backend
+lint/system/migration checks, Flutter analysis and both web artifacts. Archive
+checksums matched; one container build exited 0, migration exited 0, and the API
+uses the new image. API/database are healthy, Caddy running. Health is `ok`,
+normal/fullscreen pages return 200 and the unauthenticated platform probe 401.
+Both live JavaScript bundles match their local builds byte for byte (MD5
+`1d0edbabce6bddf06e09117a28a8df2b`). Fresh phone-sized browser sign-in smoke passed
+for both paths without page errors or business writes.
+
+Non-fatal packaging/build warnings concern ignored macOS provenance attributes
+and the app UID exceeding the system-account range. The 401 log warning is the
+expected verification probe; no startup error was found. Existing public test
+role login remains enabled; secrets/configuration were not changed. Physical
+iPhone/PWA frame/gesture acceptance remains unverified.
 
 ## Secure startup and mobile back navigation — 2026-11-11
 

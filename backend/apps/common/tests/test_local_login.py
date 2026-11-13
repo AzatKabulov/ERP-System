@@ -135,7 +135,7 @@ class LocalLoginTests(APITestCase):
 )
 class PublicTestLoginSwitchTests(APITestCase):
     """The testing switch (ERP_PUBLIC_TEST_LOGIN): off by default, and when on it works from the
-    internet, behind a proxy, in production mode."""
+    internet only in an explicitly configured development environment."""
 
     def setUp(self):
         super().setUp()
@@ -156,7 +156,7 @@ class PublicTestLoginSwitchTests(APITestCase):
         self.assertEqual(self.call("owner").status_code, 404)
         self.assertEqual(self.call("platform").status_code, 404)
 
-    @override_settings(PUBLIC_TEST_LOGIN=True)
+    @override_settings(PUBLIC_TEST_LOGIN=True, DJANGO_ENV="development")
     def test_on_it_signs_in_a_shop_role_and_the_platform_owner_without_a_password(self):
         self.assertEqual(self.call("owner").status_code, 200)
         platform = self.call("platform")
@@ -166,3 +166,10 @@ class PublicTestLoginSwitchTests(APITestCase):
         self.assertTrue(me["user"]["is_platform_operator"])
         health = self.client.get("/api/v1/health/", HTTP_HOST="erp.example.test").json()
         self.assertIn("platform", health["test_login_roles"])
+
+    @override_settings(PUBLIC_TEST_LOGIN=True, DJANGO_ENV="production")
+    def test_production_refuses_public_passwordless_login_even_when_flag_is_set(self):
+        for role in ("owner", "manager", "sales", "warehouse", "platform"):
+            self.assertEqual(self.call(role).status_code, 404)
+        health = self.client.get("/api/v1/health/", HTTP_HOST="erp.example.test").json()
+        self.assertEqual(health.get("test_login_roles"), [])

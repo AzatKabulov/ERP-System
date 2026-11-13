@@ -15,3 +15,15 @@ infra/backups/
 
 # The local test run (scripts/local/run_local.py): its database, files and secret key
 local-data/
+
+# Android installers and signing material are artifacts/secrets, never source files.
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# QA screenshots stay local; only the synthetic image input fixture is source.
+/docs/qa/contacts-overlays-2026-11-12/*.png
+/docs/qa/phone-polish-2026-11-12/*.png
+!/docs/qa/phone-polish-2026-11-12/photo-fixture.png
+/docs/qa/scanner-2026-11-14/*.png

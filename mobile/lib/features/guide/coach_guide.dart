@@ -69,7 +69,7 @@ class _GuideOnceState extends State<GuideOnce> {
   Future<void> _start() async {
     // let the page finish arriving (its own animations) before pointing at anything on it
     await Future<void>.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     await showGuide(context, widget.steps);
     await Guides.markSeen(widget.preferences, widget.id);
   }
@@ -251,7 +251,9 @@ class _GuideOverlayState extends State<_GuideOverlay> {
     final step = _steps[_index];
     final hole = rect.inflate(6);
     // the tip goes on the side of the control that has more room
-    final below = hole.center.dy < screen.height * 0.5;
+    final below = screen.height - hole.bottom > hole.top;
+    final room = (below ? screen.height - hole.bottom : hole.top) - 28;
+    final cardHeight = room.clamp(72.0, screen.height - 32);
     final width = (screen.width - 32).clamp(0.0, 330.0);
     final left = (hole.center.dx - width / 2).clamp(
       16.0,
@@ -353,7 +355,10 @@ class _GuideOverlayState extends State<_GuideOverlay> {
                   padding: EdgeInsets.only(left: arrowX - 10),
                   child: arrow,
                 ),
-              card,
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: cardHeight),
+                child: SingleChildScrollView(child: card),
+              ),
               if (!below)
                 Padding(
                   padding: EdgeInsets.only(left: arrowX - 10),

@@ -35,7 +35,7 @@ class GlassSurface extends StatelessWidget {
   /// card in a long list stays cheap.
   final double blur;
 
-  /// A denser veil, for a surface that holds text over busy content (a dialog, a menu).
+  /// An opaque surface for readable overlays, dialogs and menus.
   final bool strong;
 
   /// A soft shadow beneath. Off for glass that sits flush (a bar against the screen edge).
@@ -49,16 +49,17 @@ class GlassSurface extends StatelessWidget {
   /// A wash of colour over the veil (an emphasised card).
   final Color? tint;
 
-  /// Optional narrow-device blur. The default is zero: the veil, rim and shadow
+  /// Optional compact-layout blur (phones and tablets below 1100 logical pixels).
+  /// The default is zero: the veil, rim and shadow
   /// retain the surface treatment without a scrolling backdrop-filter layer.
   final double? mobileBlur;
 
   @override
   Widget build(BuildContext context) {
     final corners = borderRadius ?? BorderRadius.circular(radius);
-    final narrow = MediaQuery.sizeOf(context).shortestSide < 600;
-    final effectiveBlur = narrow ? (mobileBlur ?? 0) : blur;
-    final fill = strong ? AppColors.glassStrong : AppColors.glass;
+    final narrow = MediaQuery.sizeOf(context).width < 1100;
+    final effectiveBlur = strong ? 0.0 : (narrow ? (mobileBlur ?? 0) : blur);
+    final fill = strong ? AppColors.surface : AppColors.glass;
     Widget veil = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: corners,

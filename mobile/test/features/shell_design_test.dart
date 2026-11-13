@@ -1,5 +1,6 @@
 import 'package:erp_system/widgets/common.dart';
 import 'package:erp_system/widgets/glass.dart';
+import 'package:erp_system/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,7 +17,7 @@ void main() {
       final rig = RealRig();
       await rig.launch(tester, size: const Size(390, 844));
       await rig.signIn(tester);
-      expect(find.byType(GlassSurface), findsWidgets);
+      expect(find.byType(SlidingBottomNavigation), findsOneWidget);
       expect(find.byType(BackdropFilter), findsNothing);
       await tester.pumpWidget(
         MaterialApp(
@@ -30,6 +31,22 @@ void main() {
       expect(find.byType(BackdropFilter), findsOneWidget);
     },
   );
+
+  for (final width in [768.0, 820.0, 1024.0]) {
+    testWidgets('compact tablet glass has no backdrop filter at $width', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(size: Size(width, 1180)),
+            child: const GlassSurface(child: Text('tablet surface')),
+          ),
+        ),
+      );
+      expect(find.byType(BackdropFilter), findsNothing);
+    });
+  }
 
   group('navigation follows the width', () {
     testWidgets(

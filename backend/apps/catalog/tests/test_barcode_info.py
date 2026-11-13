@@ -22,7 +22,12 @@ def answer(name="Cerave Moisturising Cream", brands="Cerave,L'Oreal", quantity="
     }
 
 
-@override_settings(BARCODE_LOOKUP_ENABLED=True, BARCODE_LOOKUP_TIMEOUT=1)
+@override_settings(
+    BARCODE_LOOKUP_ENABLED=True,
+    BARCODE_LOOKUP_TIMEOUT=1,
+    BARCODE_LOOKUP_UPCITEMDB_ENABLED=False,
+    BARCODE_LOOKUP_GTINHUB_ENABLED=False,
+)
 class BarcodeInfoCase(APITestCase):
     def setUp(self):
         super().setUp()
@@ -136,6 +141,23 @@ class NotFoundAndNetworkTests(BarcodeInfoCase):
         with self.patched([ValueError("not json"), None, None]):
             self.assertFalse(self.ask().json()["found"])
 
+    def test_partial_failure_is_unavailable_and_never_cached_as_a_miss(self):
+        with self.patched([TimeoutError(), None, None]):
+            self.assertTrue(self.ask().json()["unavailable"])
+        with self.patched([answer()]):
+            self.assertTrue(self.ask().json()["found"])
+
+    def test_non_object_json_is_unavailable_instead_of_crashing(self):
+        with self.patched([["bad"], None, None]):
+            response = self.ask()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["unavailable"])
+
+    def test_a_legacy_negative_cache_does_not_hide_a_recovered_product(self):
+        cache.set(f"gtin:v2:{CERAVE}", lookup.Info(found=False).__dict__, 86400)
+        with self.patched([answer()]):
+            self.assertTrue(self.ask().json()["found"])
+
     def test_switched_off_asks_nobody(self):
         with override_settings(BARCODE_LOOKUP_ENABLED=False), self.patched([]) as fetch:
             data = self.ask().json()
@@ -179,3 +201,138 @@ class AccessTests(BarcodeInfoCase):
         from rest_framework.test import APIClient
 
         self.assertEqual(APIClient().get(self.url, {"code": CERAVE}).status_code, 401)
+
+
+@override_settings(BARCODE_LOOKUP_UPCITEMDB_ENABLED=True)
+class ExtraSourceTests(BarcodeInfoCase):
+    @staticmethod
+    def extra(code=OTHER):
+        return {
+            "code": "OK",
+            "items": [
+                {
+                    "ean": code,
+                    "title": "Engine oil 5W-30",
+                    "brand": "Example",
+                    "size": "1 L",
+                    "category": "Motor oil",
+                    "lowest_recorded_price": 9,
+                }
+            ],
+        }
+
+    def test_extra_source_adds_exact_code_automotive_metadata_without_prices(self):
+        with self.patched([None, None, None, self.extra()]) as fetch:
+            data = self.ask(OTHER).json()
+            again = self.ask(OTHER).json()
+        self.assertTrue(data["found"])
+        self.assertEqual(data["source"], "UPCitemdb")
+        self.assertEqual(data["category"], "Motor oil")
+        self.assertNotIn("lowest_recorded_price", data)
+        self.assertEqual(data, again)
+        self.assertEqual(fetch.call_count, 4)
+
+    def test_extra_source_may_recover_after_other_sources_fail(self):
+        with self.patched([TimeoutError(), None, None, self.extra()]):
+            self.assertTrue(self.ask(OTHER).json()["found"])
+
+    def test_mismatched_code_is_never_used(self):
+        with self.patched([None, None, None, self.extra(CERAVE)]):
+            self.assertFalse(self.ask(OTHER).json()["found"])
+
+    def test_burst_gate_skips_the_extra_network_call_without_caching_a_miss(self):
+        cache.set("barcode:upcitemdb:gate", True, 11)
+        with self.patched([None, None, None]) as fetch:
+            self.assertTrue(self.ask(OTHER).json()["unavailable"])
+        self.assertEqual(fetch.call_count, 3)
+        cache.delete("barcode:upcitemdb:gate")
+        with self.patched([None, None, None, self.extra()]):
+            self.assertTrue(self.ask(OTHER).json()["found"])
+
+    def test_daily_quota_is_respected(self):
+        from datetime import UTC, datetime
+
+        day = datetime.now(UTC).date().isoformat()
+        cache.set(f"barcode:upcitemdb:day:{day}", 100, 86400)
+        with self.patched([None, None, None]) as fetch:
+            self.assertTrue(self.ask(OTHER).json()["unavailable"])
+        self.assertEqual(fetch.call_count, 3)
+
+    def test_upstream_throttling_is_not_a_product_miss(self):
+        error = urllib.error.HTTPError("https://api.upcitemdb.com/", 429, "limit", {}, None)
+        with self.patched([None, None, None, error]):
+            self.assertTrue(self.ask(OTHER).json()["unavailable"])
+
+    def test_all_sources_can_return_a_genuine_miss(self):
+        with self.patched([None, None, None, {"code": "OK", "items": []}]):
+            data = self.ask(OTHER).json()
+        self.assertEqual((data["found"], data["unavailable"]), (False, False))
+
+
+@override_settings(BARCODE_LOOKUP_GTINHUB_ENABLED=True)
+class GtinHubTests(BarcodeInfoCase):
+    def test_the_fifth_source_can_find_a_part_and_never_exposes_prices(self):
+        reply = {
+            "found": True,
+            "product": {
+                "gtin": OTHER,
+                "name": "Oil filter",
+                "brand": "Parts maker",
+                "category": "Filters",
+                "price": 99,
+            },
+        }
+        with self.patched([None, None, None, reply]) as fetch:
+            data = self.ask(OTHER).json()
+        self.assertTrue(data["found"])
+        self.assertEqual(data["source"], "GTINHub")
+        self.assertEqual(data["name"], "Oil filter")
+        self.assertNotIn("price", data)
+        self.assertEqual(fetch.call_count, 4)  # UPC disabled in this test
+
+    def test_a_hub_miss_is_normal_but_a_bad_identifier_is_not(self):
+        with self.patched([None, None, None, {"found": False}]):
+            self.assertFalse(self.ask(OTHER).json()["unavailable"])
+        cache.clear()
+        with self.patched(
+            [None, None, None, {"found": True, "product": {"gtin": CERAVE, "name": "Wrong part"}}]
+        ):
+            self.assertTrue(self.ask(OTHER).json()["unavailable"])
+
+    def test_hub_daily_limit_does_not_call_the_api(self):
+        from datetime import UTC, datetime
+
+        day = datetime.now(UTC).date().isoformat()
+        cache.set(f"barcode:gtinhub:day:{day}", 10, 86400)
+        with self.patched([None, None, None]) as fetch:
+            self.assertTrue(self.ask(OTHER).json()["unavailable"])
+        self.assertEqual(fetch.call_count, 3)
+
+
+class NormalizationAndBudgetTests(BarcodeInfoCase):
+    def test_zero_padded_representations_share_a_success_cache(self):
+        with self.patched([answer()]) as fetch:
+            self.assertTrue(self.ask("036000291452").json()["found"])
+            self.assertTrue(self.ask("0036000291452").json()["found"])
+            self.assertTrue(self.ask("00036000291452").json()["found"])
+        self.assertEqual(fetch.call_count, 1)
+
+    def test_nonzero_carton_indicator_is_not_the_retail_code(self):
+        self.assertNotEqual(lookup.canonical_gtin("14006381333938"), lookup.canonical_gtin(OTHER))
+
+    def test_localized_names_are_used_when_the_generic_name_is_missing(self):
+        reply = {"status": 1, "product": {"product_name_ru": "Масляный фильтр", "brands": "X"}}
+        with self.patched([reply]):
+            self.assertEqual(self.ask().json()["name"], "Масляный фильтр")
+
+    def test_mismatched_facts_code_never_becomes_a_suggestion(self):
+        reply = answer()
+        reply["product"]["code"] = OTHER
+        with self.patched([reply, None, None]):
+            self.assertTrue(self.ask().json()["unavailable"])
+
+    def test_expired_budget_never_starts_another_network_request(self):
+        with mock.patch.object(lookup, "monotonic", return_value=11), self.patched([]) as fetch:
+            with self.assertRaises(TimeoutError):
+                lookup._fetch_before("https://example.test/", 10)
+        fetch.assert_not_called()

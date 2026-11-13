@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'app_icons.dart';
+import 'bottom_navigation.dart';
 
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
@@ -92,7 +93,7 @@ const _phoneTabs = [
 const _phoneBreakpoint = 768.0;
 
 /// The height of the floating tab bar, and the gap around it.
-const _barHeight = 68.0;
+const _barHeight = 74.0;
 const _barGap = 12.0;
 
 /// The application frame shared by the demonstration workspace and the real one. The page fills
@@ -383,6 +384,17 @@ class _AppShellState extends State<AppShell> {
     required bool showRole,
   }) {
     final safeTop = MediaQuery.paddingOf(context).top;
+    if (phone) {
+      return Column(
+        key: const ValueKey('app-top-layer'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: safeTop),
+          ...widget.banners,
+        ],
+      );
+    }
+
     final safeSides = PwaAreas.enabledOf(context)
         ? MediaQuery.paddingOf(context)
         : EdgeInsets.zero;
@@ -498,6 +510,14 @@ class _AppShellState extends State<AppShell> {
     ];
     return showModalBottomSheet<void>(
       context: context,
+      showDragHandle: false,
+      sheetAnimationStyle: AnimationStyle(
+        duration: AppMotion.of(context, const Duration(milliseconds: 280)),
+        reverseDuration: AppMotion.of(
+          context,
+          const Duration(milliseconds: 220),
+        ),
+      ),
       backgroundColor: Colors.transparent,
       elevation: 0,
       barrierColor: AppColors.scrim,
@@ -509,58 +529,65 @@ class _AppShellState extends State<AppShell> {
         child: SafeArea(
           // A list, not a column: a sheet is at most 9/16 of the screen high, and large system
           // text makes the rows taller, so it must be able to scroll.
-          child: ListView(
+          child: SingleChildScrollView(
             key: const ValueKey('more-sheet'),
-            shrinkWrap: true,
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.lineStrong,
-                    borderRadius: BorderRadius.circular(2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.lineStrong,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              for (final page in others)
-                _MoreRow(
-                  key: ValueKey('more-${page.name}'),
-                  icon: pageIcon(page),
-                  label: pageLabel(l, page),
-                  selected: widget.page == page,
-                  onTap: () {
-                    Navigator.of(sheet).pop();
-                    widget.onNavigate(page);
-                  },
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+                  child: widget.locationControl,
                 ),
-              if (widget.onHelp != null)
-                _MoreRow(
-                  key: const ValueKey('more-help'),
-                  icon: AppIcons.help,
-                  label: l.helpTitle,
-                  onTap: () {
-                    Navigator.of(sheet).pop();
-                    widget.onHelp!();
-                  },
-                ),
-              if (widget.onSignOut != null) ...[
-                Divider(height: 16, color: AppColors.line),
-                _MoreRow(
-                  key: const ValueKey('more-sign-out'),
-                  icon: AppIcons.logout,
-                  label: widget.userName.isEmpty
-                      ? l.signOut
-                      : '${l.signOut} · ${widget.userName}',
-                  onTap: () {
-                    Navigator.of(sheet).pop();
-                    widget.onSignOut!();
-                  },
-                ),
+                for (final page in others)
+                  _MoreRow(
+                    key: ValueKey('more-${page.name}'),
+                    icon: pageIcon(page),
+                    label: pageLabel(l, page),
+                    selected: widget.page == page,
+                    onTap: () {
+                      Navigator.of(sheet).pop();
+                      widget.onNavigate(page);
+                    },
+                  ),
+                if (widget.onHelp != null)
+                  _MoreRow(
+                    key: const ValueKey('more-help'),
+                    icon: AppIcons.help,
+                    label: l.helpTitle,
+                    onTap: () {
+                      Navigator.of(sheet).pop();
+                      widget.onHelp!();
+                    },
+                  ),
+                if (widget.onSignOut != null) ...[
+                  Divider(height: 16, color: AppColors.line),
+                  _MoreRow(
+                    key: const ValueKey('more-sign-out'),
+                    icon: AppIcons.logout,
+                    label: widget.userName.isEmpty
+                        ? l.signOut
+                        : '${l.signOut} · ${widget.userName}',
+                    onTap: () {
+                      Navigator.of(sheet).pop();
+                      widget.onSignOut!();
+                    },
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -575,103 +602,32 @@ class _AppShellState extends State<AppShell> {
     ];
     final hasMore = widget.pages.any((p) => !widget.phoneTabs.contains(p));
 
-    Widget tab({
-      required Key key,
-      required String label,
-      required AppIconData icon,
-      required bool selected,
-      required VoidCallback onTap,
-    }) => Expanded(
-      child: Semantics(
-        button: true,
-        selected: selected,
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            key: key,
-            borderRadius: BorderRadius.circular(20),
-            onTap: onTap,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedContainer(
-                  duration: AppMotion.of(context, AppMotion.base),
-                  curve: AppMotion.arrive,
-                  width: selected ? 52 : 34,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppColors.blue.withValues(
-                            alpha: AppColors.isDark ? 0.28 : 0.14,
-                          )
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Center(
-                    child: TweenAnimationBuilder<Color?>(
-                      tween: ColorTween(
-                        end: selected ? AppColors.blue : AppColors.muted,
-                      ),
-                      duration: AppMotion.of(context, AppMotion.base),
-                      builder: (context, c, _) =>
-                          AppIcon(icon, size: 22, color: c),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                // a bar's labels grow with the system text size up to 1.3x, as Material's do:
-                // the bar has a fixed height and must stay a bar
-                MediaQuery.withClampedTextScaling(
-                  maxScaleFactor: 1.3,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                      color: selected ? AppColors.blue : AppColors.muted,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-
-    return GlassSurface(
+    final selected = tabs.indexOf(widget.page);
+    return SlidingBottomNavigation(
       key: const ValueKey('phone-navigation'),
-      radius: 30,
-      blur: 28,
-      mobileBlur: 0,
-      child: SizedBox(
-        height: _barHeight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          child: Row(
-            children: [
-              for (final page in tabs)
-                tab(
-                  key: ValueKey('tab-${page.name}'),
-                  label: pageLabel(l, page),
-                  icon: pageIcon(page),
-                  selected: widget.page == page,
-                  onTap: () => widget.onNavigate(page),
-                ),
-              if (hasMore)
-                tab(
-                  key: const ValueKey('tab-more'),
-                  label: l.navMore,
-                  icon: AppIcons.dots,
-                  selected: _moreSelected,
-                  onTap: _openMore,
-                ),
-            ],
+      tabs: [
+        for (final page in tabs)
+          BottomTab(
+            key: ValueKey('tab-${page.name}'),
+            label: pageLabel(l, page),
+            icon: pageIcon(page),
           ),
-        ),
-      ),
+        if (hasMore)
+          BottomTab(
+            key: const ValueKey('tab-more'),
+            label: l.navMore,
+            icon: AppIcons.dots,
+            reselect: true,
+          ),
+      ],
+      selected: _moreSelected ? tabs.length : math.max(0, selected),
+      onSelected: (index) {
+        if (index < tabs.length) {
+          widget.onNavigate(tabs[index]);
+        } else {
+          _openMore();
+        }
+      },
     );
   }
 
@@ -845,7 +801,7 @@ class _PageEnterState extends State<_PageEnter>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: AppMotion.slow,
+    duration: const Duration(milliseconds: 220),
   );
   late final Animation<double> _curve = CurvedAnimation(
     parent: _controller,
@@ -858,7 +814,7 @@ class _PageEnterState extends State<_PageEnter>
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    if (AppMotion.skipEntrance(context)) {
+    if (AppMotion.reduced(context)) {
       _controller.value = 1;
     } else {
       _controller.forward();

@@ -24,6 +24,34 @@ under their glass, preventing the previous page from showing through during a
 transition. Read-only detail pages keep interactive iOS back; dirty forms keep
 their existing confirmation. These controls need physical-device frame testing.
 
+Usability follow-up (2026-11-11): compact layouts below 1100 logical pixels use
+unblurred glass surfaces on every page, retaining veil, rim and shadow. Wide
+layouts retain blur. Material route transitions use a transparent transition
+backdrop so the persistent ambient gradient remains visible instead of a flat
+surface flash. Native iOS retains its Cupertino transition. Shared fields keep
+at least 52 pixels of height and allow multiline help/errors. Product, expense,
+transfer and return forms use shared flat sections; receiving puts the photo
+above the name and uses a single field column on narrow dialogs. The platform
+owner overview uses a client-state ring with accessible, tappable count rows,
+two quiet headline figures and a vertical attention list. Trial and expiring
+counts are subsets of active clients, not extra slices of the ring. The shop
+navigation label is **Касса / Kassa**; historical sales and accounting terms
+retain their meaning.
+
+Phone polish (owner request, 2026-11-12) supersedes the earlier no-entrance rule
+for short page navigation: 220 ms content fade/slide, 280/220 ms sheet motion,
+and a 480 ms confirmation check. Honor reduced motion and keep compact count-ups
+disabled. Phone safe insets remain without a separate store header; shop context
+and help move into More, and Overview replaces the greeting. Wide headers remain.
+The phone navigation is opaque, with one sliding selection marker, no press ripple
+or changing item shadow, and drag-to-select along the bar. Peer metrics reserve
+matching label, amount and optional-note areas, including large totals. Receiving
+puts scan/manual choices side by side and More by the heading. Gallery photos are
+square and uncropped, names allow three lines, and detail photos open a zoom viewer.
+Confirmed sales show a receipt half-sheet with print/share/new-sale actions and
+best-effort audio/haptics. Unknown/rejected outcomes stay silent; device settings
+remain authoritative.
+
 The brand mark (a blue-to-violet square with an "E") is kept and the interface is built around it. No gold or brass anywhere.
 
 Where glass is used, and where it is not:
@@ -204,3 +232,22 @@ In `mobile/lib/widgets/charts.dart`: `AreaChart` (a line with a gradient fill, i
 - A new colour goes into both palettes and into the contrast test.
 
 This document describes the intended frontend. Compliance is shown by the implemented widgets, the tests and device checks, not by the tokens alone.
+
+
+### Opaque overlays and compact filters (2026-11-12)
+
+The owner's follow-up supersedes translucent `strong` glass: More, shared
+confirmation dialogs and other strong surfaces paint the scheme's fully opaque
+surface, without backdrop blur. Text from a page must never compete with modal
+content. Ordinary ambient cards retain their existing treatment. Filter controls
+use opaque neutral fills, quiet 12 px corners, and at least 44 px tap targets;
+Material choices retain their normal touch-target padding with reduced visual
+padding. Filter buttons show the selected value once, with their caption as a
+tooltip. The platform client-state filter is one dropdown containing all nine
+states instead of a large wrapping grid. Keep its current selection visible.
+
+Product-photo actions share two equal columns (camera and choose/replace), with
+wrapping labels for Russian/Turkmen. A centered destructive remove action sits
+below, with a separate gap. Customer creation from the cash desk has first name,
+optional surname and optional phone; the form scrolls on short/keyboard-reduced
+screens, and actions may wrap. Names remain Unicode; no transliteration.

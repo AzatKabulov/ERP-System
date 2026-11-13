@@ -128,12 +128,8 @@ void main() {
         await tester.tap(key('guide-next'));
         await settle(tester, ms: 600);
       }
-      // the last tip points at the help button at the top: the tip is below it
-      final help = tester.getRect(key('help-button'));
-      expect(
-        tester.getRect(key('guide-card')).top,
-        greaterThanOrEqualTo(help.bottom - 1),
-      );
+      expect(key('guide-card'), findsNothing);
+      expect(key('help-button'), findsNothing);
     });
 
     testWidgets('can be switched on again from Settings', (tester) async {

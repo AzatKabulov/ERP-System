@@ -21,14 +21,20 @@ class CustomerChoice {
 
 Future<CustomerChoice?> showCustomerPicker(
   BuildContext context,
-  SalesRepository repository,
-) => showDialog<CustomerChoice>(
+  SalesRepository repository, {
+  bool canCreate = true,
+}) => showDialog<CustomerChoice>(
   context: context,
-  builder: (_) => _CustomerPickerDialog(repository: repository),
+  builder: (_) =>
+      _CustomerPickerDialog(repository: repository, canCreate: canCreate),
 );
 
 class _CustomerPickerDialog extends StatefulWidget {
-  const _CustomerPickerDialog({required this.repository});
+  const _CustomerPickerDialog({
+    required this.repository,
+    required this.canCreate,
+  });
+  final bool canCreate;
   final SalesRepository repository;
 
   @override
@@ -39,6 +45,7 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
   final _search = TextEditingController();
   final _name = TextEditingController();
   final _phone = TextEditingController();
+  final _surname = TextEditingController();
   Timer? _debounce;
   List<Customer> _items = const [];
   bool _loading = true;
@@ -61,6 +68,7 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
     _search.dispose();
     _name.dispose();
     _phone.dispose();
+    _surname.dispose();
     super.dispose();
   }
 
@@ -98,7 +106,10 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
     });
     try {
       final created = await widget.repository.createCustomer(
-        _name.text.trim(),
+        [
+          _name.text.trim(),
+          _surname.text.trim(),
+        ].where((s) => s.isNotEmpty).join(' '),
         _phone.text.trim(),
       );
       if (mounted) Navigator.of(context).pop(CustomerChoice(created));
@@ -112,124 +123,169 @@ class _CustomerPickerDialogState extends State<_CustomerPickerDialog> {
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
-    return Dialog(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 620),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _creating ? l.customerNew : l.customerChoose,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                  IconButton(
-                    key: const ValueKey('customer-close'),
-                    tooltip: l.close,
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const AppIcon(AppIcons.close),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (_creating) ...[
-                LabeledField(
-                  label: l.customerNameLabel,
-                  child: TextField(
-                    key: const ValueKey('customer-name'),
-                    controller: _name,
-                    enabled: !_busy,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      errorText: _missingName && _name.text.trim().isEmpty
-                          ? l.fieldRequired
-                          : fieldError(l, _createError, 'name'),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                LabeledField(
-                  label: l.phoneLabel,
-                  child: TextField(
-                    key: const ValueKey('customer-phone'),
-                    controller: _phone,
-                    enabled: !_busy,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(),
-                  ),
-                ),
-                if (_createError != null && _createError!.fields.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      apiErrorText(l, _createError!),
-                      style: TextStyle(color: AppColors.danger),
-                    ),
-                  ),
-                const SizedBox(height: 16),
+    return PopScope(
+      canPop: !_busy,
+      child: Dialog(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 620),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
+                    Expanded(
+                      child: Text(
+                        _creating ? l.customerNew : l.customerChoose,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    IconButton(
+                      key: const ValueKey('customer-close'),
+                      tooltip: l.close,
                       onPressed: _busy
                           ? null
-                          : () => setState(() => _creating = false),
-                      child: Text(l.cancel),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      key: const ValueKey('customer-save'),
-                      onPressed: _busy ? null : _create,
-                      child: Text(l.save),
+                          : () => Navigator.of(context).pop(),
+                      icon: const AppIcon(AppIcons.close),
                     ),
                   ],
                 ),
-              ] else ...[
-                LabeledField(
-                  label: l.customerNameLabel,
-                  child: TextField(
-                    key: const ValueKey('customer-search'),
-                    controller: _search,
-                    onChanged: (_) {
-                      _debounce?.cancel();
-                      _debounce = Timer(
-                        const Duration(milliseconds: 300),
-                        _run,
-                      );
-                    },
-                    decoration: InputDecoration(
-                      prefixIcon: const AppIcon(AppIcons.search),
+                const SizedBox(height: 12),
+                if (_creating)
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            l.customerContactHint,
+                            style: TextStyle(color: AppColors.muted),
+                          ),
+                          const SizedBox(height: 16),
+                          LabeledField(
+                            label: l.customerFirstName,
+                            child: TextField(
+                              key: const ValueKey('customer-name'),
+                              controller: _name,
+                              enabled: !_busy,
+                              autofocus: true,
+                              maxLength: 100,
+                              textCapitalization: TextCapitalization.words,
+                              autofillHints: const [AutofillHints.givenName],
+                              decoration: InputDecoration(
+                                errorText:
+                                    _missingName && _name.text.trim().isEmpty
+                                    ? l.fieldRequired
+                                    : fieldError(l, _createError, 'name'),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          LabeledField(
+                            label: l.customerSurname,
+                            child: TextField(
+                              key: const ValueKey('customer-surname'),
+                              controller: _surname,
+                              enabled: !_busy,
+                              maxLength: 99,
+                              textCapitalization: TextCapitalization.words,
+                              autofillHints: const [AutofillHints.familyName],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          LabeledField(
+                            label: l.phoneLabel,
+                            child: TextField(
+                              key: const ValueKey('customer-phone'),
+                              controller: _phone,
+                              enabled: !_busy,
+                              keyboardType: TextInputType.phone,
+                              autofillHints: const [
+                                AutofillHints.telephoneNumber,
+                              ],
+                              maxLength: 60,
+                              decoration: InputDecoration(
+                                errorText: fieldError(l, _createError, 'phone'),
+                              ),
+                            ),
+                          ),
+                          if (_createError != null &&
+                              _createError!.fields.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text(
+                                apiErrorText(l, _createError!),
+                                style: TextStyle(color: AppColors.danger),
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            alignment: WrapAlignment.end,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              TextButton(
+                                onPressed: _busy
+                                    ? null
+                                    : () => setState(() => _creating = false),
+                                child: Text(l.cancel),
+                              ),
+                              FilledButton(
+                                key: const ValueKey('customer-save'),
+                                onPressed: _busy ? null : _create,
+                                child: Text(l.save),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton.icon(
-                      key: const ValueKey('customer-none'),
-                      onPressed: () =>
-                          Navigator.of(context).pop(const CustomerChoice(null)),
-                      icon: const AppIcon(AppIcons.personOff),
-                      label: Text(l.customerNone),
+                if (!_creating) ...[
+                  LabeledField(
+                    label: l.customerSearchLabel,
+                    child: TextField(
+                      key: const ValueKey('customer-search'),
+                      controller: _search,
+                      onChanged: (_) {
+                        _debounce?.cancel();
+                        _debounce = Timer(
+                          const Duration(milliseconds: 300),
+                          _run,
+                        );
+                      },
+                      decoration: InputDecoration(
+                        prefixIcon: const AppIcon(AppIcons.search),
+                      ),
                     ),
-                    TextButton.icon(
-                      key: const ValueKey('customer-new'),
-                      onPressed: () => setState(() => _creating = true),
-                      icon: const AppIcon(AppIcons.personAdd),
-                      label: Text(l.customerNew),
-                    ),
-                  ],
-                ),
-                const Divider(height: 1),
-                Flexible(child: _results(context)),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      TextButton.icon(
+                        key: const ValueKey('customer-none'),
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pop(const CustomerChoice(null)),
+                        icon: const AppIcon(AppIcons.personOff),
+                        label: Text(l.customerNone),
+                      ),
+                      if (widget.canCreate)
+                        TextButton.icon(
+                          key: const ValueKey('customer-new'),
+                          onPressed: () => setState(() => _creating = true),
+                          icon: const AppIcon(AppIcons.personAdd),
+                          label: Text(l.customerNew),
+                        ),
+                    ],
+                  ),
+                  const Divider(height: 1),
+                  Flexible(child: _results(context)),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

@@ -45,6 +45,7 @@ class FakeServer {
   bool refreshRejected = false;
   bool reachable = true;
   Future<void>? externalWait;
+  bool externalUnavailable = false;
   Future<void>? stockWait;
 
   /// Controlled read gates for loading tests. They never change production API behavior.
@@ -934,13 +935,13 @@ class FakeServer {
       final info = externalInfo[code];
       return _json(200, {
         'code': code,
-        'found': info != null,
+        'found': info != null && !externalUnavailable,
         'name': info?['name'] ?? '',
         'brand': info?['brand'] ?? '',
         'category': info?['category'] ?? '',
         'quantity': info?['quantity'] ?? '',
         'source': info == null ? '' : 'Open Beauty Facts',
-        'unavailable': false,
+        'unavailable': externalUnavailable,
       });
     }
 

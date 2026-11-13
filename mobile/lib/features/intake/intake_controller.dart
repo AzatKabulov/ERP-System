@@ -125,9 +125,17 @@ class IntakeController extends ChangeNotifier {
   /// Asks the server (which asks the open databases) for a name for an unknown code, in the
   /// background: the line already stands, and nothing waits for the answer. A failure or a miss
   /// just leaves the person to type the name.
+  void retrySuggestion(IntakeEntry entry) => _suggest(entry);
+
   Future<void> _suggest(IntakeEntry entry) async {
-    if (!looksLikeGtin(entry.code) || entry.suggestion != null) return;
+    if (!looksLikeGtin(entry.code) ||
+        entry.suggestion != null ||
+        entry.suggesting ||
+        !_entries.contains(entry)) {
+      return;
+    }
     entry.suggesting = true;
+    entry.suggestionFailed = false;
     _notify();
     try {
       final info = await catalog.externalInfo(entry.code);
@@ -135,7 +143,7 @@ class IntakeController extends ChangeNotifier {
       entry.suggestion = info;
       _notify();
     } catch (_) {
-      // not found online, no connection or a refusal: the person types the name
+      if (_entries.contains(entry)) entry.suggestionFailed = true;
     } finally {
       entry.suggesting = false;
       _notify();

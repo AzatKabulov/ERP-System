@@ -27,12 +27,16 @@ class DocumentButtons extends StatefulWidget {
 
 class _DocumentButtonsState extends State<DocumentButtons> {
   bool _busy = false;
+  String? _error;
 
   Future<void> _run(bool print) async {
     if (_busy) return;
     final l = strings(context);
     final actions = DocumentsScope.of(context);
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
       final bytes = await widget.repository.receipt(widget.saleId);
       final name = 'receipt-${saleNumber(widget.saleNumber)}';
@@ -42,7 +46,7 @@ class _DocumentButtonsState extends State<DocumentButtons> {
         await actions.shareDocument(bytes, name);
       }
     } catch (_) {
-      if (mounted) showFeedback(context, l.documentFailed);
+      if (mounted) setState(() => _error = l.documentFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -56,6 +60,15 @@ class _DocumentButtonsState extends State<DocumentButtons> {
       runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
+        if (_error != null)
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              _error!,
+              key: const ValueKey('document-error'),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
         OutlinedButton.icon(
           key: const ValueKey('doc-receipt-print'),
           onPressed: _busy ? null : () => _run(true),

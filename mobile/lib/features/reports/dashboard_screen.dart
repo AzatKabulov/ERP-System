@@ -104,7 +104,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 600;
         final l = strings(context);
-        final name = session.user?.fullName ?? '';
         // The shop's name is in the top bar already: only a choice of places needs naming here.
         final place = session.placeSubtitle ?? '';
         return ListView(
@@ -115,9 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   PageHead(
-                    title: name.isEmpty
-                        ? l.greetingNoName
-                        : l.welcomeUser(name),
+                    title: l.dashboard,
                     titleKey: const ValueKey('welcome'),
                     subtitle: place.isEmpty ? null : place,
                   ),
@@ -235,6 +232,7 @@ class _Figures extends StatelessWidget {
       child: FadeUp(
         index: index,
         child: MetricCard(
+          alignWithPeers: true,
           label: label,
           value: value,
           meta: meta,
@@ -664,7 +662,9 @@ class _Figures extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         AdaptiveGrid(
-          minimumWidth: compact ? 150 : 220,
+          minimumWidth: MediaQuery.textScalerOf(
+            context,
+          ).scale(compact ? 150 : 220),
           children: [
             if (d.salesMonthTotal != null)
               _card(
@@ -726,6 +726,7 @@ class _Figures extends StatelessWidget {
                   child: FadeUp(
                     index: 6,
                     child: MetricCard(
+                      alignWithPeers: true,
                       label: l.dashToComplete,
                       value: '${d.toCompleteCount}',
                       featured: true,

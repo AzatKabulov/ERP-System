@@ -149,19 +149,65 @@ void main() {
       expect(t.rig.server.productsData.last['barcodes'], [cerave]);
     });
 
-    testWidgets('the internet failing changes nothing for the worker', (
-      tester,
-    ) async {
-      final t = intakeRig();
-      know(t.rig);
-      t.rig.server.externalFails = true;
-      await openIntake(tester, t.rig);
-      await scanByKeyboard(tester, cerave);
-      expect(find.textContaining('нет в каталоге'), findsOneWidget);
-      expect(key('intake-add-found-$cerave'), findsNothing);
-      expect(key('intake-add-$cerave'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
+    testWidgets(
+      'an internet failure is visible and can be retried without losing the form',
+      (tester) async {
+        final t = intakeRig();
+        know(t.rig);
+        t.rig.server.externalFails = true;
+        await openIntake(tester, t.rig);
+        await scanByKeyboard(tester, cerave);
+        expect(
+          find.textContaining('Не удалось проверить интернет'),
+          findsWidgets,
+        );
+        expect(key('intake-add-found-$cerave'), findsNothing);
+        expect(key('intake-add-$cerave'), findsOneWidget);
+        await tapKey(tester, 'intake-add-$cerave');
+        await settle(tester);
+        await tester.enterText(key('intake-new-name'), 'Моё название');
+        t.rig.server.externalFails = false;
+        await tapKey(tester, 'intake-online-retry');
+        await settle(tester);
+        expect(t.rig.server.externalAsked.length, 2);
+        expect(key('intake-online-retry'), findsNothing);
+        expect(
+          tester.widget<TextField>(key('intake-new-name')).controller!.text,
+          'Моё название',
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'an HTTP 200 unavailable reply is distinct from a real miss and retries safely',
+      (tester) async {
+        final t = intakeRig();
+        know(t.rig);
+        t.rig.server.externalUnavailable = true;
+        await openIntake(tester, t.rig);
+        await scanByKeyboard(tester, cerave);
+        expect(
+          find.textContaining('Не удалось проверить интернет'),
+          findsWidgets,
+        );
+        expect(key('intake-add-found-$cerave'), findsNothing);
+        expect(key('intake-add-$cerave'), findsOneWidget);
+        await tapKey(tester, 'intake-add-$cerave');
+        await settle(tester);
+        await tester.enterText(key('intake-new-name'), 'Моё название');
+        t.rig.server.externalUnavailable = false;
+        await tapKey(tester, 'intake-online-retry');
+        await settle(tester);
+        expect(t.rig.server.externalAsked.length, 2);
+        expect(key('intake-online-retry'), findsNothing);
+        expect(
+          tester.widget<TextField>(key('intake-new-name')).controller!.text,
+          'Моё название',
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
 
     testWidgets('a code that cannot be a barcode number is never sent out', (
       tester,

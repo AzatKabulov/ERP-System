@@ -5,9 +5,12 @@ import os
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
+from django.db.models import F
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.accounts.models import User
+from apps.accounts.services import revoke_sessions
 
 
 class Command(BaseCommand):
@@ -48,8 +51,13 @@ class Command(BaseCommand):
             )
         elif not opts["new_key"] and TOTPDevice.objects.filter(user=user, confirmed=True).exists():
             raise CommandError(f"{username} already has an authenticator key (use --new-key).")
-        TOTPDevice.objects.filter(user=user).delete()
-        device = TOTPDevice.objects.create(user=user, name="authenticator", confirmed=True)
+        with transaction.atomic():
+            User.objects.select_for_update().get(pk=user.pk)
+            TOTPDevice.objects.filter(user=user).delete()
+            device = TOTPDevice.objects.create(user=user, name="authenticator", confirmed=True)
+            # Replacing a lost/compromised authenticator must also end API sessions.
+            User.objects.filter(pk=user.pk).update(session_version=F("session_version") + 1)
+            revoke_sessions(user)
         key = base64.b32encode(bytes.fromhex(device.key)).decode().rstrip("=")
         self.stdout.write("\nAdd this to your authenticator app (enter the key by hand):")
         self.stdout.write(f"  account: {username}")

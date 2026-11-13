@@ -1,0 +1,1330 @@
+{
+  "database_version": "18.4",
+  "store_workflows": "passed",
+  "sale_race": {
+    "201": 37,
+    "409": 3
+  },
+  "duplicate_retries": 8,
+  "mixed_reads": {
+    "requests": 120,
+    "concurrency": 12,
+    "p50_ms": 50.57,
+    "p95_ms": 77.47,
+    "max_ms": 87.73
+  },
+  "restore": {
+    "tables": 66,
+    "private_files": 5
+  },
+  "requests": [
+    {
+      "path": "/api/v1/local-test-login/",
+      "method": "POST",
+      "status": 200,
+      "ms": 17.5
+    },
+    {
+      "path": "/api/v1/local-test-login/",
+      "method": "POST",
+      "status": 200,
+      "ms": 4.47
+    },
+    {
+      "path": "/api/v1/local-test-login/",
+      "method": "POST",
+      "status": 200,
+      "ms": 3.67
+    },
+    {
+      "path": "/api/v1/local-test-login/",
+      "method": "POST",
+      "status": 200,
+      "ms": 3.7
+    },
+    {
+      "path": "/api/v1/me/",
+      "method": "GET",
+      "status": 200,
+      "ms": 5.62
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/",
+      "method": "GET",
+      "status": 200,
+      "ms": 3.71
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/locations/",
+      "method": "GET",
+      "status": 200,
+      "ms": 4.14
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/units/",
+      "method": "GET",
+      "status": 200,
+      "ms": 4.5
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "POST",
+      "status": 201,
+      "ms": 10.81
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/intakes/",
+      "method": "POST",
+      "status": 201,
+      "ms": 13.49
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/intakes/",
+      "method": "POST",
+      "status": 201,
+      "ms": 5.23
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 12.47
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/2a1276ec-03cd-4538-8ab0-b8c70d80260d/document/",
+      "method": "GET",
+      "status": 200,
+      "ms": 17.84
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/2a1276ec-03cd-4538-8ab0-b8c70d80260d/document/",
+      "method": "GET",
+      "status": 200,
+      "ms": 9.4
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/2a1276ec-03cd-4538-8ab0-b8c70d80260d/returns/",
+      "method": "POST",
+      "status": 201,
+      "ms": 14.71
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/transfers/",
+      "method": "POST",
+      "status": 201,
+      "ms": 13.11
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/transfers/50eb1d36-aed3-4b40-b937-fddac4f8e186/receive/",
+      "method": "POST",
+      "status": 200,
+      "ms": 13.4
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/counts/",
+      "method": "POST",
+      "status": 201,
+      "ms": 10.25
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/counts/ac93d1eb-4cec-48e0-b9bd-891578df5107/lines/",
+      "method": "PUT",
+      "status": 200,
+      "ms": 8.15
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/counts/ac93d1eb-4cec-48e0-b9bd-891578df5107/submit/",
+      "method": "POST",
+      "status": 200,
+      "ms": 7.41
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/counts/ac93d1eb-4cec-48e0-b9bd-891578df5107/approve/",
+      "method": "POST",
+      "status": 200,
+      "ms": 10.98
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/warranty-claims/",
+      "method": "POST",
+      "status": 201,
+      "ms": 9.92
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/warranty-claims/b6406510-4353-43e5-bc6b-7f0664c2760e/close/",
+      "method": "POST",
+      "status": 200,
+      "ms": 9.82
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/attachments/",
+      "method": "POST",
+      "status": 201,
+      "ms": 5.19
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/expense-categories/",
+      "method": "GET",
+      "status": 200,
+      "ms": 4.04
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/expenses/",
+      "method": "POST",
+      "status": 201,
+      "ms": 6.19
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/attachments/9fa14899-cc5d-4db7-8131-ca8cf949b9d4/",
+      "method": "GET",
+      "status": 200,
+      "ms": 3.91
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/attachments/9fa14899-cc5d-4db7-8131-ca8cf949b9d4/",
+      "method": "GET",
+      "status": 403,
+      "ms": 3.41
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 403,
+      "ms": 3.43
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/ec66e155-7419-46bd-a8fb-272f533b5caf/",
+      "method": "GET",
+      "status": 200,
+      "ms": 8.22
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 403,
+      "ms": 3.36
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/ec66e155-7419-46bd-a8fb-272f533b5caf/",
+      "method": "GET",
+      "status": 200,
+      "ms": 7.87
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 10.38
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/ec66e155-7419-46bd-a8fb-272f533b5caf/",
+      "method": "GET",
+      "status": 200,
+      "ms": 7.55
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/ec66e155-7419-46bd-a8fb-272f533b5caf/",
+      "method": "GET",
+      "status": 200,
+      "ms": 7.61
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/ec66e155-7419-46bd-a8fb-272f533b5caf/",
+      "method": "GET",
+      "status": 200,
+      "ms": 8.05
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/catalog/export/",
+      "method": "GET",
+      "status": 200,
+      "ms": 5.48
+    },
+    {
+      "path": "/api/v1/businesses/d807f71e-ba45-4bdb-94e0-32f766462f31/products/",
+      "method": "GET",
+      "status": 404,
+      "ms": 3.66
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 401,
+      "ms": 0.63
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 400,
+      "ms": 3.47
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 400,
+      "ms": 3.72
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 400,
+      "ms": 3.32
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 400,
+      "ms": 3.19
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 400,
+      "ms": 4.23
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 400,
+      "ms": 4.24
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 400,
+      "ms": 4.58
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 400,
+      "ms": 4.34
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 400,
+      "ms": 4.73
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/2a1276ec-03cd-4538-8ab0-b8c70d80260d/",
+      "method": "PATCH",
+      "status": 405,
+      "ms": 3.18
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/ec66e155-7419-46bd-a8fb-272f533b5caf/",
+      "method": "GET",
+      "status": 200,
+      "ms": 7.35
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 41.19
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 46.97
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 55.67
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 62.75
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 69.49
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 77.07
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 83.76
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 21.98
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 97.75
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 105.96
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 113.47
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 120.58
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 126.84
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 93.99
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 93.35
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 93.94
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 94.39
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 86.77
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 86.62
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 86.49
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 86.09
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 88.1
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 87.29
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 87.15
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 88.4
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 88.18
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 88.41
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 87.94
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 87.78
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 86.68
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 25.36
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 90.12
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 88.42
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 86.8
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 83.52
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 82.07
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 80.48
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 409,
+      "ms": 73.22
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 409,
+      "ms": 52.34
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 409,
+      "ms": 66.7
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 21.91
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 22.81
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 23.1
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 22.51
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 24.56
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 23.84
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 23.66
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/sales/",
+      "method": "POST",
+      "status": 201,
+      "ms": 25.89
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 15.78
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 25.46
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 39.23
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 44.03
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 45.71
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 46.7
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 49.52
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 50.41
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 27.06
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 56.62
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 61.25
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 60.66
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 29.75
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 80.53
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 85.21
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 41.96
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 48.54
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 41.39
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 61.64
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 69.26
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 70.82
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 42.08
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 63.7
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 72.58
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 32.44
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 38.39
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 63.97
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 57.48
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 58.99
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 75.18
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 42.19
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 47.09
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 50.55
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 72.11
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 48.91
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 41.49
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 47.01
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 34.4
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 64.94
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 46.96
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 53.81
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 68.76
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 38.99
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 50.25
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 55.36
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 37.21
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 44.63
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 63.3
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 34.69
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 54.45
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 53.58
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 76.81
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 77.47
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 37.82
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 74.26
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 44.48
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 48.76
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 34.62
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 60.43
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 60.49
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 34.18
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 53.23
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 87.73
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 50.57
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 60.48
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 63.31
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 35.21
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 48.3
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 57.37
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 36.96
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 51.18
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 82.05
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 44.86
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 56.91
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 71.89
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 45.14
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 48.09
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 48.95
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 75.91
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 64.53
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 23.64
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 64.0
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 55.17
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 50.42
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 32.64
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 59.82
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 33.67
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 51.86
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 63.49
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 78.82
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 50.15
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 50.47
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 76.2
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 45.97
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 45.04
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 30.82
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 51.35
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 71.9
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 87.51
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 52.91
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 31.97
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 52.14
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 51.89
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 51.57
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 74.26
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 68.96
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 32.62
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 40.96
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 55.22
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 61.07
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 37.18
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 48.64
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 53.63
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/stock/",
+      "method": "GET",
+      "status": 200,
+      "ms": 35.36
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/products/",
+      "method": "GET",
+      "status": 200,
+      "ms": 41.96
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 71.06
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 50.84
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/reports/summary/",
+      "method": "GET",
+      "status": 200,
+      "ms": 38.05
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 42.04
+    },
+    {
+      "path": "/api/v1/businesses/8e20c430-a1e7-48f0-9a55-10de218d15bc/dashboard/",
+      "method": "GET",
+      "status": 200,
+      "ms": 60.09
+    }
+  ]
+}

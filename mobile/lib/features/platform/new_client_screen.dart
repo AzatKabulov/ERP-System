@@ -38,10 +38,39 @@ class _NewClientScreenState extends State<NewClientScreen> {
   bool _busy = false;
   ApiException? _error;
   NewClientResult? _result;
+  bool _discarded = false;
+  bool _confirmingLeave = false;
+  bool get _dirty =>
+      [
+        _store,
+        _ownerName,
+        _ownerLogin,
+        _phone,
+        _email,
+        _amount,
+        _reference,
+      ].any((c) => c.text.isNotEmpty) ||
+      _language != 'ru' ||
+      _start.isNotEmpty ||
+      _method != 'cash';
+  void _changed() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void initState() {
     super.initState();
+    for (final c in [
+      _store,
+      _ownerName,
+      _ownerLogin,
+      _phone,
+      _email,
+      _amount,
+      _reference,
+    ]) {
+      c.addListener(_changed);
+    }
     _loadPlans();
   }
 
@@ -298,10 +327,24 @@ class _NewClientScreenState extends State<NewClientScreen> {
     final l = strings(context);
     final result = _result;
     return PopScope(
-      canPop: result == null,
-      onPopInvokedWithResult: (didPop, _) {
-        // leaving after the password was shown still tells the list a client exists
-        if (!didPop && result != null) Navigator.of(context).pop(result.detail);
+      canPop: !_busy && (_discarded || (result == null && !_dirty)),
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop || _busy || _confirmingLeave) return;
+        if (result != null) {
+          Navigator.of(context).pop(result.detail);
+          return;
+        }
+        _confirmingLeave = true;
+        final leave = await confirmAction(
+          context,
+          l.pfNewClientTitle,
+          l.unsavedChangeConflict,
+        );
+        _confirmingLeave = false;
+        if (leave && context.mounted) {
+          _discarded = true;
+          Navigator.of(context).pop();
+        }
       },
       child: Scaffold(
         appBar: AppBar(title: Text(l.pfNewClientTitle)),

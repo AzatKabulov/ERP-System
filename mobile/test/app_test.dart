@@ -31,7 +31,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(prefs.getString('language'), 'tk');
       expect(store.cartCount, 1);
-      expect(find.text('Satuwlar'), findsWidgets);
+      expect(find.text('Kassa'), findsWidgets);
       expect(tester.takeException(), isNull);
 
       for (final page in [

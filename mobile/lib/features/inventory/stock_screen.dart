@@ -211,20 +211,12 @@ class _StockScreenState extends State<StockScreen> {
     final intake = session.can('intake.create')
         ? PrimaryButton(
             key: const ValueKey('stock-intake'),
-            label: l.intakeTitle,
+            label: l.intakeScanShort,
             icon: AppIcons.scan,
             onPressed: _intake,
           )
         : null;
     final others = <Widget>[
-      // A product without a barcode: type it in by hand (no need to open the scanner first).
-      if (session.can('intake.create'))
-        OutlinedButton.icon(
-          key: const ValueKey('stock-add-manual'),
-          onPressed: () => _intake(manual: true),
-          icon: const AppIcon(AppIcons.plus, size: 20),
-          label: Text(l.stockReceiveButton),
-        ),
       // The two rarely used ones sit in a menu, each with a line that says what it is for.
       if (session.can('stock.opening.post') || session.can('stock.adjust'))
         MoreMenuButton(
@@ -266,16 +258,51 @@ class _StockScreenState extends State<StockScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          PageHead(
-            title: l.inventory,
-            subtitle: _locationId == null
-                ? session.placeSubtitle
-                : locations
-                      .where((x) => x.id == _locationId)
-                      .map((x) => x.name)
-                      .firstOrNull,
-            actions: [...others, ?intake],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: PageHead(
+                  title: l.inventory,
+                  subtitle: _locationId == null
+                      ? session.placeSubtitle
+                      : locations
+                            .where((x) => x.id == _locationId)
+                            .map((x) => x.name)
+                            .firstOrNull,
+                  actions: const [],
+                ),
+              ),
+              ...others,
+            ],
           ),
+          if (intake != null) ...[
+            const SizedBox(height: 16),
+            LayoutBuilder(
+              builder: (context, box) {
+                final manual = OutlinedButton.icon(
+                  key: const ValueKey('stock-add-manual'),
+                  onPressed: () => _intake(manual: true),
+                  icon: const AppIcon(AppIcons.plus, size: 20),
+                  label: Text(l.intakeManualShort),
+                );
+                if (MediaQuery.textScalerOf(context).scale(1) > 1.4 &&
+                    box.maxWidth < 480) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [intake, const SizedBox(height: 10), manual],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: intake),
+                    const SizedBox(width: 12),
+                    Expanded(child: manual),
+                  ],
+                );
+              },
+            ),
+          ],
           const SizedBox(height: 24),
           if (tabs.length > 1) ...[
             AppTabs<_StockTab>(

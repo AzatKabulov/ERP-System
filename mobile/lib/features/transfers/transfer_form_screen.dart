@@ -206,8 +206,8 @@ class _TransferFormScreenState extends State<TransferFormScreen> {
               constraints: const BoxConstraints(maxWidth: 760),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: FormSection(
+                  title: l.transferNew,
                   children: [
                     LabeledField(
                       label: l.transferFromLabel,

@@ -143,6 +143,8 @@ PRIVATE_FILES_ROOT = Path(env.get("PRIVATE_FILES_ROOT", str(BASE_DIR / "private_
 # The server asks; what leaves it is the barcode digits only. "false" sends nothing out.
 BARCODE_LOOKUP_ENABLED = env.get_bool("ERP_BARCODE_LOOKUP", True)
 BARCODE_LOOKUP_TIMEOUT = env.get_int("ERP_BARCODE_LOOKUP_TIMEOUT", 4)
+BARCODE_LOOKUP_UPCITEMDB_ENABLED = env.get_bool("ERP_BARCODE_LOOKUP_UPCITEMDB", True)
+BARCODE_LOOKUP_GTINHUB_ENABLED = env.get_bool("ERP_BARCODE_LOOKUP_GTINHUB", True)
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
@@ -155,7 +157,7 @@ STORAGES = {
 # TESTING ONLY. When "true", the sign-in screen offers "sign in as owner, manager, seller, keeper
 # or platform owner" with no password (apps/common/local_test_login.py). Anyone who knows the
 # address can use it. Off unless infra/.env says ERP_PUBLIC_TEST_LOGIN=true; remove it before
-# real clients.
+# real clients. The view also refuses this mode outside DJANGO_ENV=development.
 PUBLIC_TEST_LOGIN = env.get_bool("ERP_PUBLIC_TEST_LOGIN", False)
 
 REST_FRAMEWORK = {

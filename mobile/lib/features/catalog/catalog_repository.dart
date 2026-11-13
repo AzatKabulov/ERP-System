@@ -200,6 +200,12 @@ class CatalogRepository {
       '$_base/barcodes/info/',
       query: {'code': code.trim()},
     );
+    if (response.map['unavailable'] == true) {
+      throw const ApiException(
+        kind: ApiErrorKind.server,
+        code: 'barcode_lookup_unavailable',
+      );
+    }
     return ExternalInfo.fromJson(response.map);
   }
 

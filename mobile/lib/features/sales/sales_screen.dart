@@ -1,5 +1,6 @@
 import '../shared/loading_skeletons.dart';
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import '../../widgets/app_icons.dart';
@@ -23,11 +24,13 @@ import '../workspace/unsaved_work.dart';
 import 'cart_controller.dart';
 import 'checkout_screen.dart';
 import 'customer_picker.dart';
-import 'document_buttons.dart';
+import 'sale_success_sheet.dart';
+import '../../core/feedback/confirmation_feedback.dart';
 import 'sales_history_screen.dart';
 import 'sales_models.dart';
 import 'sales_repository.dart';
 import '../../widgets/glass.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/app_route.dart';
 
 /// Recording a sale: find or scan products, build a cart (which reserves no stock), set the
@@ -230,7 +233,11 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   Future<void> _chooseCustomer() async {
-    final choice = await showCustomerPicker(context, widget.repository);
+    final choice = await showCustomerPicker(
+      context,
+      widget.repository,
+      canCreate: widget.session.can('customer.manage'),
+    );
     if (choice != null) cart.customer = choice.customer;
   }
 
@@ -259,8 +266,8 @@ class _SalesScreenState extends State<SalesScreen> {
         _search.clear();
         setState(() => _done = sale);
         _runSearch(); // the quantities in stock have just changed
-        // the confirmation sits at the top; the cashier may be scrolled far below it
-        if (_scroll.hasClients) _scroll.jumpTo(0);
+        unawaited(playSaleConfirmation());
+        await _showSuccess(sale);
       case SaleUnknown():
         // The saved record now owns this sale (the pending banner lists it): the cart
         // is emptied so the same goods cannot be sold a second time by hand.
@@ -550,7 +557,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Expanded(
+                    Flexible(
                       child: Text(
                         l.cartTotalLabel,
                         style: TextStyle(
@@ -560,17 +567,25 @@ class _SalesScreenState extends State<SalesScreen> {
                         ),
                       ),
                     ),
-                    Flexible(
-                      child: Text(
-                        formatMoney(cart.totalMinor, 'TMT'),
-                        key: const ValueKey('cart-total'),
-                        textAlign: TextAlign.end,
-                        style: TextStyle(
-                          fontFamily: AppFonts.display,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 32,
-                          letterSpacing: -1.28,
-                          color: AppColors.ink,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 3,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          formatMoney(cart.totalMinor, 'TMT'),
+                          softWrap: false,
+                          maxLines: 1,
+                          key: const ValueKey('cart-total'),
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            fontFamily: AppFonts.display,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 32,
+                            letterSpacing: -1.28,
+                            color: AppColors.ink,
+                          ),
                         ),
                       ),
                     ),
@@ -635,45 +650,46 @@ class _SalesScreenState extends State<SalesScreen> {
 
   // ---- after a confirmed sale ------------------------------------------------------------
 
-  Widget _donePanel(BuildContext context, SaleDetail sale) {
-    final l = strings(context);
-    return SurfaceCard(
-      key: const ValueKey('sale-done'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              AppIcon(AppIcons.checkCircle, color: AppColors.success),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  l.saleDoneTitle(saleNumber(sale.number)),
-                  key: const ValueKey('sale-done-number'),
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(l.saleTotal(formatMoney(sale.totalMinor, 'TMT'))),
-          const SizedBox(height: 16),
-          DocumentButtons(
-            repository: widget.repository,
-            saleId: sale.id,
-            saleNumber: sale.number,
-          ),
-          const SizedBox(height: 16),
-          PrimaryButton(
-            key: const ValueKey('sale-new'),
-            label: l.newSaleAction,
-            icon: AppIcons.plus,
-            onPressed: () => setState(() => _done = null),
-          ),
-        ],
+  Future<void> _showSuccess(SaleDetail sale) async {
+    final next = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: false,
+      sheetAnimationStyle: AnimationStyle(
+        duration: AppMotion.of(context, const Duration(milliseconds: 280)),
+        reverseDuration: AppMotion.of(
+          context,
+          const Duration(milliseconds: 220),
+        ),
       ),
+      useSafeArea: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      constraints: BoxConstraints(
+        maxWidth: 560,
+        maxHeight: MediaQuery.sizeOf(context).height * .85,
+      ),
+      builder: (_) =>
+          SaleSuccessSheet(sale: sale, repository: widget.repository),
     );
+    if (next == true && mounted) {
+      setState(() => _done = null);
+    }
   }
+
+  Widget _donePanel(BuildContext context, SaleDetail sale) => Align(
+    alignment: Alignment.centerLeft,
+    child: TextButton.icon(
+      key: const ValueKey('sale-receipt-reopen'),
+      onPressed: () => _showSuccess(sale),
+      icon: AppIcon(AppIcons.checkCircle, color: AppColors.success),
+      label: Text(
+        '${strings(context).receiptAction} · ${saleNumber(sale.number)}',
+      ),
+    ),
+  );
 }
 
 class _ResultTile extends StatelessWidget {
@@ -962,6 +978,8 @@ class _CartLineCardState extends State<_CartLineCard> {
                         key: ValueKey('cart-price-${widget.index}'),
                         controller: _price,
                         textAlign: TextAlign.end,
+                        textAlignVertical: TextAlignVertical.center,
+                        maxLines: 1,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -971,7 +989,10 @@ class _CartLineCardState extends State<_CartLineCard> {
                           fontVariations: [FontVariation.weight(700)],
                         ),
                         decoration: InputDecoration(
-                          isDense: true,
+                          constraints: const BoxConstraints.tightFor(
+                            height: 48,
+                          ),
+                          isDense: false,
                           filled: true,
                           fillColor: AppColors.tint,
                           contentPadding: const EdgeInsets.symmetric(
@@ -1076,6 +1097,8 @@ class _Stepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = strings(context);
+    final lineHeight = MediaQuery.textScalerOf(context).scale(13) * 1.4;
+    final fieldHeight = math.max(48.0, lineHeight + 12);
     Widget button(Key key, AppIconData icon, String name, VoidCallback onTap) =>
         Semantics(
           button: true,
@@ -1085,13 +1108,14 @@ class _Stepper extends StatelessWidget {
             onTap: onTap,
             child: SizedBox(
               width: 48,
-              height: 48,
+              height: fieldHeight,
               child: Center(child: AppIcon(icon, size: 16)),
             ),
           ),
         );
     return Container(
-      height: 50, // two border pixels around the 48-pixel touch targets
+      height:
+          fieldHeight + 2, // preserve the text centre at larger system sizes
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -1115,18 +1139,24 @@ class _Stepper extends StatelessWidget {
                 key: ValueKey('cart-qty-$index'),
                 controller: controller,
                 textAlign: TextAlign.center,
+                textAlignVertical: TextAlignVertical.center,
+                maxLines: 1,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
                 onChanged: onChanged,
                 style: const TextStyle(
                   fontSize: 13,
+                  height: 1.4,
                   fontWeight: FontWeight.w700,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
+                  constraints: BoxConstraints.tightFor(height: fieldHeight),
                   filled: false,
                   isDense: true,
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: (fieldHeight - lineHeight) / 2,
+                  ),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,

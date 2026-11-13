@@ -46,6 +46,7 @@ class IntakeEntry {
   /// so it is not kept on the device.
   ExternalInfo? suggestion;
   bool suggesting = false;
+  bool suggestionFailed = false;
 
   /// Unsaved form input, kept separately from confirmed quantities and prices.
   final Map<String, String> form = {};

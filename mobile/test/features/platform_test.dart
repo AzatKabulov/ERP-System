@@ -115,7 +115,9 @@ void main() {
       await settle(tester);
       expect(find.text('Late Shop'), findsOneWidget);
       expect(find.text('Willy Wonka'), findsNothing);
-      await tapKey(tester, 'pf-filter-all');
+      await tapKey(tester, 'pf-state-filter');
+      await tester.tap(find.text('Все').last);
+      await settle(tester);
       await settle(tester);
       expect(find.text('Willy Wonka'), findsOneWidget);
       expect(find.text('Late Shop'), findsOneWidget);

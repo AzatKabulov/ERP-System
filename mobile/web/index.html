@@ -102,6 +102,53 @@
       transition: opacity 180ms ease-out;
     }
   </style>
+<script>
+    // Unlock only from the cashier's explicit confirmation tap. A chime is
+    // requested later, only after the server confirms the sale.
+    (() => {
+      let audio;
+      let suspendTimer;
+      const restAudio = (delay) => {
+        clearTimeout(suspendTimer);
+        suspendTimer = setTimeout(() => {
+          if (audio && audio.state === 'running') audio.suspend().catch(() => {});
+        }, delay);
+      };
+      window.erpPrepareConfirmationSound = () => {
+        try {
+          const Audio = window.AudioContext || window.webkitAudioContext;
+          if (!Audio) return;
+          audio ||= new Audio();
+          clearTimeout(suspendTimer);
+          audio.resume().catch(() => {});
+          restAudio(30000);
+        } catch (_) {}
+      };
+      window.erpPlayConfirmationSound = async () => {
+        try {
+          if (!audio) return;
+          const requestedAt = performance.now();
+          if (audio.state !== 'running') await audio.resume();
+          if (audio.state !== 'running' || performance.now() - requestedAt > 1000) return;
+          restAudio(650);
+          const start = audio.currentTime;
+          [1046.50, 1567.98].forEach((frequency, i) => {
+            const oscillator = audio.createOscillator();
+            const gain = audio.createGain();
+            const at = start + i * 0.105;
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            gain.gain.setValueAtTime(0, at);
+            gain.gain.linearRampToValueAtTime(0.07, at + 0.008);
+            gain.gain.exponentialRampToValueAtTime(0.001, at + 0.36);
+            oscillator.connect(gain); gain.connect(audio.destination);
+            oscillator.start(at); oscillator.stop(at + 0.38);
+            oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+          });
+        } catch (_) {}
+      };
+    })();
+  </script>
 </head>
 <body>
   <div id="splash"><img src="icons/splash-mark.png" alt=""></div>
