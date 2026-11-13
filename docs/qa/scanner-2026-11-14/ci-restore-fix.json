@@ -1,0 +1,20 @@
+{
+  "database_version": "18.4",
+  "store_workflows": "passed",
+  "sale_race": {
+    "201": 37,
+    "409": 3
+  },
+  "duplicate_retries": 8,
+  "mixed_reads": {
+    "requests": 120,
+    "concurrency": 12,
+    "p50_ms": 49.19,
+    "p95_ms": 77.94,
+    "max_ms": 93.42
+  },
+  "restore": {
+    "tables": 66,
+    "private_files": 1
+  }
+}

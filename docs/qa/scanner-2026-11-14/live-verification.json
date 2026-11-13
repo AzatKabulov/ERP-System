@@ -1,0 +1,26 @@
+{
+  "deployed_application_commit": "e3ed6ef69648b3d9faa6e380c397b9d32f595207",
+  "health_http": 200,
+  "normal_web_matches_local": true,
+  "fullscreen_web_matches_local": true,
+  "main_js_sha256": "59f0466eacca2219d826e027ccd20aca56de01e5bfcbdb89294405db13395fb0",
+  "debug": false,
+  "public_test_login": false,
+  "stock_reconciliation_before": "passed",
+  "stock_reconciliation_after": "passed",
+  "control_codes": [
+    {
+      "code": "3337875597210",
+      "source": "Open Beauty Facts",
+      "found": true,
+      "seconds": 3.62
+    },
+    {
+      "code": "4011558700508",
+      "source": "UPCitemdb",
+      "found": true,
+      "seconds": 5.57
+    }
+  ],
+  "test_type": "read-only live API calls; no stock or financial test writes; not hardware acceptance"
+}

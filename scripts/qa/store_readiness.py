@@ -434,8 +434,11 @@ def main():
     import psycopg
     from psycopg import sql
 
-    pg_dump = next(Path(pixeltable_pgserver.__file__).parent.rglob("pg_dump"))
-    pg_restore = pg_dump.with_name("pg_restore")
+    # The package may contain both PG16 and PG18. Select the active server's
+    # tools, not the first pg_dump encountered in the installation directory.
+    pg_server = pixeltable_pgserver.get_server(data / "pgdata", start=False)
+    pg_dump = pg_server.bin_path / "pg_dump"
+    pg_restore = pg_server.bin_path / "pg_restore"
     pg_env = {
         **os.environ,
         "PGHOST": db["host"],

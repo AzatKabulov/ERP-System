@@ -125,3 +125,24 @@ same signing key for updates. No extra repository is required. Configure secrets
 privately as described in ANDROID_RELEASE.md; never paste signing material in chat.
 The APK produced locally for the current user retains this Mac's existing debug
 key, so it can update that same testing installation. It is not a store release.
+
+
+### Optimized internal test build (2026-11-14)
+
+The primary local download for this delivery is
+`local-data/android-builds/erp-2026-11-14-scanner-test.apk` (version 0.1.0+2,
+release-mode/AOT, approximately 85.5 MB). It deliberately uses this Mac's existing
+local debug certificate so it can update the previous internal test installation.
+It is an optimized **internal test build**, not an owner-release-signed production
+or Play Store package. The separate debug APK remains available for diagnostics.
+
+To reproduce with the same local testing key and configured SDKs:
+
+```bash
+cd mobile
+flutter build apk --release --no-pub \
+  --dart-define=API_BASE_URL=https://your-test-server.example
+```
+
+Check the signer before distributing; production delivery still requires the
+owner-controlled release signing setup described in ANDROID_RELEASE.md.

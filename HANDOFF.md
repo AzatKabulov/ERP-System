@@ -1,3 +1,41 @@
+## Deployment and CI follow-up — 2026-11-14
+
+- Deployed application commit `e3ed6ef69648b3d9faa6e380c397b9d32f595207`
+  from `codex/usability-and-security`; main is unchanged. The GitHub connector
+  published the identical staged tree and the local branch was fast-forwarded
+  without resetting or replacing any working files. CLI Git credentials still
+  returned 403; the connected account's repository Write permission is valid.
+- Consistent server backup `20261113-202709-607634` passed gzip/tar validation;
+  source/configuration, normal web, /fs/ and prior container image are preserved
+  in a protected rollback directory. Live stock reconciliation passed before
+  and after activation. No stock/financial test transactions were posted live.
+- Backend image, Django checks (including deploy checks), missing-migration
+  check and applied-migration check passed. Production password-free login was
+  disabled; existing password-free sessions for four accounts were revoked.
+  Passwords, accounts and business records were retained. Ordinary login is now
+  required. API health returns HTTP 200; normal and /fs/ public JavaScript hashes
+  both match the local release build (`59f0466e...3395fb0`).
+- Live read-only API verification found CeraVe 3337875597210 through Open Beauty
+  Facts (3.62 s) and MANN oil filter 4011558700508 through UPCitemdb (5.57 s).
+  DEBUG and public test login are both false. These are exact-code server checks,
+  not physical-camera or broad catalog-coverage acceptance.
+- Primary local APK: `local-data/android-builds/erp-2026-11-14-scanner-test.apk`,
+  optimized release-mode internal testing build, 85,537,509 bytes, version 0.1.0+2.
+  Its local debug signer matches the old test APK; this is not production/store
+  signing. The 190,078,088-byte debug build is retained separately.
+- GitHub CI for the deployed source passed all 968 backend tests on PostgreSQL 16,
+  lint, migration checks, deployment safety, mobile analysis/tests and Android/web
+  builds. Only the disposable restore drill failed: the package carries both
+  PG16 and PG18 tools, and `rglob('pg_dump')` selected PG16 for its PG18 cluster.
+  The QA script now selects pg_dump/pg_restore from the active server's bin_path.
+  The complete local store/load/restore drill passed with that fix. This changes
+  QA tooling only, not deployed application behavior. Track the corrected CI result in this branch's Actions run; this entry records
+  the successful local reproduction and restore validation.
+- Screenshots stay local after automatic privacy review rejected uploading them.
+  Only source, synthetic reports, the inspected generated photo fixture and the
+  original synthesized chime are shared. See ANDROID_LOCAL_BUILD.md for artifact
+  handling in the existing repository, without an additional APK repository.
+
 ## Scanner release candidate — 2026-11-14
 
 - Expanded enrichment to five documented HTTPS sources: the three Facts catalogs,
