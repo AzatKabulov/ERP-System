@@ -1,3 +1,36 @@
+## Store pilot APK published — 2026-11-14
+
+- Owner requested a downloadable APK for shops to try for a week. Published
+  [pilot-0.1.0-build4](https://github.com/AzatKabulov/ERP-System/releases/tag/pilot-0.1.0-build4)
+  as a pre-release, with the full optimized Android APK and SHA-256 file.
+  Application source is main commit `131f7ba41210362fe53ce49a9da57d964c11e04e`;
+  this follow-up changes delivery documentation only.
+- Version `0.1.0+4`, application ID `app.erpsystem.mobile`, 85,537,509 bytes.
+  APK SHA-256 `438b5441d6acbe4edbc2527419b8921390473c1a6f3fe2ae98d311694071c296`
+  matches GitHub's uploaded-asset digest. The release includes no passwords,
+  authenticator keys or signing secrets. Each pilot shop needs its own account.
+- This is the first externally distributed build signed with the owner's
+  persistent local release key, not Android Debug. Certificate SHA-256:
+  `02d9799553e643d0807541fb1d5c871c4734e7cf463bcdb9fc5533303b356e12`.
+  Keystore and signing configuration are owner-only files under the ignored
+  `local-data/private-signing/`; preserve and privately back them up before
+  replacing the Mac. Future APK updates must reuse this key. Repository signing
+  secrets have not been configured by this task. Never generate a replacement
+  key merely because it is absent from another developer's checkout.
+- The older internally debug-signed APK cannot be updated in place with this
+  release certificate. Do not uninstall an old installation without checking
+  device-local pending work. New pilot participants install the published APK.
+- Signature verification, clean installation, native launch, visible sign-in and
+  observed no-crash checks passed on a separate Android API 36 ARM64 emulator;
+  the prior internal emulator/data were retained. Frozen dependencies unchanged.
+  Existing source CI is green; no application code changed in this packaging step.
+  Live HTTPS website and API health returned 200. Physical camera, printing and
+  store-network acceptance remain pilot work, not completed hardware validation.
+- Ordinary password login remains enabled. At the owner's explicit request,
+  passwords for the five existing test-role accounts were reset and their old
+  sessions revoked. Details remain in a private local file, excluded from Git.
+  The platform authenticator was not changed or exported.
+
 ## Deployment and CI follow-up — 2026-11-14
 
 - Deployed application commit `e3ed6ef69648b3d9faa6e380c397b9d32f595207`
