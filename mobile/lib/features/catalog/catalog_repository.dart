@@ -6,6 +6,7 @@ import '../../core/files/photo_cache.dart';
 import '../../core/money/decimal_math.dart';
 import '../../core/api/api_exception.dart';
 import 'catalog_models.dart';
+import '../scanning/part_identifier.dart';
 
 /// Products, their reference data and the lookup by barcode, over the API. No rules
 /// live here: the server validates and answers with codes.
@@ -196,9 +197,14 @@ class CatalogRepository {
 
   /// What the open product databases (asked by the server) say about a barcode, or null.
   Future<ExternalInfo?> externalInfo(String code) async {
+    final part = identifyPart(code);
     final response = await api.get(
-      '$_base/barcodes/info/',
-      query: {'code': code.trim()},
+      looksLikeGtin(code) ? '$_base/barcodes/info/' : '$_base/parts/info/',
+      query: {
+        'code': code.trim(),
+        if (!looksLikeGtin(code) && part?.brand.isNotEmpty == true)
+          'brand': part!.brand,
+      },
     );
     if (response.map['unavailable'] == true) {
       throw const ApiException(

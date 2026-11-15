@@ -1,3 +1,35 @@
+## Automotive label lookup — 2026-11-15
+
+- Shop lookup remains first. GTIN lookup uses the existing providers. The new
+  authenticated, read-only `parts/info/?code=&brand=` endpoint accepts article
+  numbers and the observed FUSO `MH044089  0001` layout. That suffix never
+  changes quantity. URL/promotional QR payloads and short internal numbers
+  such as `0007`/`1950` are not sent to external sources. Ambiguous normalized
+  shop SKUs are not chosen automatically.
+- Added an exact-article adapter for OSK's public manufacturer catalog, with
+  bounded HTTPS requests, a shared admission gate and distinct incomplete
+  search states. Source failures are not negative-cached. Its live A-7495
+  response was verified; this establishes one source, not universal coverage.
+- `backend/assets/parts/pilot.json` contains 11 limited reference rows transcribed
+  from the owner's package labels. It is not a broad internet catalog. The
+  MAWROOIL upper label 8-97148270-0 is deliberately not treated as an alias of
+  8-97096777-0 without supplier confirmation. `import_part_references` can
+  validate a supplier's public CSV into a separate reference JSON. It never
+  creates shop products, copies prices, or changes stock. Set
+  `ERP_PART_REFERENCE_FILE` to a persistent operator-managed file to use it.
+- The scanner has an explicit photo-text action. Android uses bundled ML Kit
+  Latin recognition (16.0.1), so sideloaded APKs do not depend on a Play Store
+  model download. Web uses locally hosted, lazy-loaded Tesseract assets;
+  prepare them with `python3 scripts/prepare_web_ocr.py` before every web build.
+  Npm package versions/integrities and local file hashes are checked. Photos
+  stay on the device; only the selected article/brand enters product lookup.
+  OCR candidates always need explicit selection and review. It does not
+  repair O/0 or infer vehicle compatibility. Prices remain manual. Native iOS
+  photo-text recognition has not been implemented; manual entry remains usable.
+- Existing pages and scan/manual entry placement are preserved. Multiple
+  readable codes require selection rather than choosing the first package code.
+  A lookup never saves a product or posts receiving by itself.
+
 # Barcode lookup reliability and automotive coverage — 2026-11-14
 
 Local diagnostics fetched GitHub references without merging or overwriting the

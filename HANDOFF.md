@@ -1,3 +1,23 @@
+## Automotive lookup and label reader — 2026-11-15
+
+Implementation and limits: [barcode reliability](docs/BARCODE_LOOKUP_RELIABILITY.md).
+Local verification: 982 backend tests passed against disposable PostgreSQL;
+640 Flutter tests passed; Android debug and signed release build 5, and the
+release web artifact built successfully. Three actual owner package photos
+(MH044089, ME996364, JX1008A) were read by the browser OCR with third-party
+requests blocked; zero photo uploads. Source photos and OCR output stay in
+ignored local data. These checks do not establish physical camera acceptance.
+Flutter analysis and formatting passed. Signed APK build 5 (116,553,688 bytes)
+retains the build 4 certificate; emulator update with `install -r` from version
+4 to 5, native launch and no-crash inspection passed. The visible screen uses
+the existing server and ordinary password login. Full disposable real-browser/API/PostgreSQL receiving passed with the owner
+FUSO composite code: metadata, manual prices, 50 units, repeated lookup, no new
+sale. The QA browser script now uses current navigation and dismisses onboarding
+(the initial stale-script runs failed before verification completed). The same
+run passed sale concurrency, retries, reconciliation and restoration of every
+public-table digest plus private-file hashes. Local database was PostgreSQL 18.4;
+CI/deployment use PostgreSQL 16. Deployment/publication status follows separately.
+
 ## Store pilot APK published — 2026-11-14
 
 - Owner requested a downloadable APK for shops to try for a week. Published

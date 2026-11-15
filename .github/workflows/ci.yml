@@ -71,7 +71,9 @@ jobs:
 
       - name: Build web
         working-directory: mobile
-        run: flutter build web --no-web-resources-cdn
+        run: |
+          python ../scripts/prepare_web_ocr.py
+          flutter build web --no-web-resources-cdn
 
       - name: Build Android debug APK
         working-directory: mobile

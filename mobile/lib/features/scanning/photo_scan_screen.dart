@@ -6,6 +6,8 @@ import '../../core/files/file_services.dart';
 import '../../widgets/app_icons.dart';
 import '../../widgets/common.dart';
 import 'barcode_photo_decoder.dart';
+import 'label_text_reader.dart';
+import 'part_identifier.dart';
 
 /// On HTTP a browser cannot stream video, but can offer its own photo capture.
 /// Images are decoded locally; only a selected code is returned to the caller.
@@ -16,12 +18,16 @@ class PhotoScanScreen extends StatefulWidget {
     this.onCode,
     this.changes,
     this.status,
+    this.readText = false,
+    this.recognizeText = readLabelText,
   });
 
   final Future<List<String>> Function(Uint8List bytes) decode;
   final ValueChanged<String>? onCode;
   final Listenable? changes;
   final WidgetBuilder? status;
+  final bool readText;
+  final Future<String> Function(Uint8List bytes) recognizeText;
 
   @override
   State<PhotoScanScreen> createState() => _PhotoScanScreenState();
@@ -61,18 +67,23 @@ class _PhotoScanScreenState extends State<PhotoScanScreen> {
         setState(() => _error = l.photoScanFailed);
         return;
       }
-      final codes = (await widget.decode(photo.bytes))
-          .map((c) => c.trim())
-          .where((c) => c.isNotEmpty && c.length <= 64)
-          .toSet()
-          .toList();
+      final codes =
+          (widget.readText
+                  ? partCandidates(await widget.recognizeText(photo.bytes))
+                  : await widget.decode(photo.bytes))
+              .map((c) => c.trim())
+              .where((c) => c.isNotEmpty && c.length <= 64)
+              .toSet()
+              .toList();
       if (!mounted) return;
-      if (codes.length == 1) {
+      if (codes.length == 1 && !widget.readText) {
         _selected(codes.single);
       } else {
         setState(() {
           _choices = codes;
-          _error = codes.isEmpty ? l.photoScanNotFound : null;
+          _error = codes.isEmpty
+              ? (widget.readText ? l.partTextNotFound : l.photoScanNotFound)
+              : null;
         });
       }
     } catch (_) {
@@ -94,7 +105,7 @@ class _PhotoScanScreenState extends State<PhotoScanScreen> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                Text(l.photoScanHint),
+                Text(widget.readText ? l.partTextHint : l.photoScanHint),
                 const SizedBox(height: 24),
                 PrimaryButton(
                   key: const ValueKey('photo-scan-camera'),
@@ -121,7 +132,9 @@ class _PhotoScanScreenState extends State<PhotoScanScreen> {
                 ],
                 if (_choices.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  Text(l.photoScanMultiple),
+                  Text(
+                    widget.readText ? l.partTextChoose : l.photoScanMultiple,
+                  ),
                   for (final code in _choices)
                     OutlinedButton(
                       onPressed: () => _selected(code),

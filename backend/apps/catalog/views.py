@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Value
+from django.db.models.functions import Replace, Upper
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
@@ -20,7 +21,7 @@ from apps.common.errors import ApiError
 from apps.common.negotiation import IgnoreClientContentNegotiation
 from apps.common.uploads import declared_size_exceeds
 
-from . import csvio, expiry, lookup, photos, services
+from . import csvio, expiry, lookup, part_lookup, photos, services
 from .models import Barcode, Brand, Category, Product, ReorderSetting, Unit
 from .serializers import (
     BrandSerializer,
@@ -188,6 +189,32 @@ class BarcodeLookupView(BusinessAPIView):
                 product = (
                     _products(request.business).filter(sku__iexact=code, is_active=True).first()
                 )
+                if product is None:
+                    article, brand = part_lookup.identify(code)
+                    if article:
+                        candidates = (
+                            _products(request.business)
+                            .filter(is_active=True)
+                            .annotate(
+                                article_key=Upper(
+                                    Replace(
+                                        Replace(
+                                            Replace("sku", Value("-"), Value("")),
+                                            Value(" "),
+                                            Value(""),
+                                        ),
+                                        Value("."),
+                                        Value(""),
+                                    )
+                                )
+                            )
+                            .filter(article_key=part_lookup.key(article))
+                        )
+                        if brand:
+                            candidates = candidates.filter(brand__name__iexact=brand)
+                        matches = list(candidates[:2])
+                        if len(matches) == 1:
+                            product = matches[0]
         if product is None:
             raise ApiError(
                 "barcode_not_found", "No active product has this barcode", status_code=404
@@ -226,6 +253,21 @@ class BarcodeInfoView(BusinessAPIView):
                 "unavailable": info.unavailable,
             }
         )
+
+
+class PartInfoView(BusinessAPIView):
+    """Exact automotive reference suggestions, reviewed before any catalog write."""
+
+    required_permission = "catalog.view"
+    throttle_classes = [BarcodeLookupThrottle]
+
+    def get(self, request, business_id):
+        code = request.query_params.get("code", "")
+        brand = request.query_params.get("brand", "")
+        article, _ = part_lookup.identify(code, brand)
+        if not article:
+            return Response({"found": False, "unavailable": False})
+        return Response(part_lookup.find(code, brand))
 
 
 class ProductPhotoView(BusinessAPIView):

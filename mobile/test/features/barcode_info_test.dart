@@ -209,16 +209,25 @@ void main() {
       },
     );
 
-    testWidgets('a code that cannot be a barcode number is never sent out', (
-      tester,
-    ) async {
-      final t = intakeRig();
-      await openIntake(tester, t.rig);
-      await scanByKeyboard(tester, 'MH044089');
-      await scanByKeyboard(tester, 'https://example.test/qr?x=1');
-      await scanByKeyboard(tester, '12345');
-      expect(t.rig.server.externalAsked, isEmpty);
-    });
+    testWidgets(
+      'articles use the part catalog; URLs and short codes stay local',
+      (tester) async {
+        final t = intakeRig();
+        await openIntake(tester, t.rig);
+        await scanByKeyboard(tester, 'MH044089');
+        await scanByKeyboard(tester, 'https://example.test/qr?x=1');
+        await scanByKeyboard(tester, '12345');
+        expect(t.rig.server.externalAsked, ['MH044089']);
+        expect(
+          t.rig.server.readPaths.where((p) => p.endsWith('/barcodes/info/')),
+          isEmpty,
+        );
+        expect(
+          t.rig.server.readPaths.where((p) => p.endsWith('/parts/info/')),
+          hasLength(1),
+        );
+      },
+    );
 
     testWidgets('a product the catalog already has is not asked about', (
       tester,

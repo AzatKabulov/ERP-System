@@ -393,6 +393,29 @@ Owner: a product may be added without a price and goods may arrive without a cos
 - **In the app.** Shop-catalog lookup is first. For an unknown GTIN, the server requests external suggestions. The existing receiving dialog shows a localized loading state before review fields appear. Found metadata may prefill name, brand and category; the worker reviews it, enters quantity and prices, and explicitly saves. A definitive miss permits manual naming; a failed or incomplete search shows unavailable/retry. Retry retains entered or cleared fields. Other intake lines and the catalog's scanned-product form use the same shared repository; a suggestion never creates a product or posts stock. Existing saved barcode mappings are resolved through the shop's server without another external search; this does not imply offline operation.
 - **Limits.** The three open Facts sources are volunteer-built; UPCitemdb and GTINHub are additional general catalogs with trial quotas. None establishes complete automotive or Chinese-parts coverage. Suggestions require review; do not infer compatibility or manufacturer part numbers from similar names.
 
+#### Automotive label enrichment (2026-11-15)
+
+The shared scanner supports an explicit photo-to-article action and read-only
+`parts/info/` enrichment. See [the implementation and limits](BARCODE_LOOKUP_RELIABILITY.md).
+Shop records stay business-scoped; the operator reference file contains only
+public product metadata. OSK is queried by exact own article, not by a fitment
+or substitute match. Ambiguous matches require manual entry. Lookup cannot
+create products, change prices, or move stock. OCR photos stay on the device;
+Android bundles its model and web serves its verified assets from this host.
+Run `python3 scripts/prepare_web_ocr.py` before `flutter build web`; CI does so.
+Supplier CSV conversion:
+
+```sh
+cd backend
+uv run python manage.py import_part_references /path/to/public-parts.csv --output /path/to/parts.json
+```
+
+Required columns: `article,brand,name`; optional `code_aliases,brand_aliases`
+use `|` delimiters. Price/business columns are rejected. Replacing an existing
+reference file needs explicit `--replace`; no shop database is modified.
+Keep deployment-provided references on persistent storage and set
+`ERP_PART_REFERENCE_FILE`; a file inside a rebuilt container is not persistent.
+
 #### Barcode change acceptance checklist (owner, 2026-11-14)
 
 Preserve these behaviors when changing providers, receiving, caching, networking

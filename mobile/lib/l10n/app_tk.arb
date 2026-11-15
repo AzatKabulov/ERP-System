@@ -1815,5 +1815,9 @@
   "customerContactHint": "Indiki satyn alyşlar we kepillik boýunça habarlaşmak üçin alyjyny ýatda saklaň. Telefon hökmany däl.",
   "customerSearchLabel": "Ady ýa-da telefony boýunça gözleg",
   "intakeOnlineUnavailable": "Internet maglumatnamalaryny barlap bolmady. Gözlegi gaýtalaň ýa-da adyny el bilen ýazyň.",
-  "intakeOnlineNotFound": "Haryt tapylmady. Ştrih-kod eýýäm dolduryldy — adyny we galan maglumatlary el bilen giriziň."
+  "intakeOnlineNotFound": "Haryt tapylmady. Ştrih-kod eýýäm dolduryldy — adyny we galan maglumatlary el bilen giriziň.",
+  "partTextRead": "Gaplamadaky artikuly oka",
+  "partTextHint": "Marka we artikul görünýän edip, etiketkany surata düşüriň. Surat enjamda işlenýär.",
+  "partTextChoose": "Gaplamadaky artikuly barlaň we gabat gelýän belgini saýlaň.",
+  "partTextNotFound": "Artikuly okap bolmady. Etiketkany ýakyndan surata düşüriň ýa-da belgini el bilen giriziň."
 }

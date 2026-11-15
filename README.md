@@ -57,6 +57,7 @@ cd mobile
 dart format lib test
 flutter analyze
 flutter test
+python3 ../scripts/prepare_web_ocr.py
 flutter build web --no-web-resources-cdn
 flutter build apk --debug
 ```

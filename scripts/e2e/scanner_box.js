@@ -14,12 +14,33 @@ if (!API || !password || process.env.ERP_E2E_DISPOSABLE !== 'true') {
   try {
     const { page } = await L.newPage(browser);
     activePage = page;
+    const login = await fetch(new URL('/api/v1/auth/login/', API), {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username: 'owner', password}),
+    });
+    assert.equal(login.status, 200);
+    const { access } = await login.json();
+    const get = async path => {
+      const response = await fetch(new URL(path, API), {headers: {Authorization: `Bearer ${access}`}});
+      assert.equal(response.status, 200);
+      return response.json();
+    };
+    const me = await get('/api/v1/me/');
+    const business = me.memberships[0].business.id;
+    const base = `/api/v1/businesses/${business}`;
+    const salesBefore = await get(`${base}/sales/`);
     await L.boot(page);
+    if ((await L.text(page)).includes('Войти по логину и паролю')) {
+      await L.clickLabel(page, 'Войти по логину и паролю');
+    }
     await L.fill(page, '^Логин$', 'owner');
     await L.fill(page, '^Пароль$', password);
     await L.clickLabel(page, 'Войти', { which: 'last', wait: 1800 });
+    if ((await L.text(page)).includes('Пропустить')) {
+      await L.clickLabel(page, 'Пропустить');
+    }
     await L.clickLabel(page, 'Склад');
-    await L.clickLabel(page, 'Приёмка сканированием');
+    await L.clickLabel(page, 'Сканировать');
     await L.fill(page, '^Код товара$', barcode);
     await page.keyboard.press('Enter');
     await page.waitForTimeout(1200);
@@ -57,26 +78,15 @@ if (!API || !password || process.env.ERP_E2E_DISPOSABLE !== 'true') {
     await L.clickLabel(page, 'Сохранить', { wait: 1500 });
     await L.clickLabel(page, 'Принять на склад');
     await L.clickLabel(page, 'Подтвердить', { wait: 1800 });
-    await L.clickLabel(page, 'Продажи');
+    await L.clickLabel(page, 'Касса');
+    if ((await L.waitText(page, /Пропустить/, 3500)).ok) {
+      await L.clickLabel(page, 'Пропустить');
+    }
     await L.fill(page, 'Поиск', barcode);
     await page.keyboard.press('Enter');
     await page.waitForTimeout(1000);
     assert.match(await L.text(page), /Подшипник ÄŇŞ smoke/);
     assert.match(await L.text(page), /Корзина пуста/);
-    const login = await fetch(new URL('/api/v1/auth/login/', API), {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({username: 'owner', password}),
-    });
-    assert.equal(login.status, 200);
-    const { access } = await login.json();
-    const get = async path => {
-      const response = await fetch(new URL(path, API), {headers: {Authorization: `Bearer ${access}`}});
-      assert.equal(response.status, 200);
-      return response.json();
-    };
-    const me = await get('/api/v1/me/');
-    const business = me.memberships[0].business.id;
-    const base = `/api/v1/businesses/${business}`;
     const product = await get(`${base}/barcodes/lookup/?code=${encodeURIComponent(barcode)}`);
     assert.equal(product.name, 'Подшипник ÄŇŞ smoke');
     assert.equal(product.price.amount, '125.50');
@@ -87,7 +97,7 @@ if (!API || !password || process.env.ERP_E2E_DISPOSABLE !== 'true') {
     const movements = await get(`${base}/stock/movements/?product=${product.id}`);
     assert.equal(movements.results.find(row => row.product.id === product.id).unit_cost, '60.25');
     const sales = await get(`${base}/sales/`);
-    assert.equal(sales.count, 0);
+    assert.equal(sales.count, salesBefore.count);
     console.log('PASS: real browser/API/PostgreSQL: barcode, name, brand, category, manual prices, 50 received; sales search creates no sale.');
   } catch (error) {
     if (activePage) {

@@ -254,12 +254,14 @@ class ExternalInfo {
     required this.quantity,
     required this.source,
     this.category = '',
+    this.article = '',
   });
   final String name;
   final String brand;
   final String quantity;
   final String source;
   final String category;
+  final String article;
 
   /// The name to offer: the product's own name, with the brand and the size added when the name
   /// does not already say them ("CeraVe Moisturising Cream 454 g").
@@ -284,6 +286,7 @@ class ExternalInfo {
       quantity: ((json['quantity'] as String?) ?? '').trim(),
       source: (json['source'] as String?) ?? '',
       category: ((json['category'] as String?) ?? '').trim(),
+      article: ((json['article'] as String?) ?? '').trim(),
     );
   }
 }

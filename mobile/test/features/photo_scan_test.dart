@@ -17,6 +17,8 @@ Future<void> openPhoto(
   FakeFilePicking picker,
   Future<List<String>> Function(Uint8List) decode, {
   String locale = 'ru',
+  bool readText = false,
+  Future<String> Function(Uint8List)? recognizeText,
 }) async {
   await tester.binding.setSurfaceSize(const Size(390, 844));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -43,7 +45,11 @@ Future<void> openPhoto(
               onPressed: () async {
                 final code = await Navigator.of(context).push<String>(
                   MaterialPageRoute(
-                    builder: (_) => PhotoScanScreen(decode: decode),
+                    builder: (_) => PhotoScanScreen(
+                      decode: decode,
+                      readText: readText,
+                      recognizeText: recognizeText ?? (_) async => '',
+                    ),
                   ),
                 );
                 if (context.mounted && code != null) {
@@ -67,6 +73,34 @@ FakeFilePicking photoPicker() => FakeFilePicking(hasCamera: false)
   ..nextPhoto = PickedFile(name: 'barcode.jpg', bytes: Uint8List.fromList([1]));
 
 void main() {
+  for (final locale in ['ru', 'tk']) {
+    testWidgets(
+      'label OCR requires selection, retains manual fallback ($locale)',
+      (tester) async {
+        final picker = FakeFilePicking()
+          ..nextPhoto = PickedFile(
+            name: 'label.jpg',
+            bytes: Uint8List.fromList([1, 2, 3]),
+          );
+        await openPhoto(
+          tester,
+          picker,
+          (_) async => [],
+          locale: locale,
+          readText: true,
+          recognizeText: (_) async => 'MITSUBISHI FUSO\nME996364\nQTY 1',
+        );
+        await tapKey(tester, 'photo-scan-camera');
+        await tester.pumpAndSettle();
+        expect(find.text('MITSUBISHI FUSO ME996364'), findsOneWidget);
+        expect(find.textContaining('result:'), findsNothing);
+        await tester.tap(find.text('MITSUBISHI FUSO ME996364'));
+        await tester.pumpAndSettle();
+        expect(find.text('result:MITSUBISHI FUSO ME996364'), findsOneWidget);
+      },
+    );
+  }
+
   for (final locale in ['ru', 'tk']) {
     testWidgets(
       'phone photo returns a code, even without live camera ($locale)',

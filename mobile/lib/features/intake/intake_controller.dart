@@ -5,6 +5,7 @@ import '../../core/api/api_exception.dart';
 import '../catalog/catalog_models.dart';
 import '../catalog/catalog_repository.dart';
 import '../inventory/inventory_models.dart';
+import '../scanning/part_identifier.dart';
 import 'intake_draft_store.dart';
 import 'intake_models.dart';
 
@@ -128,7 +129,7 @@ class IntakeController extends ChangeNotifier {
   void retrySuggestion(IntakeEntry entry) => _suggest(entry);
 
   Future<void> _suggest(IntakeEntry entry) async {
-    if (!looksLikeGtin(entry.code) ||
+    if ((!looksLikeGtin(entry.code) && identifyPart(entry.code) == null) ||
         entry.suggestion != null ||
         entry.suggesting ||
         !_entries.contains(entry)) {
@@ -192,7 +193,10 @@ class IntakeController extends ChangeNotifier {
       priceCurrency: 'TMT',
       warrantyMonths: warrantyMonths,
       warrantyTerms: '',
-      barcodes: !entry.isManual && codeFitsAsArticle(entry.code)
+      barcodes:
+          !entry.isManual &&
+              codeFitsAsArticle(entry.code) &&
+              identifyPart(entry.code)?.brand.isNotEmpty != true
           ? [entry.code]
           : const [],
     );

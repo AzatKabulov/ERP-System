@@ -145,6 +145,8 @@ BARCODE_LOOKUP_ENABLED = env.get_bool("ERP_BARCODE_LOOKUP", True)
 BARCODE_LOOKUP_TIMEOUT = env.get_int("ERP_BARCODE_LOOKUP_TIMEOUT", 4)
 BARCODE_LOOKUP_UPCITEMDB_ENABLED = env.get_bool("ERP_BARCODE_LOOKUP_UPCITEMDB", True)
 BARCODE_LOOKUP_GTINHUB_ENABLED = env.get_bool("ERP_BARCODE_LOOKUP_GTINHUB", True)
+PART_LOOKUP_OSK_ENABLED = env.get_bool("ERP_PART_LOOKUP_OSK", True)
+PART_REFERENCE_FILE = env.get("ERP_PART_REFERENCE_FILE", str(BASE_DIR / "assets/parts/pilot.json"))
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {

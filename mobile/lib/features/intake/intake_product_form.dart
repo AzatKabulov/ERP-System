@@ -12,6 +12,7 @@ import '../catalog/catalog_models.dart';
 import '../catalog/catalog_repository.dart';
 import '../catalog/category_picker.dart';
 import '../inventory/quantity_input.dart';
+import '../scanning/part_identifier.dart';
 import 'intake_controller.dart';
 import 'intake_models.dart';
 
@@ -44,7 +45,7 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
         widget.entry.form['sku'] ??
         widget.entry.product?.sku ??
         (!widget.entry.isManual && codeFitsAsArticle(widget.entry.code)
-            ? widget.entry.code
+            ? identifyPart(widget.entry.code)?.article ?? widget.entry.code
             : ''),
   );
   late final _brand = TextEditingController(
@@ -168,6 +169,7 @@ class _IntakeProductFormState extends State<IntakeProductForm> {
         _fill('name', _name, info.displayName);
         _fill('brand', _brand, info.brand);
         _fill('category', _category, info.category);
+        if (info.article.isNotEmpty) _fill('sku', _sku, info.article);
       }
     }
     setState(() {});

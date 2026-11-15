@@ -388,7 +388,10 @@ class FakeServer {
       await readWaits[request.url.path];
     }
     if (!reachable) throw http.ClientException('offline');
-    if (request.url.path.endsWith('/barcodes/info/')) await externalWait;
+    if (request.url.path.endsWith('/barcodes/info/') ||
+        request.url.path.endsWith('/parts/info/')) {
+      await externalWait;
+    }
     if (request.url.path.endsWith('/stock/')) await stockWait;
     final host = request.url.origin;
     hosts.add(host);
@@ -928,7 +931,8 @@ class FakeServer {
       return _json(201, entry);
     }
 
-    if (rest == 'barcodes/info/' && method == 'GET') {
+    if ((rest == 'barcodes/info/' || rest == 'parts/info/') &&
+        method == 'GET') {
       final code = (request.url.queryParameters['code'] ?? '').trim();
       externalAsked.add(code);
       if (externalFails) return _error(500, 'server_error');
@@ -941,6 +945,7 @@ class FakeServer {
         'category': info?['category'] ?? '',
         'quantity': info?['quantity'] ?? '',
         'source': info == null ? '' : 'Open Beauty Facts',
+        'article': info?['article'] ?? '',
         'unavailable': externalUnavailable,
       });
     }

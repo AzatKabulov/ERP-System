@@ -129,7 +129,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     if (widget.initialBarcode != null) _dirty = true;
     widget.unsaved.mark(this, dirty: _dirty);
     final code = widget.initialBarcode;
-    if (widget.existing == null && code != null && looksLikeGtin(code)) {
+    if (widget.existing == null && code != null) {
       // A scanned code the catalog does not know: offer the name the open databases have, unless
       // the person has already typed one. A miss or a failure changes nothing.
       widget.repository

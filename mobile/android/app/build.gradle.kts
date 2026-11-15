@@ -82,3 +82,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Bundled Latin model: works for side-loaded APKs without a Play Services download.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+}

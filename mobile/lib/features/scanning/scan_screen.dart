@@ -36,6 +36,7 @@ class _ScanScreenState extends State<ScanScreen> {
   );
   bool _done = false;
   bool _photoMode = false;
+  bool _textMode = false;
 
   late final _session = ScannerSession(_controller);
   bool _closing = false;
@@ -61,6 +62,15 @@ class _ScanScreenState extends State<ScanScreen> {
     setState(() => _photoMode = true);
   }
 
+  void _useText() {
+    _done = true;
+    unawaited(_session.close());
+    setState(() {
+      _photoMode = true;
+      _textMode = true;
+    });
+  }
+
   @override
   void dispose() {
     unawaited(_session.close());
@@ -69,20 +79,54 @@ class _ScanScreenState extends State<ScanScreen> {
 
   void _onDetect(BarcodeCapture capture) {
     if (_done) return; // one result, however many frames contain the code
-    for (final barcode in capture.barcodes) {
-      final value = barcode.rawValue?.trim();
-      if (value != null && value.isNotEmpty) {
-        _done = true;
-        HapticFeedback.mediumImpact();
-        _close(value);
-        return;
-      }
+    final values = capture.barcodes
+        .map((b) => b.rawValue?.trim())
+        .whereType<String>()
+        .where(
+          (v) =>
+              v.isNotEmpty &&
+              v.length <= 64 &&
+              !v.contains('://') &&
+              !v.contains(RegExp(r'[\r\n]')),
+        )
+        .toSet()
+        .toList();
+    if (values.isEmpty) return;
+    _done = true;
+    if (values.length == 1) {
+      HapticFeedback.mediumImpact();
+      _close(values.single);
+    } else {
+      _choose(values);
+    }
+  }
+
+  Future<void> _choose(List<String> values) async {
+    final l = strings(context);
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(l.photoScanMultiple),
+        children: [
+          for (final value in values.take(8))
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, value),
+              child: Text(value),
+            ),
+        ],
+      ),
+    );
+    if (!mounted || _closing) return;
+    if (selected == null) {
+      _done = false;
+    } else {
+      _close(selected);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_photoMode) return const PhotoScanScreen();
+    if (_photoMode) return PhotoScanScreen(readText: _textMode);
     final l = strings(context);
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -99,6 +143,12 @@ class _ScanScreenState extends State<ScanScreen> {
           foregroundColor: Colors.white,
           title: Text(l.scanTitle, style: const TextStyle(fontSize: 16)),
           actions: [
+            IconButton(
+              key: const ValueKey('scan-read-part'),
+              tooltip: l.partTextRead,
+              onPressed: _useText,
+              icon: const AppIcon(AppIcons.camera),
+            ),
             ValueListenableBuilder(
               valueListenable: _controller,
               builder: (context, state, _) {

@@ -55,3 +55,12 @@ An update is the same: download the new file and open it; the data stays.
 ## Google Play later
 
 Google Play wants an app bundle (`.aab`, built by the same workflow with `flutter build appbundle`), a developer account (a one-time fee), a privacy policy, store texts and screenshots. Use **Play App Signing** and, when you enrol the app, upload **this same key** as the app signing key (Play lets you do that at the first upload): then the copies already installed by direct download keep updating from the store. Keep using the id and the key above; that is why they matter now.
+
+
+## Label reader (2026-11-15)
+
+Build 5 bundles the Latin ML Kit text model for explicit package-photo reading.
+This increases APK size and works without downloading a model from Google Play.
+Catalog/stock requests still need the configured server and internet connection.
+Reuse the persistent build 4 release certificate for all updates. Installing and
+launching in an emulator does not validate physical camera or shop-network use.

@@ -11,6 +11,32 @@ String value(WidgetTester tester, String id) =>
 const code = '3337875597470';
 
 void main() {
+  testWidgets(
+    'part reference fills name and article while retaining the scanned code',
+    (tester) async {
+      final t = intakeRig();
+      const raw = 'MH044089  0001';
+      t.rig.server.externalInfo[raw] = {
+        'name': 'Подшипник КПП',
+        'brand': 'Mitsubishi Fuso',
+        'article': 'MH044089',
+      };
+      await openIntake(tester, t.rig);
+      await scanByKeyboard(tester, raw, review: true);
+      expect(value(tester, 'intake-new-name'), 'Mitsubishi Fuso Подшипник КПП');
+      expect(value(tester, 'intake-new-sku'), 'MH044089');
+      expect(value(tester, 'intake-edit-qty'), '1');
+      expect(value(tester, 'intake-new-price'), '');
+      expect(value(tester, 'intake-edit-cost'), '');
+      expect(t.rig.server.productWrites, 0);
+      await tapKey(tester, 'intake-new-save');
+      await settle(tester);
+      expect(t.rig.server.productsData.last['barcodes'], [raw]);
+      expect(t.rig.server.productsData.last['sku'], 'MH044089');
+      expect(t.rig.server.ledger.intakesPosted, 0);
+    },
+  );
+
   testWidgets('one form prefills online data while leaving both prices blank', (
     tester,
   ) async {

@@ -1,5 +1,6 @@
 import '../catalog/catalog_models.dart';
 import '../inventory/inventory_models.dart';
+import '../scanning/part_identifier.dart';
 
 /// Where one scanned code stands.
 enum IntakeEntryState {
@@ -128,7 +129,7 @@ class IntakeDraft {
 bool codeFitsAsArticle(String code) =>
     code.isNotEmpty &&
     code.length <= 64 &&
-    !code.contains(RegExp(r'\s')) &&
+    (!code.contains(RegExp(r'\s')) || identifyPart(code) != null) &&
     !code.contains('://');
 
 /// The unit a quickly added product gets unless the person picks another: the one that counts

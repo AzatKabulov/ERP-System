@@ -10,9 +10,13 @@ class MainActivity : FlutterActivity() {
     private var confirmationPool: SoundPool? = null
     private var confirmationId = 0
     private var confirmationReady = false
+    private var labelTextReader: LabelTextReader? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        labelTextReader = LabelTextReader(this)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "erp/label-text")
+            .setMethodCallHandler(labelTextReader)
         // Preload an original chime; never delay checkout waiting for audio.
         try {
             val pool = SoundPool.Builder().setMaxStreams(1)
@@ -47,6 +51,7 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        labelTextReader?.close()
         confirmationReady = false
         confirmationPool?.release()
         confirmationPool = null

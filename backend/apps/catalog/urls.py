@@ -21,6 +21,7 @@ urlpatterns = [
     ),
     path(f"{B}barcodes/lookup/", views.BarcodeLookupView.as_view(), name="barcode-lookup"),
     path(f"{B}barcodes/info/", views.BarcodeInfoView.as_view(), name="barcode-info"),
+    path(f"{B}parts/info/", views.PartInfoView.as_view(), name="part-info"),
     path(f"{B}units/", views.UnitListCreateView.as_view(), name="unit-list"),
     path(f"{B}units/<uuid:ref_id>/", views.UnitDetailView.as_view(), name="unit-detail"),
     path(f"{B}categories/", views.CategoryListCreateView.as_view(), name="category-list"),
