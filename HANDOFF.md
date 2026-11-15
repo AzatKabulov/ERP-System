@@ -1,3 +1,31 @@
+## Automotive pilot published and deployed — 2026-11-15
+
+- Application source `5b6e5a81882436f6b47381f216d2ac18b9d76078` is on main
+  (following implementation commit `5e05c6c`). Server source/image, normal web
+  and /fs/ were updated from these artifacts. Public health returns 200. Both
+  live main.dart.js SHA-256 hashes match local `9d3852842c07661a3e3239a2d84e9edf8871a0c25c024e051fa0ccdba7d27896`.
+- Consistent server backup `20261115-125342-1314864` and protected source/web/image
+  rollback copies remain on the server. System/deploy/migration checks and live
+  stock reconciliation passed. No stock/financial tests ran against live data.
+  DEBUG and password-free test login remain false; no accounts/passwords changed.
+- Live read-only API: MH044089 compound and ME996364 found via the limited ERP
+  reference; OSK A-7495 found through OSK; 0007 remained unknown. All HTTP 200.
+  Published browser OCR read MH044089, ME996364 and JX1008A from three actual
+  package photos with all third-party requests blocked; images stayed on Mac.
+- Published [pilot build 5](https://github.com/AzatKabulov/ERP-System/releases/tag/pilot-0.1.0-build5)
+  with the signed APK and checksum. Public unauthenticated download returned 200;
+  GitHub asset digest matches local SHA-256
+  `e8c1b6105a701b2e361f4cf2167e31ea6867fe34e2881bb970b547d1d3c3cb59`.
+  Size 116,553,688 bytes; permanent build 4 certificate retained. Emulator
+  upgrade 4 to 5 and native launch passed, without uninstalling or clearing data.
+  Photos, passwords and signing material were not published.
+- GitHub CI already passed PostgreSQL 16 backend tests, deployment safety,
+  disposable restore, container build, mobile tests, format, analysis and web
+  build; its Android packaging jobs were still running when this note was written.
+  Physical camera/printer/shop-network validation and fluent Turkmen review
+  remain pilot checks. Automotive reference coverage is limited and needs
+  real supplier data; no universal recognition or fitment claim is made.
+
 ## Automotive lookup and label reader — 2026-11-15
 
 Implementation and limits: [barcode reliability](docs/BARCODE_LOOKUP_RELIABILITY.md).
