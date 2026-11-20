@@ -1,4 +1,4 @@
-## Password login and isolated pilot — 2026-11-20 (in progress)
+## Password login and isolated pilot — 2026-11-20 (deployed)
 
 Owner explicitly requested removal of the authenticator step for all sign-ins,
 an isolated empty one-week pilot shop, main push, deploy and signed APK build 6.
@@ -12,7 +12,31 @@ Validation: 143 focused and all 982 backend tests passed on disposable PostgreSQ
 640 Flutter tests, analysis and formatting passed. Signed release APK build 6 and
 web build passed. APK retained the build 4/5 certificate; emulator upgrade from
 build 5 to 6 and native launch succeeded without uninstalling. Real-browser
-RU/TK sign-in, account creation, deployment and publication evidence follow.
+RU/TK operator and shop password sign-in plus role isolation passed; the same
+scratch run passed stock/load/retry checks and full DB/private-file restoration.
+
+Application commit `b1b1efe698b7c880832a2593e27767cc51239b39` was pushed to main
+and deployed to the API, normal web and /fs/. Backups and prior source/web/image
+remain protected on the server under the 2026-11-20-login rollback folder.
+System/deploy/migration checks and stock reconciliation passed. Both live
+JavaScript SHA-256 values match local
+`f85b2beb9f7099f8b04c8f43ed824f0a3d9b35e2028d734509d8bc18f58c1ebb`.
+Health is 200; the console form has username/password and no OTP field.
+
+Created one owner-authorized isolated empty shop with a one-week trial through
+2026-11-27 23:59:59 Asia/Ashgabat. Products, stock movements, sales and expenses
+are all zero. Live HTTPS password login, no forced password change, empty catalog
+and denial of platform access passed. Existing accounts and business records
+were not reset. Credentials remain private and are not in source or APK assets.
+
+Published [pilot build 6](https://github.com/AzatKabulov/ERP-System/releases/tag/pilot-0.1.0-build6)
+with the permanent signed APK and checksum. Public download returns 200;
+116,553,688 bytes, SHA-256
+`ef4bd52fc60a6f85e53e833c5b118124ced044888c760cfbb83961100427bf4e`
+matches GitHub's asset digest. Backend/container/local-run CI and client
+tests/analysis/web checks passed; GitHub Android packaging was still running
+when this record was written. Physical camera, printer and shop-network checks
+remain pilot acceptance work.
 
 ## Automotive pilot published and deployed — 2026-11-15
 
