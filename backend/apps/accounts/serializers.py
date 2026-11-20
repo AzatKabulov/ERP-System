@@ -33,8 +33,6 @@ class UserSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     password = serializers.CharField(max_length=256, trim_whitespace=False)
-    # Only an operator is asked for it (the code from their authenticator app).
-    otp_token = serializers.CharField(max_length=16, required=False, allow_blank=True, default="")
 
 
 class RefreshSerializer(serializers.Serializer):

@@ -299,13 +299,9 @@ class SessionController extends ChangeNotifier {
   }
 
   /// Throws [ApiException] (wrong password, throttled, unreachable...).
-  Future<void> signIn(
-    String username,
-    String password, {
-    String? otpToken,
-  }) async {
+  Future<void> signIn(String username, String password) async {
     final generation = ++_generation;
-    await api.login(username.trim(), password, otpToken: otpToken);
+    await api.login(username.trim(), password);
     if (_disposed || generation != _generation) return;
     _expired = false;
     _unreachable = false;

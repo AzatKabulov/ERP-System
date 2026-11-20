@@ -142,22 +142,14 @@ class ApiClient {
       send('PATCH', path, body: body ?? const {});
 
   /// Signs in and keeps the tokens. Throws [ApiException] on failure.
-  Future<Map<String, dynamic>> login(
-    String username,
-    String password, {
-    String? otpToken,
-  }) async {
+  Future<Map<String, dynamic>> login(String username, String password) async {
     final generation = ++_generation;
     _access = null;
     _reads.clear();
     final response = await send(
       'POST',
       '/api/v1/auth/login/',
-      body: {
-        'username': username,
-        'password': password,
-        if (otpToken != null && otpToken.isNotEmpty) 'otp_token': otpToken,
-      },
+      body: {'username': username, 'password': password},
       authenticated: false,
     );
     final data = response.map;

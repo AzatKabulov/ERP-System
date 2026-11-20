@@ -4,10 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import '../core/fake_server.dart';
 import '../support/real_rig.dart';
 
-/// The platform owner signs in on the ordinary screen (plus the code from their authenticator
-/// app) and lands on their own pages: the overview, every client, the support desk, notices.
+/// The platform owner signs in with username/password and lands on their own pages: the overview, every client, the support desk, notices.
 void makeOperator(FakeServer server) {
-  server.operatorCode = '123456';
   (server.me['user'] as Map)['is_platform_operator'] = true;
   (server.me['user'] as Map)['full_name'] = 'Boss';
   server.me['memberships'] = [];
@@ -16,9 +14,6 @@ void makeOperator(FakeServer server) {
 Future<void> signInAsOperator(WidgetTester tester, RealRig rig) async {
   await rig.launch(tester);
   await rig.signIn(tester);
-  await tester.enterText(key('sign-in-code'), '123456');
-  await tapKey(tester, 'sign-in-submit');
-  await settle(tester);
 }
 
 Future<void> openClient(WidgetTester tester, String id) async {
@@ -30,28 +25,24 @@ Future<void> openClient(WidgetTester tester, String id) async {
 
 void main() {
   group('signing in', () {
-    testWidgets('the password comes first, then the code', (tester) async {
-      final rig = RealRig();
-      makeOperator(rig.server);
-      await rig.launch(tester);
-      expect(key('sign-in-code'), findsNothing);
-
-      await rig.signIn(tester);
-      // the password was right: only now is the code asked for, and nothing is shown as an error
-      expect(key('sign-in-code'), findsOneWidget);
-      expect(key('sign-in-error'), findsNothing);
-      expect(key('pf-total'), findsNothing);
-
-      await tester.enterText(key('sign-in-code'), '000000');
-      await tapKey(tester, 'sign-in-submit');
-      await settle(tester);
-      expect(key('sign-in-error'), findsOneWidget);
-      expect(key('pf-total'), findsNothing);
-
-      await tester.enterText(key('sign-in-code'), '123456');
-      await tapKey(tester, 'sign-in-submit');
-      await settle(tester);
-      expect(key('pf-total'), findsOneWidget);
+    testWidgets('an operator signs in with password alone in ru and tk', (
+      tester,
+    ) async {
+      for (final language in ['ru', 'tk']) {
+        final rig = RealRig();
+        makeOperator(rig.server);
+        await rig.launch(tester);
+        if (language == 'tk') {
+          await tester.tap(find.text('TM'));
+          await settle(tester);
+        }
+        await rig.signIn(tester);
+        expect(key('sign-in-code'), findsNothing);
+        expect(key('sign-in-error'), findsNothing);
+        expect(key('pf-total'), findsOneWidget);
+        await tester.pumpWidget(const SizedBox());
+        await settle(tester);
+      }
     });
 
     testWidgets('a wrong password never asks for the code', (tester) async {
@@ -329,9 +320,6 @@ void main() {
       makeOperator(rig.server);
       await rig.launch(tester, size: const Size(393, 800));
       await rig.signIn(tester);
-      await tester.enterText(key('sign-in-code'), '123456');
-      await tapKey(tester, 'sign-in-submit');
-      await settle(tester);
       expect(key('pf-total'), findsOneWidget);
       for (final page in ['Clients', 'Support', 'Notices', 'Overview']) {
         await tapKey(tester, 'nav-platform$page');

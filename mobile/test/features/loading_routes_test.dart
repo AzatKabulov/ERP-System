@@ -162,9 +162,6 @@ void main() {
         makeOperator(rig.server);
         await rig.launch(tester, size: size);
         await rig.signIn(tester);
-        await tester.enterText(key('sign-in-code'), '123456');
-        await tapKey(tester, 'sign-in-submit');
-        await settle(tester);
         for (final (page, path) in [
           ('platformClients', '/api/v1/platform/clients/'),
           ('platformSupport', '/api/v1/platform/support/'),

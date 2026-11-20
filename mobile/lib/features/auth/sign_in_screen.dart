@@ -89,12 +89,6 @@ class _SignInScreenState extends State<SignInScreen> {
   final _username = TextEditingController();
   final _password = TextEditingController();
   final _passwordFocus = FocusNode();
-  final _code = TextEditingController();
-  final _codeFocus = FocusNode();
-
-  /// The platform owner's account is asked for the code from their authenticator app after the
-  /// password; the server says so (`otp_required`) and only then does the field appear.
-  bool _needsCode = false;
   bool _busy = false;
   ApiException? _error;
 
@@ -104,8 +98,6 @@ class _SignInScreenState extends State<SignInScreen> {
     _username.dispose();
     _password.dispose();
     _passwordFocus.dispose();
-    _code.dispose();
-    _codeFocus.dispose();
     super.dispose();
   }
 
@@ -176,35 +168,10 @@ class _SignInScreenState extends State<SignInScreen> {
       _busy = true;
       _error = null;
     });
-    if (_needsCode && _code.text.trim().isEmpty) {
-      setState(() {
-        _busy = false;
-        _error = const ApiException(
-          kind: ApiErrorKind.client,
-          code: 'validation_error',
-        );
-      });
-      _codeFocus.requestFocus();
-      return;
-    }
     try {
-      await widget.session.signIn(
-        username,
-        _password.text,
-        otpToken: _needsCode ? _code.text.trim() : null,
-      );
+      await widget.session.signIn(username, _password.text);
     } on ApiException catch (e) {
-      if (!mounted) return;
-      if (e.code == 'otp_required') {
-        // not an error: the password was right, one more step is needed
-        setState(() {
-          _needsCode = true;
-          _error = null;
-        });
-        _codeFocus.requestFocus();
-      } else {
-        setState(() => _error = e);
-      }
+      if (mounted) setState(() => _error = e);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -350,41 +317,9 @@ class _SignInScreenState extends State<SignInScreen> {
               controller: _password,
               focusNode: _passwordFocus,
               enabled: !_busy,
-              textInputAction: _needsCode
-                  ? TextInputAction.next
-                  : TextInputAction.done,
-              onSubmitted: (_) =>
-                  _needsCode ? _codeFocus.requestFocus() : _submit(),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
             ),
-            if (_needsCode) ...[
-              const SizedBox(height: 18),
-              LabeledField(
-                label: l.signInCodeLabel,
-                child: TextField(
-                  key: const ValueKey('sign-in-code'),
-                  controller: _code,
-                  focusNode: _codeFocus,
-                  enabled: !_busy,
-                  keyboardType: TextInputType.number,
-                  autofillHints: const [AutofillHints.oneTimeCode],
-                  textInputAction: TextInputAction.done,
-                  maxLength: 8,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  onSubmitted: (_) => _submit(),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    helperText: l.signInCodeHint,
-                    helperMaxLines: 2,
-                    prefixIcon: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 14),
-                      child: AppIcon(AppIcons.lock, size: 20),
-                    ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 48),
-                  ),
-                ),
-              ),
-            ],
           ],
           if (_error != null) ...[
             const SizedBox(height: 12),

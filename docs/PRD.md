@@ -1,3 +1,11 @@
+## Password sign-in (owner decision, 2026-11-20)
+
+All shop and platform accounts sign in with username and password. Remove the
+authenticator-code step from both the shared app and the operator console.
+Keep password validation, login throttling, server permissions, tenant isolation,
+HTTPS, session revocation and account recovery. A pilot participant gets an
+isolated empty shop and an explicitly bounded trial, never platform access.
+
 # Product Requirements Document
 
 ## Startup performance clarification (owner, 2026-11-10)

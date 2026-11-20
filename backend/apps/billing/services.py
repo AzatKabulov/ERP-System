@@ -304,6 +304,7 @@ def provision_client(
     phone: str = "",
     language: str = "ru",
     plan: Plan | None = None,
+    trial_days: int | None = None,
     amount=None,
     currency="",
     method="",
@@ -349,7 +350,7 @@ def provision_client(
     )
     _event(client, K.CREATED, actor, note=(note or "").strip())
     if plan is None:
-        start_trial(client, actor)
+        start_trial(client, actor, days=trial_days)
     else:
         renew(
             client,

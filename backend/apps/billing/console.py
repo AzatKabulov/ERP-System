@@ -3,7 +3,7 @@ system (never for a store). It is a separate admin site that shows only the plat
 clients and their subscriptions, support requests, announcements, packages. A store's sales,
 customers and stock are not registered here, so they cannot be browsed from it.
 
-Signing in needs the operator's password and a code from their authenticator app."""
+Signing in needs the operator's username and password (owner decision, 2026-11-20)."""
 
 from dataclasses import dataclass
 from datetime import timedelta
@@ -18,8 +18,6 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
-from django_otp import devices_for_user
-from django_otp.admin import OTPAdminAuthenticationForm, OTPAdminSite
 
 from apps.businesses.models import Membership, Role
 from apps.sales.models import Sale
@@ -78,33 +76,14 @@ def state_badge(client: Client, now=None):
     )
 
 
-class ConsoleLoginForm(OTPAdminAuthenticationForm):
-    """The password step, then the code from the operator's authenticator app.
-
-    The library makes a person choose which device the code is from, so the first try with a
-    right password always failed with "Please select a device". An operator has one
-    authenticator: use it without asking. The code is still checked against a device that belongs
-    to this person only, with the library's own lock-out after repeated wrong codes."""
-
-    def _chosen_device(self, user):
-        device = super()._chosen_device(user)
-        if device is None:
-            own = list(devices_for_user(user))
-            if len(own) == 1:
-                device = own[0]
-        return device
-
-
-class ConsoleSite(OTPAdminSite):
-    login_form = ConsoleLoginForm
+class ConsoleSite(admin.AdminSite):
     site_header = "Owner console"
     site_title = "Owner console"
     index_title = "Clients and subscriptions"
     index_template = "console/index.html"
 
     def login(self, request, extra_context=None):
-        """A few tries a minute per address: the password and the code are both needed, but
-        guessing them should still be slow."""
+        """Keep password guessing rate-limited independently of the API login."""
         if request.method == "POST":
             forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[-1].strip()
             key = f"console-login:{forwarded or request.META.get('REMOTE_ADDR', '')}"

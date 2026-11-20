@@ -1,3 +1,19 @@
+## Password login and isolated pilot — 2026-11-20 (in progress)
+
+Owner explicitly requested removal of the authenticator step for all sign-ins,
+an isolated empty one-week pilot shop, main push, deploy and signed APK build 6.
+API login, Flutter and the operator console now use username/password. Active
+account, `is_staff`, tenant permissions, login throttles, HTTPS and session
+revocation remain. Existing user credentials and legacy OTP records are retained.
+Operator creation no longer generates or prints an authenticator key; explicit
+password reset retains token revocation. Generic `create_pilot_shop` refuses any
+existing username and uses an environment/prompt password, never a source constant.
+Validation: 143 focused and all 982 backend tests passed on disposable PostgreSQL;
+640 Flutter tests, analysis and formatting passed. Signed release APK build 6 and
+web build passed. APK retained the build 4/5 certificate; emulator upgrade from
+build 5 to 6 and native launch succeeded without uninstalling. Real-browser
+RU/TK sign-in, account creation, deployment and publication evidence follow.
+
 ## Automotive pilot published and deployed — 2026-11-15
 
 - Application source `5b6e5a81882436f6b47381f216d2ac18b9d76078` is on main

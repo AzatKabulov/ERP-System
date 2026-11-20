@@ -33,7 +33,6 @@ class FakeServer {
   final FakePlatform platform = FakePlatform();
 
   /// When set, the account that signs in is an operator: after the password it must give this code.
-  String? operatorCode;
 
   /// Reports, the dashboard and the activity history (see fake_reports.dart).
   late final FakeReports reports = FakeReports(this);
@@ -436,11 +435,6 @@ class FakeServer {
     if (path == '/api/v1/auth/login/') {
       if (body['password'] != userPassword) {
         return _error(401, 'invalid_credentials');
-      }
-      if (operatorCode != null) {
-        final given = '${body['otp_token'] ?? ''}';
-        if (given.isEmpty) return _error(401, 'otp_required');
-        if (given != operatorCode) return _error(401, 'invalid_otp');
       }
       return _json(200, {
         'access': accessToken,

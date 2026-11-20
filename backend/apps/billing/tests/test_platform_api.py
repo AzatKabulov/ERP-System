@@ -3,7 +3,6 @@ review says. A store's staff must get nothing from any of these routes."""
 
 from datetime import timedelta
 
-from django.test import override_settings
 from django.utils import timezone
 from django_otp.oath import TOTP
 from django_otp.plugins.otp_totp.models import TOTPDevice
@@ -57,57 +56,40 @@ class OperatorSignInTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.json()["user"]["is_platform_operator"])
 
-    def test_an_operator_is_asked_for_the_code_after_the_password(self):
+    def test_an_operator_with_an_old_device_signs_in_with_password_alone(self):
         make_operator()
         response = sign_in("boss")
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json()["error"]["code"], "otp_required")
-        self.assertNotIn("access", response.json())
-
-    def test_a_wrong_code_is_refused(self):
-        _, device = make_operator()
-        wrong = "000000" if code_of(device) != "000000" else "111111"
-        response = sign_in("boss", otp_token=wrong)
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json()["error"]["code"], "invalid_otp")
-
-    def test_a_wrong_password_never_reaches_the_code_step(self):
-        make_operator()
-        response = sign_in("boss", password="not-the-password-1")
-        self.assertEqual(response.json()["error"]["code"], "invalid_credentials")
-
-    def test_the_right_code_signs_in_and_the_profile_says_operator(self):
-        _, device = make_operator()
-        response = sign_in("boss", otp_token=code_of(device))
         self.assertEqual(response.status_code, 200, response.content)
         data = response.json()
         self.assertTrue(data["user"]["is_platform_operator"])
-        me = client_for()
-        me.credentials(HTTP_AUTHORIZATION=f"Bearer {data['access']}")
-        body = me.get(ME).json()
-        self.assertTrue(body["user"]["is_platform_operator"])
-        self.assertEqual(body["memberships"], [])  # an operator works in no store
+        api = APIClient()
+        api.credentials(HTTP_AUTHORIZATION=f"Bearer {data['access']}")
+        self.assertEqual(api.get(ME).json()["memberships"], [])
+        self.assertEqual(api.get(f"{P}/overview/").status_code, 200)
 
-    def test_a_code_with_spaces_is_accepted(self):
+    def test_a_wrong_password_cannot_issue_tokens_even_with_a_legacy_code(self):
         _, device = make_operator()
-        token = code_of(device)
-        response = sign_in("boss", otp_token=f"{token[:3]} {token[3:]}")
-        self.assertEqual(response.status_code, 200)
-
-    @override_settings(OTP_TOTP_THROTTLE_FACTOR=600)
-    def test_guessing_codes_is_locked_out_even_for_the_right_one(self):
-        _, device = make_operator()
-        right = code_of(device)
-        wrong = "000000" if right != "000000" else "111111"
-        sign_in("boss", otp_token=wrong)
-        response = sign_in("boss", otp_token=right)
-        self.assertEqual(response.status_code, 429)
-        self.assertEqual(response.json()["error"]["code"], "otp_locked")
-
-    def test_an_operator_without_an_authenticator_cannot_sign_in_at_all(self):
-        make_operator("keyless", authenticator=False)
-        response = sign_in("keyless", otp_token="123456")
+        response = sign_in("boss", password="wrong-password", otp_token=code_of(device))
         self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json()["error"]["code"], "invalid_credentials")
+        self.assertNotIn("access", response.json())
+
+    def test_a_new_operator_needs_no_authenticator(self):
+        make_operator("keyless", authenticator=False)
+        self.assertEqual(sign_in("keyless").status_code, 200)
+
+    def test_an_inactive_operator_cannot_sign_in(self):
+        user, _ = make_operator()
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+        response = sign_in("boss")
+        self.assertEqual(response.status_code, 401)
+        self.assertNotIn("access", response.json())
+
+    def test_missing_password_is_rejected(self):
+        make_operator()
+        response = APIClient().post(LOGIN, {"username": "boss"}, format="json")
+        self.assertEqual(response.status_code, 400)
         self.assertNotIn("access", response.json())
 
 
@@ -157,11 +139,11 @@ class AccessTests(APITestCase):
         self.assertFalse(Client.objects.filter(business__name="Mine").exists())
         self.assertEqual(Client.objects.get(pk=self.client_row.pk).override, "")
 
-    def test_a_staff_flag_without_an_authenticator_is_not_enough(self):
+    def test_an_authenticated_operator_without_a_device_has_platform_access(self):
         keyless, _ = make_operator("keyless", authenticator=False)
         for url in self.urls:
             with self.subTest(url=url):
-                self.assertEqual(client_for(keyless).get(url).status_code, 403)
+                self.assertEqual(client_for(keyless).get(url).status_code, 200)
 
     def test_an_operator_gets_in(self):
         api = client_for(self.operator)

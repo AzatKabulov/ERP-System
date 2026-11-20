@@ -39,7 +39,7 @@ if _settings.PUBLIC_TEST_LOGIN:  # testing only, see settings.py
 urlpatterns = [
     *_test_login,
     # Our own back office (clients, subscriptions, support): its own address, sign-in with a
-    # password and an authenticator code. See apps/billing/console.py.
+    # username and password. See apps/billing/console.py.
     path(env.get("DJANGO_CONSOLE_PATH", "console/"), console_site.urls),
     path("api/v1/", include(api)),
 ]

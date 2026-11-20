@@ -2,8 +2,8 @@
 notices and the packages. The same things the old console offers, behind the ordinary sign-in.
 
 Who may use it: an operator (`User.is_staff`, made with `manage.py create_operator`). They sign in
-like anyone else, with one more step: the code from their authenticator app, checked at sign-in
-(accounts.views.check_operator_code). A store's staff get 403 on every route here. Every change to a
+with username and password (owner decision, 2026-11-20). Store staff get 403 on every route.
+Every change to a
 subscription goes through services.py, which writes the history entry in the same transaction, and
 every button shows what it will do (the "review" step) before it does it.
 """
@@ -14,7 +14,6 @@ from django.db import transaction
 from django.db.models import Max, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework import serializers
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
@@ -42,18 +41,11 @@ MAX_ROWS = 500
 
 
 class IsPlatformOperator(BasePermission):
-    """An operator who has an authenticator. (Sign-in already asked for its code; this is the
-    second lock on the door.)"""
+    """An active authenticated platform operator; shop membership grants no access here."""
 
     def has_permission(self, request, view):
         user = request.user
-        return bool(
-            user
-            and user.is_authenticated
-            and user.is_active
-            and user.is_staff
-            and TOTPDevice.objects.filter(user=user, confirmed=True).exists()
-        )
+        return bool(user and user.is_authenticated and user.is_active and user.is_staff)
 
 
 class OperatorView(APIView):

@@ -84,14 +84,11 @@ def main():
     if args.browser_script:
         # This cluster is disposable. Allow the browser to review the platform UI
         # through the same local-only test login as the shop roles, never a saved password.
-        from django_otp.plugins.otp_totp.models import TOTPDevice
-
         from apps.accounts.models import User
 
-        operator = User.objects.create_superuser(
-            "qa-platform-operator", "", secrets.token_urlsafe(40)
-        )
-        TOTPDevice.objects.create(user=operator, confirmed=True)
+        operator_password = secrets.token_urlsafe(40)
+        User.objects.create_superuser("qa-platform-operator", "", operator_password)
+        os.environ["ERP_QA_OPERATOR_PASSWORD"] = operator_password
     # New shops have one place. This throwaway legacy fixture additionally
     # exercises retained transfer/FIFO/location-isolation services; no public
     # create-location endpoint or real shop is changed.

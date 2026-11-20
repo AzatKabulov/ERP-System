@@ -10,8 +10,6 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.utils import timezone
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.oath import TOTP
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.accounts.models import User
@@ -39,13 +37,9 @@ plain_static = override_settings(
 
 
 def operator_client(test, username="operator"):
-    """A browser signed in to the console: password step done and authenticator code verified."""
+    """An authenticated platform operator, without an OTP session marker."""
     user = User.objects.create_superuser(username, "", "operator-password-1")
-    device = TOTPDevice.objects.create(user=user, name="authenticator", confirmed=True)
     test.client.force_login(user)
-    session = test.client.session
-    session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-    session.save()
     return user
 
 
@@ -66,73 +60,51 @@ class WhoMayEnterTests(TestCase):
         self.assertEqual(self.client.get(HOME).status_code, 302)
         self.assertEqual(self.client.get("/console/billing/client/").status_code, 302)
 
-    def test_an_operator_without_the_authenticator_code_is_not_let_in(self):
-        user = User.objects.create_superuser("operator-b", "", "operator-password-1")
-        TOTPDevice.objects.create(user=user, name="authenticator", confirmed=True)
-        self.client.force_login(user)  # password done, code not given
-        self.assertEqual(self.client.get(HOME).status_code, 302)
-
-    def test_a_verified_operator_gets_in(self):
-        operator_client(self)
-        self.assertEqual(self.client.get(HOME).status_code, 200)
-
-    def _code(self, device):
-        return str(TOTP(device.bin_key, device.step, device.t0, device.digits).token()).zfill(
-            device.digits
-        )
-
-    def _operator_with_authenticator(self):
-        user = User.objects.create_superuser("operator-c", "", "operator-password-1")
-        device = TOTPDevice.objects.create(user=user, name="authenticator", confirmed=True)
-        return device
-
-    def test_an_operator_signs_in_with_password_and_code_without_choosing_a_device(self):
-        device = self._operator_with_authenticator()
+    def test_operator_password_login_without_a_device(self):
+        User.objects.create_superuser("operator-b", "", "operator-password-1")
         response = self.client.post(
             "/console/login/",
             {
-                "username": "operator-c",
+                "username": "operator-b",
                 "password": "operator-password-1",
-                "otp_token": self._code(device),
                 "next": HOME,
             },
         )
-        self.assertEqual(response.status_code, 302, response.content[:300])
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(self.client.get(HOME).status_code, 200)
 
-    def test_a_right_password_with_a_wrong_or_missing_code_is_not_let_in(self):
-        device = self._operator_with_authenticator()
-        wrong = "000000" if self._code(device) != "000000" else "111111"
-        for code in (wrong, ""):
-            with self.subTest(code=code):
-                response = self.client.post(
-                    "/console/login/",
-                    {
-                        "username": "operator-c",
-                        "password": "operator-password-1",
-                        "otp_token": code,
-                        "next": HOME,
-                    },
-                )
-                self.assertEqual(response.status_code, 200)  # the form again, with a message
-                self.assertEqual(self.client.get(HOME).status_code, 302)
-
-    def test_a_code_from_someone_else_s_authenticator_is_not_enough(self):
-        mine = self._operator_with_authenticator()
-        other = User.objects.create_superuser("operator-d", "", "operator-password-2")
-        theirs = TOTPDevice.objects.create(user=other, name="authenticator", confirmed=True)
-        self.assertNotEqual(self._code(mine), self._code(theirs))
+    def test_existing_authenticator_does_not_add_a_code_step(self):
+        user = User.objects.create_superuser("operator-b", "", "operator-password-1")
+        TOTPDevice.objects.create(user=user, confirmed=True)
         response = self.client.post(
             "/console/login/",
             {
-                "username": "operator-c",
+                "username": user.username,
                 "password": "operator-password-1",
-                "otp_token": self._code(theirs),
+                "next": HOME,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.client.get(HOME).status_code, 200)
+
+    def test_wrong_password_is_refused(self):
+        User.objects.create_superuser("operator-b", "", "operator-password-1")
+        response = self.client.post(
+            "/console/login/",
+            {
+                "username": "operator-b",
+                "password": "wrong-password",
                 "next": HOME,
             },
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.client.get(HOME).status_code, 302)
+
+    def test_console_form_contains_no_authenticator_field(self):
+        response = self.client.get("/console/login/")
+        self.assertContains(response, 'name="username"')
+        self.assertContains(response, 'name="password"')
+        self.assertNotContains(response, 'name="otp_token"')
 
     def test_a_store_s_data_cannot_be_browsed_from_here(self):
         operator_client(self)
@@ -394,13 +366,14 @@ class CreateOperatorCommandTests(TestCase):
             call_command("create_operator", *args, stdout=out)
         return out.getvalue()
 
-    def test_creates_an_operator_with_an_authenticator_key(self):
+    def test_creates_an_operator_without_printing_credentials_or_creating_a_device(self):
         output = self.run_command("boss")
         user = User.objects.get(username="boss")
         self.assertTrue(user.is_staff and user.is_superuser)
-        device = TOTPDevice.objects.get(user=user)
-        self.assertTrue(device.confirmed)
-        self.assertRegex(output, r"key:\s+[A-Z2-7]{20,}")
+        self.assertTrue(user.check_password("operator-password-1"))
+        self.assertFalse(TOTPDevice.objects.filter(user=user).exists())
+        self.assertNotIn("operator-password-1", output)
+        self.assertNotIn("key:", output)
 
     def test_weak_passwords_are_refused(self):
         with self.assertRaises(CommandError):
@@ -413,16 +386,15 @@ class CreateOperatorCommandTests(TestCase):
             self.run_command("store-person")
         self.assertFalse(User.objects.get(username="store-person").is_staff)
 
-    def test_a_second_run_needs_new_key_and_replaces_the_old_one(self):
+    def test_a_second_run_requires_explicit_password_reset(self):
         self.run_command("boss")
-        first = TOTPDevice.objects.get(user__username="boss").key
         with self.assertRaises(CommandError):
-            self.run_command("boss")
-        self.run_command("boss", "--new-key")
-        self.assertNotEqual(TOTPDevice.objects.get(user__username="boss").key, first)
-        self.assertEqual(TOTPDevice.objects.filter(user__username="boss").count(), 1)
+            self.run_command("boss", password="replacement-password-2")
+        self.assertTrue(User.objects.get(username="boss").check_password("operator-password-1"))
+        self.run_command("boss", "--reset-password", password="replacement-password-2")
+        self.assertTrue(User.objects.get(username="boss").check_password("replacement-password-2"))
 
-    def test_replacing_authenticator_revokes_existing_access_and_refresh_tokens(self):
+    def test_resetting_operator_password_revokes_access_and_refresh_tokens(self):
         from rest_framework.test import APIClient
 
         from apps.accounts.services import issue_tokens
@@ -433,7 +405,7 @@ class CreateOperatorCommandTests(TestCase):
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION="Bearer " + tokens["access"])
         self.assertEqual(client.get("/api/v1/me/").status_code, 200)
-        self.run_command("boss", "--new-key")
+        self.run_command("boss", "--reset-password", password="replacement-password-2")
         self.assertEqual(client.get("/api/v1/me/").status_code, 401)
         client.credentials()
         self.assertEqual(
